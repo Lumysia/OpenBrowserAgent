@@ -226,10 +226,10 @@ export function PageTranslatePage() {
       />
       <SettingSwitchCard
         icon={<Captions size={18} />}
-        title={p.subtitles.videoButton}
-        description={p.subtitles.videoButtonDescription}
-        checked={settings.videoButton}
-        onChange={(videoButton) => update({ videoButton })}
+        title={p.subtitles.setting}
+        description={p.subtitles.settingDescription}
+        checked={settings.videoSubtitles}
+        onChange={(videoSubtitles) => update({ videoSubtitles })}
       />
       <SettingsSection
         icon={<Database />}

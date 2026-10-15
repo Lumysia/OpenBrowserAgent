@@ -15,10 +15,12 @@ export const PAGE_SCRIPT = {
   // The translate button, registered in top frames while it is on, except
   // on the sites it is hidden on.
   pageTranslateButton: "content-scripts/page-translate-button.js",
-  // Subtitle translation, injected when the user starts it; the video
-  // button, registered on every page while it is on.
+  // Subtitle translation, and the observer that passes it the caption files
+  // the page loads (in the page's own world): registered on every page while
+  // "Translate video subtitles" is on, else injected when the user starts
+  // them.
   videoSubtitles: "content-scripts/video-subtitles.js",
-  videoButton: "content-scripts/video-button.js",
+  captionObserver: "content-scripts/caption-observer.js",
   // A short note on the page (page-feedback.ts).
   pageToast: "content-scripts/page-toast.js",
   elementSelector: "content-scripts/element-selector.js",
@@ -27,6 +29,11 @@ export const PAGE_SCRIPT = {
 // The ids of the scripts registered with scripting.registerContentScripts.
 export const REGISTERED_SCRIPT_ID = {
   smartBar: "oba-smart-bar",
-  videoButton: "oba-video-button",
+  videoSubtitles: "oba-video-subtitles",
+  captionObserver: "oba-caption-observer",
   pageTranslateButton: "oba-page-translate-button",
 } as const;
+
+// Ids earlier versions registered, unregistered on start in case the
+// browser kept them: the video's subtitle button (before 0.2.0-beta.11).
+export const RETIRED_SCRIPT_IDS = ["oba-video-button"] as const;

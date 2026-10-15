@@ -115,15 +115,14 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "字幕を翻訳",
     menuItemLabel: "字幕を翻訳 / 翻訳を非表示（動画上）",
-    start: "字幕を翻訳",
-    stop: "字幕の翻訳を非表示",
     noCaptions:
       "この動画の字幕がまだ見つかりません。プレーヤーで字幕をオンにしてください。表示されしだい翻訳します。",
     liveOnly:
       "画面の字幕を表示されしだい翻訳しています。先まで翻訳するには、プレーヤーの字幕をいったんオフにしてからオンにしてください。",
     noVideo: "ここには字幕を翻訳できる動画がありません。",
-    videoButton: "動画の字幕ボタン",
-    videoButtonDescription:
-      "動画にポインターを合わせると隅にボタンを表示し、字幕を翻訳できます。「このページを翻訳」でもページ上の動画の字幕を翻訳します。",
+    // Settings: subtitles start by themselves on every video.
+    setting: "動画の字幕を翻訳",
+    settingDescription:
+      "字幕のある動画では、どのサイトでも自動で各行の下に翻訳を表示します。動画のコンテキストメニューの「字幕を翻訳」で、その動画だけオフ／オンにできます。この設定がオフでも、メニューと「このページを翻訳」で字幕を翻訳できます。",
   },
 };

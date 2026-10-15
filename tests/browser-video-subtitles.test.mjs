@@ -12,15 +12,18 @@ import { poll } from "./chromium.mjs";
 import { fixtureTranslator } from "./page-translate-fixture.mjs";
 import { inShadowRoot } from "./shadow-roots.mjs";
 import {
+  hasCaptionObserver,
   isLayerRoot,
   lineAt,
-  pointAtVideo,
   seek,
   shownLine,
   startSubtitles,
   subtitles,
-  videoButton,
 } from "./video-subtitles-fixture.mjs";
+
+const captionRequests = (fixture) =>
+  fixture.requests.filter((request) => request.url.startsWith("/api/captions"))
+    .length;
 
 // Translated video subtitles with the AI engine, on each kind of player:
 // the original line on top, its translation below, in our own layer.
@@ -35,7 +38,23 @@ test(
     });
     const { browser, url, clickMenuItem, options, fixture } = session;
     try {
-      await contentScriptsRegistered(options, PAGE_SCRIPT.videoButton);
+      await t.test(
+        "off by default: nothing registered, nothing in pages",
+        async () => {
+          const registered = await options.call(async () =>
+            (await chrome.scripting.getRegisteredContentScripts()).flatMap(
+              (script) => script.js,
+            ),
+          );
+          assert.ok(!registered.includes(PAGE_SCRIPT.videoSubtitles));
+          assert.ok(!registered.includes(PAGE_SCRIPT.captionObserver));
+          const page = await browser.open(url("/stub-start"));
+          await poll(() => page.call(() => window.loaded === 40));
+          assert.equal(await hasCaptionObserver(page), false);
+          assert.equal(await subtitles(page), null);
+          await page.send("Page.close");
+        },
+      );
 
       await t.test(
         "a <track>: from the menu, near the playhead first",
@@ -99,46 +118,25 @@ test(
         },
       );
 
-      await t.test(
-        "cues added over time, from the video's button",
-        async () => {
-          const page = await browser.open(url("/streamed"));
-          await pointAtVideo(page);
-          const button = await poll(() => videoButton(page));
-          assert.equal(button.label, "Translate subtitles");
-          assert.equal(button.pressed, false);
-          await click(page, button);
-          // Cues the player adds later are translated when the playhead gets
-          // there.
-          await poll(() =>
-            page.call(
-              () =>
-                document.getElementById("video").textTracks[0].cues.length >=
-                30,
-            ),
-          );
-          await seek(page, 126);
-          assert.equal(
-            (await shownLine(page, "Streamed line 25.")).translation,
-            "FR: Streamed line 25.",
-          );
-          await pointAtVideo(page);
-          const pressed = await poll(async () => {
-            const value = await videoButton(page);
-            return value?.pressed ? value : null;
-          });
-          assert.equal(pressed.label, "Hide translated subtitles");
-          await click(page, pressed);
-          await poll(async () => (await subtitles(page)) === null);
-          await poll(async () => (await videoButton(page))?.pressed === false);
-          // Turned off in the settings, it goes from the open page at once.
-          await session.setPreferences({ videoButton: false });
-          await pointAtVideo(page);
-          await poll(async () => (await videoButton(page)) === null);
-          await session.setPreferences({ videoButton: true });
-          await page.send("Page.close");
-        },
-      );
+      await t.test("cues added over time, from the menu", async () => {
+        const pageUrl = url("/streamed");
+        const page = await browser.open(pageUrl);
+        await clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl);
+        // Cues the player adds later are translated when the playhead gets
+        // there.
+        await poll(() =>
+          page.call(
+            () =>
+              document.getElementById("video").textTracks[0].cues.length >= 30,
+          ),
+        );
+        await seek(page, 126);
+        assert.equal(
+          (await shownLine(page, "Streamed line 25.")).translation,
+          "FR: Streamed line 25.",
+        );
+        await page.send("Page.close");
+      });
 
       await t.test(
         "captions drawn as page text, from Translate this page",
@@ -213,31 +211,22 @@ test(
       await t.test(
         "a caption file the player loads after starting",
         async () => {
-          const page = await browser.open(url("/stub-later"));
+          const pageUrl = url("/stub-later");
+          const page = await browser.open(pageUrl);
           await seek(page, 46);
-          await pointAtVideo(page);
-          await click(page, await poll(() => videoButton(page)));
+          const before = captionRequests(fixture);
+          await clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl);
           // Nothing to read yet. Once the observer is in the page, the
           // player's CC button loads its file, and that copy is read: it
           // isn't fetched again.
-          await poll(() =>
-            page.call(
-              () =>
-                !String(XMLHttpRequest.prototype.send).includes("native code"),
-            ),
-          );
+          await poll(() => hasCaptionObserver(page));
           await click(page, await elementCenter(page, "#cc"));
           await poll(() => page.call(() => window.loaded === 40));
           assert.equal(
             (await shownLine(page, "Stub line at 45 seconds.")).translation,
             "FR: Stub line at 45 seconds.",
           );
-          assert.equal(
-            fixture.requests.filter((request) =>
-              request.url.startsWith("/api/captions"),
-            ).length,
-            1,
-          );
+          assert.equal(captionRequests(fixture) - before, 1);
           await page.send("Page.close");
         },
       );
@@ -254,6 +243,84 @@ test(
         );
         await page.send("Page.close");
       });
+
+      await t.test("always on: registered in every frame", async () => {
+        await session.setPreferences({ videoSubtitles: true });
+        await contentScriptsRegistered(options, PAGE_SCRIPT.videoSubtitles);
+        await contentScriptsRegistered(options, PAGE_SCRIPT.captionObserver);
+      });
+
+      await t.test(
+        "always on: a caption file loaded as the page starts, without a click",
+        async () => {
+          const before = captionRequests(fixture);
+          const page = await browser.open(url("/stub-start"));
+          await poll(() => page.call(() => window.loaded === 40));
+          await seek(page, 46);
+          assert.equal(
+            (await shownLine(page, "Stub line at 45 seconds.")).translation,
+            "FR: Stub line at 45 seconds.",
+          );
+          // The player's own copy was read, not fetched again.
+          assert.equal(captionRequests(fixture) - before, 1);
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: the menu turns one video's subtitles off and on",
+        async () => {
+          const pageUrl = url("/track");
+          const page = await browser.open(pageUrl);
+          await seek(page, 31);
+          await shownLine(page, lineAt(30));
+          const toggle = () =>
+            clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl, {
+              srcUrl: url("/blank.webm"),
+              mediaType: "video",
+            });
+          await toggle();
+          await poll(async () => (await subtitles(page)) === null);
+          // They stay off for this video when it plays on.
+          await seek(page, 36);
+          await page.call(() => document.getElementById("video").play());
+          await poll(() =>
+            page.call(() => document.getElementById("video").currentTime > 37),
+          );
+          assert.equal(await subtitles(page), null);
+          await page.call(() => document.getElementById("video").pause());
+          await toggle();
+          await seek(page, 41);
+          await shownLine(page, lineAt(40));
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on, turned off: subtitles leave open pages, new pages get nothing",
+        async () => {
+          const pageUrl = url("/track");
+          const page = await browser.open(pageUrl);
+          await seek(page, 31);
+          await shownLine(page, lineAt(30));
+          await session.setPreferences({ videoSubtitles: false });
+          await poll(async () => (await subtitles(page)) === null);
+          await poll(() =>
+            options.call(
+              async (files) =>
+                !(await chrome.scripting.getRegisteredContentScripts()).some(
+                  (script) => script.js?.some((file) => files.includes(file)),
+                ),
+              [PAGE_SCRIPT.videoSubtitles, PAGE_SCRIPT.captionObserver],
+            ),
+          );
+          const next = await browser.open(url("/stub-start"));
+          await poll(() => next.call(() => window.loaded === 40));
+          assert.equal(await hasCaptionObserver(next), false);
+          await page.send("Page.close");
+          await next.send("Page.close");
+        },
+      );
     } finally {
       await session.close();
     }

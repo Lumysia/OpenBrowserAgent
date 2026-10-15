@@ -31,7 +31,8 @@ const DURATION_SLACK_SECONDS = 5;
 // How long a line from the page's own captions stays in the video's text
 // track (it is replaced as soon as the next one shows).
 const LIVE_LINE_SECONDS = 4;
-// Playing this long without any subtitles found brings up a note.
+// Playing this long without any subtitles found brings up a note, for
+// subtitles the user started.
 const NO_CAPTIONS_MS = 8_000;
 
 export type VideoSession = ReturnType<typeof startVideoSession>;
@@ -39,7 +40,8 @@ export type VideoSession = ReturnType<typeof startVideoSession>;
 export function startVideoSession(
   video: HTMLVideoElement,
   translator: SubtitleTranslator,
-  notes: VideoSubtitlesNotes,
+  // The notes to show; none for subtitles that started by themselves.
+  notes: VideoSubtitlesNotes | undefined,
 ) {
   const owner = {};
   const overlay = createOverlay(video);
@@ -56,15 +58,10 @@ export function startVideoSession(
   let frame: number | undefined;
 
   const track = createTextTrackSource(video, () => refreshLines());
-  const stopFiles = watchCaptionFiles((next) => {
-    if (next.at < loadedAt || !fits(next.cues)) return;
-    file = next;
-    refreshLines();
-  });
   const dom = watchDomCaptions(video, {
     onText(text) {
       liveText = text;
-      render();
+      update();
     },
     onLine(text) {
       liveLines.push(text);
@@ -74,6 +71,11 @@ export function startVideoSession(
           { text, before: liveLines.slice(0, -1).join(" ") || undefined },
         ]);
     },
+  });
+  const stopFiles = watchCaptionFiles((next) => {
+    if (next.at < loadedAt || !fits(next.cues)) return;
+    file = next;
+    refreshLines();
   });
 
   function fits(cues: Cue[]) {
@@ -93,6 +95,11 @@ export function startVideoSession(
     lines = next ? segmentCues(next) : [];
     scheduledAt = undefined;
     update();
+  }
+
+  // A source with lines: until then the video costs nothing per frame.
+  function hasLines() {
+    return !!cueSource || dom.found || !!liveText;
   }
 
   function schedule(time: number) {
@@ -141,18 +148,18 @@ export function startVideoSession(
   function update() {
     if (cueSource) schedule(video.currentTime);
     render();
+    if (!video.paused) play();
   }
 
-  // Each frame while playing, so lines change on time and the layer
-  // follows the video when the page scrolls or resizes.
+  // Each frame while playing with lines, so they change on time and the
+  // layer follows the video when the page scrolls or resizes.
   function loop() {
     frame = undefined;
     update();
-    if (!video.paused) frame = requestAnimationFrame(loop);
   }
-  const play = () => {
-    if (frame === undefined) frame = requestAnimationFrame(loop);
-  };
+  function play() {
+    if (frame === undefined && hasLines()) frame = requestAnimationFrame(loop);
+  }
   const seeked = () => {
     scheduledAt = undefined;
     update();
@@ -178,10 +185,9 @@ export function startVideoSession(
   ];
   for (const [target, type, listener] of events)
     target.addEventListener(type, listener, { passive: true, capture: true });
-  if (!video.paused) play();
   refreshLines();
   const noteTimer = window.setTimeout(() => {
-    if (cueSource) return;
+    if (cueSource || !notes) return;
     showToast(
       dom.found || liveText ? notes.liveOnly : notes.noCaptions,
       notes.theme,

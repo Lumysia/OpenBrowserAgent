@@ -1,19 +1,18 @@
+// Translated video subtitles: registers their scripts while they are always
+// on (registration.ts), else injects the subtitle script into the frame
+// with the video when the user starts them (the right-click menu,
+// "Translate this page"), and puts the caption observer it asks for in the
+// page's world (see src/video-subtitles/caption-observer.ts).
 import { getMessages } from "../../shared/i18n";
-// Translated video subtitles: injects the subtitle script into the frame
-// with the video when the user starts them (the video's button, the
-// right-click menu, "Translate this page"), and installs the caption file
-// observer it asks for (see main-world.ts).
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
 import { getBrowserApi } from "../../shared/browser-api";
 import { PAGE_SCRIPT } from "../../shared/page-scripts";
 import { storage } from "../../shared/storage";
 import {
-  CAPTION_RESPONSE_MAX_CHARS,
   MIN_VIDEO_SIZE,
   VIDEO_SUBTITLES_MESSAGE,
-  type VideoButtonConfig,
+  type VideoSubtitlesConfig,
   type VideoSubtitlesNotes,
-  type VideoSubtitlesObserveMessage,
   type VideoSubtitlesStartAllMessage,
   type VideoSubtitlesStopAllMessage,
   type VideoSubtitlesToggleMessage,
@@ -21,13 +20,12 @@ import {
 import { showPageNote } from "../page-feedback";
 import { pageToastTheme } from "../page-toast";
 import { PAGE_TRANSLATE_TOAST_MS } from "../../shared/page-translate/protocol";
-import { observeCaptionFiles } from "./main-world";
-import { registerVideoButton } from "./registration";
+import { registerVideoSubtitles } from "./registration";
 
 type Sender = chrome.runtime.MessageSender;
 
 export function setupVideoSubtitles() {
-  registerVideoButton();
+  registerVideoSubtitles();
 }
 
 // Subtitle page messages; false for other messages.
@@ -40,19 +38,11 @@ export function handleVideoSubtitlesMessage(
   const tabId = sender.tab?.id;
   const frameId = sender.frameId ?? 0;
   switch (type) {
-    case VIDEO_SUBTITLES_MESSAGE.button:
-      if (tabId !== undefined)
-        void toggleInFrame(tabId, frameId).finally(() =>
-          sendResponse({ ok: true }),
-        );
-      else sendResponse({ ok: false });
-      return true;
     case VIDEO_SUBTITLES_MESSAGE.config:
-      void buttonConfig().then(sendResponse);
+      void subtitlesConfig().then(sendResponse);
       return true;
-    case VIDEO_SUBTITLES_MESSAGE.observe: {
-      const event = (message as Partial<VideoSubtitlesObserveMessage>).event;
-      if (tabId === undefined || typeof event !== "string") {
+    case VIDEO_SUBTITLES_MESSAGE.observe:
+      if (tabId === undefined) {
         sendResponse({ ok: false });
         return false;
       }
@@ -60,15 +50,13 @@ export function handleVideoSubtitlesMessage(
         .scripting.executeScript({
           target: { tabId, frameIds: [frameId] },
           world: "MAIN",
-          func: observeCaptionFiles,
-          args: [event, CAPTION_RESPONSE_MAX_CHARS],
+          files: [PAGE_SCRIPT.captionObserver],
         })
         .then(
           () => sendResponse({ ok: true }),
           () => sendResponse({ ok: false }),
         );
       return true;
-    }
     default:
       return false;
   }
@@ -179,17 +167,10 @@ async function pageNotes(): Promise<VideoSubtitlesNotes> {
   };
 }
 
-async function buttonConfig() {
-  const [preferences, language] = await Promise.all([
-    storage.preferences.get(),
-    storage.language.get(),
-  ]);
-  const { start, stop } = getMessages(language).pageTranslate.subtitles;
-  const config: VideoButtonConfig = {
-    enabled: normalizePageTranslateSettings(preferences.pageTranslate)
-      .videoButton,
-    labels: { start, stop },
-    theme: pageToastTheme(preferences.colorScheme, preferences.accentColor),
+async function subtitlesConfig(): Promise<VideoSubtitlesConfig> {
+  const preferences = await storage.preferences.get();
+  return {
+    always: normalizePageTranslateSettings(preferences.pageTranslate)
+      .videoSubtitles,
   };
-  return config;
 }

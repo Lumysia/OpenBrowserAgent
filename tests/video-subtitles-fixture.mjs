@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { poll } from "./chromium.mjs";
-import { elementCenter } from "./cdp-input.mjs";
 import { startPageTranslate } from "./page-translate-fixture.mjs";
 import { hasClass, inShadowRoot } from "./shadow-roots.mjs";
 
@@ -88,6 +87,12 @@ setInterval(() => {
 ${VIDEO_TAG}></video>
 <button id="cc" onclick="const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();">CC</button>
 </body></html>`,
+  // A player that loads its caption file as the page starts, before anyone
+  // could do anything.
+  "/stub-start": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
+${VIDEO_TAG}></video>
+<script>const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en&start'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();</script>
+</body></html>`,
   // The same player that loaded its file before the user started.
   "/stub-earlier": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
 ${VIDEO_TAG}></video>
@@ -164,36 +169,11 @@ export function shownLine(page, original) {
   });
 }
 
-// The corner button over the video: its center and state, or null.
-export function videoButton(page) {
-  return inShadowRoot(
-    page,
-    (root) =>
-      root.shadowRootType === "closed" &&
-      root.children?.some((child) => hasClass(child, "video-button-theme")),
-    (root) => {
-      const button = root?.querySelector(".video-button");
-      if (!button || button.hidden) return null;
-      const rect = button.getBoundingClientRect();
-      return {
-        x: rect.x + rect.width / 2,
-        y: rect.y + rect.height / 2,
-        label: button.getAttribute("aria-label"),
-        pressed: button.getAttribute("aria-pressed") === "true",
-      };
-    },
+// Whether the page's caption observer wraps XMLHttpRequest.
+export function hasCaptionObserver(page) {
+  return page.call(
+    () => !String(XMLHttpRequest.prototype.send).includes("native code"),
   );
-}
-
-// Moves the mouse over the video, as a user pointing at it.
-export async function pointAtVideo(page) {
-  const center = await elementCenter(page, "#video");
-  for (const dx of [0, 10])
-    await page.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: center.x + dx,
-      y: center.y,
-    });
 }
 
 export function seek(page, seconds) {

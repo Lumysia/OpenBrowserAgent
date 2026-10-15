@@ -115,15 +115,14 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "Traduzir legendas",
     menuItemLabel: "Traduzir legendas / Ocultá-las (em vídeos)",
-    start: "Traduzir legendas",
-    stop: "Ocultar legendas traduzidas",
     noCaptions:
       "Ainda não foram encontradas legendas para este vídeo. Ative as legendas no player — elas são traduzidas assim que aparecem.",
     liveOnly:
       "As legendas na tela são traduzidas conforme aparecem. Para traduzir com antecedência, desative e ative de novo as legendas do player.",
     noVideo: "Não há nenhum vídeo para traduzir legendas aqui.",
-    videoButton: "Botão de legendas nos vídeos",
-    videoButtonDescription:
-      "Mostra um botão no canto de um vídeo quando você aponta para ele, para traduzir as legendas. “Traduzir esta página” também traduz as legendas dos vídeos da página.",
+    // Settings: subtitles start by themselves on every video.
+    setting: "Traduzir legendas de vídeos",
+    settingDescription:
+      "Vídeos com legendas mostram sozinhos cada linha com a tradução embaixo, em todos os sites. “Traduzir legendas” no menu de contexto de um vídeo as desativa ou ativa para esse vídeo. Com esta opção desativada, o menu e “Traduzir esta página” continuam traduzindo as legendas.",
   },
 };
