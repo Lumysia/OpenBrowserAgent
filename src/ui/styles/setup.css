@@ -103,19 +103,19 @@
   background: color-mix(in oklab, var(--accent-softer) 28%, var(--card));
   color: var(--accent-text);
 }
-.bootstrap-feedback-card.is-error {
+.bootstrap-feedback-card[data-state="error"] {
   border-color: color-mix(in oklab, var(--destructive) 28%, var(--border));
   background: color-mix(in oklab, var(--destructive) 10%, var(--card));
   color: var(--destructive);
 }
 /* Pulling from the cloud: a highlight sweeps across the button. */
-.bootstrap-cloud-action.is-loading {
+.bootstrap-cloud-action[data-state="loading"] {
   --pulse-peak-scale: 1.01;
   overflow: hidden;
   opacity: 1;
   animation: pulse 1.8s var(--ease-in-out) infinite;
 }
-.bootstrap-cloud-action.is-loading::after {
+.bootstrap-cloud-action[data-state="loading"]::after {
   --shimmer-from: -100%;
   --shimmer-to: 200%;
   content: "";
@@ -131,7 +131,7 @@
   background-size: 50% 100%;
   animation: shimmer 1.25s var(--ease-in-out) infinite;
 }
-.bootstrap-cloud-action.is-loading > * {
+.bootstrap-cloud-action[data-state="loading"] > * {
   position: relative;
   z-index: var(--z-raised);
 }
@@ -152,7 +152,7 @@
     translate var(--duration-base) var(--ease-out),
     scale var(--duration-base) var(--ease-out);
 }
-.local-setup-hint.visible {
+.local-setup-hint[data-state="visible"] {
   max-height: 140px;
   padding-block: 9px;
   border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));

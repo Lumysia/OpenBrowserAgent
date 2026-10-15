@@ -15,6 +15,7 @@ import { useComposer } from "./sidepanel-providers";
 import { SkillPickerList } from "./skill-picker";
 import { formatMessage } from "../../src/shared/text";
 import { cn } from "../../src/ui/utils";
+import { UI_STATE } from "../../src/ui/ui-state";
 import { useMessages } from "../../src/ui/messages";
 import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
@@ -186,13 +187,18 @@ export function AddContextMenu({
     <div className="add-context-panel-shell" data-view={displayView}>
       {leavingView && (
         <div
-          className="add-context-panel is-leaving"
+          className="add-context-panel"
+          data-state={UI_STATE.leaving}
           key={`leaving-${leavingView}`}
         >
           {renderView(leavingView)}
         </div>
       )}
-      <div className="add-context-panel is-entering" key={displayView}>
+      <div
+        className="add-context-panel"
+        data-state={UI_STATE.entering}
+        key={displayView}
+      >
         {renderView(displayView)}
       </div>
     </div>

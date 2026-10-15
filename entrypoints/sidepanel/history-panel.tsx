@@ -32,6 +32,7 @@ import {
 import type { SummariesUpdater } from "./use-chats";
 import { cn } from "../../src/ui/utils";
 import { useMessages } from "../../src/ui/messages";
+import { stateWhen, UI_STATE } from "../../src/ui/ui-state";
 import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
 export function HistoryPanel({
@@ -311,8 +312,8 @@ function HistoryItem({
         child && "child",
         chat.id === activeChatId && "active",
         unreadCompletedChatIds[chat.id] && "unread-complete",
-        removing && "removing",
       )}
+      data-state={stateWhen(removing, UI_STATE.removing)}
     >
       {editingChatId === chat.id ? (
         <div className="history-select history-title-editor">

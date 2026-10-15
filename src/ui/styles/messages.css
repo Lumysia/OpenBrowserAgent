@@ -117,7 +117,7 @@
   transform-origin: right center;
   animation: enter var(--duration-base) var(--ease-out) backwards;
 }
-.message-jump-controls.is-removing {
+.message-jump-controls[data-state="removing"] {
   pointer-events: none;
   animation: exit var(--duration-fast) var(--ease-standard) both;
 }
@@ -164,7 +164,7 @@
   animation: enter var(--duration-slow) var(--ease-out) backwards;
   transition: var(--transition-interactive);
 }
-:is(.context-card, .queued-message).is-removing {
+:is(.context-card, .queued-message)[data-state="removing"] {
   pointer-events: none;
   animation: exit var(--duration-remove) var(--ease-standard) both;
 }

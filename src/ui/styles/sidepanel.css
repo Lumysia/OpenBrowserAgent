@@ -270,7 +270,7 @@
 .history-item:nth-child(4) {
   --item-index: 3;
 }
-.history-item.removing {
+.history-item[data-state="removing"] {
   pointer-events: none;
   animation: collapse var(--duration-remove) var(--ease-standard) both;
 }

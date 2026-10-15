@@ -241,8 +241,8 @@
   width: 14px;
   height: 14px;
 }
-.run-stop-notice.error > svg,
-.run-stop-notice.error .run-stop-notice-text {
+.run-stop-notice[data-state="error"] > svg,
+.run-stop-notice[data-state="error"] .run-stop-notice-text {
   color: var(--destructive);
 }
 .run-stop-notice-text.ui-card-description {
@@ -397,7 +397,7 @@
     enter var(--duration-base) var(--ease-out) backwards,
     glow 2.8s var(--ease-in-out) infinite;
 }
-.typing-indicator.is-removing {
+.typing-indicator[data-state="removing"] {
   animation: exit var(--duration-fast) var(--ease-standard) both;
 }
 .typing-indicator-icon {

@@ -341,20 +341,20 @@
   border-radius: var(--radius-md);
   background: color-mix(in oklab, var(--secondary) 70%, var(--card));
 }
-.markdown-image-card.is-broken {
+.markdown-image-card[data-state="broken"] {
   min-height: 92px;
   display: grid;
   place-items: center;
   color: var(--muted-foreground);
 }
-.markdown-image-card.is-broken::before {
+.markdown-image-card[data-state="broken"]::before {
   content: attr(data-alt);
   padding: var(--space-3);
   font-size: var(--text-base);
   line-height: 1.4;
   text-align: center;
 }
-.markdown-image-card.is-broken :is(img, figcaption),
+.markdown-image-card[data-state="broken"] :is(img, figcaption),
 .markdown-image-card figcaption:empty {
   display: none;
 }

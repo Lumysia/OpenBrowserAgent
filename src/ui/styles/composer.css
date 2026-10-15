@@ -358,14 +358,14 @@
 .add-context-panel {
   min-width: 0;
 }
-.add-context-panel.is-entering {
+.add-context-panel[data-state="entering"] {
   --enter-x: 10px;
   --enter-y: 0;
   --enter-scale: 0.985;
   --enter-blur: 1px;
   animation: enter var(--duration-base) var(--ease-out) backwards;
 }
-.add-context-panel.is-leaving {
+.add-context-panel[data-state="leaving"] {
   --exit-x: -8px;
   --exit-y: 0;
   --exit-scale: 0.985;

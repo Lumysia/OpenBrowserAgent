@@ -23,7 +23,7 @@ import {
   TabsTrigger,
   Textarea,
 } from "../../src/ui/components";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { useMessages } from "../../src/ui/messages";
 
 type WebDavDraft = WebDavSyncBackendConfig;
@@ -105,16 +105,15 @@ export function SyncBootstrapStep({
         <Feedback
           key={setupFeedbackMessage}
           error={setupFeedbackError}
-          className={cn(
-            "bootstrap-feedback-card",
-            setupFeedbackError && "is-error",
-          )}
+          className="bootstrap-feedback-card"
+          data-state={stateWhen(setupFeedbackError, UI_STATE.error)}
         >
           {setupFeedbackMessage}
         </Feedback>
       ) : null}
       <Button
-        className={cn("bootstrap-cloud-action", syncing && "is-loading")}
+        className="bootstrap-cloud-action"
+        data-state={stateWhen(syncing, UI_STATE.loading)}
         onClick={handleCloudAction}
         disabled={!canPull || syncing || hasActiveSyncBackend}
       >

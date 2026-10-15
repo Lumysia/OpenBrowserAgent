@@ -2,7 +2,7 @@ import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { typingPhrases } from "../../src/shared/holidays";
 import { useHoliday } from "./holiday-touches";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { useMessages } from "../../src/ui/messages";
 
 const TYPING_PHRASE_INTERVAL_MS = 2_000;
@@ -28,7 +28,8 @@ export function TypingIndicator({ removing = false }: { removing?: boolean }) {
 
   return (
     <span
-      className={cn("typing-indicator", removing && "is-removing")}
+      className="typing-indicator"
+      data-state={stateWhen(removing, UI_STATE.removing)}
       aria-label={phrase}
     >
       <span className="typing-indicator-icon" aria-hidden="true">

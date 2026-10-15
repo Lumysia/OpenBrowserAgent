@@ -19,6 +19,7 @@ import {
 import type { MarkdownConfig } from "./markdown-engine";
 import { MermaidPreview } from "./mermaid-preview";
 import { useMessages } from "../../src/ui/messages";
+import { UI_STATE } from "../../src/ui/ui-state";
 
 // Renders an answer as Marked's top-level blocks. While it streams, only the
 // last block changes; finished blocks keep their object and skip rendering.
@@ -60,7 +61,7 @@ export function MarkdownContent({
       event.target instanceof HTMLImageElement ? event.target : null;
     const card = image?.closest(".markdown-image-card") as HTMLElement | null;
     if (!image || !card) return;
-    card.classList.add("is-broken");
+    card.dataset.state = UI_STATE.broken;
     card.dataset.alt = image.alt || "";
   }
 

@@ -26,19 +26,23 @@
   opacity: 0.72;
   transition: var(--transition-interactive);
 }
-.tool-card:is(.loading, .done, .error)::before {
+.tool-card:is(
+    [data-state="loading"],
+    [data-state="done"],
+    [data-state="error"]
+  )::before {
   opacity: 1;
 }
-.tool-card.loading {
+.tool-card[data-state="loading"] {
   background: color-mix(in oklab, var(--accent-softer) 28%, transparent);
 }
-.tool-card.loading::before {
+.tool-card[data-state="loading"]::before {
   background: var(--accent-strong);
 }
-.tool-card.error::before {
+.tool-card[data-state="error"]::before {
   background: color-mix(in oklab, var(--destructive) 72%, transparent);
 }
-.tool-card.error .tool-description {
+.tool-card[data-state="error"] .tool-description {
   color: var(--destructive);
 }
 .tool-title {
@@ -98,13 +102,13 @@
   width: 16px;
   height: 16px;
 }
-.tool-card.loading .tool-icon {
+.tool-card[data-state="loading"] .tool-icon {
   --pulse-rest-opacity: 0.72;
   --pulse-peak-scale: 1.08;
   --pulse-peak-y: -1px;
   animation: pulse 1.35s var(--ease-in-out) infinite;
 }
-.tool-card.done .tool-icon {
+.tool-card[data-state="done"] .tool-icon {
   --pop-opacity: 1;
   --pop-scale: 0.9;
   --pop-rotate: -4deg;
@@ -137,14 +141,14 @@
   color: var(--muted-foreground);
   transition: var(--transition-colors);
 }
-.tool-card.loading .tool-detail {
+.tool-card[data-state="loading"] .tool-detail {
   border-left-color: color-mix(
     in oklab,
     var(--accent-strong) 30%,
     var(--border)
   );
 }
-.tool-card.done .tool-detail {
+.tool-card[data-state="done"] .tool-detail {
   border-left-color: color-mix(
     in oklab,
     var(--accent-strong) 18%,
@@ -162,14 +166,14 @@
   grid-template-rows: 0fr;
   transition: grid-template-rows var(--duration-base) var(--ease-out);
 }
-.tool-detail-slot.visible {
+.tool-detail-slot[data-state="visible"] {
   grid-template-rows: 1fr;
 }
 .tool-detail-slot-content {
   min-height: 0;
   overflow: hidden;
 }
-.tool-detail-slot.visible .tool-detail-slot-content {
+.tool-detail-slot[data-state="visible"] .tool-detail-slot-content {
   margin-top: var(--space-2);
 }
 .tool-description {

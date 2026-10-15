@@ -16,7 +16,7 @@ import { toolIcon } from "./tool-icons";
 import { TOOL_CARD_KINDS } from "./tool-bodies";
 import { DownloadReferences } from "./download-tool-display";
 import { ToolReferenceButton } from "./tool-references";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE } from "../../src/ui/ui-state";
 import { useMessages } from "../../src/ui/messages";
 
 export function ToolPart({
@@ -53,12 +53,12 @@ export function ToolPart({
     part.state === CHAT_PART_STATE.done ||
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const status = loading
-    ? "loading"
+    ? UI_STATE.loading
     : failed
-      ? "error"
+      ? UI_STATE.error
       : isDone
-        ? "done"
-        : "idle";
+        ? UI_STATE.done
+        : UI_STATE.idle;
   const body = kind && (
     <kind.Body
       part={part}
@@ -71,7 +71,7 @@ export function ToolPart({
     />
   );
   return (
-    <div className={cn("tool-card", status)}>
+    <div className="tool-card" data-state={status}>
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" className="tool-title tool-title-button">

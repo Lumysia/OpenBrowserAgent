@@ -4,7 +4,7 @@ import { TOOL_NAME } from "../../src/shared/tool-names";
 import type { ChatPart, QuestionToolAnswer } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
 import { isQuestionPending, QuestionToolForm } from "./tool-question-form";
 
@@ -73,7 +73,8 @@ function SubAgentBody({
   return (
     <>
       <div
-        className={cn("tool-detail-slot", progress && "visible")}
+        className="tool-detail-slot"
+        data-state={stateWhen(progress, UI_STATE.visible)}
         aria-hidden={!progress}
       >
         <div
