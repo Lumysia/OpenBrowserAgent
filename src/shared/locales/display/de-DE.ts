@@ -8,11 +8,11 @@ export const displayDeDE: DisplayMessages = {
     characters: plural({ one: "{count} Zeichen", other: "{count} Zeichen" }),
   },
   providerTypes: {
-    openai: "OpenAI-kompatibel",
-    "openai-responses": "OpenAI-Responses-kompatibel",
-    anthropic: "Anthropic-kompatibel",
-    gemini: "Gemini-kompatibel",
-    ollama: "Ollama-kompatibel",
+    openai: "OpenAI (oder kompatibel)",
+    "openai-responses": "OpenAI (Responses-API)",
+    anthropic: "Anthropic (oder kompatibel)",
+    gemini: "Google Gemini",
+    ollama: "Ollama (lokal)",
   },
   mcpServerPresets: {
     exa: "Websuche und Extraktion von Webseiteninhalten.",
@@ -57,6 +57,8 @@ export const displayDeDE: DisplayMessages = {
     bridgeNotFound: "Diese Ausführungs-Bridge gibt es nicht mehr.",
     bridgeHostRequired: "Geben Sie den Namen des Native-Messaging-Hosts ein.",
     bridgeTimeout: "Die Ausführungs-Bridge hat nicht rechtzeitig geantwortet.",
+    syncKeysLocked:
+      "Ihre API-Schlüssel sind synchronisiert, aber gesperrt. Geben Sie Ihre Sync-Passphrase unter Einstellungen → Synchronisierung ein.",
   },
   toolSteps: {
     failed: "Fehlgeschlagen",

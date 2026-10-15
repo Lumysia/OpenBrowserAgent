@@ -2,7 +2,7 @@ import { knownValues } from "./values";
 // The right-click menu: its settings and the items it shows.
 
 // Items in menu order, as the settings name them.
-const CONTEXT_MENU_ITEM = {
+export const CONTEXT_MENU_ITEM = {
   ask: "ask",
   summarizePage: "summarizePage",
   translateSelection: "translateSelection",
@@ -13,7 +13,7 @@ const CONTEXT_MENU_ITEM = {
   copyMarkdown: "copyMarkdown",
 } as const;
 
-type ContextMenuItem =
+export type ContextMenuItem =
   (typeof CONTEXT_MENU_ITEM)[keyof typeof CONTEXT_MENU_ITEM];
 
 export const CONTEXT_MENU_ITEMS = Object.values(CONTEXT_MENU_ITEM);

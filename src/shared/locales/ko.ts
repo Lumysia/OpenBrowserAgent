@@ -8,6 +8,8 @@ import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
+import { settingsKo } from "./settings/ko";
+import { setupKo } from "./setup/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -34,36 +36,7 @@ export const ko: LocaleMessages = {
   },
   words: { newChat: "새 채팅", agent: "탐색", ask: "질문" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent 설정",
-    connectProviderDescription:
-      "언어를 선택하고 필요하면 동기화를 켠 다음, 준비되면 AI 제공업체와 모델을 추가하세요.",
     addProvider: "AI 제공업체 추가",
-    cloudSyncConnect: "연결 및 동기화",
-    cloudSyncTesting: "연결 중…",
-    cloudSyncPulling: "클라우드 동기화 확인 중…",
-    cloudSyncDescription:
-      "클라우드에서 다른 기기의 설정을 가져오거나 이 기기의 새 설정을 클라우드에 저장할 수 있습니다.",
-    cloudSyncError:
-      "클라우드 동기화 테스트에 실패했습니다. 백엔드를 확인하거나 로컬에서 시작하세요.",
-    cloudSyncSynced:
-      "클라우드 동기화가 준비되었습니다. 다음으로 AI 제공업체 설정을 추가하세요.",
-    cloudSyncSyncedButton: "동기화됨",
-    startLocally: "로컬에서 시작",
-    localSetupHint:
-      "설정이 열렸습니다. 설정에서 AI 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
-    bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
-    syncConfigCodeTab: "코드 붙여넣기",
-    syncManualTab: "수동 입력",
-    syncConfigCode: "동기화 구성 코드",
-    syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
-    syncConfigCodeInvalid:
-      "동기화 구성 코드가 올바르지 않습니다. 코드를 확인한 뒤 다시 시도하세요.",
-    bootstrapStepProviderTitle: "AI 제공업체와 모델 추가",
-    bootstrapStepProviderDescription:
-      "설정을 열어 AI 제공업체와 모델을 추가하고 테스트하세요.",
-    bootstrapStepTaskTitle: "첫 작업 보내기",
-    bootstrapStepTaskDescription:
-      "모델이 정상 응답하면 여기로 돌아와 OpenBrowserAgent에 탐색이나 요약을 요청하세요.",
     chatHistory: "채팅 기록",
     backToChat: "채팅으로 돌아가기",
     exportChatOpenAi: "채팅을 OpenAI JSON으로 내보내기",
@@ -141,7 +114,7 @@ export const ko: LocaleMessages = {
     selectedText: "선택한 텍스트",
     willBeSentWithMessage: "메시지와 함께 전송됩니다",
     removeSelectedText: "선택한 텍스트 제거",
-    addNewTab: "새 탭 추가",
+    addOpenTabs: "열린 탭 추가…",
     addCurrentTab: "현재 탭 추가",
     attachFiles: "파일 첨부",
     attachFilesHint: "이미지 또는 로컬 파일",
@@ -245,6 +218,9 @@ export const ko: LocaleMessages = {
       runScript: { running: "스크립트 실행 중", done: "스크립트 실행됨" },
       devtools: { running: "진단 실행 중", done: "진단 완료" },
     },
+    clearAllChatsConfirm:
+      "고정한 채팅을 포함해 모든 채팅을 삭제할까요? 되돌릴 수 없습니다.",
+    clearAllChatsAction: "모든 채팅 삭제",
   },
   options: {
     general: "일반",
@@ -377,7 +353,6 @@ export const ko: LocaleMessages = {
     localExecutionBridgeTestError: "브리지 테스트 실패",
     deleteLocalExecutionBridge: "실행 브리지 삭제",
     skills: "스킬",
-    modelProviders: "AI 제공업체",
     providerDescription:
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
@@ -419,13 +394,12 @@ export const ko: LocaleMessages = {
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
-    selectImageModel: "이미지 모델 선택",
     enableImageGeneration: "이미지 생성 활성화",
     enableImageGenerationDescription:
       "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
     imageGenerationSize: "이미지 크기",
     providerConnection: "연결 정보",
-    providerConnectionHint: "이름, API 키, Base URL을 구성합니다.",
+    providerConnectionHint: "이름과 API 키를 설정하세요.",
     providerName: "이름",
     deleteProvider: "AI 제공업체 삭제",
     apiKey: "API 키",
@@ -525,19 +499,15 @@ export const ko: LocaleMessages = {
     lightTheme: "라이트",
     darkTheme: "다크",
     syncSettingsDescription:
-      "백엔드를 고르고 아래에서 동기화할 항목을 고르세요. 설정은 항상 동기화되며 키, 채팅, 파일은 각각 스위치로 켜고 끕니다.",
-    syncBackendDescription: "동기화할 항목.",
+      "모든 기기에서 같은 설정을 유지합니다. 동기화할 위치를 고른 다음 동기화할 항목을 고르세요.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
     syncBackendBrowserSyncHint: "이 브라우저에 로그인한 계정으로 동기화합니다.",
     syncBackendWebDavSyncHint:
       "선택한 WebDAV 서버로 동기화하며, 채팅과 파일도 동기화할 수 있습니다.",
-    syncBackendName: "백엔드 이름",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "사용자 이름",
     syncBackendPassword: "비밀번호 또는 앱 비밀번호",
-    syncBackendCopyConfig: "구성 코드 복사",
-    syncBackendCopiedConfig: "구성 코드 복사됨",
     autoScroll: "자동 스크롤",
     autoScrollDescription:
       "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",
@@ -547,11 +517,9 @@ export const ko: LocaleMessages = {
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
       "에이전트가 실행할 수 있는 도구 단계 수를 설정합니다. 0으로 설정하면 도구 호출을 사용하지 않습니다.",
-    helperModel: "보조 모델",
     helperModelDescription:
       "요약 같은 백그라운드 작업에 사용합니다. 기본값은 해당 채팅의 모델입니다.",
     modelSameAsChat: "채팅 모델과 동일",
-    debug: "디버그",
     debugDescription: "OpenBrowserAgent 데이터를 초기화하는 개발자 도구입니다.",
     debugResetTitle: "OpenBrowserAgent 데이터 지우기",
     debugResetDescription:
@@ -580,6 +548,11 @@ export const ko: LocaleMessages = {
     debugToolCore: "항상 불러옴",
     debugToolOnDemand: "필요할 때 불러옴",
     debugToolRequired: "필수 매개변수",
+    advanced: "고급",
+    apiStyle: "API 유형",
+    apiStyleHint:
+      "서비스가 Responses API만 제공하는 경우가 아니라면 Chat Completions를 유지하세요.",
+    deleteAgentWithWorkspace: "워크스페이스와 함께 삭제",
   },
   smartBar: smartBarKo,
   contextMenu: contextMenuKo,
@@ -590,4 +563,6 @@ export const ko: LocaleMessages = {
   display: displayKo,
   pageTranslate: pageTranslateKo,
   pageTools: pageToolsKo,
+  settings: settingsKo,
+  setup: setupKo,
 };

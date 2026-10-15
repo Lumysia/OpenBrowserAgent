@@ -8,11 +8,11 @@ export const displayZhTW: DisplayMessages = {
     characters: plural({ other: "{count} 個字元" }),
   },
   providerTypes: {
-    openai: "OpenAI 相容",
-    "openai-responses": "OpenAI Responses 相容",
-    anthropic: "Anthropic 相容",
-    gemini: "Gemini 相容",
-    ollama: "Ollama 相容",
+    openai: "OpenAI（或相容）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（或相容）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（本機）",
   },
   mcpServerPresets: {
     exa: "網頁搜尋和網頁內容擷取。",
@@ -51,6 +51,8 @@ export const displayZhTW: DisplayMessages = {
     bridgeNotFound: "這個執行橋已不存在。",
     bridgeHostRequired: "請輸入原生訊息主機名稱。",
     bridgeTimeout: "執行橋沒有及時回應。",
+    syncKeysLocked:
+      "你的 API Key 已同步但處於鎖定狀態。請在「設定 → 同步」中輸入同步密語。",
   },
   toolSteps: {
     failed: "失敗",

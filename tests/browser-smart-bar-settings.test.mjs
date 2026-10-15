@@ -1,3 +1,4 @@
+import { OPTIONS_HASH, OPTIONS_ROUTE } from "../src/shared/config.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
@@ -78,7 +79,7 @@ test("smart bar settings", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
 
     await t.test("turned on in the options page, the bar shows", async () => {
       await options.send("Page.navigate", {
-        url: extensionUrl("options.html#/smart-bar"),
+        url: extensionUrl(`options.html${OPTIONS_HASH.smartBar}`),
       });
       const enable = await poll(() =>
         options.call(() => {
@@ -357,35 +358,45 @@ test("smart bar settings", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       assert.equal(await session.prepares(), prepares);
     });
 
-    await t.test("model choices live on the providers page", async () => {
-      const pickers = (route) =>
-        options
-          .send("Page.navigate", { url: extensionUrl(`options.html#${route}`) })
-          .then(() =>
-            poll(() =>
-              options.call(
-                (hash) =>
-                  location.hash === hash &&
-                  !!document.querySelector("#root .nav-link"),
-                `#${route}`,
+    await t.test(
+      "model choices live in the providers page's Models table",
+      async () => {
+        const pickers = (route) =>
+          options
+            .send("Page.navigate", {
+              url: extensionUrl(`options.html#${route}`),
+            })
+            .then(() =>
+              poll(() =>
+                options.call(
+                  (hash) =>
+                    location.hash === hash &&
+                    !!document.querySelector("#root .nav-link"),
+                  `#${route}`,
+                ),
               ),
-            ),
-          )
-          .then(() => settled(options))
-          .then(() =>
-            options.call(() =>
-              [...document.querySelectorAll("[aria-label]")]
-                .map((item) => item.getAttribute("aria-label"))
-                .filter((label) => /^(Smart bar|Helper) model$/.test(label)),
-            ),
-          );
-      assert.deepEqual(await pickers("/providers"), [
-        "Helper model",
-        "Smart bar model",
-      ]);
-      assert.deepEqual(await pickers("/smart-bar"), []);
-      assert.deepEqual(await pickers("/"), []);
-    });
+            )
+            .then(() => settled(options))
+            .then(() =>
+              options.call(() =>
+                [
+                  ...document.querySelectorAll(".models-table [aria-label]"),
+                ].map((item) => item.getAttribute("aria-label")),
+              ),
+            );
+        // One Models table: every feature's model in one place.
+        assert.deepEqual(await pickers(OPTIONS_ROUTE.providers), [
+          "Chat",
+          "Helper",
+          "Smart bar",
+          "Translation",
+          "Images",
+        ]);
+        assert.deepEqual(await pickers(OPTIONS_ROUTE.smartBar), []);
+        assert.deepEqual(await pickers(OPTIONS_ROUTE.pageTranslate), []);
+        assert.deepEqual(await pickers(OPTIONS_ROUTE.general), []);
+      },
+    );
   } finally {
     await session.close();
   }

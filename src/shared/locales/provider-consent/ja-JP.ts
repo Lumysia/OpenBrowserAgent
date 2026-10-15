@@ -11,7 +11,7 @@ export const providerConsentJaJP: ProviderConsentLocaleMessages = {
   needsPermission: "許可が必要",
   localEndpoint: "ローカルのエンドポイント（{host}） — 許可は不要です。",
   requiredToSave:
-    "この AI プロバイダーを保存するには、上のチェックボックスをオンにしてください。",
+    "API キーを保存するには、上のチェックボックスをオンにしてください。",
   required:
     "{host} はまだ内容の受信を許可されていません。サイドパネルでメッセージを送信するときか、「設定」→「AI プロバイダー」で同意してください。",
 };

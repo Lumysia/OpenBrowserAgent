@@ -11,11 +11,11 @@ export const displayEsES: DisplayMessages = {
     }),
   },
   providerTypes: {
-    openai: "Compatible con OpenAI",
-    "openai-responses": "Compatible con OpenAI Responses",
-    anthropic: "Compatible con Anthropic",
-    gemini: "Compatible con Gemini",
-    ollama: "Compatible con Ollama",
+    openai: "OpenAI (o compatible)",
+    "openai-responses": "OpenAI (API Responses)",
+    anthropic: "Anthropic (o compatible)",
+    gemini: "Google Gemini",
+    ollama: "Ollama (local)",
   },
   mcpServerPresets: {
     exa: "Búsqueda web y extracción del contenido de páginas.",
@@ -60,6 +60,8 @@ export const displayEsES: DisplayMessages = {
     bridgeNotFound: "Este puente de ejecución ya no existe.",
     bridgeHostRequired: "Introduce el nombre del host de mensajería nativa.",
     bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
+    syncKeysLocked:
+      "Tus claves API están sincronizadas pero bloqueadas. Introduce tu frase de contraseña de sincronización en Configuración → Sincronización.",
   },
   toolSteps: {
     failed: "Error",

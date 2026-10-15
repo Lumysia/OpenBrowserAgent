@@ -8,11 +8,11 @@ export const displayJaJP: DisplayMessages = {
     characters: plural({ other: "{count}文字" }),
   },
   providerTypes: {
-    openai: "OpenAI 互換",
-    "openai-responses": "OpenAI Responses 互換",
-    anthropic: "Anthropic 互換",
-    gemini: "Gemini 互換",
-    ollama: "Ollama 互換",
+    openai: "OpenAI（または互換）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（または互換）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（ローカル）",
   },
   mcpServerPresets: {
     exa: "ウェブ検索とページ内容の抽出。",
@@ -56,6 +56,8 @@ export const displayJaJP: DisplayMessages = {
     bridgeNotFound: "この実行ブリッジはもうありません。",
     bridgeHostRequired: "ネイティブメッセージングホスト名を入力してください。",
     bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
+    syncKeysLocked:
+      "API キーは同期されていますが、ロックされています。「設定 → 同期」で同期パスフレーズを入力してください。",
   },
   toolSteps: {
     failed: "失敗",

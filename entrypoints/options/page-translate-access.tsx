@@ -1,13 +1,12 @@
-import { Keyboard, MousePointerClick } from "lucide-react";
-import { PAGE_TRANSLATE_COMMAND } from "../../src/shared/page-translate/protocol";
+import { MousePointerClick } from "lucide-react";
 import type { PageTranslateSettings } from "../../src/shared/page-translate/settings";
 import { CardDescription, SettingSwitchCard } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { CommandShortcut } from "./command-shortcut";
 import { HostListEditor } from "./host-list-editor";
 
-// The ways into page translation besides the menu: the button on pages
-// (with the sites it is hidden on) and the keyboard shortcut.
+// The button on pages, with the sites it is hidden on. (The keyboard
+// shortcut is under General → Keyboard shortcuts.)
 export function PageTranslateAccess({
   settings,
   update,
@@ -45,15 +44,6 @@ export function PageTranslateAccess({
             <CardDescription>{p.button.hiddenSitesDescription}</CardDescription>
           </>
         )}
-      </SettingSwitchCard>
-      <SettingSwitchCard
-        icon={<Keyboard size={18} />}
-        title={p.shortcut.setting}
-        description={p.shortcut.settingDescription}
-        checked={settings.shortcut}
-        onChange={(shortcut) => update({ shortcut })}
-      >
-        <CommandShortcut command={PAGE_TRANSLATE_COMMAND} />
       </SettingSwitchCard>
     </>
   );

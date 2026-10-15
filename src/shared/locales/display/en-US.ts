@@ -12,11 +12,11 @@ export const displayEnUS = {
     }),
   },
   providerTypes: {
-    openai: "OpenAI-compatible",
-    "openai-responses": "OpenAI Responses-compatible",
-    anthropic: "Anthropic-compatible",
-    gemini: "Gemini-compatible",
-    ollama: "Ollama-compatible",
+    openai: "OpenAI (or compatible)",
+    "openai-responses": "OpenAI (Responses API)",
+    anthropic: "Anthropic (or compatible)",
+    gemini: "Google Gemini",
+    ollama: "Ollama (local)",
   },
   // Recommended MCP servers (mcp-presets.ts), by name: what each offers.
   mcpServerPresets: {
@@ -61,6 +61,8 @@ export const displayEnUS = {
     bridgeNotFound: "This execution bridge no longer exists.",
     bridgeHostRequired: "Enter the native messaging host name.",
     bridgeTimeout: "The execution bridge didn’t answer in time.",
+    syncKeysLocked:
+      "Your API keys are synced but locked. Enter your sync passphrase in Settings → Sync.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

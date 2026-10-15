@@ -70,7 +70,7 @@ Users can attach current tabs, choose open tabs, upload/paste files, pick skills
 
 "Translate this page" in the right-click menu translates the whole page in place, keeping the original: each paragraph gets its translation underneath, in the page's own font. Paragraphs on and near the screen go first, the rest as the user scrolls, and content the page adds later is translated too. Links, emphasis and inline code stay in the translation (copies of the page's own elements; nothing from the engine becomes markup). Code blocks, form fields and text marked `translate="no"` are left alone. The same menu item then reads "Show original", which removes every translation and restores the page exactly.
 
-Settings → Page translation picks the engine (the browser's on-device translator by default, with the user's AI model taking over where the browser has none or can't translate a page; the AI model, with a model of its own if wanted; or Google's or Microsoft's free translation, which send the page text to them), the language (the extension's language by default) and the display (original and translation, or translation only). Translations are saved on the device for 30 days. Details on what is sent: [Permissions and Privacy](permissions-and-privacy.md#page-translation).
+Settings → On pages → Translate picks the engine (the browser's on-device translator by default, with the user's AI model taking over where the browser has none or can't translate a page; the AI model, with a model of its own if wanted in the Models table; or Google's or Microsoft's free translation, which send the page text to them), the language (under General → "Translate into"; the extension's language by default) and the display (original and translation, or translation only). Translations are saved on the device for 30 days. Details on what is sent: [Permissions and Privacy](permissions-and-privacy.md#page-translation).
 
 ### Markdown and Rich Output
 
@@ -78,7 +78,7 @@ Assistant output supports Markdown, syntax-highlighted code blocks with copy but
 
 ### Settings
 
-The options UI includes General, Agents, Sync, AI providers, MCP Servers, Local Execution Bridges, Skills, Smart bar, Context menu, Page translation, Debug, and Help pages.
+The options UI has six pages and Help: General, AI providers & models, Agents & skills (two tabs), On pages (Translate, Smart bar, Right-click menu), Sync, and Advanced (MCP servers, local execution bridges, Troubleshooting). A setup page opens on install. Older page links (`#/smart-bar`, `#/page-translation`, …) open the matching tab.
 
 Users can configure language, theme, accent color, chat behavior, context limits, providers, models, agents, sync, MCP servers, local execution bridges, and reusable skills.
 

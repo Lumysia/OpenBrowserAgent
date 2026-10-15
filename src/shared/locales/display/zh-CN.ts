@@ -8,11 +8,11 @@ export const displayZhCN: DisplayMessages = {
     characters: plural({ other: "{count} 个字符" }),
   },
   providerTypes: {
-    openai: "OpenAI 兼容",
-    "openai-responses": "OpenAI Responses 兼容",
-    anthropic: "Anthropic 兼容",
-    gemini: "Gemini 兼容",
-    ollama: "Ollama 兼容",
+    openai: "OpenAI（或兼容）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（或兼容）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（本地）",
   },
   mcpServerPresets: {
     exa: "网页搜索和网页内容提取。",
@@ -51,6 +51,8 @@ export const displayZhCN: DisplayMessages = {
     bridgeNotFound: "这个执行桥已不存在。",
     bridgeHostRequired: "请输入原生消息主机名。",
     bridgeTimeout: "执行桥没有及时响应。",
+    syncKeysLocked:
+      "你的 API Key 已同步但处于锁定状态。请在“设置 → 同步”中输入同步口令。",
   },
   toolSteps: {
     failed: "失败",

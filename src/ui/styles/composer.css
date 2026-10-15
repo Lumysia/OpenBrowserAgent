@@ -181,40 +181,17 @@
   box-shadow: none;
 }
 
-/* The floating new chat button and the typing indicator share a row above
-   the composer. */
-.new-chat-row {
+/* The typing indicator floats in a row just above the composer. */
+.typing-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  min-height: 42px;
   margin-top: -34px;
   margin-bottom: var(--space-2);
   pointer-events: none;
 }
-.new-chat-row .typing-indicator {
+.typing-row .typing-indicator {
   min-width: 0;
-}
-.new-chat-button {
-  height: 42px;
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 0 var(--space-4);
-  border: 1px solid color-mix(in oklab, var(--accent-strong) 18%, transparent);
-  border-radius: var(--radius-pill);
-  background:
-    linear-gradient(180deg, var(--highlight), transparent 60%),
-    var(--accent-fill);
-  color: var(--accent-text);
-  font-size: var(--text-lg);
-  box-shadow: var(--inner-highlight), var(--elevation-1);
-  pointer-events: auto;
-}
-.new-chat-button:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg, var(--highlight), transparent 60%),
-    color-mix(in oklab, var(--accent-hover) 78%, var(--card));
-  translate: 0 -1px;
 }
 
 /* Messages waiting for the current run. */

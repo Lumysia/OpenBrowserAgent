@@ -73,7 +73,7 @@ export function AddContextMenu({
         <div className="add-context-menu add-context-menu-compact">
           <ActionListItem
             icon={<Layers size={17} />}
-            title={t.sidepanel.addNewTab}
+            title={t.sidepanel.addOpenTabs}
             onClick={onShowTabs}
           />
           <ActionListItem

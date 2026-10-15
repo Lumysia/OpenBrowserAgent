@@ -85,4 +85,13 @@ export const syncKo: SyncMessages = {
     "이 기기의 {collection} 항목 {total}개 중 {count}개가 사라졌어요. 동기화하면 모든 기기에서 삭제돼요.",
   massDeleteLocalApply: "모든 기기에서 삭제",
   massDeleteLocalKeep: "이 기기에 복원",
+  choiceTitle: "이 기기 동기화",
+  choiceOff: "끔",
+  choiceBrowser: "브라우저 계정",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "모든 내용이 이 기기에만 저장됩니다.",
+  whatSyncs: "동기화할 항목",
+  copyCode: "다른 기기용 동기화 코드 복사",
+  codeCopied: "동기화 코드를 복사했습니다",
+  pasteCode: "다른 기기의 동기화 코드 붙여넣기",
 };

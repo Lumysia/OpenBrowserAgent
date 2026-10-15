@@ -16,6 +16,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  Disclosure,
   Input,
   Feedback,
   Label,
@@ -210,27 +211,32 @@ export function ModelList({
                 }
               />
             </Label>
-            <Label>
-              {t.options.modelContextLength}
-              <Input
-                inputMode="numeric"
-                placeholder={t.options.modelContextLengthAuto}
-                value={model.contextLength ? String(model.contextLength) : ""}
-                onChange={(event) =>
-                  onChange({
-                    ...value,
-                    [modelKey]: models.map((candidate) =>
-                      candidate.id === model.id
-                        ? withModelContextLength(candidate, event.target.value)
-                        : candidate,
-                    ),
-                  })
-                }
-              />
-            </Label>
-            <small className="model-api-name">
-              {t.options.modelContextLengthDescription}
-            </small>
+            <Disclosure label={t.options.advanced}>
+              <Label>
+                {t.options.modelContextLength}
+                <Input
+                  inputMode="numeric"
+                  placeholder={t.options.modelContextLengthAuto}
+                  value={model.contextLength ? String(model.contextLength) : ""}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      [modelKey]: models.map((candidate) =>
+                        candidate.id === model.id
+                          ? withModelContextLength(
+                              candidate,
+                              event.target.value,
+                            )
+                          : candidate,
+                      ),
+                    })
+                  }
+                />
+              </Label>
+              <small className="model-api-name">
+                {t.options.modelContextLengthDescription}
+              </small>
+            </Disclosure>
             {testResult?.modelId === model.id && (
               <Feedback
                 error={!testResult.ok}

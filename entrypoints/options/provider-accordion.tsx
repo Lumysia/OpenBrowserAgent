@@ -1,16 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
-import { formatCount, getMessages, type Messages } from "../../src/shared/i18n";
+import { formatCount, getMessages } from "../../src/shared/i18n";
 import {
   providerHasConsent,
   withProviderConsent,
 } from "../../src/shared/provider-consent";
 import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
-import {
-  providerBaseUrlOptions,
-  providerType,
-  type ProviderId,
-} from "../../src/shared/providers";
+import { providerType } from "../../src/shared/providers";
 import {
   AccordionContent,
   AccordionItem,
@@ -23,11 +19,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -38,7 +29,7 @@ import {
   providerTypeLabel,
 } from "../../src/ui/provider-display";
 import { ProviderConsentField } from "./provider-consent-field";
-import { ProviderThinkingSwitch } from "./provider-thinking-switch";
+import { ProviderAdvanced } from "./provider-advanced";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import {
@@ -46,7 +37,9 @@ import {
   testProviderModel,
 } from "../../src/shared/provider-requests";
 import { errorWithDetail } from "../../src/shared/user-errors";
-import { useTransient } from "../../src/ui/use-transient";
+import { useAutoSave } from "../../src/ui/use-auto-save";
+import { sameJson } from "../../src/shared/sync/codec";
+import { normalizeProviderConfig } from "../../src/shared/provider-instances";
 import { useUiLanguage } from "../../src/ui/messages";
 
 export function ProviderAccordion({
@@ -70,7 +63,6 @@ export function ProviderAccordion({
   const [selectedFetchedModelId, setSelectedFetchedModelId] = useState("");
   const [customModelOpen, setCustomModelOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [saved, showSaved] = useTransient<true>();
   const [testingModelId, setTestingModelId] = useState("");
   const [testResult, setTestResult] = useState<{
     modelId: string;
@@ -81,8 +73,14 @@ export function ProviderAccordion({
   const models = draft.models || [];
   const provider = draft.type || "openai";
   const t = getMessages(language);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(value);
   const consentMissing = !providerHasConsent(draft);
+  // Edits save as they are made; the API key waits for the permission to
+  // send content to the provider.
+  const toSave = consentMissing ? { ...draft, apiKey: value.apiKey } : draft;
+  const keyUnsaved = (draft.apiKey || "") !== (value.apiKey || "");
+  // What this form saved last; a stored value that differs came from
+  // elsewhere (another page, sync) and replaces the form's.
+  const lastSaved = useRef(value);
   const canAddManualModel = !!providerType(provider).manualModels;
   const selectableFetchedModels = fetchedModels
     .filter((model) => !models.some((candidate) => candidate.id === model.id))
@@ -93,8 +91,16 @@ export function ProviderAccordion({
     );
 
   useEffect(() => {
+    if (sameJson(value, lastSaved.current)) return;
+    lastSaved.current = value;
     setDraft(value);
-  }, [providerId, value]);
+  }, [value]);
+
+  useAutoSave(toSave, value, (next) => {
+    // As it comes back from storage (ProviderList normalizes it).
+    lastSaved.current = normalizeProviderConfig(providerId, next);
+    onChange(next);
+  });
 
   function addModel() {
     const name = modelName.trim();
@@ -104,6 +110,7 @@ export function ProviderAccordion({
       draft,
     );
     setDraft({ ...draft, models: [...models, model] });
+    onModelAdded(model);
     setModelName("");
     return true;
   }
@@ -135,25 +142,15 @@ export function ProviderAccordion({
       (candidate) => candidate.id === selectedFetchedModelId,
     );
     if (!model || models.some((candidate) => candidate.id === model.id)) return;
-    const nextModels = [...models, modelWithProviderLabel(model, draft)];
+    const added = modelWithProviderLabel(model, draft);
+    const nextModels = [...models, added];
     setDraft({ ...draft, models: nextModels });
+    onModelAdded(added);
     const next = fetchedModels.find(
       (candidate) =>
         !nextModels.some((existing) => existing.id === candidate.id),
     );
     setSelectedFetchedModelId(next?.id || "");
-  }
-
-  function saveProvider() {
-    if (consentMissing) return;
-    onChange(draft);
-    models
-      .filter(
-        (model) =>
-          !value.models?.some((candidate) => candidate.id === model.id),
-      )
-      .forEach(onModelAdded);
-    showSaved(true);
   }
 
   async function testModel(model: ModelConfig) {
@@ -226,26 +223,15 @@ export function ProviderAccordion({
                 />
               </Label>
             )}
-            <ProviderBaseUrl
-              t={t}
-              provider={provider}
-              value={draft}
-              onChange={setDraft}
-            />
-            <ProviderThinkingSwitch
-              t={t}
-              provider={provider}
-              value={draft}
-              onChange={setDraft}
-            />
             <ProviderConsentField
               t={t}
               saved={value}
               draft={draft}
-              dirty={dirty}
+              dirty={keyUnsaved}
               onDraftChange={setDraft}
-              onWithdraw={() => onChange(withProviderConsent(value, false))}
+              onWithdraw={() => setDraft(withProviderConsent(draft, false))}
             />
+            <ProviderAdvanced t={t} value={draft} onChange={setDraft} />
           </div>
           <div className="provider-models-panel">
             <SettingsSubheading
@@ -344,61 +330,8 @@ export function ProviderAccordion({
           <Button variant="destructiveOutline" size="sm" onClick={onDelete}>
             <Trash2 size={16} /> {t.options.deleteProvider}
           </Button>
-          <Button onClick={saveProvider} disabled={!dirty || consentMissing}>
-            {saved ? t.common.saved : t.common.save}
-          </Button>
         </div>
       </AccordionContent>
     </AccordionItem>
-  );
-}
-
-function ProviderBaseUrl({
-  t,
-  provider,
-  value,
-  onChange,
-}: {
-  t: Messages;
-  provider: ProviderId;
-  value: ProviderConfig;
-  onChange: (value: ProviderConfig) => void;
-}) {
-  const options = providerBaseUrlOptions(provider);
-  if (options.length) {
-    return (
-      <Label>
-        {t.options.baseUrl}
-        <Select
-          value={value.baseUrl || options[0]}
-          onValueChange={(baseUrl) => onChange({ ...value, baseUrl })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((url) => (
-              <SelectItem key={url} value={url}>
-                {url}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Label>
-    );
-  }
-  // The Gemini SDK has its own endpoint.
-  if (providerType(provider).sdkEndpoint) return null;
-  return (
-    <Label>
-      {t.options.baseUrl}
-      <Input
-        value={value.baseUrl || ""}
-        placeholder={providerType(provider).defaultBaseUrl}
-        onChange={(event) =>
-          onChange({ ...value, baseUrl: event.target.value })
-        }
-      />
-    </Label>
   );
 }

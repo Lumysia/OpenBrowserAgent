@@ -11,8 +11,7 @@ export const providerConsentFrFR: ProviderConsentLocaleMessages = {
   needsPermission: "Autorisation requise",
   localEndpoint:
     "Point de terminaison local ({host}) – aucune autorisation requise.",
-  requiredToSave:
-    "Cochez la case ci-dessus pour enregistrer ce fournisseur d’IA.",
+  requiredToSave: "Cochez la case ci-dessus pour enregistrer la clé API.",
   required:
     "{host} n’est pas encore autorisé à recevoir votre contenu. Acceptez lors de l’envoi d’un message dans le panneau latéral, ou dans « Paramètres » → « Fournisseurs d’IA ».",
 };

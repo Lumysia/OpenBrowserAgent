@@ -2,10 +2,6 @@
    tools, and the theme picker. */
 
 /* Providers. */
-.provider-top-stack {
-  display: grid;
-  gap: 10px;
-}
 .provider-summary {
   display: flex;
   align-items: center;
@@ -42,18 +38,6 @@
   flex: 1 1 min(280px, 100%);
 }
 .provider-add-selected-button {
-  margin-left: auto;
-}
-.provider-image-fields {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(150px, 220px);
-  align-items: end;
-  gap: var(--space-3);
-}
-.provider-image-model-field {
-  min-width: 0;
-}
-.provider-size-field {
   margin-left: auto;
 }
 .provider-add-row {
@@ -368,12 +352,8 @@
 }
 
 @media (max-width: 900px) {
-  .provider-image-fields,
   .provider-editor-grid {
     grid-template-columns: 1fr;
-  }
-  .provider-size-field {
-    margin-left: 0;
   }
   .provider-models-panel {
     padding-top: var(--space-4);
@@ -430,4 +410,9 @@
 }
 .bridge-install-command .ui-button {
   flex: none;
+}
+
+/* The Models table: one model choice per feature, of one width. */
+.models-table .ui-select-trigger {
+  width: min(280px, 38vw);
 }

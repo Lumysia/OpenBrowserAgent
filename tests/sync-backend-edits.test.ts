@@ -5,10 +5,6 @@ import {
   webDavBackendOf,
   withWebDavPatch,
 } from "../src/shared/sync-backends";
-import { getMessages } from "../src/shared/i18n";
-import { syncBackendTitle } from "../src/ui/sync-backend-display";
-
-const t = getMessages("en-US");
 
 test("WebDAV edits are trimmed and keep the other backends", () => {
   const next = withWebDavPatch(DEFAULT_SYNC_BACKENDS, {
@@ -28,20 +24,5 @@ test("WebDAV edits are trimmed and keep the other backends", () => {
   assert.equal(
     webDavBackendOf(withWebDavPatch(next, { name: " " })).name,
     "WebDAV",
-  );
-});
-
-test("a backend's title is its own name, else what kind it is", () => {
-  const backends = withWebDavPatch(DEFAULT_SYNC_BACKENDS, {});
-  assert.equal(
-    syncBackendTitle(webDavBackendOf(backends), t),
-    t.options.syncBackendWebDavSync,
-  );
-  assert.equal(
-    syncBackendTitle(
-      webDavBackendOf(withWebDavPatch(backends, { name: "Home NAS" })),
-      t,
-    ),
-    "Home NAS",
   );
 });

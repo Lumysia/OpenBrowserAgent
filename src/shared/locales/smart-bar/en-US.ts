@@ -66,7 +66,6 @@ export const smartBarEnUS = {
   editActions: "Actions for text you are editing",
   editActionsDescription:
     "Shown when you select text in a text field. Results can replace the selection.",
-  model: "Smart bar model",
   modelDescription: "Model for Explain, Translate and the writing actions.",
 };
 

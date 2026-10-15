@@ -8,6 +8,8 @@ import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
+import { settingsJaJP } from "./settings/ja-JP";
+import { setupJaJP } from "./setup/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -34,37 +36,7 @@ export const jaJP: LocaleMessages = {
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent をセットアップ",
-    connectProviderDescription:
-      "言語を選択し、必要に応じて同期を有効にしてから、準備ができたら AI プロバイダーとモデルを追加します。",
     addProvider: "AI プロバイダーを追加",
-    cloudSyncConnect: "接続して同期",
-    cloudSyncTesting: "接続中…",
-    cloudSyncPulling: "クラウド同期を確認中…",
-    cloudSyncDescription:
-      "クラウド同期で、別のデバイスの設定から始めることも、このデバイスの新しい設定をクラウドに保存することもできます。",
-    cloudSyncError:
-      "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
-    cloudSyncSynced:
-      "クラウド同期の準備ができました。次に AI プロバイダーを設定してください。",
-    cloudSyncSyncedButton: "同期済み",
-    startLocally: "ローカルで開始",
-    localSetupHint:
-      "設定を開きました。そこで AI プロバイダーとモデルを追加し、ここに戻って続行してください。",
-    bootstrapStepSyncTitle: "同期バックエンド（任意）",
-    syncConfigCodeTab: "コードを貼り付け",
-    syncManualTab: "手動設定",
-    syncConfigCode: "同期設定コード",
-    syncConfigCodeDescription:
-      "別のデバイスからコピーしたコードを貼り付けます。",
-    syncConfigCodeInvalid:
-      "同期設定コードが無効です。確認してもう一度お試しください。",
-    bootstrapStepProviderTitle: "AI プロバイダーとモデルを追加",
-    bootstrapStepProviderDescription:
-      "設定を開き、AI プロバイダーとモデルを追加してテストします。",
-    bootstrapStepTaskTitle: "最初のタスクを送信",
-    bootstrapStepTaskDescription:
-      "モデルが正常に応答したらここに戻り、OpenBrowserAgent にブラウズや要約を依頼します。",
     chatHistory: "チャット履歴",
     backToChat: "チャットに戻る",
     exportChatOpenAi: "チャットを OpenAI JSON としてエクスポート",
@@ -143,7 +115,7 @@ export const jaJP: LocaleMessages = {
     selectedText: "選択したテキスト",
     willBeSentWithMessage: "メッセージと一緒に送信されます",
     removeSelectedText: "選択したテキストを削除",
-    addNewTab: "新しいタブを追加",
+    addOpenTabs: "開いているタブを追加…",
     addCurrentTab: "現在のタブを追加",
     attachFiles: "ファイルを添付",
     attachFilesHint: "画像またはローカルファイル",
@@ -274,6 +246,9 @@ export const jaJP: LocaleMessages = {
       },
       devtools: { running: "診断を実行中", done: "診断を実行しました" },
     },
+    clearAllChatsConfirm:
+      "ピン留めしたものも含め、すべてのチャットを削除しますか？元に戻せません。",
+    clearAllChatsAction: "すべてのチャットを削除",
   },
   options: {
     general: "一般",
@@ -409,7 +384,6 @@ export const jaJP: LocaleMessages = {
     localExecutionBridgeTestError: "ブリッジテストに失敗しました",
     deleteLocalExecutionBridge: "実行ブリッジを削除",
     skills: "スキル",
-    modelProviders: "AI プロバイダー",
     providerDescription:
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
@@ -455,13 +429,12 @@ export const jaJP: LocaleMessages = {
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
-    selectImageModel: "画像モデルを選択",
     enableImageGeneration: "画像生成を有効化",
     enableImageGenerationDescription:
       "エージェントが画像生成ツールを使えるようにします。",
     imageGenerationSize: "画像サイズ",
     providerConnection: "接続情報",
-    providerConnectionHint: "名前、API キー、ベース URL を設定します。",
+    providerConnectionHint: "名前と API キーを設定します。",
     providerName: "名前",
     deleteProvider: "AI プロバイダーを削除",
     apiKey: "API キー",
@@ -561,20 +534,16 @@ export const jaJP: LocaleMessages = {
     lightTheme: "ライト",
     darkTheme: "ダーク",
     syncSettingsDescription:
-      "同期先を選び、下で同期する内容を選びます。設定は常に同期され、キー、チャット、ファイルはそれぞれスイッチで切り替えます。",
-    syncBackendDescription: "同期する内容。",
+      "どのデバイスでも同じ設定を使えます。同期先を選んでから、同期する内容を選びます。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
     syncBackendBrowserSyncHint:
       "このブラウザーにサインインしているアカウントで同期します。",
     syncBackendWebDavSyncHint:
       "選んだ WebDAV サーバーで同期します。チャットやファイルも同期できます。",
-    syncBackendName: "バックエンド名",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "ユーザー名",
     syncBackendPassword: "パスワードまたはアプリパスワード",
-    syncBackendCopyConfig: "設定コードをコピー",
-    syncBackendCopiedConfig: "設定コードをコピーしました",
     autoScroll: "自動スクロール",
     autoScrollDescription:
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",
@@ -584,11 +553,9 @@ export const jaJP: LocaleMessages = {
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "エージェントが実行できるツールのステップ数を設定します。0 にするとツール呼び出しを無効にします。",
-    helperModel: "補助モデル",
     helperModelDescription:
       "要約などのバックグラウンド処理に使います。既定ではチャットのモデルを使います。",
     modelSameAsChat: "チャットのモデルと同じ",
-    debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgent のデータをリセットする開発者向けツールです。",
     debugResetTitle: "OpenBrowserAgent のデータを消去",
@@ -618,6 +585,11 @@ export const jaJP: LocaleMessages = {
     debugToolCore: "常時読み込み",
     debugToolOnDemand: "必要時に読み込み",
     debugToolRequired: "必須パラメーター",
+    advanced: "詳細設定",
+    apiStyle: "API の種類",
+    apiStyleHint:
+      "サービスが Responses API しか提供していない場合を除き、Chat Completions のままにしてください。",
+    deleteAgentWithWorkspace: "ワークスペースごと削除",
   },
   smartBar: smartBarJaJP,
   contextMenu: contextMenuJaJP,
@@ -628,4 +600,6 @@ export const jaJP: LocaleMessages = {
   display: displayJaJP,
   pageTranslate: pageTranslateJaJP,
   pageTools: pageToolsJaJP,
+  settings: settingsJaJP,
+  setup: setupJaJP,
 };

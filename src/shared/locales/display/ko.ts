@@ -8,11 +8,11 @@ export const displayKo: DisplayMessages = {
     characters: plural({ other: "{count}자" }),
   },
   providerTypes: {
-    openai: "OpenAI 호환",
-    "openai-responses": "OpenAI Responses 호환",
-    anthropic: "Anthropic 호환",
-    gemini: "Gemini 호환",
-    ollama: "Ollama 호환",
+    openai: "OpenAI(또는 호환)",
+    "openai-responses": "OpenAI(Responses API)",
+    anthropic: "Anthropic(또는 호환)",
+    gemini: "Google Gemini",
+    ollama: "Ollama(로컬)",
   },
   mcpServerPresets: {
     exa: "웹 검색과 웹페이지 내용 추출.",
@@ -56,6 +56,8 @@ export const displayKo: DisplayMessages = {
     bridgeNotFound: "이 실행 브리지는 더 이상 없습니다.",
     bridgeHostRequired: "네이티브 메시징 호스트 이름을 입력하세요.",
     bridgeTimeout: "실행 브리지가 제때 응답하지 않았습니다.",
+    syncKeysLocked:
+      "API 키가 동기화되었지만 잠겨 있습니다. 설정 → 동기화에서 동기화 암호 문구를 입력하세요.",
   },
   toolSteps: {
     failed: "실패",

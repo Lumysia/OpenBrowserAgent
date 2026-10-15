@@ -8,6 +8,8 @@ import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
+import { settingsFrFR } from "./settings/fr-FR";
+import { setupFrFR } from "./setup/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
@@ -34,36 +36,7 @@ export const frFR: LocaleMessages = {
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Demander" },
   sidepanel: {
-    connectProviderTitle: "Configurer OpenBrowserAgent",
-    connectProviderDescription:
-      "Choisissez la langue, activez la synchronisation si besoin, puis ajoutez un fournisseur d’IA et un modèle.",
     addProvider: "Ajouter un fournisseur d’IA",
-    cloudSyncConnect: "Connecter et synchroniser",
-    cloudSyncTesting: "Connexion…",
-    cloudSyncPulling: "Vérification de la synchronisation cloud…",
-    cloudSyncDescription:
-      "Utilisez la synchronisation cloud pour reprendre la configuration d’un autre appareil ou enregistrer dans le cloud celle de cet appareil.",
-    cloudSyncError:
-      "Échec du test de synchronisation cloud. Vérifiez le backend ou démarrez en local.",
-    cloudSyncSynced:
-      "La synchronisation cloud est prête. Configurez ensuite un fournisseur d’IA.",
-    cloudSyncSyncedButton: "Synchronisé",
-    startLocally: "Démarrer en local",
-    localSetupHint:
-      "Les paramètres sont ouverts. Ajoutez-y un fournisseur d’IA et un modèle, puis revenez ici pour continuer.",
-    bootstrapStepSyncTitle: "Backend de synchronisation (facultatif)",
-    syncConfigCodeTab: "Coller un code",
-    syncManualTab: "Configuration manuelle",
-    syncConfigCode: "Code de configuration de synchronisation",
-    syncConfigCodeDescription: "Collez un code copié depuis un autre appareil.",
-    syncConfigCodeInvalid:
-      "Code de configuration de synchronisation invalide. Vérifiez le code puis réessayez.",
-    bootstrapStepProviderTitle: "Ajouter un fournisseur d’IA et un modèle",
-    bootstrapStepProviderDescription:
-      "Ouvrez les paramètres pour ajouter un fournisseur d’IA, ajouter un modèle et le tester.",
-    bootstrapStepTaskTitle: "Envoyer votre première tâche",
-    bootstrapStepTaskDescription:
-      "Une fois que le modèle a répondu correctement, revenez ici et demandez à OpenBrowserAgent de naviguer ou de résumer.",
     chatHistory: "Historique des discussions",
     backToChat: "Retour à la discussion",
     exportChatOpenAi: "Exporter la discussion en JSON OpenAI",
@@ -146,7 +119,7 @@ export const frFR: LocaleMessages = {
     selectedText: "Texte sélectionné",
     willBeSentWithMessage: "Sera envoyé avec votre message",
     removeSelectedText: "Retirer le texte sélectionné",
-    addNewTab: "Ajouter un nouvel onglet",
+    addOpenTabs: "Ajouter des onglets ouverts…",
     addCurrentTab: "Ajouter l’onglet actuel",
     attachFiles: "Joindre des fichiers",
     attachFilesHint: "Images ou fichiers locaux",
@@ -289,6 +262,9 @@ export const frFR: LocaleMessages = {
       runScript: { running: "Exécution du script", done: "Script exécuté" },
       devtools: { running: "Diagnostic en cours", done: "Diagnostic effectué" },
     },
+    clearAllChatsConfirm:
+      "Supprimer toutes les discussions, y compris celles épinglées ? Cette action est irréversible.",
+    clearAllChatsAction: "Supprimer toutes les discussions",
   },
   options: {
     general: "Général",
@@ -432,7 +408,6 @@ export const frFR: LocaleMessages = {
     localExecutionBridgeTestError: "Échec du test du pont",
     deleteLocalExecutionBridge: "Supprimer le pont d’exécution",
     skills: "Compétences",
-    modelProviders: "Fournisseurs d’IA",
     providerDescription:
       "Utilisez votre propre clé API et connectez OpenBrowserAgent à vos fournisseurs d’IA préférés.",
     mcpServersDescription:
@@ -481,13 +456,12 @@ export const frFR: LocaleMessages = {
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
-    selectImageModel: "Sélectionner un modèle d’image",
     enableImageGeneration: "Activer la génération d’images",
     enableImageGenerationDescription:
       "Met l’outil de génération d’images à la disposition des agents.",
     imageGenerationSize: "Taille de l’image",
     providerConnection: "Connexion",
-    providerConnectionHint: "Configurez le nom, la clé API et l’URL de base.",
+    providerConnectionHint: "Définissez le nom et la clé API.",
     providerName: "Nom",
     deleteProvider: "Supprimer le fournisseur d’IA",
     apiKey: "Clé API",
@@ -594,19 +568,15 @@ export const frFR: LocaleMessages = {
     lightTheme: "Clair",
     darkTheme: "Sombre",
     syncSettingsDescription:
-      "Choisissez le backend et, plus bas, ce qui est synchronisé. Les paramètres sont toujours synchronisés ; les clés, les discussions et les fichiers ont chacun un interrupteur.",
-    syncBackendDescription: "Ce qui est synchronisé.",
+      "Gardez la même configuration sur tous vos appareils : choisissez où synchroniser, puis ce qui est synchronisé.",
     syncBackendBrowserSync: "Synchronisation intégrée du compte navigateur",
     syncBackendWebDavSync: "Synchronisation WebDAV",
     syncBackendBrowserSyncHint: "Par le compte connecté à ce navigateur.",
     syncBackendWebDavSyncHint:
       "Par un serveur WebDAV de votre choix ; il peut aussi contenir les discussions et les fichiers.",
-    syncBackendName: "Nom du backend",
     syncBackendWebDavUrl: "URL WebDAV",
     syncBackendUsername: "Nom d’utilisateur",
     syncBackendPassword: "Mot de passe ou mot de passe d’application",
-    syncBackendCopyConfig: "Copier le code de configuration",
-    syncBackendCopiedConfig: "Code de configuration copié",
     autoScroll: "Défilement automatique",
     autoScrollDescription:
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",
@@ -616,11 +586,9 @@ export const frFR: LocaleMessages = {
     maxToolSteps: "Nombre maximal d’étapes d’outils",
     maxToolStepsDescription:
       "Définit combien d’étapes d’outils l’agent peut exécuter. Utilisez 0 pour désactiver les appels d’outils.",
-    helperModel: "Modèle auxiliaire",
     helperModelDescription:
       "Sert aux tâches en arrière-plan comme les résumés. Par défaut, le modèle de la discussion.",
     modelSameAsChat: "Identique au modèle de la discussion",
-    debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d’OpenBrowserAgent.",
     debugResetTitle: "Effacer les données OpenBrowserAgent",
@@ -650,6 +618,11 @@ export const frFR: LocaleMessages = {
     debugToolCore: "Toujours chargé",
     debugToolOnDemand: "Chargé à la demande",
     debugToolRequired: "Paramètres requis",
+    advanced: "Avancé",
+    apiStyle: "Type d’API",
+    apiStyleHint:
+      "Gardez Chat Completions, sauf si votre service ne propose que l’API Responses.",
+    deleteAgentWithWorkspace: "Le supprimer avec son espace de travail",
   },
   smartBar: smartBarFrFR,
   contextMenu: contextMenuFrFR,
@@ -660,4 +633,6 @@ export const frFR: LocaleMessages = {
   display: displayFrFR,
   pageTranslate: pageTranslateFrFR,
   pageTools: pageToolsFrFR,
+  settings: settingsFrFR,
+  setup: setupFrFR,
 };

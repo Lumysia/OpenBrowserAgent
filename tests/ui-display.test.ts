@@ -25,22 +25,25 @@ const zh = getMessages("zh-CN");
 getMessages("en-US");
 
 test("default provider names show in the UI language, chosen ones as typed", () => {
-  assert.equal(providerNameDisplay("OpenAI-compatible", zh), "OpenAI 兼容");
+  assert.equal(
+    providerNameDisplay("OpenAI-compatible", zh),
+    "OpenAI（或兼容）",
+  );
   assert.equal(providerNameDisplay("My OpenAI", zh), "My OpenAI");
   assert.equal(providerNameDisplay("OpenRouter", zh), "OpenRouter");
-  assert.equal(providerNameDisplay("Gemini-compatible", zh), "Gemini 兼容");
+  assert.equal(providerNameDisplay("Gemini-compatible", zh), "Google Gemini");
   // Default names stored by older versions follow the new wording too.
-  assert.equal(providerNameDisplay("Ollama", zh), "Ollama 兼容");
+  assert.equal(providerNameDisplay("Ollama", zh), "Ollama（本地）");
   assert.equal(
     providerNameDisplay("OpenAI Responses", zh),
-    "OpenAI Responses 兼容",
+    "OpenAI（Responses API）",
   );
   assert.equal(
     modelNameDisplay(
       { name: "claude", displayName: "Anthropic-compatible / claude / v2" },
       zh,
     ),
-    "Anthropic 兼容 / claude / v2",
+    "Anthropic（或兼容） / claude / v2",
   );
   assert.equal(modelNameDisplay({ name: "gpt-5" }, zh), "gpt-5");
 });

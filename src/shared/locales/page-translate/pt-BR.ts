@@ -19,7 +19,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Seu provedor de IA traduz as páginas com o modelo escolhido abaixo.",
+      "Seu provedor de IA traduz as páginas com o modelo de tradução escolhido em Provedores de IA e modelos.",
     browser:
       "O navegador traduz neste dispositivo; nenhum texto sai dele. Cada idioma é baixado uma vez. Quando ele não consegue traduzir uma página, o modelo de IA abaixo a traduz.",
     google:
@@ -40,9 +40,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "Política de privacidade",
-  model: "Modelo",
   modelDescription: "O modelo que traduz as páginas.",
-  defaultModel: "O mesmo modelo da conversa",
   targetLanguage: "Traduzir para",
   targetLanguageDescription:
     "As páginas, as legendas de vídeos e “Traduzir” da barra inteligente usam este idioma. O idioma da extensão não muda.",
@@ -102,15 +100,6 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     hiddenSites: "Oculto nestes sites",
     hiddenSitesDescription:
       "O botão não aparece nestes sites. Um site inclui seus subdomínios.",
-  },
-  shortcut: {
-    setting: "Atalho de teclado",
-    settingDescription: "Traduz a página ou mostra o original.",
-    current: "Atalho: {shortcut}",
-    none: "Nenhum atalho definido",
-    change: "Alterar atalho",
-    firefoxHint:
-      "Para alterá-lo, abra about:addons, clique no botão de engrenagem e escolha “Gerenciar atalhos de extensões”.",
   },
   subtitles: {
     menu: "Traduzir legendas",

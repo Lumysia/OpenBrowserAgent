@@ -9,6 +9,7 @@ import {
   size,
   useLocale,
 } from "./browser.mjs";
+import { OPTIONS_ROUTE } from "../../src/shared/config.ts";
 import { movePointer } from "../../tests/cdp-input.mjs";
 import { seedOptions } from "./seed.mjs";
 
@@ -22,9 +23,19 @@ const MARGIN = 16;
 // frame: the last card on the page, or the last control of the expanded card
 // when the page goes on below it.
 export const OPTIONS_SHOTS = [
-  { name: "agents", route: "agents", expand: "general-agent", fit: "page" },
-  { name: "providers", route: "providers", expand: "OpenAI", fit: "card" },
-  { name: "skills", route: "skills", expand: "", fit: "page" },
+  {
+    name: "agents",
+    route: OPTIONS_ROUTE.agents,
+    expand: "general-agent",
+    fit: "page",
+  },
+  {
+    name: "providers",
+    route: OPTIONS_ROUTE.providers,
+    expand: "OpenAI",
+    fit: "card",
+  },
+  { name: "skills", route: OPTIONS_ROUTE.skills, expand: "", fit: "page" },
 ];
 
 // Scrolls as far as the page heading allows for the `fit` content to end
@@ -100,7 +111,7 @@ export async function optionsShots(demo) {
     await delay(1500);
     const shots = [];
     for (const item of OPTIONS_SHOTS) {
-      await page.call((route) => (location.hash = `#/${route}`), item.route);
+      await page.call((route) => (location.hash = `#${route}`), item.route);
       await delay(1200);
       await click(page, ".ui-accordion-trigger", item.expand);
       await delay(1000);

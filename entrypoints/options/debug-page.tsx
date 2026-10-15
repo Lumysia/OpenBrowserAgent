@@ -92,7 +92,7 @@ export function DebugPage() {
     <div className="stack">
       <SettingsPageHeader
         icon={<Bug />}
-        title={t.options.debug}
+        title={t.settings.troubleshooting}
         description={t.options.debugDescription}
       />
       <Accordion type="single" collapsible>

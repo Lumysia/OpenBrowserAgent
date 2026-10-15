@@ -91,4 +91,13 @@ export const syncPtBR: SyncMessages = {
     "{count} de {total} itens em {collection} sumiram deste dispositivo. A sincronização os excluiria em todos os dispositivos.",
   massDeleteLocalApply: "Excluir em todos os dispositivos",
   massDeleteLocalKeep: "Restaurar neste dispositivo",
+  choiceTitle: "Sincronizar este dispositivo",
+  choiceOff: "Desativada",
+  choiceBrowser: "Conta do navegador",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "Tudo fica neste dispositivo.",
+  whatSyncs: "O que é sincronizado",
+  copyCode: "Copiar código de sincronização para outro dispositivo",
+  codeCopied: "Código de sincronização copiado",
+  pasteCode: "Colar o código de sincronização de outro dispositivo",
 };

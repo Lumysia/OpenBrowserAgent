@@ -11,7 +11,7 @@ export const providerConsentDeDE: ProviderConsentLocaleMessages = {
   needsPermission: "Erlaubnis nötig",
   localEndpoint: "Lokaler Endpunkt ({host}) – keine Erlaubnis nötig.",
   requiredToSave:
-    "Setzen Sie oben das Häkchen, um diesen KI-Anbieter zu speichern.",
+    "Setzen Sie oben das Häkchen, um den API-Schlüssel zu speichern.",
   required:
     "{host} darf Ihre Inhalte noch nicht empfangen. Stimmen Sie beim Senden einer Nachricht in der Seitenleiste zu oder unter „Einstellungen“ → „KI-Anbieter“.",
 };

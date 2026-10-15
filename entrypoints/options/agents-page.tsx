@@ -23,6 +23,7 @@ import {
   SettingsPageHeader,
   CommitInput,
   CommitTextarea,
+  ConfirmButton,
 } from "../../src/ui/components";
 import { AgentToolsEditor } from "./agent-tools-editor";
 import { ResetDefaultsCard } from "./reset-defaults-card";
@@ -39,6 +40,9 @@ import { downloadAgentZip, importAgentZip } from "./workspace-import";
 import { importErrorText } from "./import-errors";
 import { useLatest } from "../../src/ui/use-latest";
 import { useMessages } from "../../src/ui/messages";
+import { revealElement } from "../../src/ui/reveal";
+
+const agentElementId = (agentId: string) => `agent-${agentId}`;
 
 export function AgentsPage() {
   const [preferences, setPreferences] = useStoredState(storage.preferences);
@@ -46,6 +50,7 @@ export function AgentsPage() {
   const [workspaces] = useStoredState(storage.agentWorkspaces);
   const importAgentInputRef = useRef<HTMLInputElement | null>(null);
   const [importAgentError, setImportAgentError] = useState("");
+  const [openAgents, setOpenAgents] = useState<string[]>([]);
   const t = useMessages();
   const models = useConfiguredModels();
   const items = agents || [];
@@ -72,6 +77,8 @@ export function AgentsPage() {
   function addAgent() {
     const agent = createAgentDraft(t.options.newAgent);
     setAgents((current) => [...current, agent]);
+    setOpenAgents((current) => [...current, agent.id]);
+    revealElement(agentElementId(agent.id));
   }
 
   function deleteAgent(agentId: string) {
@@ -187,12 +194,21 @@ export function AgentsPage() {
         }
       />
       {importAgentError ? <Feedback error>{importAgentError}</Feedback> : null}
-      <Accordion type="multiple" className="stack">
+      <Accordion
+        type="multiple"
+        value={openAgents}
+        onValueChange={setOpenAgents}
+        className="stack"
+      >
         {items.map((agent) => {
           const description = agentDisplayDescription(agent, t);
           const builtin = isBuiltinAgentId(agent.id);
           return (
-            <AccordionItem key={agent.id} value={agent.id}>
+            <AccordionItem
+              key={agent.id}
+              value={agent.id}
+              id={agentElementId(agent.id)}
+            >
               <AccordionTrigger>
                 <SettingsSummary
                   icon={<AgentIcon agent={agent} size={18} />}
@@ -279,13 +295,18 @@ export function AgentsPage() {
                     >
                       <Download size={15} /> {t.options.downloadAgentZip}
                     </Button>
-                    <Button
-                      variant="destructiveOutline"
+                    <ConfirmButton
                       disabled={builtin}
-                      onClick={() => deleteAgent(agent.id)}
+                      confirmLabel={
+                        agent.workspace
+                          ? t.options.deleteAgentWithWorkspace
+                          : t.common.confirm
+                      }
+                      cancelLabel={t.common.cancel}
+                      onConfirm={() => deleteAgent(agent.id)}
                     >
                       <Trash2 size={15} /> {t.options.deleteAgent}
-                    </Button>
+                    </ConfirmButton>
                   </div>
                 </div>
               </AccordionContent>

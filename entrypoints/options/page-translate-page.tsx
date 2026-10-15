@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Bot,
   Captions,
   Cpu,
   Database,
@@ -13,15 +12,12 @@ import {
 } from "lucide-react";
 import { PRIVACY_POLICY_TRANSLATION_URL } from "../../src/shared/config";
 import { clearTranslations } from "../../src/shared/page-translate/cache";
-import { PAGE_TRANSLATE_LANGUAGES } from "../../src/shared/page-translate/languages";
 import {
   FREE_CLOUD_ENGINES,
-  matchTargetLanguage,
   normalizePageTranslateSettings,
   PAGE_TRANSLATE_DISPLAY,
   PAGE_TRANSLATE_ENGINE,
   PAGE_TRANSLATE_ENGINES,
-  PAGE_TRANSLATE_FALLBACK,
   type PageTranslateDisplay,
   type PageTranslateEngine,
   type PageTranslateSettings,
@@ -31,6 +27,7 @@ import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import {
   Button,
   CardDescription,
+  Disclosure,
   Feedback,
   Select,
   SelectContent,
@@ -45,25 +42,23 @@ import {
 } from "../../src/ui/components";
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { ModelSelect, useConfiguredModels } from "./model-select";
+import {
+  ContextMenuItemsSection,
+  TRANSLATE_MENU_ITEMS,
+} from "./context-menu-page";
 import { PageTranslateAccess } from "./page-translate-access";
-import { useMessages, useUiLanguage } from "../../src/ui/messages";
-
-// Select value for "follow the extension's language"; stored as "".
-const FOLLOW_INTERFACE = "interface";
+import { useMessages } from "../../src/ui/messages";
 
 // Without the Translator API the on-device engine falls back to the AI model.
 const hasBrowserTranslator = "Translator" in globalThis;
 
 export function PageTranslatePage() {
-  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [cacheState, setCacheState] = useState<"idle" | "clearing" | "cleared">(
     "idle",
   );
   const [cacheError, setCacheError] = useState("");
   const t = useMessages();
-  const models = useConfiguredModels();
   const p = t.pageTranslate;
   if (!preferences) return null;
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
@@ -77,12 +72,6 @@ export function PageTranslatePage() {
     }));
   const browserMissing =
     settings.engine === PAGE_TRANSLATE_ENGINE.browser && !hasBrowserTranslator;
-  // The model card also serves an engine that falls back to the model.
-  const usesModel =
-    settings.engine === PAGE_TRANSLATE_ENGINE.model ||
-    PAGE_TRANSLATE_FALLBACK[settings.engine] === PAGE_TRANSLATE_ENGINE.model;
-  const names = displayNames(language);
-  const interfaceLanguage = matchTargetLanguage(language) || "en";
   const cloud = FREE_CLOUD_ENGINES.includes(settings.engine)
     ? (settings.engine as keyof typeof p.cloudNotice)
     : undefined;
@@ -150,53 +139,6 @@ export function PageTranslatePage() {
           </div>
         )}
       </SettingsSection>
-      {usesModel && (
-        <SettingsSection
-          icon={<Bot />}
-          title={p.model}
-          description={p.modelDescription}
-        >
-          <ModelSelect
-            t={t}
-            models={models}
-            value={settings.modelId}
-            noneLabel={p.defaultModel}
-            label={p.model}
-            onChange={(modelId = "") => update({ modelId })}
-          />
-        </SettingsSection>
-      )}
-      <SettingsSection
-        icon={<Languages />}
-        title={p.targetLanguage}
-        description={p.targetLanguageDescription}
-      >
-        <Select
-          value={settings.targetLanguage || FOLLOW_INTERFACE}
-          onValueChange={(value) =>
-            update({
-              targetLanguage: value === FOLLOW_INTERFACE ? "" : value,
-            })
-          }
-        >
-          <SelectTrigger aria-label={p.targetLanguage}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={FOLLOW_INTERFACE}>
-              {p.followInterface.replace(
-                "{language}",
-                names(interfaceLanguage),
-              )}
-            </SelectItem>
-            {PAGE_TRANSLATE_LANGUAGES.map(({ tag }) => (
-              <SelectItem key={tag} value={tag}>
-                {names(tag)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SettingsSection>
       <SettingsSection
         icon={<PanelsTopLeft />}
         title={p.display}
@@ -218,55 +160,45 @@ export function PageTranslatePage() {
         </ToggleGroup>
       </SettingsSection>
       <SettingSwitchCard
-        icon={<Menu size={18} />}
-        title={p.translateMenus}
-        description={p.translateMenusDescription}
-        checked={settings.translateMenus}
-        onChange={(translateMenus) => update({ translateMenus })}
-      />
-      <SettingSwitchCard
         icon={<Captions size={18} />}
         title={p.subtitles.setting}
         description={p.subtitles.settingDescription}
         checked={settings.videoSubtitles}
         onChange={(videoSubtitles) => update({ videoSubtitles })}
       />
-      <SettingsSection
-        icon={<Database />}
-        title={p.cache}
-        description={p.cacheDescription}
-        contentClassName="stack"
-      >
-        <div>
-          <Button
-            variant="outline"
-            disabled={cacheState === "clearing"}
-            onClick={() => void clearCache()}
-          >
-            <Trash2 size={16} />
-            {p.clearCache}
-          </Button>
-        </div>
-        {cacheState === "cleared" && <Feedback>{p.cacheCleared}</Feedback>}
-        {cacheError && <Feedback error>{cacheError}</Feedback>}
-      </SettingsSection>
+      <ContextMenuItemsSection
+        items={TRANSLATE_MENU_ITEMS}
+        title={t.settings.translateMenuItems}
+        description={t.settings.translateMenuItemsDescription}
+      />
+      <Disclosure label={t.settings.advanced}>
+        <SettingSwitchCard
+          icon={<Menu size={18} />}
+          title={p.translateMenus}
+          description={p.translateMenusDescription}
+          checked={settings.translateMenus}
+          onChange={(translateMenus) => update({ translateMenus })}
+        />
+        <SettingsSection
+          icon={<Database />}
+          title={p.cache}
+          description={p.cacheDescription}
+          contentClassName="stack"
+        >
+          <div>
+            <Button
+              variant="outline"
+              disabled={cacheState === "clearing"}
+              onClick={() => void clearCache()}
+            >
+              <Trash2 size={16} />
+              {p.clearCache}
+            </Button>
+          </div>
+          {cacheState === "cleared" && <Feedback>{p.cacheCleared}</Feedback>}
+          {cacheError && <Feedback error>{cacheError}</Feedback>}
+        </SettingsSection>
+      </Disclosure>
     </div>
   );
-}
-
-// Chinese is named by its script ("Simplified Chinese"), as people choose it.
-const NAMED_BY_SCRIPT: Record<string, string> = {
-  "zh-CN": "zh-Hans",
-  "zh-TW": "zh-Hant",
-};
-
-// Language names in the extension's language.
-function displayNames(language: string | undefined) {
-  let names: Intl.DisplayNames | undefined;
-  try {
-    names = new Intl.DisplayNames([language || "en"], { type: "language" });
-  } catch {
-    names = undefined;
-  }
-  return (tag: string) => names?.of(NAMED_BY_SCRIPT[tag] ?? tag) || tag;
 }

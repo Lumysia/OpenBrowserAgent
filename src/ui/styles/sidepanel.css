@@ -29,7 +29,7 @@
     );
 }
 .sidepanel.history-mode,
-.sidepanel.bootstrap-mode {
+.sidepanel.setup-mode {
   grid-template-rows: minmax(0, 1fr);
 }
 

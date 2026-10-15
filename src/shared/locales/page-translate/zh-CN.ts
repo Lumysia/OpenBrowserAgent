@@ -18,7 +18,7 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     microsoft: "Microsoft 翻译（免费）",
   },
   engineDetails: {
-    model: "由你的 AI 提供商使用下方选择的模型翻译页面。",
+    model: "由你的 AI 提供商使用“AI 提供商和模型”中设置的翻译模型翻译页面。",
     browser:
       "由浏览器在此设备上翻译，文本不会离开设备。每种语言只需下载一次。无法翻译的页面将改由下方的 AI 模型翻译。",
     google: "非官方的免费服务，不是 Google 的 API，可能随时停止工作。",
@@ -37,9 +37,7 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "隐私政策",
-  model: "模型",
   modelDescription: "用于翻译页面的模型。",
-  defaultModel: "与对话相同的模型",
   targetLanguage: "翻译为",
   targetLanguageDescription:
     "网页、视频字幕和智能工具栏的“翻译”都使用此语言。这不会改变扩展的语言。",
@@ -88,15 +86,6 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     move: "方向键沿边缘移动它，E 键将它移到下一条边缘。",
     hiddenSites: "在这些网站上隐藏",
     hiddenSitesDescription: "按钮不会在这些网站上显示。网站包括其子域名。",
-  },
-  shortcut: {
-    setting: "键盘快捷键",
-    settingDescription: "翻译此页面或显示原文。",
-    current: "快捷键：{shortcut}",
-    none: "未设置快捷键",
-    change: "更改快捷键",
-    firefoxHint:
-      "如需更改，请打开 about:addons，点击齿轮按钮，然后选择“管理扩展快捷键”。",
   },
   subtitles: {
     menu: "翻译字幕",

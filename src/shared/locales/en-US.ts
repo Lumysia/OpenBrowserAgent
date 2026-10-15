@@ -8,6 +8,8 @@ import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
+import { settingsEnUS } from "./settings/en-US";
+import { setupEnUS } from "./setup/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
@@ -38,35 +40,7 @@ export const enUS = {
     ask: "Ask",
   },
   sidepanel: {
-    connectProviderTitle: "Set up OpenBrowserAgent",
-    connectProviderDescription:
-      "Choose your language, optionally enable sync, then add an AI provider and model when ready.",
     addProvider: "Add AI provider",
-    cloudSyncConnect: "Connect and sync",
-    cloudSyncTesting: "Connecting…",
-    cloudSyncPulling: "Checking cloud sync…",
-    cloudSyncDescription:
-      "Use cloud sync to start from another device's setup or store this device's new setup in the cloud.",
-    cloudSyncError:
-      "Cloud sync test failed. Check the backend or start locally.",
-    cloudSyncSynced: "Cloud sync is ready. Add an AI provider and model next.",
-    cloudSyncSyncedButton: "Synced",
-    startLocally: "Start locally",
-    localSetupHint:
-      "Settings is open. Add an AI provider and model there, then return here to continue.",
-    bootstrapStepSyncTitle: "Sync backend (optional)",
-    syncConfigCodeTab: "Paste code",
-    syncManualTab: "Manual setup",
-    syncConfigCode: "Sync config code",
-    syncConfigCodeDescription: "Paste a code copied from another device.",
-    syncConfigCodeInvalid:
-      "Invalid sync config code. Check the code and try again.",
-    bootstrapStepProviderTitle: "Add an AI provider and model",
-    bootstrapStepProviderDescription:
-      "Open Settings to add an AI provider, add a model, and test it.",
-    bootstrapStepTaskTitle: "Send your first task",
-    bootstrapStepTaskDescription:
-      "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
     chatHistory: "Chat history",
     backToChat: "Back to chat",
     exportChatOpenAi: "Export chat as OpenAI JSON",
@@ -148,7 +122,7 @@ export const enUS = {
     selectedText: "Selected text",
     willBeSentWithMessage: "Will be sent with your message",
     removeSelectedText: "Remove selected text",
-    addNewTab: "Add new tab",
+    addOpenTabs: "Add open tabs…",
     addCurrentTab: "Add current tab",
     attachFiles: "Attach files",
     attachFilesHint: "Images or local files",
@@ -268,6 +242,9 @@ export const enUS = {
       runScript: { running: "Running script", done: "Ran script" },
       devtools: { running: "Running diagnostics", done: "Ran diagnostics" },
     },
+    clearAllChatsConfirm:
+      "Delete every chat, pinned ones too? This can’t be undone.",
+    clearAllChatsAction: "Delete all chats",
   },
   options: {
     general: "General",
@@ -404,7 +381,6 @@ export const enUS = {
     localExecutionBridgeTestError: "Bridge test failed",
     deleteLocalExecutionBridge: "Delete execution bridge",
     skills: "Skills",
-    modelProviders: "AI providers",
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     mcpServersDescription:
@@ -453,13 +429,12 @@ export const enUS = {
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
-    selectImageModel: "Select image model",
     enableImageGeneration: "Enable image generation",
     enableImageGenerationDescription:
       "Make the image generation tool available to agents.",
     imageGenerationSize: "Image size",
     providerConnection: "Connection",
-    providerConnectionHint: "Set the name, API key, and base URL.",
+    providerConnectionHint: "Set the name and API key.",
     providerName: "Name",
     deleteProvider: "Delete AI provider",
     apiKey: "API key",
@@ -561,20 +536,16 @@ export const enUS = {
     lightTheme: "Light",
     darkTheme: "Dark",
     syncSettingsDescription:
-      "Choose the backend, and below, what syncs. Settings always sync; keys, chats and files each have a switch.",
-    syncBackendDescription: "What syncs.",
+      "Keep your setup the same on every device: choose where it syncs, then what syncs.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
     syncBackendBrowserSyncHint:
       "Through the account this browser is signed in to.",
     syncBackendWebDavSyncHint:
       "Through a WebDAV server you choose; it can also hold chats and files.",
-    syncBackendName: "Backend name",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "Username",
     syncBackendPassword: "Password or app password",
-    syncBackendCopyConfig: "Copy config code",
-    syncBackendCopiedConfig: "Config code copied",
     autoScroll: "Auto scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",
@@ -584,11 +555,9 @@ export const enUS = {
     maxToolSteps: "Max tool steps",
     maxToolStepsDescription:
       "Set how many tool steps the agent may run. Use 0 to disable tool calls.",
-    helperModel: "Helper model",
     helperModelDescription:
       "Used for background tasks such as summaries. Defaults to the chat's model.",
     modelSameAsChat: "Same as chat model",
-    debug: "Debug",
     debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
     debugResetTitle: "Clear OpenBrowserAgent data",
     debugResetDescription:
@@ -617,6 +586,11 @@ export const enUS = {
     debugToolCore: "Always loaded",
     debugToolOnDemand: "Loaded on demand",
     debugToolRequired: "Required parameters",
+    advanced: "Advanced",
+    apiStyle: "API style",
+    apiStyleHint:
+      "Keep Chat Completions unless your service only offers the Responses API.",
+    deleteAgentWithWorkspace: "Delete it and its workspace",
   },
   smartBar: smartBarEnUS,
   contextMenu: contextMenuEnUS,
@@ -627,6 +601,8 @@ export const enUS = {
   display: displayEnUS,
   pageTranslate: pageTranslateEnUS,
   pageTools: pageToolsEnUS,
+  settings: settingsEnUS,
+  setup: setupEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

@@ -18,7 +18,7 @@ const SHORTCUTS_PAGE = getBrowserApi()
 // Firefox, where to change it). Nothing where the browser has no commands.
 export function CommandShortcut({ command }: { command: string }) {
   const t = useMessages();
-  const p = t.pageTranslate;
+  const s = t.settings;
   const shortcut = useCommandShortcut(command);
   if (shortcut === undefined) return null;
   return (
@@ -26,8 +26,8 @@ export function CommandShortcut({ command }: { command: string }) {
       <div className="split">
         <CardDescription>
           {shortcut
-            ? p.shortcut.current.replace("{shortcut}", shortcut)
-            : p.shortcut.none}
+            ? s.commandShortcut.current.replace("{shortcut}", shortcut)
+            : s.commandShortcut.none}
         </CardDescription>
         {SHORTCUTS_PAGE && (
           <Button
@@ -36,12 +36,12 @@ export function CommandShortcut({ command }: { command: string }) {
             onClick={() => void openOrFocusUrl(SHORTCUTS_PAGE)}
           >
             <ExternalLink size={14} />
-            {p.shortcut.change}
+            {s.commandShortcut.change}
           </Button>
         )}
       </div>
       {!SHORTCUTS_PAGE && (
-        <CardDescription>{p.shortcut.firefoxHint}</CardDescription>
+        <CardDescription>{s.shortcutsFirefoxHint}</CardDescription>
       )}
     </>
   );

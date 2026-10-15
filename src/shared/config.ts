@@ -86,6 +86,9 @@ export const SOURCE_SNIPPET_MAX_CHARS = 800;
 export const COPY_FEEDBACK_MS = 1_800;
 export const QUICK_FEEDBACK_MS = 1_200;
 export const LOCAL_SETUP_FEEDBACK_MS = 3_600;
+
+// How long a settings form waits after the last keystroke before it saves.
+export const AUTO_SAVE_DELAY_MS = 400;
 export const TOOLTIP_DELAY_MS = 250;
 export const BYTES_PER_KIB = 1024;
 export const BYTES_PER_MIB = BYTES_PER_KIB * BYTES_PER_KIB;
@@ -137,19 +140,49 @@ export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;
 export const SENT_ATTACHMENTS_PREVIEW_COUNT = 3;
 
-export const OPTIONS_ROUTE = {
+// The settings pages, in the sidebar's order, then the setup page.
+export const OPTIONS_PAGE_ROUTE = {
   general: "/",
-  agents: "/agents",
-  sync: "/sync",
   providers: "/providers",
-  mcp: "/mcp",
-  localExecutionBridges: "/local-execution-bridges",
-  skills: "/skills",
-  smartBar: "/smart-bar",
-  contextMenu: "/context-menu",
-  pageTranslate: "/page-translation",
-  debug: "/debug",
+  agents: "/agents",
+  onPages: "/on-pages",
+  sync: "/sync",
+  advanced: "/advanced",
+  // First-run setup, opened on install; not in the sidebar.
+  welcome: "/welcome",
 } as const;
+
+// Every place in settings: the pages, and the tabs inside them
+// ("<page>/<tab>").
+export const OPTIONS_ROUTE = {
+  ...OPTIONS_PAGE_ROUTE,
+  skills: `${OPTIONS_PAGE_ROUTE.agents}/skills`,
+  pageTranslate: `${OPTIONS_PAGE_ROUTE.onPages}/translate`,
+  smartBar: `${OPTIONS_PAGE_ROUTE.onPages}/smart-bar`,
+  contextMenu: `${OPTIONS_PAGE_ROUTE.onPages}/right-click`,
+  mcp: `${OPTIONS_PAGE_ROUTE.advanced}/mcp`,
+  localExecutionBridges: `${OPTIONS_PAGE_ROUTE.advanced}/bridges`,
+  debug: `${OPTIONS_PAGE_ROUTE.advanced}/troubleshooting`,
+} as const;
+
+// Routes of the pages before they were grouped, still opened by links and
+// bookmarks.
+const LEGACY_OPTIONS_ROUTE: Record<string, string> = {
+  "/skills": OPTIONS_ROUTE.skills,
+  "/page-translation": OPTIONS_ROUTE.pageTranslate,
+  "/smart-bar": OPTIONS_ROUTE.smartBar,
+  "/context-menu": OPTIONS_ROUTE.contextMenu,
+  "/mcp": OPTIONS_ROUTE.mcp,
+  "/local-execution-bridges": OPTIONS_ROUTE.localExecutionBridges,
+  "/debug": OPTIONS_ROUTE.debug,
+};
+
+// The route a hash ("#/smart-bar") leads to: an older page's route becomes
+// where that page is now; an empty hash is General.
+export function resolveOptionsRoute(hash: string) {
+  const route = hash.replace(/^#/, "") || OPTIONS_ROUTE.general;
+  return LEGACY_OPTIONS_ROUTE[route] ?? route;
+}
 
 // The same routes as location hashes ("#/agents").
 export const OPTIONS_HASH = Object.fromEntries(
@@ -170,7 +203,7 @@ export function clampMaxToolSteps(value: number | undefined) {
 }
 
 // Where Chromium browsers (Edge too) let the user change extension keyboard
-// shortcuts. Firefox has no URL for it (see pageTranslate.shortcut.firefoxHint).
+// shortcuts. Firefox has no URL for it (see settings.shortcutsFirefoxHint).
 export const BROWSER_SHORTCUTS_URL = "chrome://extensions/shortcuts";
 
 // The suggested keys for the toolbar button (manifest `_execute_action`,

@@ -62,15 +62,21 @@ export function chooseHelperModel(
   return findModel(normalizeProviderState(state), helperModelId);
 }
 
+// The image model: the one asked for or chosen, else the chat's model.
 export function chooseImageModel(
   state: ProviderState,
   preferences: Preferences,
   modelId?: string,
 ) {
-  return findModel(
-    normalizeProviderState(state),
-    modelId || preferences.selectedImageModelId,
-    (provider) => [...(provider.imageModels || []), ...(provider.models || [])],
+  return (
+    findModel(
+      normalizeProviderState(state),
+      modelId || preferences.selectedImageModelId,
+      (provider) => [
+        ...(provider.imageModels || []),
+        ...(provider.models || []),
+      ],
+    ) ?? chooseChatModel(state, preferences)
   );
 }
 

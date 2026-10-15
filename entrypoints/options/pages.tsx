@@ -1,19 +1,15 @@
 import type { ComponentType } from "react";
 import {
-  Bot,
-  Bug,
   Cloud,
-  FileText,
-  Highlighter,
-  Languages,
   MousePointerClick,
-  Plug,
   Server,
   SlidersHorizontal,
-  TerminalSquare,
+  Sparkles,
+  Bot,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { OPTIONS_HASH, OPTIONS_ROUTE } from "../../src/shared/config";
+import { OPTIONS_PAGE_ROUTE, OPTIONS_ROUTE } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { AgentsPage } from "./agents-page";
 import { ContextMenuPage } from "./context-menu-page";
@@ -26,70 +22,111 @@ import { ProvidersPage } from "./providers-page";
 import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
 import { SyncPage } from "./sync-page";
+import { tabbedPage } from "./tabbed-page";
+import { WelcomePage } from "./welcome-page";
 
-type OptionsPageId = keyof typeof OPTIONS_ROUTE;
+type OptionsPageId = keyof typeof OPTIONS_PAGE_ROUTE;
 
 type OptionsPage = {
   id: OptionsPageId;
   route: string;
-  hash: string;
   icon: LucideIcon;
   title: (t: Messages) => string;
-  Page: ComponentType;
+  Page: ComponentType<{ route: string }>;
+  // Reached by link only, not listed in the sidebar.
+  hidden?: boolean;
 };
 
 const PAGES: Record<
   OptionsPageId,
-  Pick<OptionsPage, "icon" | "title" | "Page">
+  Pick<OptionsPage, "icon" | "title" | "Page" | "hidden">
 > = {
   general: {
     icon: SlidersHorizontal,
     title: (t) => t.options.general,
     Page: GeneralPage,
   },
-  agents: { icon: Bot, title: (t) => t.options.agents, Page: AgentsPage },
-  sync: { icon: Cloud, title: (t) => t.options.sync, Page: SyncPage },
   providers: {
     icon: Server,
-    title: (t) => t.options.providers,
+    title: (t) => t.settings.providersModels,
     Page: ProvidersPage,
   },
-  mcp: { icon: Plug, title: (t) => t.options.mcpServers, Page: McpPage },
-  localExecutionBridges: {
-    icon: TerminalSquare,
-    title: (t) => t.options.localExecutionBridges,
-    Page: LocalExecutionBridgesPage,
+  agents: {
+    icon: Bot,
+    title: (t) => t.settings.agentsSkills,
+    Page: tabbedPage([
+      {
+        route: OPTIONS_ROUTE.agents,
+        title: (t) => t.options.agents,
+        Page: AgentsPage,
+      },
+      {
+        route: OPTIONS_ROUTE.skills,
+        title: (t) => t.options.skills,
+        Page: SkillsPage,
+      },
+    ]),
   },
-  skills: { icon: FileText, title: (t) => t.options.skills, Page: SkillsPage },
-  smartBar: {
-    icon: Highlighter,
-    title: (t) => t.smartBar.settingsTitle,
-    Page: SmartBarPage,
-  },
-  contextMenu: {
+  onPages: {
     icon: MousePointerClick,
-    title: (t) => t.contextMenu.settingsTitle,
-    Page: ContextMenuPage,
+    title: (t) => t.settings.onPages,
+    Page: tabbedPage([
+      {
+        route: OPTIONS_ROUTE.pageTranslate,
+        title: (t) => t.settings.translate,
+        Page: PageTranslatePage,
+      },
+      {
+        route: OPTIONS_ROUTE.smartBar,
+        title: (t) => t.smartBar.settingsTitle,
+        Page: SmartBarPage,
+      },
+      {
+        route: OPTIONS_ROUTE.contextMenu,
+        title: (t) => t.settings.rightClick,
+        Page: ContextMenuPage,
+      },
+    ]),
   },
-  pageTranslate: {
-    icon: Languages,
-    title: (t) => t.pageTranslate.settingsTitle,
-    Page: PageTranslatePage,
+  sync: { icon: Cloud, title: (t) => t.options.sync, Page: SyncPage },
+  advanced: {
+    icon: Wrench,
+    title: (t) => t.settings.advanced,
+    Page: tabbedPage([
+      {
+        route: OPTIONS_ROUTE.mcp,
+        title: (t) => t.options.mcpServers,
+        Page: McpPage,
+      },
+      {
+        route: OPTIONS_ROUTE.localExecutionBridges,
+        title: (t) => t.options.localExecutionBridges,
+        Page: LocalExecutionBridgesPage,
+      },
+      {
+        route: OPTIONS_ROUTE.debug,
+        title: (t) => t.settings.troubleshooting,
+        Page: DebugPage,
+      },
+    ]),
   },
-  debug: { icon: Bug, title: (t) => t.options.debug, Page: DebugPage },
+  welcome: {
+    icon: Sparkles,
+    title: (t) => t.setup.welcomeTitle,
+    Page: WelcomePage,
+    hidden: true,
+  },
 };
 
-// The settings pages, in OPTIONS_ROUTE's order (the sidebar's). The first
-// one is shown for an unknown route.
+// The settings pages, in OPTIONS_PAGE_ROUTE's order (the sidebar's). The
+// first one is shown for an unknown route.
 export const OPTIONS_PAGES: OptionsPage[] = (
-  Object.keys(OPTIONS_ROUTE) as OptionsPageId[]
-).map((id) => ({
-  id,
-  route: OPTIONS_ROUTE[id],
-  hash: OPTIONS_HASH[id],
-  ...PAGES[id],
-}));
+  Object.keys(OPTIONS_PAGE_ROUTE) as OptionsPageId[]
+).map((id) => ({ id, route: OPTIONS_PAGE_ROUTE[id], ...PAGES[id] }));
 
+// The page a route is on: its own, or the page of a tab inside it
+// ("/advanced/mcp" is on "/advanced").
 export function optionsPageFor(route: string) {
-  return OPTIONS_PAGES.find((page) => page.route === route) ?? OPTIONS_PAGES[0];
+  const page = `/${route.split("/")[1] ?? ""}`;
+  return OPTIONS_PAGES.find((item) => item.route === page) ?? OPTIONS_PAGES[0];
 }

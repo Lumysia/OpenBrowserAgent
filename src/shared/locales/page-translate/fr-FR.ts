@@ -19,7 +19,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Votre fournisseur d’IA traduit les pages avec le modèle choisi ci-dessous.",
+      "Votre fournisseur d’IA traduit les pages avec le modèle de traduction choisi dans Fournisseurs d’IA et modèles.",
     browser:
       "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois. Lorsqu’il ne peut pas traduire une page, le modèle d’IA choisi ci-dessous prend le relais.",
     google:
@@ -40,9 +40,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "Politique de confidentialité",
-  model: "Modèle",
   modelDescription: "Le modèle qui traduit les pages.",
-  defaultModel: "Même modèle que la discussion",
   targetLanguage: "Traduire en",
   targetLanguageDescription:
     "Les pages, les sous-titres des vidéos et « Traduire » dans la barre intelligente utilisent cette langue. La langue de l’extension ne change pas.",
@@ -102,15 +100,6 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     hiddenSites: "Masqué sur ces sites",
     hiddenSitesDescription:
       "Le bouton n’apparaît pas sur ces sites. Un site inclut ses sous-domaines.",
-  },
-  shortcut: {
-    setting: "Raccourci clavier",
-    settingDescription: "Traduit la page ou affiche l’original.",
-    current: "Raccourci : {shortcut}",
-    none: "Aucun raccourci défini",
-    change: "Modifier le raccourci",
-    firefoxHint:
-      "Pour le modifier, ouvrez about:addons, cliquez sur l’engrenage et choisissez « Gérer les raccourcis d’extensions ».",
   },
   subtitles: {
     menu: "Traduire les sous-titres",

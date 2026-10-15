@@ -74,4 +74,13 @@ export const syncZhCN: SyncMessages = {
     "本设备上{collection}中 {total} 项里有 {count} 项已不在。同步会在所有设备上删除它们。",
   massDeleteLocalApply: "在所有设备上删除",
   massDeleteLocalKeep: "在本设备上恢复",
+  choiceTitle: "同步本设备",
+  choiceOff: "关闭",
+  choiceBrowser: "浏览器账号",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "所有内容都只保存在本设备上。",
+  whatSyncs: "同步的内容",
+  copyCode: "复制同步码以用于另一台设备",
+  codeCopied: "已复制同步码",
+  pasteCode: "粘贴另一台设备的同步码",
 };

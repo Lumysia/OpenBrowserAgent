@@ -68,6 +68,5 @@ export const smartBarKo: SmartBarLocaleMessages = {
   editActions: "편집 중인 텍스트 작업",
   editActionsDescription:
     "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택한 텍스트를 바꿀 수 있습니다.",
-  model: "스마트 바 모델",
   modelDescription: "설명, 번역 및 글쓰기 작업에 사용할 모델입니다.",
 };

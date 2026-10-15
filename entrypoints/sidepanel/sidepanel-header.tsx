@@ -39,11 +39,9 @@ export function SidepanelHeader({
   const t = useMessages();
   const [syncStatus] = useStoredState(storage.syncStatus);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
-  const cloudStatus = cloudSyncStatus(
-    t,
-    syncStatus,
-    !!activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID,
-  );
+  const syncOn =
+    !!activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID;
+  const cloudStatus = cloudSyncStatus(t, syncStatus, syncOn);
   const SyncIcon = cloudStatus.Icon;
   return (
     <header className="sidepanel-header">
@@ -72,19 +70,22 @@ export function SidepanelHeader({
               </Button>
             </IconTooltip>
           )}
-          <IconTooltip label={cloudStatus.label}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("cloud-sync-button", cloudStatus.className)}
-              aria-label={cloudStatus.label}
-              onClick={() =>
-                openOrFocusOptions(OPTIONS_HASH.sync).catch(console.warn)
-              }
-            >
-              <SyncIcon size={18} />
-            </Button>
-          </IconTooltip>
+          {/* Sync is for people who turned it on; Settings leads to it. */}
+          {syncOn && (
+            <IconTooltip label={cloudStatus.label}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("cloud-sync-button", cloudStatus.className)}
+                aria-label={cloudStatus.label}
+                onClick={() =>
+                  openOrFocusOptions(OPTIONS_HASH.sync).catch(console.warn)
+                }
+              >
+                <SyncIcon size={18} />
+              </Button>
+            </IconTooltip>
+          )}
         </div>
         <div className="sidepanel-chat-context">
           {parentChat && (

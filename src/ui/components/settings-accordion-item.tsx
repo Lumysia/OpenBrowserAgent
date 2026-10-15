@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 // A settings row that opens: the summary opens it, the actions next to it
 // (test, switch, delete…) do not, and a chevron button opens it too.
 export function SettingsAccordionItem({
+  id,
   value,
   summary,
   actions,
@@ -24,6 +25,8 @@ export function SettingsAccordionItem({
   contentClassName,
   children,
 }: {
+  // The element id, to scroll to the item.
+  id?: string;
   value: string;
   summary: ReactNode;
   actions?: ReactNode;
@@ -36,7 +39,7 @@ export function SettingsAccordionItem({
   children?: ReactNode;
 }) {
   return (
-    <AccordionItem value={value} className={className}>
+    <AccordionItem id={id} value={value} className={className}>
       <AccordionHeader
         className={cn("ui-accordion-header-with-actions", headerClassName)}
       >

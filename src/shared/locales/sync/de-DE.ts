@@ -91,4 +91,13 @@ export const syncDeDE: SyncMessages = {
     "{count} von {total} Elementen in {collection} fehlen auf diesem Gerät. Die Synchronisierung würde sie auf allen Geräten löschen.",
   massDeleteLocalApply: "Auf allen Geräten löschen",
   massDeleteLocalKeep: "Auf diesem Gerät wiederherstellen",
+  choiceTitle: "Dieses Gerät synchronisieren",
+  choiceOff: "Aus",
+  choiceBrowser: "Browserkonto",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "Alles bleibt auf diesem Gerät.",
+  whatSyncs: "Was synchronisiert wird",
+  copyCode: "Sync-Code für ein anderes Gerät kopieren",
+  codeCopied: "Sync-Code kopiert",
+  pasteCode: "Sync-Code eines anderen Geräts einfügen",
 };

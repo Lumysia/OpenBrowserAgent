@@ -126,18 +126,22 @@ export function SmartBarPage() {
             {s.siteModeAllowList}
           </ToggleGroupItem>
         </ToggleGroup>
-        <HostListEditor
-          label={s.blockedSites}
-          hosts={settings.blockedHosts}
-          labels={hostLabels}
-          onChange={(blockedHosts) => update({ blockedHosts })}
-        />
-        <HostListEditor
-          label={s.allowedSites}
-          hosts={settings.allowedHosts}
-          labels={hostLabels}
-          onChange={(allowedHosts) => update({ allowedHosts })}
-        />
+        {/* Only the list the chosen mode uses; the other keeps its sites. */}
+        {settings.siteMode === SMART_BAR_SITE_MODE.allowList ? (
+          <HostListEditor
+            label={s.allowedSites}
+            hosts={settings.allowedHosts}
+            labels={hostLabels}
+            onChange={(allowedHosts) => update({ allowedHosts })}
+          />
+        ) : (
+          <HostListEditor
+            label={s.blockedSites}
+            hosts={settings.blockedHosts}
+            labels={hostLabels}
+            onChange={(blockedHosts) => update({ blockedHosts })}
+          />
+        )}
       </SettingsSection>
       <SettingsSection
         icon={<ListChecks />}

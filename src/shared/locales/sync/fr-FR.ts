@@ -91,4 +91,13 @@ export const syncFrFR: SyncMessages = {
     "{count} éléments sur {total} dans {collection} ont disparu de cet appareil. La synchronisation les supprimerait sur tous les appareils.",
   massDeleteLocalApply: "Supprimer sur tous les appareils",
   massDeleteLocalKeep: "Restaurer sur cet appareil",
+  choiceTitle: "Synchroniser cet appareil",
+  choiceOff: "Désactivée",
+  choiceBrowser: "Compte du navigateur",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "Tout reste sur cet appareil.",
+  whatSyncs: "Ce qui est synchronisé",
+  copyCode: "Copier le code de synchronisation pour un autre appareil",
+  codeCopied: "Code de synchronisation copié",
+  pasteCode: "Coller le code de synchronisation d’un autre appareil",
 };

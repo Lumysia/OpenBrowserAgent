@@ -8,6 +8,8 @@ import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
+import { settingsZhTW } from "./settings/zh-TW";
+import { setupZhTW } from "./setup/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -34,33 +36,7 @@ export const zhTW: LocaleMessages = {
   },
   words: { newChat: "新對話", agent: "瀏覽", ask: "詢問" },
   sidepanel: {
-    connectProviderTitle: "初始化 OpenBrowserAgent",
-    connectProviderDescription:
-      "選擇介面語言，視需要設定同步，然後新增 AI 提供者與模型即可開始。",
     addProvider: "新增 AI 提供者",
-    cloudSyncConnect: "連線並同步",
-    cloudSyncTesting: "正在連線…",
-    cloudSyncPulling: "正在檢查雲端同步…",
-    cloudSyncDescription:
-      "可從雲端拉取其他裝置的設定，也可以把目前裝置的新設定儲存到雲端。",
-    cloudSyncError: "雲端同步測試失敗。請檢查後端，或選擇「從本機開始」。",
-    cloudSyncSynced: "雲端同步已就緒。接下來新增 AI 提供者和模型。",
-    cloudSyncSyncedButton: "已同步",
-    startLocally: "從本機開始",
-    localSetupHint:
-      "設定頁已開啟。請在那裡新增 AI 提供者和模型，然後回到這裡繼續。",
-    bootstrapStepSyncTitle: "同步後端（選用）",
-    syncConfigCodeTab: "貼上設定碼",
-    syncManualTab: "手動設定",
-    syncConfigCode: "同步設定碼",
-    syncConfigCodeDescription: "貼上從另一台裝置複製的設定碼。",
-    syncConfigCodeInvalid: "設定碼無效，請檢查後再試一次。",
-    bootstrapStepProviderTitle: "新增 AI 提供者和模型",
-    bootstrapStepProviderDescription:
-      "開啟設定頁，新增 AI 提供者、新增模型並測試是否可用。",
-    bootstrapStepTaskTitle: "傳送第一個任務",
-    bootstrapStepTaskDescription:
-      "模型測試通過後回到這裡，讓 OpenBrowserAgent 瀏覽、摘要或執行任務。",
     chatHistory: "對話紀錄",
     backToChat: "返回對話",
     exportChatOpenAi: "將對話匯出為 OpenAI JSON",
@@ -136,7 +112,7 @@ export const zhTW: LocaleMessages = {
     selectedText: "所選文字",
     willBeSentWithMessage: "將隨訊息傳送",
     removeSelectedText: "移除所選文字",
-    addNewTab: "新增分頁",
+    addOpenTabs: "新增已開啟的分頁…",
     addCurrentTab: "新增目前分頁",
     attachFiles: "上傳檔案",
     attachFilesHint: "圖片或本機檔案",
@@ -231,6 +207,8 @@ export const zhTW: LocaleMessages = {
       runScript: { running: "執行指令碼中", done: "指令碼已執行" },
       devtools: { running: "執行診斷中", done: "診斷已完成" },
     },
+    clearAllChatsConfirm: "刪除所有對話（包括已釘選的）？此操作無法復原。",
+    clearAllChatsAction: "刪除所有對話",
   },
   options: {
     general: "一般",
@@ -356,7 +334,6 @@ export const zhTW: LocaleMessages = {
     localExecutionBridgeTestError: "執行橋測試失敗",
     deleteLocalExecutionBridge: "刪除執行橋",
     skills: "技能",
-    modelProviders: "AI 提供者",
     providerDescription:
       "使用自己的金鑰，將 OpenBrowserAgent 連線到你常用的 AI 提供者。",
     mcpServersDescription:
@@ -398,12 +375,11 @@ export const zhTW: LocaleMessages = {
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
-    selectImageModel: "選擇圖片模型",
     enableImageGeneration: "啟用圖片產生",
     enableImageGenerationDescription: "向智慧體開放圖片產生工具。",
     imageGenerationSize: "圖片尺寸",
     providerConnection: "連線資訊",
-    providerConnectionHint: "設定名稱、API Key 和 Base URL。",
+    providerConnectionHint: "設定名稱和 API Key。",
     providerName: "名稱",
     deleteProvider: "刪除 AI 提供者",
     apiKey: "API Key",
@@ -496,19 +472,15 @@ export const zhTW: LocaleMessages = {
     lightTheme: "淺色",
     darkTheme: "深色",
     syncSettingsDescription:
-      "選擇同步後端，並在下方選擇同步的內容。設定一律同步；金鑰、對話和檔案各有一個開關。",
-    syncBackendDescription: "同步的內容。",
+      "讓每台裝置上的設定保持一致：先選擇同步到哪裡，再選擇同步的內容。",
     syncBackendBrowserSync: "內建瀏覽器帳號同步",
     syncBackendWebDavSync: "WebDAV 同步",
     syncBackendBrowserSyncHint: "透過此瀏覽器登入的帳號同步。",
     syncBackendWebDavSyncHint:
       "透過你選擇的 WebDAV 伺服器同步，也可以同步對話和檔案。",
-    syncBackendName: "後端名稱",
     syncBackendWebDavUrl: "WebDAV 位址",
     syncBackendUsername: "使用者名稱",
     syncBackendPassword: "密碼或應用程式密碼",
-    syncBackendCopyConfig: "複製設定碼",
-    syncBackendCopiedConfig: "設定碼已複製",
     autoScroll: "自動捲動",
     autoScrollDescription: "AI 輸出時自動保持最新內容可見。",
     autoRetry: "自動重試",
@@ -516,10 +488,8 @@ export const zhTW: LocaleMessages = {
     maxToolSteps: "最大工具步數",
     maxToolStepsDescription:
       "設定智慧體最多可執行多少步工具呼叫；填 0 表示停用工具呼叫。",
-    helperModel: "輔助模型",
     helperModelDescription: "用於摘要等背景工作。預設使用目前對話的模型。",
     modelSameAsChat: "與對話模型相同",
-    debug: "偵錯",
     debugDescription: "用於重設 OpenBrowserAgent 資料的開發工具。",
     debugResetTitle: "清除 OpenBrowserAgent 資料",
     debugResetDescription:
@@ -548,6 +518,11 @@ export const zhTW: LocaleMessages = {
     debugToolCore: "一律載入",
     debugToolOnDemand: "依需求載入",
     debugToolRequired: "必要參數",
+    advanced: "進階",
+    apiStyle: "API 類型",
+    apiStyleHint:
+      "除非你的服務只提供 Responses API，否則請保留 Chat Completions。",
+    deleteAgentWithWorkspace: "連同工作區一起刪除",
   },
   smartBar: smartBarZhTW,
   contextMenu: contextMenuZhTW,
@@ -558,4 +533,6 @@ export const zhTW: LocaleMessages = {
   display: displayZhTW,
   pageTranslate: pageTranslateZhTW,
   pageTools: pageToolsZhTW,
+  settings: settingsZhTW,
+  setup: setupZhTW,
 };

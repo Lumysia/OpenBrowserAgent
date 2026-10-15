@@ -10,8 +10,7 @@ export const providerConsentEsES: ProviderConsentLocaleMessages = {
   withdraw: "Retirar el permiso",
   needsPermission: "Necesita permiso",
   localEndpoint: "Endpoint local ({host}) – no necesita permiso.",
-  requiredToSave:
-    "Marca la casilla de arriba para guardar este proveedor de IA.",
+  requiredToSave: "Marca la casilla de arriba para guardar la clave API.",
   required:
     "{host} aún no tiene permiso para recibir tu contenido. Acepta al enviar un mensaje en el panel lateral o en «Configuración» → «Proveedores de IA».",
 };

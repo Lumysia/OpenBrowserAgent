@@ -8,6 +8,8 @@ import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
+import { settingsDeDE } from "./settings/de-DE";
+import { setupDeDE } from "./setup/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -34,37 +36,7 @@ export const deDE: LocaleMessages = {
   },
   words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen stellen" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent einrichten",
-    connectProviderDescription:
-      "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann, sobald Sie so weit sind, einen KI-Anbieter und ein Modell hinzu.",
     addProvider: "KI-Anbieter hinzufügen",
-    cloudSyncConnect: "Verbinden und synchronisieren",
-    cloudSyncTesting: "Verbindung wird hergestellt…",
-    cloudSyncPulling: "Cloud-Synchronisierung wird geprüft…",
-    cloudSyncDescription:
-      "Nutzen Sie die Cloud-Synchronisierung, um die Einrichtung eines anderen Geräts zu übernehmen oder die neue Einrichtung dieses Geräts in der Cloud zu speichern.",
-    cloudSyncError:
-      "Test der Cloud-Synchronisierung fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
-    cloudSyncSynced:
-      "Die Cloud-Synchronisierung ist bereit. Richten Sie als Nächstes einen KI-Anbieter ein.",
-    cloudSyncSyncedButton: "Synchronisiert",
-    startLocally: "Lokal starten",
-    localSetupHint:
-      "Die Einstellungen sind geöffnet. Fügen Sie dort KI-Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
-    bootstrapStepSyncTitle: "Sync-Backend (optional)",
-    syncConfigCodeTab: "Code einfügen",
-    syncManualTab: "Manuell einrichten",
-    syncConfigCode: "Sync-Konfigurationscode",
-    syncConfigCodeDescription:
-      "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
-    syncConfigCodeInvalid:
-      "Ungültiger Sync-Konfigurationscode. Prüfen Sie den Code und versuchen Sie es erneut.",
-    bootstrapStepProviderTitle: "KI-Anbieter und Modell hinzufügen",
-    bootstrapStepProviderDescription:
-      "Öffnen Sie die Einstellungen, um KI-Anbieter und Modell hinzuzufügen und zu testen.",
-    bootstrapStepTaskTitle: "Erste Aufgabe senden",
-    bootstrapStepTaskDescription:
-      "Sobald ein Modell erfolgreich antwortet, kehren Sie hierher zurück und bitten Sie OpenBrowserAgent, im Web zu browsen oder etwas zusammenzufassen.",
     chatHistory: "Chatverlauf",
     backToChat: "Zurück zum Chat",
     exportChatOpenAi: "Chat als OpenAI-JSON exportieren",
@@ -147,7 +119,7 @@ export const deDE: LocaleMessages = {
     selectedText: "Ausgewählter Text",
     willBeSentWithMessage: "Wird mit Ihrer Nachricht gesendet",
     removeSelectedText: "Ausgewählten Text entfernen",
-    addNewTab: "Neuen Tab hinzufügen",
+    addOpenTabs: "Offene Tabs hinzufügen…",
     addCurrentTab: "Aktuellen Tab hinzufügen",
     attachFiles: "Dateien anhängen",
     attachFilesHint: "Bilder oder lokale Dateien",
@@ -292,6 +264,9 @@ export const deDE: LocaleMessages = {
       runScript: { running: "Skript läuft", done: "Skript ausgeführt" },
       devtools: { running: "Diagnose läuft", done: "Diagnose abgeschlossen" },
     },
+    clearAllChatsConfirm:
+      "Alle Chats löschen, auch angeheftete? Das lässt sich nicht rückgängig machen.",
+    clearAllChatsAction: "Alle Chats löschen",
   },
   options: {
     general: "Allgemein",
@@ -430,7 +405,6 @@ export const deDE: LocaleMessages = {
     localExecutionBridgeTestError: "Bridge-Test fehlgeschlagen",
     deleteLocalExecutionBridge: "Ausführungs-Bridge löschen",
     skills: "Skills",
-    modelProviders: "KI-Anbieter",
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     mcpServersDescription:
@@ -481,13 +455,12 @@ export const deDE: LocaleMessages = {
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
-    selectImageModel: "Bildmodell auswählen",
     enableImageGeneration: "Bildgenerierung aktivieren",
     enableImageGenerationDescription:
       "Stellt Agenten das Tool zur Bildgenerierung bereit.",
     imageGenerationSize: "Bildgröße",
     providerConnection: "Verbindung",
-    providerConnectionHint: "Name, API-Schlüssel und Basis-URL konfigurieren.",
+    providerConnectionHint: "Legen Sie Namen und API-Schlüssel fest.",
     providerName: "Name",
     deleteProvider: "KI-Anbieter löschen",
     apiKey: "API-Schlüssel",
@@ -597,8 +570,7 @@ export const deDE: LocaleMessages = {
     lightTheme: "Hell",
     darkTheme: "Dunkel",
     syncSettingsDescription:
-      "Wählen Sie das Backend und darunter, was synchronisiert wird. Einstellungen werden immer synchronisiert; Schlüssel, Chats und Dateien haben je einen Schalter.",
-    syncBackendDescription: "Was synchronisiert wird.",
+      "Halten Sie Ihre Einrichtung auf jedem Gerät gleich: Wählen Sie, wohin synchronisiert wird, und dann, was synchronisiert wird.",
     syncBackendBrowserSync:
       "Integrierte Synchronisierung über das Browserkonto",
     syncBackendWebDavSync: "WebDAV-Synchronisierung",
@@ -606,12 +578,9 @@ export const deDE: LocaleMessages = {
       "Über das Konto, mit dem dieser Browser angemeldet ist.",
     syncBackendWebDavSyncHint:
       "Über einen WebDAV-Server Ihrer Wahl – er kann auch Chats und Dateien aufnehmen.",
-    syncBackendName: "Backend-Name",
     syncBackendWebDavUrl: "WebDAV-URL",
     syncBackendUsername: "Benutzername",
     syncBackendPassword: "Passwort oder App-Passwort",
-    syncBackendCopyConfig: "Konfigurationscode kopieren",
-    syncBackendCopiedConfig: "Konfigurationscode kopiert",
     autoScroll: "Automatisch scrollen",
     autoScrollDescription:
       "Die neueste KI-Ausgabe während des Streamings automatisch sichtbar halten.",
@@ -621,11 +590,9 @@ export const deDE: LocaleMessages = {
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
       "Legt fest, wie viele Tool-Schritte der Agent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
-    helperModel: "Hilfsmodell",
     helperModelDescription:
       "Für Hintergrundaufgaben wie Zusammenfassungen. Standardmäßig das Modell des Chats.",
     modelSameAsChat: "Wie das Chatmodell",
-    debug: "Debug",
     debugDescription:
       "Entwicklertools zum Zurücksetzen von OpenBrowserAgent-Daten.",
     debugResetTitle: "OpenBrowserAgent-Daten löschen",
@@ -655,6 +622,11 @@ export const deDE: LocaleMessages = {
     debugToolCore: "Immer geladen",
     debugToolOnDemand: "Bei Bedarf geladen",
     debugToolRequired: "Erforderliche Parameter",
+    advanced: "Erweitert",
+    apiStyle: "API-Art",
+    apiStyleHint:
+      "Behalten Sie Chat Completions bei, außer Ihr Dienst bietet nur die Responses-API.",
+    deleteAgentWithWorkspace: "Mit Arbeitsbereich löschen",
   },
   smartBar: smartBarDeDE,
   contextMenu: contextMenuDeDE,
@@ -665,4 +637,6 @@ export const deDE: LocaleMessages = {
   display: displayDeDE,
   pageTranslate: pageTranslateDeDE,
   pageTools: pageToolsDeDE,
+  settings: settingsDeDE,
+  setup: setupDeDE,
 };

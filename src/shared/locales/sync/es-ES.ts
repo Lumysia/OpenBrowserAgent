@@ -90,4 +90,13 @@ export const syncEsES: SyncMessages = {
     "Faltan {count} de {total} elementos de {collection} en este dispositivo. La sincronización los eliminaría en todos los dispositivos.",
   massDeleteLocalApply: "Eliminar en todos los dispositivos",
   massDeleteLocalKeep: "Restaurar en este dispositivo",
+  choiceTitle: "Sincronizar este dispositivo",
+  choiceOff: "Desactivada",
+  choiceBrowser: "Cuenta del navegador",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "Todo se queda en este dispositivo.",
+  whatSyncs: "Qué se sincroniza",
+  copyCode: "Copiar código de sincronización para otro dispositivo",
+  codeCopied: "Código de sincronización copiado",
+  pasteCode: "Pegar el código de sincronización de otro dispositivo",
 };
