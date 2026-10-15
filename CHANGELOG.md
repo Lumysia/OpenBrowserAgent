@@ -26,7 +26,7 @@ What changed in each release. The release workflow publishes the section for the
 - Bridge test errors the extension knows (bridge not found, no host name, no answer in time) are shown in your language.
 - Page translation with your AI model reads each part of the page in context: the model is told the page's description, the section heading above the text, the sentence just before it and whether a text is a heading, button, menu item, label or caption. Short labels and buttons come out shorter and more natural, and smaller models translate more cleanly (fewer untranslated or repeated originals). Translations cached by earlier versions are made again once.
 - Model names containing “/” (such as OpenRouter’s `vendor/model`) show whole in the model menus, every model picker in Settings shows models the same way, and the model named under an answer is the one that actually answered.
-- “Reset built-ins” and “Reset defaults” on the Agents and MCP servers pages ask for confirmation first, like deleting a skill.
+- “Reset built-ins” and “Reset defaults” on the Agents page ask for confirmation first, like deleting a skill.
 - Settings and the side panel tell the browser their language, so screen readers and hyphenation follow the UI language.
 - Sync backends on the Sync page show the name you gave a WebDAV backend and a line on what each kind of sync is, instead of the same title twice. First-run setup names the WebDAV option in your language and saves the server details only when you connect.
 - Settings text fields for agents, MCP servers and local execution bridges save when you leave the field instead of on every keystroke, and deleting an MCP server or bridge asks first. Test errors and import errors show in your UI language, also after you change it.

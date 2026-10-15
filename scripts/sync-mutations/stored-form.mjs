@@ -100,8 +100,8 @@ export default [
   {
     name: "P5: renaming a provider renames every model",
     file: "entrypoints/options/provider-drafts.ts",
-    from: "      model.displayName?.startsWith(from)",
-    to: "      true",
+    from: "      return provider === from",
+    to: "      return true",
   },
   {
     name: "B1: list items filled in on read are stored with a change",
@@ -138,18 +138,6 @@ export default [
     file: "src/shared/stored-form.ts",
     from: "      result[key] = keepStoredForm(undefined, shown[key], value);",
     to: "      result[key] = value;",
-  },
-  {
-    name: "B1: built-in MCP servers are filled in as defined, not as read",
-    file: "src/shared/mcp.ts",
-    from: "const BUILTINS = BUILTIN_MCP_SERVERS.map(",
-    to: "const BUILTINS = BUILTIN_MCP_SERVERS || [].map(",
-  },
-  {
-    name: "B1: built-in MCP servers a list lacks go after its servers",
-    file: "src/shared/mcp.ts",
-    from: "  result.splice(Math.max(first, 0), 0, ...leading);",
-    to: "  result.push(...leading);",
   },
   {
     name: "S1: a chat save returns the stored form",

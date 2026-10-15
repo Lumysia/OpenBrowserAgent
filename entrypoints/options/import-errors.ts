@@ -1,7 +1,6 @@
 import type { Messages } from "../../src/shared/i18n";
 import type { WorkspaceErrorCode } from "../../src/shared/workspace-errors";
-import { userErrorText } from "../../src/shared/user-errors";
-import { errorWithDetail } from "../../src/shared/user-errors";
+import { errorWithDetail, userErrorText } from "../../src/shared/user-errors";
 import { skillTooLargeText } from "../../src/ui/skill-display";
 import { workspaceErrorText } from "./workspace-error-text";
 
