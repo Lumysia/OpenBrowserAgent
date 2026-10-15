@@ -247,6 +247,8 @@ The **translate button** sits on an edge of web pages (the edge of the window, n
 
 **Translate into** is the one target language: pages, video subtitles and the smart bar's Translate and dictionary entries all use it. Its default is the extension's language; descriptions name the features that use it rather than calling it a page setting.
 
+The **toolbar button**'s own right-click menu and the side panel's **"This page"** strip hold the same per-page switches (strings in `src/shared/locales/page-tools/`): translate the page, "Translate into: {language}", "Translate button on this site", "Smart bar on this site" and, on a page with a video, "Translated subtitles for this video". Switch labels name the thing that is on or off, not an action; "this site" is the page's host. Together they are the **page tools** (Chinese 页面工具 / 頁面工具, Japanese ページツール, Korean 페이지 도구, French outils de la page, German Seitenwerkzeuge, Spanish herramientas de la página, Portuguese ferramentas da página).
+
 **Subtitles** are a video's lines, whatever the player calls them (captions, CC); the extension shows each line with its translation under it. "Translate subtitles" is the item in a video's context menu that turns them on or off for that one video; "Translate video subtitles" is the setting that translates them by themselves on every video. The video's own subtitle control is the player's "captions", so notes that tell people to use it say "captions in the player".
 
 | English                             | 简体中文                            | 繁體中文                            | 日本語                                   | 한국어                                     |

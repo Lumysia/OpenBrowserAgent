@@ -3,6 +3,7 @@ import { contextMenuZhTW } from "./context-menu/zh-TW";
 import { providerConsentZhTW } from "./provider-consent/zh-TW";
 import { displayZhTW } from "./display/zh-TW";
 import { pageTranslateZhTW } from "./page-translate/zh-TW";
+import { pageToolsZhTW } from "./page-tools/zh-TW";
 import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
@@ -544,4 +545,5 @@ export const zhTW: LocaleMessages = {
   themes: themesZhTW,
   display: displayZhTW,
   pageTranslate: pageTranslateZhTW,
+  pageTools: pageToolsZhTW,
 };

@@ -41,10 +41,11 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const { browser, options, extensionUrl, url, setPreferences } = session;
   const pageUrl = url("/page");
   const worker = await session.worker();
-  // Records what the background creates from now on.
+  // Records what the background creates and updates from now on.
   await worker.call(() => {
     const menus = chrome.contextMenus;
     const create = menus.create.bind(menus);
+    const update = menus.update.bind(menus);
     const removeAll = menus.removeAll.bind(menus);
     self.menuItems = [];
     menus.create = (properties, callback) =>
@@ -53,12 +54,21 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         self.menuItems.push({ ...properties, error });
         callback?.();
       });
+    menus.update = (id, properties, callback) => {
+      const item = self.menuItems.find((entry) => entry.id === id);
+      if (item) Object.assign(item, properties);
+      return update(id, properties, callback);
+    };
     menus.removeAll = (...args) => {
       self.menuItems = [];
       return removeAll(...args);
     };
   });
-  const menuItems = () => worker.call(() => self.menuItems);
+  // The page's menu, without the toolbar button's.
+  const menuItems = () =>
+    worker.call(() =>
+      self.menuItems.filter((item) => !item.contexts.includes("action")),
+    );
   const setMenu = (contextMenu) => setPreferences({ contextMenu });
   // Agent runs only: chat titles are asked for too.
   const agentPrompts = () =>

@@ -13,6 +13,7 @@ import {
 import { STORAGE_KEYS } from "../shared/storage-keys";
 import {
   MIN_VIDEO_SIZE,
+  VIDEO_SUBTITLES_ACTIVE_KEY,
   VIDEO_SUBTITLES_MESSAGE,
   type VideoSubtitlesConfig,
   type VideoSubtitlesNotes,
@@ -24,6 +25,7 @@ import { createTranslator, type SubtitleTranslator } from "./translator";
 import { startVideoSession, type VideoSession } from "./video-session";
 
 const INSTALLED = Symbol.for("oba.videoSubtitles");
+const ACTIVE = Symbol.for(VIDEO_SUBTITLES_ACTIVE_KEY);
 // Media events (seen on the document while capturing) that tell a video is
 // there or has changed size.
 const VIDEO_EVENTS = ["loadedmetadata", "play", "playing", "resize"];
@@ -59,6 +61,16 @@ export function installVideoSubtitles() {
   let pointed: WeakRef<HTMLVideoElement> | undefined;
   let removedTimer: number | undefined;
 
+  // Tells the background when the frame's first subtitles start or its
+  // last ones stop.
+  function announce() {
+    const scope = globalThis as { [ACTIVE]?: boolean };
+    const active = sessions.size > 0;
+    if (!!scope[ACTIVE] === active) return;
+    scope[ACTIVE] = active;
+    void send({ type: VIDEO_SUBTITLES_MESSAGE.state });
+  }
+
   function start(
     video: HTMLVideoElement,
     origin: Origin,
@@ -83,6 +95,7 @@ export function installVideoSubtitles() {
       }),
       origin,
     });
+    announce();
     removedTimer ??= window.setInterval(() => {
       for (const video of sessions.keys()) if (!video.isConnected) stop(video);
     }, REMOVED_CHECK_MS);
@@ -91,6 +104,7 @@ export function installVideoSubtitles() {
   function stop(video: HTMLVideoElement) {
     sessions.get(video)?.session.stop();
     sessions.delete(video);
+    announce();
     if (sessions.size) return;
     translator?.stop();
     translator = undefined;

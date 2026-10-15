@@ -185,6 +185,38 @@ export function hideSmartBarOnHost(
     : { ...settings, blockedHosts: [...settings.blockedHosts, host] };
 }
 
+// "Smart bar on this site" switched on: off everywhere, it turns on for
+// this site only (allow-list mode); otherwise the site leaves the blocked
+// list, or joins the allowed one.
+export function showSmartBarOnHost(
+  settings: SmartBarSettings,
+  host: string,
+): SmartBarSettings {
+  if (!settings.enabled)
+    return {
+      ...settings,
+      enabled: true,
+      siteMode: SMART_BAR_SITE_MODE.allowList,
+      allowedHosts: hostListed(settings.allowedHosts, host)
+        ? settings.allowedHosts
+        : [...settings.allowedHosts, host],
+    };
+  if (settings.siteMode === SMART_BAR_SITE_MODE.allowList)
+    return hostListed(settings.allowedHosts, host)
+      ? settings
+      : { ...settings, allowedHosts: [...settings.allowedHosts, host] };
+  return {
+    ...settings,
+    blockedHosts: settings.blockedHosts.filter(
+      (entry) => !hostMatches(host, entry),
+    ),
+  };
+}
+
+export function isSmartBarOnHost(settings: SmartBarSettings, host: string) {
+  return settings.enabled && isSmartBarAllowedOnHost(settings, host);
+}
+
 // The site "Hide on this site" hides the bar on: the host itself, or in
 // allow-list mode the broadest allowed entry covering it.
 export function smartBarHideSite(settings: SmartBarSettings, host: string) {

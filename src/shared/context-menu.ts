@@ -70,10 +70,14 @@ type ContextMenuTitles = {
 };
 
 export type ContextMenuEntry = {
-  id: ContextMenuId;
-  parentId?: ContextMenuId;
+  id: string;
+  parentId?: string;
   title: string;
   contexts: string[];
+  type?: "normal" | "checkbox" | "radio";
+  checked?: boolean;
+  enabled?: boolean;
+  visible?: boolean;
 };
 
 // Every context on a web page; `all` leaves out the tab strip.
@@ -169,6 +173,6 @@ export function contextMenuEntries(
 }
 
 // `&` marks an access key in menu titles; a literal one is doubled.
-function menuTitle(title: string) {
+export function menuTitle(title: string) {
   return title.replaceAll("&", "&&");
 }

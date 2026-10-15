@@ -3,6 +3,7 @@ import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { providerConsentFrFR } from "./provider-consent/fr-FR";
 import { displayFrFR } from "./display/fr-FR";
 import { pageTranslateFrFR } from "./page-translate/fr-FR";
+import { pageToolsFrFR } from "./page-tools/fr-FR";
 import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
@@ -646,4 +647,5 @@ export const frFR: LocaleMessages = {
   themes: themesFrFR,
   display: displayFrFR,
   pageTranslate: pageTranslateFrFR,
+  pageTools: pageToolsFrFR,
 };

@@ -3,6 +3,7 @@ import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { providerConsentPtBR } from "./provider-consent/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
 import { pageTranslatePtBR } from "./page-translate/pt-BR";
+import { pageToolsPtBR } from "./page-tools/pt-BR";
 import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
@@ -642,4 +643,5 @@ export const ptBR: LocaleMessages = {
   themes: themesPtBR,
   display: displayPtBR,
   pageTranslate: pageTranslatePtBR,
+  pageTools: pageToolsPtBR,
 };

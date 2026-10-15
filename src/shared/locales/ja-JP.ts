@@ -3,6 +3,7 @@ import { contextMenuJaJP } from "./context-menu/ja-JP";
 import { providerConsentJaJP } from "./provider-consent/ja-JP";
 import { displayJaJP } from "./display/ja-JP";
 import { pageTranslateJaJP } from "./page-translate/ja-JP";
+import { pageToolsJaJP } from "./page-tools/ja-JP";
 import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
@@ -614,4 +615,5 @@ export const jaJP: LocaleMessages = {
   themes: themesJaJP,
   display: displayJaJP,
   pageTranslate: pageTranslateJaJP,
+  pageTools: pageToolsJaJP,
 };

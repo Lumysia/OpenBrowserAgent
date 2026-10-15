@@ -3,6 +3,7 @@ import { contextMenuDeDE } from "./context-menu/de-DE";
 import { providerConsentDeDE } from "./provider-consent/de-DE";
 import { displayDeDE } from "./display/de-DE";
 import { pageTranslateDeDE } from "./page-translate/de-DE";
+import { pageToolsDeDE } from "./page-tools/de-DE";
 import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
@@ -651,4 +652,5 @@ export const deDE: LocaleMessages = {
   themes: themesDeDE,
   display: displayDeDE,
   pageTranslate: pageTranslateDeDE,
+  pageTools: pageToolsDeDE,
 };
