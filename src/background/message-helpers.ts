@@ -3,6 +3,7 @@ import {
   isMetadataOnlyAttachment,
 } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
+import { internalInstruction } from "../shared/model-notes";
 import { skillSource } from "./tools/source-handles";
 import {
   renderSelectedText,
@@ -59,7 +60,7 @@ function renderLatestUserMessage(
   }: { attachments: UploadedAttachment[]; skills: Skill[] },
 ) {
   if (message.metadata?.internalRetry)
-    return `<internal_instruction>\n${message.content}\n</internal_instruction>`;
+    return internalInstruction(message.content);
   const sources = Array.isArray(message.metadata?.sources)
     ? (message.metadata.sources as ChatSource[])
     : [];

@@ -32,6 +32,11 @@ import {
   type ModelRef,
   type ModelRefusal,
 } from "../shared/model-limits";
+import {
+  IMAGE_OMITTED_NOTE,
+  internalInstruction,
+  TEXT_ONLY_INSTRUCTION,
+} from "../shared/model-notes";
 import { CONTEXT_POLICY } from "./context/policy";
 import { catalogModel, knownOutputLimit } from "./model-catalog";
 import { knownRefusals, rememberRefusal } from "./model-limits";
@@ -375,7 +380,7 @@ function withoutImages(messages: Message[]): Message[] {
           part.type === "image"
             ? {
                 type: "text" as const,
-                text: "[Image omitted: the selected model rejected non-text content.]",
+                text: IMAGE_OMITTED_NOTE,
               }
             : part,
         ),
@@ -384,8 +389,7 @@ function withoutImages(messages: Message[]): Message[] {
     {
       role: "user",
       timestamp: Date.now(),
-      content:
-        "<internal_instruction>The selected model rejected non-text content. Continue using text-only browser inspection and file metadata. Do not request screenshots or media again in this run. If visual evidence is needed, explain the limitation and ask the user to switch to a model that supports images.</internal_instruction>",
+      content: internalInstruction(TEXT_ONLY_INSTRUCTION),
     },
   ];
 }

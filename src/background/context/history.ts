@@ -11,7 +11,8 @@ import {
   base64FromDataUrl,
   isVisionImageMimeType,
 } from "../../shared/attachments";
-import { modelStopNote, replyCutOff } from "../../shared/run-stop";
+import { MODEL_STOP_NOTE } from "../../shared/model-notes";
+import { replyCutOff } from "../../shared/run-stop";
 import { toolModelResult, turnSteps } from "../../shared/tool-results";
 import {
   toolNameFromPartType,
@@ -99,7 +100,7 @@ export function noteCutReplies(messages: AgentMessage[]): AgentMessage[] {
           ...message,
           content: [
             ...message.content,
-            { type: "text", text: modelStopNote("length") },
+            { type: "text", text: MODEL_STOP_NOTE.length },
           ],
         }
       : message,
@@ -113,7 +114,7 @@ function assistantTurn(
   options: HistoryOptions,
 ): Message[] {
   const cut = replyCutOff(message);
-  const note = cut ? modelStopNote(cut.reason) : "";
+  const note = cut ? MODEL_STOP_NOTE[cut.reason] : "";
   const turn = replayedTurn(message, options);
   if (!note) return turn;
   const last = turn[turn.length - 1];

@@ -1,5 +1,6 @@
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { toToolDeclaration } from "@earendil-works/pi-ai/utils/transcript";
+import { TOOL_LIMIT_NOTICE } from "../shared/model-notes";
 import { TOOL_NAME } from "../shared/tool-names";
 import {
   AI_TEXT_CHUNK_TYPE,
@@ -42,11 +43,6 @@ export type RunSetup = Omit<
   | "addUsage"
   | "helperInputChars"
 >;
-
-// Declared tools are never removed during a run. Past the step limit, calls
-// are answered with this instead of running.
-const TOOL_LIMIT_NOTICE =
-  "Not executed: the tool step limit for this run is reached. Do not call more tools. Answer now with what you know, say what remains uncertain, and suggest the best next step.";
 
 export async function runPiAgent(options: {
   session: StreamSession;

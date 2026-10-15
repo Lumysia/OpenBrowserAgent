@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getMessages } from "../src/shared/i18n.ts";
-import { modelStopNote } from "../src/shared/run-stop.ts";
+import { MODEL_STOP_NOTE } from "../src/shared/model-notes.ts";
 import { UI_STATE } from "../src/ui/ui-state.ts";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
 import { clickElement } from "./cdp-input.mjs";
@@ -107,7 +107,7 @@ test(
       );
       assert.match(
         JSON.stringify(queued.body.messages),
-        new RegExp(modelStopNote("error").replace(/[[\].]/g, "\\$&")),
+        new RegExp(MODEL_STOP_NOTE.error.replace(/[[\].]/g, "\\$&")),
       );
 
       // A reply cut at the output limit: Continue asks the model to go on.

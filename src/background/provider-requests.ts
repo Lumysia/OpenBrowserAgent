@@ -15,10 +15,8 @@ import {
 import { providerTypeFromId } from "../shared/provider-instances";
 import type { ModelConfig } from "../shared/types";
 import { providerModel } from "./model-resolver";
+import { MODEL_CHECK } from "../shared/model-notes";
 import { requestText } from "./pi-provider";
-
-const TEST_SYSTEM_PROMPT = "You are checking whether this model can respond.";
-const TEST_PROMPT = "Reply with exactly: OK";
 
 async function testModel({
   providerId,
@@ -32,7 +30,7 @@ async function testModel({
     provider: config,
     model: { id: `${providerId}:${modelName}`, name: modelName },
   });
-  await requestText(model, { system: TEST_SYSTEM_PROMPT, prompt: TEST_PROMPT });
+  await requestText(model, MODEL_CHECK);
 }
 
 // The models the provider's endpoint lists, named "<provider> / <label>".
