@@ -138,13 +138,16 @@ export function servePages(pages, request, response) {
   return true;
 }
 
-// Waits until the extension registered its content scripts (the smart bar
-// does once it is turned on).
-export function contentScriptsRegistered(page) {
+// Waits until the extension registered the page script `script` (a file
+// such as SMART_BAR_SCRIPT.trigger; the smart bar's once it is turned on).
+export function contentScriptsRegistered(page, script) {
   return poll(() =>
     page.call(
-      async () =>
-        (await chrome.scripting.getRegisteredContentScripts()).length > 0,
+      async (script) =>
+        (await chrome.scripting.getRegisteredContentScripts()).some(
+          (registered) => registered.js?.includes(script),
+        ),
+      script,
     ),
   );
 }
