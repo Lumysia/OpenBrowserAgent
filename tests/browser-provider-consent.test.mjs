@@ -62,20 +62,27 @@ test("provider consent", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         url: extensionUrl("options.html#/providers"),
       });
       await poll(() =>
-        options.call(() => !!document.querySelector(".ui-accordion-trigger")),
+        options.call(
+          () =>
+            !!document.querySelector(
+              ".ui-accordion-trigger:has(.provider-summary)",
+            ),
+        ),
       );
       // The provider from an older version asks for permission.
       assert.ok(
         await options.call(
           (text) =>
             document
-              .querySelector(".ui-accordion-trigger")
+              .querySelector(".ui-accordion-trigger:has(.provider-summary)")
               .textContent.includes(text),
           TEXT.needsPermission,
         ),
       );
       await options.call(() =>
-        document.querySelector(".ui-accordion-trigger").click(),
+        document
+          .querySelector(".ui-accordion-trigger:has(.provider-summary)")
+          .click(),
       );
       const agreement = TEXT.agreement.replace("{host}", host);
       assert.equal(

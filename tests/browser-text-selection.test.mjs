@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { MODIFIERS, pressKey, typeText } from "./cdp-input.mjs";
+import { MODIFIERS, clickElement, pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   composerFixture,
@@ -113,6 +113,8 @@ test(
       const options = await browser.open(
         `chrome-extension://${browser.id}/options.html`,
       );
+      // General's fields are under "Chat behavior".
+      await clickElement(options, ".ui-accordion-trigger");
       await poll(() =>
         options.call(
           (field) =>
