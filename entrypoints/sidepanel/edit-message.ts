@@ -1,3 +1,4 @@
+import { TOOL_OUTPUT_SOURCES } from "../../src/shared/tool-results";
 import type {
   AttachmentTab,
   Chat,
@@ -85,8 +86,9 @@ function sourcesForMessages(sources: ChatSource[], messages: ChatMessage[]) {
     for (const part of message.parts || []) {
       collectCitationIds(ids, part.text);
       const output = part.output as Record<string, unknown> | undefined;
-      if (!output || !Array.isArray(output._sources)) continue;
-      for (const source of output._sources as ChatSource[])
+      const added = output?.[TOOL_OUTPUT_SOURCES];
+      if (!Array.isArray(added)) continue;
+      for (const source of added as ChatSource[])
         if (source.id) ids.add(source.id);
     }
   }

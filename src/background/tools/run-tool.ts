@@ -1,3 +1,4 @@
+import { TOOL_OUTPUT_SOURCES } from "../../shared/tool-results";
 import { PAGE_TOOL_GROUPS } from "../../shared/agents";
 import { assignChatSources } from "../../shared/chat-sources";
 import { withCancellationTimeout, type Pause } from "../../shared/cancellation";
@@ -107,7 +108,7 @@ export async function runTool(
       ...(result.isError && !result.details?.error
         ? { error: result.text }
         : {}),
-      ...(added.length ? { _sources: added } : {}),
+      ...(added.length ? { [TOOL_OUTPUT_SOURCES]: added } : {}),
     },
     image: result.image,
     isError: !!result.isError,

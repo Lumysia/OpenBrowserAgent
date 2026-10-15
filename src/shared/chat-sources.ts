@@ -1,3 +1,4 @@
+import { TOOL_OUTPUT_SOURCES } from "./tool-results";
 import { SOURCE_SNIPPET_MAX_CHARS, SOURCE_TITLE_MAX_CHARS } from "./config";
 import {
   CHAT_PART_STATE,
@@ -47,8 +48,9 @@ export function extractSourcesFromPart(part?: ChatPart): ChatSource[] {
   if (!part || !isToolPartType(part.type)) return [];
   if (part.state !== CHAT_PART_STATE.outputAvailable) return [];
   const output = recordOf(part.output);
-  return Array.isArray(output._sources)
-    ? output._sources
+  const sources = output[TOOL_OUTPUT_SOURCES];
+  return Array.isArray(sources)
+    ? sources
         .map((source) => recordOf(source) as unknown as ChatSource)
         .filter((source) => source.id && source.title)
     : [];

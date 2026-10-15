@@ -1,3 +1,4 @@
+import { storedToolImage } from "../shared/tool-results";
 import { errorMessage } from "../shared/error-message";
 import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
@@ -223,14 +224,7 @@ async function storeGeneratedImageResult(
       signal,
     });
     const { image: _image, ...rest } = result;
-    return {
-      ...rest,
-      imageAttachmentId: id,
-      imageAttachmentName: attachment.name,
-      imageAttachmentType: attachment.type,
-      imageAttachmentSize: attachment.size,
-      imageStored: true,
-    };
+    return { ...rest, ...storedToolImage(attachment) };
   } catch (error) {
     signal?.throwIfAborted();
     return {
