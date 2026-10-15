@@ -10,9 +10,9 @@ export function observeCaptionFiles(event: string, maxChars: number) {
   if (scope[flag]) return;
   scope[flag] = true;
 
-  // Media, images and fonts are never captions.
+  // Media, images, fonts and event streams are never captions.
   const SKIPPED_TYPE =
-    /^(video|audio|image|font)\/|octet-stream|mpegurl|dash\+xml/i;
+    /^(video|audio|image|font)\/|octet-stream|mpegurl|dash\+xml|event-stream/i;
   // The start of every format the subtitle script reads (a loose test; it
   // parses properly).
   const looksLikeCaptions = (text: string) => {
@@ -32,6 +32,24 @@ export function observeCaptionFiles(event: string, maxChars: number) {
   };
   const skipped = (type: string | null, length: string | null) =>
     (!!type && SKIPPED_TYPE.test(type)) || Number(length) > maxChars;
+  // Reads at most maxChars (plus one chunk) of a copy of the body, so a long
+  // or never-ending response (event streams, downloads without a length) is
+  // not buffered whole.
+  const readHead = async (body: ReadableStream<Uint8Array>) => {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    try {
+      while (text.length <= maxChars) {
+        const { done, value } = await reader.read();
+        if (done) return text + decoder.decode();
+        text += decoder.decode(value, { stream: true });
+      }
+      return undefined;
+    } finally {
+      reader.cancel().catch(() => undefined);
+    }
+  };
 
   const originalFetch = window.fetch;
   const observedFetch = function (
@@ -47,10 +65,11 @@ export function observeCaptionFiles(event: string, maxChars: number) {
           skipped(headers.get("content-type"), headers.get("content-length"))
         )
           return;
-        return value
-          .clone()
-          .text()
-          .then((text) => report(value.url, text));
+        const body = value.clone().body;
+        if (!body) return;
+        return readHead(body).then(
+          (text) => text !== undefined && report(value.url, text),
+        );
       })
       .catch(() => undefined);
     return response;
