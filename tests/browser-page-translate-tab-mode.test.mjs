@@ -24,9 +24,10 @@ test(
       pages: {
         "/article": articlePage({ paragraphs: 5 }).replace(
           "</article>",
-          '<a id="next" href="/next">Next day</a></article>',
+          '<a id="next" href="/next">Next day</a><a id="aside" href="/aside" target="_blank">Aside</a></article>',
         ),
         "/next": nextPage,
+        "/aside": nextPage.replace("Next notes", "Aside notes"),
       },
       answer: fixtureTranslator(),
     });
@@ -51,6 +52,18 @@ test(
       const page = await browser.open(url("/article"));
       await clickMenu(url("/article"));
       await poll(() => translationIn(page, "#intro"));
+
+      // A link it opens in a new tab is translated there too.
+      // As a user's click: without a gesture it would be blocked as a popup.
+      // (A mouse click could land beside it while translations move it.)
+      await page.send("Runtime.evaluate", {
+        expression: 'document.querySelector("#aside").click()',
+        userGesture: true,
+      });
+      const aside = await browser.attach((href) => href === url("/aside"));
+      assert.match(await at(aside, "/aside", "#intro"), /^FR: /);
+      // The menu follows the tab in front.
+      await page.send("Page.bringToFront");
 
       await page.call(() => document.querySelector("#next").click());
       assert.equal(
