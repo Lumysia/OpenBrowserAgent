@@ -12,7 +12,6 @@ export const pageToolsEnUS = {
     "The translate button is off everywhere. Turn it on in Settings.",
   smartBar: "Smart bar on this site",
   subtitles: "Translated subtitles for this video",
-  notWebPage: "Page tools work on web pages.",
 };
 
 export type PageToolsLocaleMessages = typeof pageToolsEnUS;

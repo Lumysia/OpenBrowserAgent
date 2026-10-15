@@ -10,5 +10,4 @@ export const pageToolsJaJP: PageToolsLocaleMessages = {
     "翻訳ボタンはすべてのサイトでオフです。設定でオンにしてください。",
   smartBar: "このサイトでスマートバーを使用",
   subtitles: "この動画の字幕を翻訳",
-  notWebPage: "ページツールはウェブページで使えます。",
 };

@@ -61,7 +61,8 @@ export function handlePageToolsMessage(
     pageToolsChanged();
     return false;
   }
-  if (sender.tab) return false;
+  // Only the extension's own pages ask.
+  if (!sender.url?.startsWith(getBrowserApi().runtime.getURL(""))) return false;
   if (type === PAGE_TOOLS_MESSAGE.state) {
     const { tabId } = message as PageToolsStateMessage;
     return respondWith(tabPageTools(tabId), sendResponse);

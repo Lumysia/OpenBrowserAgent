@@ -10,5 +10,4 @@ export const pageToolsFrFR: PageToolsLocaleMessages = {
     "Le bouton de traduction est désactivé partout. Activez-le dans les paramètres.",
   smartBar: "Barre intelligente sur ce site",
   subtitles: "Sous-titres traduits pour cette vidéo",
-  notWebPage: "Les outils de la page fonctionnent sur les pages web.",
 };

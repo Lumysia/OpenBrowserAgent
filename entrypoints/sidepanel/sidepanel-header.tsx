@@ -21,6 +21,7 @@ import { chatDisplayTitle } from "../../src/ui/agent-display";
 import { Button, IconTooltip } from "../../src/ui/components";
 import { cn } from "../../src/ui/utils";
 import { useMessages } from "../../src/ui/messages";
+import { PageToolsStrip } from "./page-tools-strip";
 
 export function SidepanelHeader({
   currentChat,
@@ -119,6 +120,7 @@ export function SidepanelHeader({
           </IconTooltip>
         </div>
       </div>
+      <PageToolsStrip />
     </header>
   );
 }

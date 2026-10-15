@@ -9,5 +9,4 @@ export const pageToolsZhTW: PageToolsLocaleMessages = {
   pageButtonOff: "翻譯按鈕已在所有網站上關閉。請在設定中開啟。",
   smartBar: "在此網站使用智慧工具列",
   subtitles: "翻譯此影片的字幕",
-  notWebPage: "頁面工具僅適用於網頁。",
 };

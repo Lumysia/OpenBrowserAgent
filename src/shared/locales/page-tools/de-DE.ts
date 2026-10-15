@@ -10,5 +10,4 @@ export const pageToolsDeDE: PageToolsLocaleMessages = {
     "Die Übersetzen-Schaltfläche ist überall aus. Schalten Sie sie in den Einstellungen ein.",
   smartBar: "Smart Bar auf dieser Website",
   subtitles: "Übersetzte Untertitel für dieses Video",
-  notWebPage: "Seitenwerkzeuge funktionieren auf Webseiten.",
 };
