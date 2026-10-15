@@ -5,15 +5,14 @@ import {
   DEFAULT_SMART_BAR_SETTINGS,
   hideSmartBarOnHost,
   isSmartBarAllowedOnHost,
-  normalizeHost,
   normalizeSmartBarSettings,
   SMART_BAR_MAX_TEXT_CHARS,
   smartBarActions,
   smartBarHideSite,
   smartBarMatchPatterns,
-  smartBarPatternsCover,
   smartBarTextTooLong,
 } from "../src/shared/smart-bar";
+import { normalizeHost, patternsCover } from "../src/shared/site-hosts";
 import { smartBarPrompt } from "../src/background/smart-bar/prompts";
 import { placeSmartBar } from "../src/smart-bar/placement";
 import { speechChunks } from "../src/shared/speech-language";
@@ -91,8 +90,8 @@ test("the page script is registered only where the bar may run", () => {
     ["*://*.example.org/*"],
   );
   const blockMode = smartBarMatchPatterns(on)!;
-  assert.equal(smartBarPatternsCover(blockMode, "example.org"), true);
-  assert.equal(smartBarPatternsCover(blockMode, "a.docs.example.com"), false);
+  assert.equal(patternsCover(blockMode, "example.org"), true);
+  assert.equal(patternsCover(blockMode, "a.docs.example.com"), false);
   assert.deepEqual(
     smartBarActions({ ...on, disabledEditActions: ["translate"] }, true),
     ["improve", "fixGrammar", "ask"],

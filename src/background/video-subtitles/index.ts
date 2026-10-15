@@ -22,29 +22,12 @@ import { showPageNote } from "../page-feedback";
 import { pageToastTheme } from "../page-toast";
 import { PAGE_TRANSLATE_TOAST_MS } from "../../shared/page-translate/protocol";
 import { observeCaptionFiles } from "./main-world";
-import { syncVideoButtonRegistration } from "./registration";
+import { registerVideoButton } from "./registration";
 
 type Sender = chrome.runtime.MessageSender;
 
 export function setupVideoSubtitles() {
-  let registration = Promise.resolve();
-  const sync = (on: boolean) => {
-    registration = registration
-      .then(() => syncVideoButtonRegistration(on))
-      .catch((error) =>
-        console.warn("Video button registration failed", error),
-      );
-  };
-  void storage.preferences
-    .get()
-    .then((preferences) =>
-      sync(
-        normalizePageTranslateSettings(preferences.pageTranslate).videoButton,
-      ),
-    );
-  storage.preferences.watch((preferences) =>
-    sync(normalizePageTranslateSettings(preferences.pageTranslate).videoButton),
-  );
+  registerVideoButton();
 }
 
 // Subtitle page messages; false for other messages.
