@@ -9,7 +9,7 @@ OpenBrowserAgent is an AI assistant in the browser's side panel. The user connec
 PERMISSION JUSTIFICATIONS (same order as the store page; each under 1000 characters)
 
 == scripting justification ==
-Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, show a page translation the user asked for, and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
+Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, show a page translation the user asked for (and, while it is on in Settings, a small translate button on the page's edge that does nothing until clicked), and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
 
 == tabs justification ==
 The agent lists, opens, reloads, navigates and closes tabs when the user asks it to work across pages (in the background, so the user keeps their own tab; it brings a tab to the front only when the user asks), and the user can attach open tabs (title and URL) to a chat as context.
