@@ -41,9 +41,13 @@ test(
         (await texts(setup, "h1")).includes(t.setup.welcomeTitle),
       );
       // The provider comes first; the sync code is behind the link.
-      const buttons = await texts(setup, "button");
-      assert.ok(buttons.includes(t.sidepanel.addProvider), buttons.join("|"));
-      assert.ok(buttons.includes(t.setup.joinLink), buttons.join("|"));
+      await poll(async () => {
+        const buttons = await texts(setup, "button");
+        return (
+          buttons.includes(t.sidepanel.addProvider) &&
+          buttons.includes(t.setup.joinLink)
+        );
+      });
       assert.equal(
         await setup.call(() => !!document.querySelector("textarea")),
         false,
