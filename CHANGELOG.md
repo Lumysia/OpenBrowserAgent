@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.11 - 2026-10-15
+
 - **Translate video subtitles everywhere**: turn on "Translate video subtitles" in Settings → Page translation, and every video with subtitles shows each line with its translation under it by itself, on any site, including the first captions a player loads (no need to turn the player's captions off and on again). "Translate subtitles" in a video's right-click menu turns them off or on for that video. The switch is off by default; while it is off, the menu and "Translate this page" translate subtitles as before.
 - The small subtitle button on the corner of videos is gone, with its setting; the switch above and the right-click menu replace it.
 - Translated subtitles stay over the video when the window or the player changes size, also while the video is paused, and move with it when you scroll instead of catching up a moment later; before, they could hang past the player's edge or below it. They are also smaller, with the original line a little smaller than its translation.
