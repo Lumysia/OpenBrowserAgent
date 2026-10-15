@@ -8,7 +8,11 @@ import {
   type PageTranslateSettings,
 } from "../src/shared/page-translate/settings";
 import { PAGE_SCRIPT } from "../src/shared/page-scripts";
-import { isCaptionCandidate } from "../src/shared/video-subtitles/caption-filter";
+import {
+  CAPTION_READING,
+  captionReading,
+  isThumbnailTrack,
+} from "../src/shared/video-subtitles/caption-filter";
 import { CAPTION_FILE_EVENT } from "../src/shared/video-subtitles/protocol";
 import {
   installCaptionObserver,
@@ -39,22 +43,27 @@ test("subtitles are off by default, also for settings stored by earlier versions
 
 test("the subtitle scripts run in every frame before the page's scripts, the observer in the page's world", () => {
   assert.deepEqual(
-    VIDEO_SUBTITLE_SCRIPTS.map(({ file, allFrames, runAt, world }) => ({
-      file,
-      allFrames,
-      runAt,
-      world,
-    })),
+    VIDEO_SUBTITLE_SCRIPTS.map(
+      ({ file, allFrames, matchOriginAsFallback, runAt, world }) => ({
+        file,
+        allFrames,
+        matchOriginAsFallback,
+        runAt,
+        world,
+      }),
+    ),
     [
       {
         file: PAGE_SCRIPT.videoSubtitles,
         allFrames: true,
+        matchOriginAsFallback: true,
         runAt: "document_start",
         world: undefined,
       },
       {
         file: PAGE_SCRIPT.captionObserver,
         allFrames: true,
+        matchOriginAsFallback: true,
         runAt: "document_start",
         world: "MAIN",
       },
@@ -62,7 +71,7 @@ test("the subtitle scripts run in every frame before the page's scripts, the obs
   );
 });
 
-test("only responses named caption files by their type or URL are read", () => {
+test("only responses named caption files by their type or URL are read, unnamed types peeked at", () => {
   const max = 1_000;
   const head = (url: string, type: string | null, length?: number) => ({
     url,
@@ -77,15 +86,27 @@ test("only responses named caption files by their type or URL are read", () => {
     head("https://example.com/media/en.vtt?sig=1", "text/plain"),
     head("https://example.com/player/captions/42", null),
   ])
-    assert.equal(isCaptionCandidate(yes, max), true, yes.url);
+    assert.equal(captionReading(yes, max), CAPTION_READING.read, yes.url);
+  for (const unnamed of [
+    head("https://cdn.example/s/en.vtt", "application/octet-stream"),
+    head("https://cdn.example/s/a1b2c3", "binary/octet-stream", 900),
+  ])
+    assert.equal(
+      captionReading(unnamed, max),
+      CAPTION_READING.peek,
+      unnamed.url,
+    );
   for (const no of [
     head("https://example.com/api/feed", "application/json"),
     head("https://example.com/page", "text/html"),
     head("https://example.com/subscriptions", "application/json"),
     head("https://example.com/captions/clip.mp4", "video/mp4"),
     head("https://example.com/captions.vtt", "text/vtt", 5_000),
+    head("https://example.com/seg-1.m4s", "application/octet-stream", 5_000),
+    head("https://example.com/live.m3u8", "application/vnd.apple.mpegurl"),
+    head("https://example.com/sprite.jpg", "image/jpeg"),
   ])
-    assert.equal(isCaptionCandidate(no, max), false, no.url);
+    assert.equal(captionReading(no, max), undefined, no.url);
 });
 
 const VTT = "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello.\n";
@@ -94,14 +115,27 @@ const VTT = "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello.\n";
 // turn; `cloned` counts the bodies read.
 function fakePage(
   videos: number,
-  responses: Array<{ url: string; type: string; body: string }>,
+  responses: Array<{ url: string; type: string; body: string | string[] }>,
 ) {
   const events: string[] = [];
-  const counts = { cloned: 0 };
+  const counts = { cloned: 0, chunks: 0 };
   const scope = {
     fetch: async () => {
       const { url, type, body } = responses.shift()!;
-      const response = new Response(body, {
+      // Each string is a chunk of the body; `chunks` counts those read.
+      const chunks = typeof body === "string" ? [body] : [...body];
+      const stream = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            const chunk = chunks.shift();
+            if (chunk === undefined) return controller.close();
+            counts.chunks++;
+            controller.enqueue(new TextEncoder().encode(chunk));
+          },
+        },
+        { highWaterMark: 0 },
+      );
+      const response = new Response(stream, {
         headers: { "content-type": type },
       });
       return {
@@ -110,7 +144,7 @@ function fakePage(
         headers: response.headers,
         clone() {
           counts.cloned++;
-          return response.clone();
+          return { body: stream };
         },
       } as unknown as Response;
     },
@@ -161,4 +195,47 @@ test("the caption observer does nothing on a page without a video", async () => 
   await settle();
   assert.equal(page.counts.cloned, 0);
   assert.deepEqual(page.events, []);
+});
+
+test("the caption observer peeks at files of an unnamed type, and skips thumbnail tracks", async () => {
+  const binary = "\u0000\u0000\u0000\u0018ftypiso6".padEnd(80, "\u0001");
+  const thumbnails = [
+    "WEBVTT",
+    "",
+    "00:00:00.000 --> 00:00:05.000",
+    "preview-01.jpg#xywh=0,0,320,180",
+    "",
+    "00:00:05.000 --> 00:00:10.000",
+    "preview-01.jpg#xywh=320,0,320,180",
+    "",
+  ].join("\n");
+  const page = fakePage(1, [
+    // Bytes that aren't captions: only the first chunk is read.
+    {
+      url: "https://cdn.example/seg",
+      type: "application/octet-stream",
+      body: [binary, "more", "more"],
+    },
+    {
+      url: "https://cdn.example/en.vtt",
+      type: "binary/octet-stream",
+      body: [VTT.padEnd(70, "\n"), "00:00:03.000 --> 00:00:04.000\nBye.\n"],
+    },
+    {
+      url: "https://cdn.example/preview.vtt",
+      type: "application/octet-stream",
+      body: thumbnails,
+    },
+  ]);
+  await page.scope.fetch!("https://cdn.example/seg");
+  await settle();
+  assert.equal(page.counts.chunks, 1);
+  await page.scope.fetch!("https://cdn.example/en.vtt");
+  await page.scope.fetch!("https://cdn.example/preview.vtt");
+  await settle();
+  assert.deepEqual(page.events, [
+    VTT.padEnd(70, "\n") + "00:00:03.000 --> 00:00:04.000\nBye.\n",
+  ]);
+  assert.equal(isThumbnailTrack(thumbnails), true);
+  assert.equal(isThumbnailTrack(VTT), false);
 });

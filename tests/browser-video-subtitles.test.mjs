@@ -6,6 +6,7 @@ import { SUBTITLE_WINDOW } from "../src/shared/video-subtitles/schedule.ts";
 import {
   BROWSER_TEST_TIMEOUT,
   contentScriptsRegistered,
+  unchangedFor,
 } from "./browser-harness.mjs";
 import { click, elementCenter } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
@@ -265,6 +266,38 @@ test(
           );
           // The player's own copy was read, not fetched again.
           assert.equal(captionRequests(fixture) - before, 1);
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: a player in another site's frame, files served as plain bytes",
+        async () => {
+          const askedFor = (text) =>
+            batches.flat().filter((line) => line === text).length;
+          const before = askedFor(lineAt(30));
+          const page = await browser.open(url("/embed"));
+          const frame = await browser.attach(
+            (href) => href === url("/embedded-player", "localhost"),
+            "iframe",
+          );
+          await poll(() => frame.call(() => window.loaded > 0));
+          await seek(frame, 31);
+          // From the caption file, not its thumbnail track (loaded after
+          // it), and once: the lines the player draws aren't translated
+          // again.
+          assert.deepEqual(await shownLine(frame, lineAt(30)), {
+            original: lineAt(30),
+            translation: `FR: ${lineAt(30)}`,
+          });
+          assert.ok(askedFor(lineAt(30)) - before <= 1);
+          // The watermark is no line.
+          await seek(frame, 2);
+          await poll(async () => (await subtitles(frame)) === null);
+          assert.equal(await unchangedFor(() => subtitles(frame)), null);
+          assert.ok(
+            !batches.flat().some((line) => /Example Site|xywh/.test(line)),
+          );
           await page.send("Page.close");
         },
       );

@@ -117,3 +117,48 @@ test("files that aren't captions, or too large, are ignored", () => {
     undefined,
   );
 });
+
+test("WebVTT: ruby keeps its base text; a cue that is only an annotation, and a thumbnail track, aren't captions", () => {
+  const file = parseCaptionFile(
+    [
+      "WEBVTT",
+      "",
+      "00:00:00.000 --> 00:00:05.000 line:0% align:end size:15%",
+      "<ruby><rt>sitename</rt></ruby>",
+      "",
+      "00:00:01.000 --> 00:00:03.000",
+      "<ruby>漢<rp>(</rp><rt>kan</rt><rp>)</rp>字<rt>ji</ruby>を読む",
+      "",
+      "00:00:04.000 --> 00:00:05.000",
+      "&nbsp;<i> </i>",
+      "",
+    ].join("\n"),
+  );
+  assert.deepEqual(
+    file?.cues.map(({ text }) => text),
+    ["漢字を読む"],
+  );
+  const thumbnails = [
+    "WEBVTT",
+    "",
+    "00:00:00.000 --> 00:00:05.000",
+    "preview-01.jpg#xywh=0,0,320,180",
+    "",
+    "00:00:05.000 --> 00:00:10.000",
+    "https://cdn.example/sprites/preview-02.webp",
+    "",
+  ].join("\n");
+  assert.equal(parseCaptionFile(thumbnails), undefined);
+});
+
+test("TTML: a ruby annotation span is left out", () => {
+  const file = parseCaptionFile(
+    `<?xml version="1.0"?><tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling"><body><div>` +
+      `<p begin="00:00:01.000" end="00:00:02.000"><span tts:ruby="container"><span tts:ruby="base">漢字</span><span tts:ruby="text">かんじ</span></span>です</p>` +
+      `</div></body></tt>`,
+  );
+  assert.deepEqual(
+    file?.cues.map(({ text }) => text),
+    ["漢字です"],
+  );
+});

@@ -15,19 +15,22 @@ import {
 // While "Translate video subtitles" is on, every frame of every page gets
 // the subtitle script and the caption observer before the page's own
 // scripts, so the first caption file a player loads is seen (videos are
-// often embedded, so all frames). Where the browser can't register them,
+// often embedded, also from other sites, so all frames, and frames without
+// their own origin where the browser supports it). Where the browser can't register them,
 // the menu and "Translate this page" still translate subtitles.
 export const VIDEO_SUBTITLE_SCRIPTS: ContentScript[] = [
   {
     id: REGISTERED_SCRIPT_ID.videoSubtitles,
     file: PAGE_SCRIPT.videoSubtitles,
     allFrames: true,
+    matchOriginAsFallback: true,
     runAt: "document_start",
   },
   {
     id: REGISTERED_SCRIPT_ID.captionObserver,
     file: PAGE_SCRIPT.captionObserver,
     allFrames: true,
+    matchOriginAsFallback: true,
     runAt: "document_start",
     world: "MAIN",
   },

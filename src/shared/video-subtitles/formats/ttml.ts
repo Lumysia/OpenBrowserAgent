@@ -4,6 +4,9 @@
 import { clockSeconds, finishCues, plainCueText, type Cue } from "../cues";
 
 const ROOT = /<(?:[\w-]+:)?tt[\s>]/;
+// A ruby annotation span (`tts:ruby="text"`): the reading over the text.
+const RUBY_TEXT =
+  /<((?:[\w-]+:)?span)\b[^>]*\s(?:[\w-]+:)?ruby\s*=\s*["']text["'][^>]*>[\s\S]*?<\/\1\s*>/g;
 const PARAGRAPH = /<((?:[\w-]+:)?p)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1\s*>)/g;
 
 export function looksLikeTtml(text: string) {
@@ -38,7 +41,9 @@ export function parseTtml(text: string): Cue[] {
     cues.push({
       start,
       end,
-      text: plainCueText(body.replace(/\s*\r?\n\s*/g, " ")),
+      text: plainCueText(
+        body.replace(RUBY_TEXT, "").replace(/\s*\r?\n\s*/g, " "),
+      ),
     });
   }
   return finishCues(cues);

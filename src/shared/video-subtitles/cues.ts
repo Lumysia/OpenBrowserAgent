@@ -38,10 +38,16 @@ const ENTITIES: Record<string, string> = {
   rlm: "\u200f",
 };
 
-// Markup removed (`<br>` becomes a line break) and entities decoded,
-// spacing kept.
+// A ruby annotation (`<rt>`, which may be left unclosed) or its fallback
+// parentheses (`<rp>`): the reading over the text, not what is said.
+const RUBY_ANNOTATION =
+  /<(rt|rp)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|(?=<\/?(?:ruby|rt|rp)\b)|$)/gi;
+
+// Markup removed (`<br>` becomes a line break, ruby keeps its base text)
+// and entities decoded, spacing kept.
 export function decodeCueMarkup(markup: string) {
   return markup
+    .replace(RUBY_ANNOTATION, "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]*>/g, "")
     .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, name: string) => {

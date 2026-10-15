@@ -9,10 +9,15 @@
 // It is kept cheap for pages that never show captions: nothing is looked
 // at while the page has no video, and a response is read only when its
 // headers or URL name it a caption file (see caption-filter.ts), and then
-// at most CAPTION_RESPONSE_MAX_CHARS of it.
+// at most CAPTION_RESPONSE_MAX_CHARS of it; one of a type that names no
+// format ("octet-stream") only when its first bytes start like captions.
 import {
-  isCaptionCandidate,
-  looksLikeCaptions,
+  CAPTION_PEEK_BYTES,
+  CAPTION_READING,
+  captionReading,
+  isCaptionText,
+  startsLikeCaptions,
+  type CaptionReading,
 } from "../shared/video-subtitles/caption-filter";
 import {
   CAPTION_FILE_EVENT,
@@ -39,11 +44,13 @@ export function installCaptionObserver(
 
   const { document } = scope;
   const videos = document.getElementsByTagName("video");
-  const candidate = (url: string, type: string | null, length: string | null) =>
-    videos.length > 0 && isCaptionCandidate({ url, type, length }, maxChars);
+  const reading = (url: string, type: string | null, length: string | null) =>
+    videos.length > 0
+      ? captionReading({ url, type, length }, maxChars)
+      : undefined;
 
   const report = (url: string, text: string) => {
-    if (text.length > maxChars || !looksLikeCaptions(text)) return;
+    if (text.length > maxChars || !isCaptionText(text)) return;
     document.dispatchEvent(
       new scope.CustomEvent(CAPTION_FILE_EVENT, {
         detail: JSON.stringify({ url, text }),
@@ -52,21 +59,45 @@ export function installCaptionObserver(
   };
 
   // Reads at most maxChars (plus one chunk) of a copy of the body, so a long
-  // or never-ending response is not buffered whole.
-  const readHead = async (body: ReadableStream<Uint8Array>) => {
+  // or never-ending response is not buffered whole; when peeking, stops
+  // after the first chunk unless it starts like captions.
+  const readHead = async (
+    body: ReadableStream<Uint8Array>,
+    how: CaptionReading,
+  ) => {
     const reader = body.getReader();
     const decoder = new TextDecoder();
     let text = "";
+    let checked = how !== CAPTION_READING.peek;
     try {
       while (text.length <= maxChars) {
         const { done, value } = await reader.read();
         if (done) return text + decoder.decode();
         text += decoder.decode(value, { stream: true });
+        if (!checked && text.length >= CAPTION_PEEK_BYTES) {
+          if (!startsLikeCaptions(text.slice(0, CAPTION_PEEK_BYTES)))
+            return undefined;
+          checked = true;
+        }
       }
       return undefined;
     } finally {
       reader.cancel().catch(() => undefined);
     }
+  };
+
+  // The text of a response already in memory as bytes (players that load
+  // files as binary), when it starts like captions and may fit the limit
+  // (each character takes at most 3 bytes in UTF-8).
+  const textOf = (buffer: ArrayBuffer) => {
+    if (buffer.byteLength > maxChars * 3) return undefined;
+    const bytes = new Uint8Array(buffer);
+    const decoder = new TextDecoder();
+    if (
+      !startsLikeCaptions(decoder.decode(bytes.subarray(0, CAPTION_PEEK_BYTES)))
+    )
+      return undefined;
+    return decoder.decode(bytes);
   };
 
   const originalFetch = scope.fetch;
@@ -79,18 +110,17 @@ export function installCaptionObserver(
       response
         .then((value) => {
           const { headers } = value;
-          if (
-            !value.ok ||
-            !candidate(
+          const how =
+            value.ok &&
+            reading(
               value.url,
               headers.get("content-type"),
               headers.get("content-length"),
-            )
-          )
-            return;
+            );
+          if (!how) return;
           const body = value.clone().body;
           if (!body) return;
-          return readHead(body).then(
+          return readHead(body, how).then(
             (text) => text !== undefined && report(value.url, text),
           );
         })
@@ -116,7 +146,7 @@ export function installCaptionObserver(
         if (
           this.status < 200 ||
           this.status >= 300 ||
-          !candidate(
+          !reading(
             this.responseURL,
             this.getResponseHeader("content-type"),
             this.getResponseHeader("content-length"),
@@ -126,7 +156,10 @@ export function installCaptionObserver(
         const type = this.responseType;
         if (type === "" || type === "text")
           report(this.responseURL, this.responseText);
-        else if (
+        else if (type === "arraybuffer") {
+          const text = textOf(this.response as ArrayBuffer);
+          if (text !== undefined) report(this.responseURL, text);
+        } else if (
           type === "json" &&
           Array.isArray((this.response as { events?: unknown } | null)?.events)
         )

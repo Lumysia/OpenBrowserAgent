@@ -39,6 +39,30 @@ const json3 = JSON.stringify({
   })),
 });
 
+// A player's caption file that starts with a watermark: a cue that is only
+// a ruby annotation, in a corner. Lines from 10 seconds on.
+const watermarked = [
+  "WEBVTT",
+  "",
+  "00:00:00.000 --> 00:00:05.000 line:0% align:end size:15%",
+  "<ruby><rt>Example Site</rt></ruby>",
+  "",
+  ...times
+    .filter((t) => t >= 10)
+    .flatMap((t) => [`${clock(t)} --> ${clock(t + 4)}`, lineAt(t), ""]),
+].join("\n");
+// The previews over a seek bar, as a WebVTT file of picture references.
+const thumbnails = [
+  "WEBVTT",
+  "",
+  ...times.flatMap((t) => [
+    `${clock(t)} --> ${clock(t + 5)}`,
+    `preview-01.jpg#xywh=${(t / 5) * 160},0,160,90`,
+    "",
+  ]),
+].join("\n");
+const UNNAMED = { "Content-Type": "application/octet-stream" };
+
 export const PAGES = {
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
   "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
@@ -114,6 +138,41 @@ let timer;
 addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(layout, 250); });
 </script>
 </body></html>`,
+  // A page that embeds a player from another site. The player fetches its
+  // caption file and its thumbnail track as the page starts, both served as
+  // plain bytes, and draws the lines itself.
+  "/embed": `<!doctype html><html lang="en"><head><title>Embedded player</title>${STYLE}</head><body>
+<iframe id="frame" style="display:block;width:680px;height:400px;border:0"></iframe>
+<script>frame.src = location.href.replace("127.0.0.1", "localhost").replace("/embed", "/embedded-player");</script>
+</body></html>`,
+  "/embedded-player": `<!doctype html><html lang="en"><head><title>Player</title>${STYLE}</head><body>
+<div id="player" style="position:relative;width:640px;height:360px">
+${VIDEO_TAG.replace('style="display:block;width:640px;height:360px"', 'style="display:block;width:100%;height:100%"')}></video>
+<div id="text-container" style="position:absolute;left:0;right:0;bottom:30px;text-align:center;color:#fff"></div>
+</div>
+<script>
+const seconds = (clock) => clock.split(":").reduce((total, part) => total * 60 + Number(part), 0);
+(async () => {
+  const text = await (await fetch("/cdn/track-en")).text();
+  const cues = text.split("\\n\\n").flatMap((block) => {
+    const match = /^(\\S+) --> (\\S+)[^\\n]*\\n([\\s\\S]+)$/.exec(block);
+    return match ? [{ start: seconds(match[1]), end: seconds(match[2]), text: match[3] }] : [];
+  });
+  await (await fetch("/cdn/preview-thumbs")).text();
+  const video = document.getElementById("video");
+  const container = document.getElementById("text-container");
+  const draw = () => {
+    const cue = cues.find((cue) => cue.start <= video.currentTime && video.currentTime < cue.end);
+    container.innerHTML = cue ? cue.text : "";
+  };
+  video.addEventListener("timeupdate", draw);
+  video.addEventListener("seeked", draw);
+  window.loaded = cues.length;
+})();
+</script>
+</body></html>`,
+  "/cdn/track-en": { html: watermarked, headers: UNNAMED },
+  "/cdn/preview-thumbs": { html: thumbnails, headers: UNNAMED },
   // The same player that loaded its file before the user started.
   "/stub-earlier": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
 ${VIDEO_TAG}></video>
