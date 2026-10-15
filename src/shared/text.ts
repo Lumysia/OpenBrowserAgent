@@ -20,6 +20,19 @@ export function wordCount(text: string) {
   return count;
 }
 
+// Question marks of the scripts that have their own (Latin and most others,
+// Arabic, Armenian, Ethiopic, Limbu, Vai, full-width and small forms of
+// Chinese and Japanese, doubled and reversed ones), maybe followed by
+// closing quotes and brackets. Greek writes its question mark as a
+// semicolon, which can't be told apart from one.
+const QUESTION_END =
+  /[?\u055E\u061F\u1367\u1945\u2047-\u2049\u2E2E\uA60F\uFE56\uFF1F][\p{Pe}\p{Pf}"']*$/u;
+
+// The text ends in a question mark, in any script.
+export function isQuestion(text: string) {
+  return QUESTION_END.test(text.trim());
+}
+
 // A message with its `{name}` placeholders filled in.
 export function formatMessage(
   template: string,

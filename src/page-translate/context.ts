@@ -12,7 +12,7 @@ import {
   type PageTranslateRole,
 } from "../shared/page-translate/context";
 import type { Paragraph } from "./blocks";
-import { controlOf, isMenuItem } from "./dom-rules";
+import { contentControlOf, controlOf, isMenuItem } from "./dom-rules";
 import type { Unit } from "./units";
 
 const CAPTION_SELECTOR = "figcaption, caption";
@@ -40,7 +40,9 @@ export function roleOf(paragraph: Paragraph): PageTranslateRole | undefined {
 
 function findRole(paragraph: Paragraph): PageTranslateRole | undefined {
   const element = paragraph.parent;
-  if (element.closest(HEADING_SELECTOR)) return PAGE_TRANSLATE_ROLE.heading;
+  // A control whose label is content is a title (see isContentControl).
+  if (element.closest(HEADING_SELECTOR) || contentControlOf(element))
+    return PAGE_TRANSLATE_ROLE.heading;
   const control = controlOf(element);
   if (control)
     return isMenuItem(control)
