@@ -8,6 +8,7 @@ import {
 } from "./scripts/quickjs-wasm-plugin";
 import { SMART_BAR_COMMAND } from "./src/shared/smart-bar-protocol";
 import { PAGE_TRANSLATE_COMMAND } from "./src/shared/page-translate/protocol";
+import { SIDE_PANEL_SHORTCUT } from "./src/shared/config";
 import {
   CODE_SANDBOX_CSP,
   CODE_SANDBOX_PATH,
@@ -131,10 +132,7 @@ export default defineConfig({
     },
     commands: {
       _execute_action: {
-        suggested_key: {
-          default: "Ctrl+J",
-          mac: "Command+J",
-        },
+        suggested_key: { ...SIDE_PANEL_SHORTCUT },
         description: "OpenBrowserAgent",
       },
       // No default key: the user picks one in the browser's shortcut settings.

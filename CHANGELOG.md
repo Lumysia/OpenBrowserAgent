@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Keyboard shortcut for the side panel**: Ctrl+Shift+Y (Command+Shift+Y on macOS) opens the side panel. The key suggested before was one the browser keeps for itself, so the side panel had no shortcut. If the key isn't set after the update, or another extension has it, pick one in the browser's shortcut settings.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 
 ## 0.2.0-beta.11 - 2026-10-15
