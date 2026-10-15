@@ -163,6 +163,14 @@ test("rule 6: a number with units or currency is a number; words around one make
     Array(8).fill("number"),
   );
   assert.equal(metadataOf("5 zł", { language: "pl" }), "number");
+  // Without spaces, a number is joined to the words around it.
+  assert.equal(metadataOf("6時間12分", { language: "ja" }), "number");
+  assert.equal(
+    metadataOf("この3年間、商品カタログを変更するたびに再構築していました。", {
+      language: "ja",
+    }),
+    undefined,
+  );
   assert.deepEqual(
     texts(`<main><p>Ep 12: The End</p><p>Day 1 of 3</p><p>$24.99</p></main>`),
     ["Ep 12: The End", "Day 1 of 3"],

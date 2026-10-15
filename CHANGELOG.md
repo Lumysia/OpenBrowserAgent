@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Page translation no longer skips paragraphs in Japanese and other languages written without spaces when they contain a number: such paragraphs were taken for a number and left untranslated.
+
 ## 0.2.0-beta.12 - 2026-10-15
 
 - **Keyboard shortcut for the side panel**: Ctrl+Shift+Y (Command+Shift+Y on macOS) opens the side panel. The key suggested before was one the browser keeps for itself, so the side panel had no shortcut. If the key isn't set after the update, or another extension has it, pick one in the browser's shortcut settings.
