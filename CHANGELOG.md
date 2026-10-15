@@ -8,6 +8,7 @@ What changed in each release. The release workflow publishes the section for the
 - Removed the "Diagnostic logging" switch in Settings → Debug: it no longer did anything. Its stored setting is cleared on update.
 - Links you open in a new tab from a translated page are translated too, like the next pages in the same tab.
 - The browser's built-in translator leaves text that is already in your language as it is, also on pages that mix languages (such as a feed with posts in several languages); before, it could garble it.
+- With the browser's built-in translator, short titles such as a name with a version number are translated like the rest of the page. Before, one it took for another language could stop it from translating the page and hand it to the AI model, or leave the titles and the cards after them untranslated. A text in a language it can't translate no longer takes the texts around it down with it.
 - An MCP server or bridge test error saved by an earlier version no longer repeats "Server test failed" or "Bridge test failed" in front of the reason.
 - Skills you picked are highlighted in the skill list, like the chosen model and agent.
 - When a page the agent works on opens a new tab, your tab now always comes back to the front; before, it sometimes stayed on the new tab.
