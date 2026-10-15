@@ -41,7 +41,8 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   modelDescription: "用於翻譯頁面的模型。",
   defaultModel: "與對話相同的模型",
   targetLanguage: "翻譯為",
-  targetLanguageDescription: "頁面會翻譯成此語言。這不會改變擴充功能的語言。",
+  targetLanguageDescription:
+    "網頁、影片字幕和智慧工具列的「翻譯」都使用此語言。這不會改變擴充功能的語言。",
   followInterface: "擴充功能的語言（{language}）",
   display: "顯示方式",
   displayDescription: "「原文和譯文」會保留每個段落，並在其下方加上譯文。",

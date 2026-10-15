@@ -45,7 +45,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   defaultModel: "チャットと同じモデル",
   targetLanguage: "翻訳先の言語",
   targetLanguageDescription:
-    "ページはこの言語に翻訳されます。拡張機能の言語は変わりません。",
+    "ページ、動画の字幕、スマートバーの「翻訳」はこの言語を使います。拡張機能の言語は変わりません。",
   followInterface: "拡張機能の言語（{language}）",
   display: "表示",
   displayDescription:

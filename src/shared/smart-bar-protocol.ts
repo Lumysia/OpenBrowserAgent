@@ -64,6 +64,9 @@ export type SmartBarPageConfig = {
   // The language results are written in (the extension's language setting,
   // which `language` may only approximate).
   replyLanguage: string;
+  // The language Translate and the dictionary write in: "Translate into",
+  // shared with page translation and subtitles.
+  translateLanguage: string;
   colorScheme: NonNullable<Preferences["colorScheme"]>;
   accentColor: NonNullable<Preferences["accentColor"]>;
 };

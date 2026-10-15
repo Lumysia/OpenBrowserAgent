@@ -19,14 +19,17 @@ const CONTEXT_LIMIT = 600;
 const SYSTEM =
   "You are a reading and writing assistant inside a browser toolbar. Return only the requested output: no preamble, no quotes around it, no follow-up questions. Use plain text; short '-' lists are fine, but no Markdown headings, tables or bold.";
 
-// Replies use the extension's language setting, which defaults to the
-// browser's UI language.
+// `reply`: what Explain answers in (the extension's language setting, which
+// defaults to the browser's UI language). `translate`: what Translate and the
+// dictionary write in (the "Translate into" setting pages use too).
+export type SmartBarPromptLanguages = { reply: string; translate: string };
+
 export function smartBarPrompt(
   { action, text, context, sourceLanguage }: Omit<SmartBarRunRequest, "type">,
-  replyLanguage: string,
+  languages: SmartBarPromptLanguages,
 ) {
-  const language = languageName(replyLanguage);
-  const target = translationTarget(replyLanguage, sourceLanguage);
+  const language = languageName(languages.reply);
+  const target = translationTarget(languages.translate, sourceLanguage);
   const format = smartBarResultFormat(action, text);
   if (format === SMART_BAR_RESULT_FORMAT.dictionary)
     return {
@@ -52,24 +55,24 @@ export function smartBarPrompt(
 }
 
 // The language to translate into. Fixed when the page knew the text's
-// language; otherwise the model picks between the reply language and the
+// language; otherwise the model picks between the target language and the
 // fallback, which it often gets wrong.
 type TranslationTarget = { language: string; fallback?: string };
 
 function translationTarget(
-  replyLanguage: string,
+  targetLanguage: string,
   sourceLanguage: string | undefined,
 ): TranslationTarget {
   const source = normalizeLanguageTag(sourceLanguage);
   if (source)
     return {
       language: languageName(
-        smartBarTranslationLanguage(replyLanguage, source),
+        smartBarTranslationLanguage(targetLanguage, source),
       ),
     };
   return {
-    language: languageName(replyLanguage),
-    fallback: isSmartBarTranslationFallback(replyLanguage)
+    language: languageName(targetLanguage),
+    fallback: isSmartBarTranslationFallback(targetLanguage)
       ? undefined
       : languageName(SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE),
   };

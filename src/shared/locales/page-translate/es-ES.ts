@@ -45,7 +45,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   defaultModel: "El mismo modelo que el chat",
   targetLanguage: "Traducir a",
   targetLanguageDescription:
-    "Las páginas se traducen a este idioma. No cambia el idioma de la extensión.",
+    "Las páginas, los subtítulos de vídeos y «Traducir» de la barra inteligente usan este idioma. No cambia el idioma de la extensión.",
   followInterface: "Idioma de la extensión ({language})",
   display: "Visualización",
   displayDescription:

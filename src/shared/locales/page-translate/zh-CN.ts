@@ -41,7 +41,8 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   modelDescription: "用于翻译页面的模型。",
   defaultModel: "与对话相同的模型",
   targetLanguage: "翻译为",
-  targetLanguageDescription: "页面会翻译成此语言。这不会改变扩展的语言。",
+  targetLanguageDescription:
+    "网页、视频字幕和智能工具栏的“翻译”都使用此语言。这不会改变扩展的语言。",
   followInterface: "扩展的语言（{language}）",
   display: "显示方式",
   displayDescription: "“原文和译文”会保留每个段落，并在其下方加上译文。",

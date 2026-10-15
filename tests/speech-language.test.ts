@@ -243,7 +243,7 @@ const input = (change: Partial<ReadAloudInput>): ReadAloudInput => ({
   action: "translate",
   source: "今天天气很好，我们去公园散步吧。",
   output: { write: "" },
-  languages: { page: "en", reply: "en-US", ui: "en-US" },
+  languages: { page: "en", reply: "en-US", translate: "en-US", ui: "en-US" },
   ...change,
 });
 
@@ -255,7 +255,12 @@ test("translations are read in their target language", async () => {
     await readResultPieces(
       input({
         output: { write: "Das Wetter ist schön." },
-        languages: { page: "zh-CN", reply: "de-DE", ui: "en-US" },
+        languages: {
+          page: "zh-CN",
+          reply: "de-DE",
+          translate: "de-DE",
+          ui: "en-US",
+        },
       }),
     ),
     [{ text: "Das Wetter ist schön.", lang: "de-DE" }],
@@ -266,7 +271,12 @@ test("translations are read in their target language", async () => {
       input({
         source: "Bonjour tout le monde, comment allez-vous ?",
         output: { write: "Hello everyone, how are you?" },
-        languages: { page: "fr", reply: "fr-FR", ui: "fr-FR" },
+        languages: {
+          page: "fr",
+          reply: "fr-FR",
+          translate: "fr-FR",
+          ui: "fr-FR",
+        },
       }),
       detector({ Bonjour: "fr" }),
     ),
@@ -298,7 +308,13 @@ test("a translation is read in the language the run asked for", async () => {
     input({
       source: "time",
       output: { write: "时间" },
-      languages: { source: "en", page: "zh-CN", reply: "zh-CN", ui: "zh-CN" },
+      languages: {
+        source: "en",
+        page: "zh-CN",
+        reply: "zh-CN",
+        translate: "zh-CN",
+        ui: "zh-CN",
+      },
     }),
   );
   assert.deepEqual(pieces, [{ text: "时间", lang: "zh-CN" }]);
@@ -311,7 +327,12 @@ test("edits keep the source language as hint", async () => {
         action: "fixGrammar",
         source: "Ich habe ein Hund.",
         output: { write: "Ich habe einen Hund." },
-        languages: { page: "de", reply: "en-US", ui: "en-US" },
+        languages: {
+          page: "de",
+          reply: "en-US",
+          translate: "en-US",
+          ui: "en-US",
+        },
       }),
     ),
     [{ text: "Ich habe einen Hund.", lang: "de" }],
@@ -341,7 +362,12 @@ test("a dictionary entry is read part by part, in card order", async () => {
           translation: "意外发现",
         },
       },
-      languages: { page: "en-GB", reply: "zh-CN", ui: "zh-CN" },
+      languages: {
+        page: "en-GB",
+        reply: "zh-CN",
+        translate: "zh-CN",
+        ui: "zh-CN",
+      },
     }),
   );
   assert.deepEqual(pieces, [
@@ -362,5 +388,22 @@ test("kanji-only text follows a Japanese hint", async () => {
   assert.deepEqual(
     await speechPieces([{ text: "学习很重要", hints: ["zh-CN"] }]),
     [{ text: "学习很重要", lang: "zh-CN" }],
+  );
+});
+
+test("a translation is read in the Translate into language, not the reply language", async () => {
+  assert.deepEqual(
+    await readResultPieces(
+      input({
+        output: { write: "Das Wetter ist schön." },
+        languages: {
+          page: "zh-CN",
+          reply: "en-US",
+          translate: "de",
+          ui: "en-US",
+        },
+      }),
+    ),
+    [{ text: "Das Wetter ist schön.", lang: "de" }],
   );
 });

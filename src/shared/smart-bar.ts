@@ -58,24 +58,24 @@ export const SMART_BAR_EDIT_ACTIONS = [
   SMART_BAR_ACTION.ask,
 ] as const satisfies readonly SmartBarAction[];
 
-// Translate answers in the reply language, or in this one when the text
-// already is in the reply language. The prompts ask for it; reading aloud
+// Translate answers in the target language ("Translate into"), or in this
+// one when the text already is in the target language. The prompts ask for it; reading aloud
 // expects it.
 export const SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE = "en";
 
 export function smartBarTranslationLanguage(
-  replyLanguage: string,
+  targetLanguage: string,
   sourceLanguage: string | undefined,
 ) {
   return sourceLanguage &&
-    primaryLanguage(sourceLanguage) === primaryLanguage(replyLanguage)
+    primaryLanguage(sourceLanguage) === primaryLanguage(targetLanguage)
     ? SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
-    : replyLanguage;
+    : targetLanguage;
 }
 
-export function isSmartBarTranslationFallback(replyLanguage: string) {
+export function isSmartBarTranslationFallback(targetLanguage: string) {
   return (
-    primaryLanguage(replyLanguage) === SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
+    primaryLanguage(targetLanguage) === SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
   );
 }
 

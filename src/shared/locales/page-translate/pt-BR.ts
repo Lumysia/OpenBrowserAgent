@@ -45,7 +45,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   defaultModel: "O mesmo modelo da conversa",
   targetLanguage: "Traduzir para",
   targetLanguageDescription:
-    "As páginas são traduzidas para este idioma. O idioma da extensão não muda.",
+    "As páginas, as legendas de vídeos e “Traduzir” da barra inteligente usam este idioma. O idioma da extensão não muda.",
   followInterface: "Idioma da extensão ({language})",
   display: "Exibição",
   displayDescription:

@@ -154,9 +154,10 @@ export function hidePageButtonOnHost(
       };
 }
 
-// The language pages are translated into: the setting, else the extension's
+// The one "Translate into" language: pages, video subtitles and the smart
+// bar's Translate and dictionary use it. The setting, else the extension's
 // language, matched to a language the engines know.
-export function pageTranslateTarget(
+export function translateIntoLanguage(
   settings: PageTranslateSettings,
   uiLanguage: string | undefined,
 ) {

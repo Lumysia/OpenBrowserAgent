@@ -1,6 +1,10 @@
 import { resolveAgent } from "../../shared/agents";
 import { getMessages } from "../../shared/i18n";
 import { resolveLanguage } from "../../shared/ui-languages";
+import {
+  normalizePageTranslateSettings,
+  translateIntoLanguage,
+} from "../../shared/page-translate/settings";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import { grantProviderConsent } from "../../shared/provider-consent";
 import { ProviderConsentError, userErrorText } from "../../shared/user-errors";
@@ -30,6 +34,7 @@ import {
 } from "../../shared/smart-bar-protocol";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { storage } from "../../shared/storage";
+import type { Preferences } from "../../shared/types";
 import { getBrowserApi } from "../../shared/browser-api";
 import {
   normalizeColorScheme,
@@ -38,7 +43,7 @@ import {
 import { resolveModel } from "../model-resolver";
 import { QUICK_TASK_PRIORITY, requestQuickText } from "../quick-tasks";
 import { handOffToSidePanel } from "../side-panel-handoff";
-import { smartBarPrompt } from "./prompts";
+import { smartBarPrompt, type SmartBarPromptLanguages } from "./prompts";
 import { pageHost } from "../../shared/site-hosts";
 import {
   injectTrigger,
@@ -184,17 +189,32 @@ async function prepare(
   )
     return { onSelection };
   if (!request.uiLoaded) await injectUi(tabId, sender.frameId ?? 0);
+  const languages = promptLanguages(preferences, language);
   const config: SmartBarPageConfig = {
     actions,
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
     providerConsent: getMessages(language).providerConsent,
     language: resolveLanguage(language),
-    replyLanguage: language,
+    replyLanguage: languages.reply,
+    translateLanguage: languages.translate,
     colorScheme: normalizeColorScheme(preferences.colorScheme),
     accentColor: normalizeTheme(preferences.accentColor),
   };
   return { onSelection, config };
+}
+
+function promptLanguages(
+  preferences: Preferences,
+  language: string,
+): SmartBarPromptLanguages {
+  return {
+    reply: language,
+    translate: translateIntoLanguage(
+      normalizePageTranslateSettings(preferences.pageTranslate),
+      language,
+    ),
+  };
 }
 
 async function showForSelection(tabId: number) {
@@ -280,7 +300,7 @@ async function runAction(
   let thinking = false;
   await requestQuickText(
     model,
-    smartBarPrompt(request, language),
+    smartBarPrompt(request, promptLanguages(preferences, language)),
     QUICK_TASK_PRIORITY.interactive,
     {
       signal,

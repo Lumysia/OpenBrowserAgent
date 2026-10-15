@@ -45,7 +45,7 @@ export const pageTranslateEnUS = {
   defaultModel: "Same model as the chat",
   targetLanguage: "Translate into",
   targetLanguageDescription:
-    "Pages are translated into this language. It doesn't change the extension's language.",
+    "Pages, video subtitles and the smart bar's Translate use this language. It doesn't change the extension's language.",
   // {language}: the extension's language.
   followInterface: "Extension's language ({language})",
   display: "Display",

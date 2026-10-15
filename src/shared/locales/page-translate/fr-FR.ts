@@ -45,7 +45,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   defaultModel: "Même modèle que la discussion",
   targetLanguage: "Traduire en",
   targetLanguageDescription:
-    "Les pages sont traduites dans cette langue. La langue de l’extension ne change pas.",
+    "Les pages, les sous-titres des vidéos et « Traduire » dans la barre intelligente utilisent cette langue. La langue de l’extension ne change pas.",
   followInterface: "Langue de l’extension ({language})",
   display: "Affichage",
   displayDescription:

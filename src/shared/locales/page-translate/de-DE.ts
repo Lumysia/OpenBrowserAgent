@@ -45,7 +45,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   defaultModel: "Gleiches Modell wie im Chat",
   targetLanguage: "Übersetzen in",
   targetLanguageDescription:
-    "Seiten werden in diese Sprache übersetzt. Die Sprache der Erweiterung ändert sich nicht.",
+    "Seiten, Video-Untertitel und „Übersetzen“ in der Smart Bar verwenden diese Sprache. Die Sprache der Erweiterung ändert sich nicht.",
   followInterface: "Sprache der Erweiterung ({language})",
   display: "Anzeige",
   displayDescription:

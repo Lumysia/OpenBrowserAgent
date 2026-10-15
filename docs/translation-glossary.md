@@ -245,6 +245,8 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 
 The **translate button** sits on an edge of web pages (the edge of the window, never "sidebar"); its close control offers "Hide on {site}" and "Hide everywhere", and Settings lists the sites it is hidden on. The **keyboard shortcut** is the browser's extension shortcut for the same toggle; the browser names the place to change it, so Firefox's hint quotes Firefox's own menu label ("Manage Extension Shortcuts").
 
+**Translate into** is the one target language: pages, video subtitles and the smart bar's Translate and dictionary entries all use it. Its default is the extension's language; descriptions name the features that use it rather than calling it a page setting.
+
 **Subtitles** are a video's lines, whatever the player calls them (captions, CC); the extension shows each line with its translation under it. "Translate subtitles" is the item in a video's context menu that turns them on or off for that one video; "Translate video subtitles" is the setting that translates them by themselves on every video. The video's own subtitle control is the player's "captions", so notes that tell people to use it say "captions in the player".
 
 | English                             | 简体中文                            | 繁體中文                            | 日本語                                   | 한국어                                     |

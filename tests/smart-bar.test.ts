@@ -17,6 +17,8 @@ import { smartBarPrompt } from "../src/background/smart-bar/prompts";
 import { placeSmartBar } from "../src/smart-bar/placement";
 import { speechChunks } from "../src/shared/speech-language";
 
+const languages = (tag: string) => ({ reply: tag, translate: tag });
+
 test("the smart bar is off by default and stored settings are cleaned", () => {
   assert.equal(mergePreferences({}).smartBar?.enabled, false);
   assert.deepEqual(
@@ -143,7 +145,10 @@ test("long selections are refused, never cut", () => {
   assert.equal(smartBarTextTooLong(`${limit}TAIL`), true);
   // What the model gets is the whole selection, so Replace is safe.
   assert.match(
-    smartBarPrompt({ action: "improve", text: `${limit}TAIL` }, "en-US").prompt,
+    smartBarPrompt(
+      { action: "improve", text: `${limit}TAIL` },
+      languages("en-US"),
+    ).prompt,
     /TAIL\n<\/text>$/,
   );
 });
@@ -173,7 +178,7 @@ test("context helps read the selection but is never the task", () => {
         pageTitle: "Google News",
       },
     },
-    "en-US",
+    languages("en-US"),
   );
   assert.match(
     prompt,
@@ -189,7 +194,7 @@ test("context helps read the selection but is never the task", () => {
       text: "Top st",
       context: { before: "", after: "ories" },
     },
-    "en-US",
+    languages("en-US"),
   ).prompt;
   assert.match(fix, /replaces exactly the selected text/);
   assert.doesNotMatch(fix, /read it as the whole word/);
@@ -197,7 +202,7 @@ test("context helps read the selection but is never the task", () => {
   assert.doesNotMatch(
     smartBarPrompt(
       { action: "explain", text: "x", context: { before: " ", after: "" } },
-      "en-US",
+      languages("en-US"),
     ).prompt,
     /<context>/,
   );
@@ -208,7 +213,7 @@ test("context helps read the selection but is never the task", () => {
       text: "x",
       context: { before: "b".repeat(5000), after: "a".repeat(5000) },
     },
-    "en-US",
+    languages("en-US"),
   ).prompt;
   assert.ok(long.length < 2000);
 });

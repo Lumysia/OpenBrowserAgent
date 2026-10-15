@@ -5,6 +5,7 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - **Keyboard shortcut for the side panel**: Ctrl+Shift+Y (Command+Shift+Y on macOS) opens the side panel. The key suggested before was one the browser keeps for itself, so the side panel had no shortcut. If the key isn't set after the update, or another extension has it, pick one in the browser's shortcut settings.
+- **One "Translate into" language**: Translate in the smart bar and its dictionary entries now use the same language as page translation and video subtitles (Settings → Page translation → "Translate into"), instead of the extension's language. Nothing changes while "Translate into" is left at the extension's language.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 
 ## 0.2.0-beta.11 - 2026-10-15

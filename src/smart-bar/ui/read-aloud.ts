@@ -25,8 +25,10 @@ export type ReadAloudInput = {
     source?: string;
     // The selection's nearest lang attribute.
     page?: string;
-    // What results are written in.
+    // What Explain is written in.
     reply: string;
+    // What Translate writes in.
+    translate: string;
     ui: string;
   };
 };
@@ -59,7 +61,7 @@ export async function readResultPieces(
   const source = await sourceLanguage(input, detect);
   if (action !== SMART_BAR_ACTION.translate)
     return speechPieces([{ text: output.write, hints: hints(source) }], detect);
-  const target = smartBarTranslationLanguage(languages.reply, source);
+  const target = smartBarTranslationLanguage(languages.translate, source);
   return speechPieces(
     output.entry
       ? dictionarySpeech(output.entry, {

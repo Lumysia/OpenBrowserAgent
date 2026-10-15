@@ -44,7 +44,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   defaultModel: "채팅과 같은 모델",
   targetLanguage: "번역할 언어",
   targetLanguageDescription:
-    "페이지를 이 언어로 번역합니다. 확장 프로그램의 언어는 바뀌지 않습니다.",
+    "페이지, 동영상 자막, 스마트 바의 '번역'에 이 언어를 사용합니다. 확장 프로그램의 언어는 바뀌지 않습니다.",
   followInterface: "확장 프로그램 언어({language})",
   display: "표시 방식",
   displayDescription:

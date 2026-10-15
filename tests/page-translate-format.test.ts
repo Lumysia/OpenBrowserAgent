@@ -16,7 +16,7 @@ import {
 import {
   DEFAULT_PAGE_TRANSLATE_SETTINGS,
   normalizePageTranslateSettings,
-  pageTranslateTarget,
+  translateIntoLanguage,
 } from "../src/shared/page-translate/settings";
 import { mergePreferences } from "../src/shared/default-preferences";
 
@@ -182,7 +182,7 @@ test("settings: defaults, cleaned values, the target language", () => {
     false,
   );
   const target = (targetLanguage: string, ui: string) =>
-    pageTranslateTarget(
+    translateIntoLanguage(
       { ...DEFAULT_PAGE_TRANSLATE_SETTINGS, targetLanguage },
       ui,
     );
