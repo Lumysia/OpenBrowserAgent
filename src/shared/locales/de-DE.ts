@@ -534,15 +534,22 @@ export const deDE: LocaleMessages = {
     deleteFile: "Datei löschen",
     updatedAt: "Aktualisiert",
     skillSize: "Skill-Größe",
-    skillCheckEntry: "SKILL.md vorhanden",
-    skillCheckEntryMissing: "SKILL.md fehlt",
-    skillCheckName: "Metadatenname verwendet Kebab-Case",
-    skillCheckNameInvalid: "Metadatenname muss Kebab-Case verwenden",
-    skillCheckDescription: "Beschreibung vorhanden",
-    skillCheckDescriptionMissing: "Beschreibung fehlt",
-    skillCheckSize: "Größe liegt im Limit",
-    skillCheckTooLarge:
-      "Die Dateien eines Skills dürfen zusammen {max} Zeichen enthalten",
+    skillCheck: {
+      entry: { ok: "SKILL.md vorhanden", failed: "SKILL.md fehlt" },
+      name: {
+        ok: "Metadatenname verwendet Kebab-Case",
+        failed: "Metadatenname muss Kebab-Case verwenden",
+      },
+      description: {
+        ok: "Beschreibung vorhanden",
+        failed: "Beschreibung fehlt",
+      },
+      size: {
+        ok: "Größe liegt im Limit",
+        failed:
+          "Die Dateien eines Skills dürfen zusammen {max} Zeichen enthalten",
+      },
+    },
     deleteSkill: "Skill löschen",
     builtinSkillBadge: "Integriert",
     overrideSkillBadge: "Angepasster integrierter Skill",
@@ -552,12 +559,17 @@ export const deDE: LocaleMessages = {
     revertSkillToBuiltin: "Auf integrierte Version zurücksetzen",
     viewFile: "Datei anzeigen",
     skillInvokeMode: "Verwendung",
-    skillInvokeAuto: "Automatisch",
-    skillInvokeManual: "Manuell",
-    skillInvokeOff: "Aus",
-    skillInvokeAutoHint: "Wird verwendet, wenn Ihre Anfrage passt",
-    skillInvokeManualHint: "Nur, wenn Sie ihn mit / oder + auswählen",
-    skillInvokeOffHint: "Wird nie verwendet",
+    skillInvoke: {
+      auto: {
+        label: "Automatisch",
+        hint: "Wird verwendet, wenn Ihre Anfrage passt",
+      },
+      manual: {
+        label: "Manuell",
+        hint: "Nur, wenn Sie ihn mit / oder + auswählen",
+      },
+      off: { label: "Aus", hint: "Wird nie verwendet" },
+    },
     skillListOverBudget: "Die Skill-Liste ist lang",
     skillListOverBudgetDescription:
       "Beschreibungen automatischer Skills belegen {chars} von {limit} Zeichen. Stellen Sie selten genutzte Skills auf „Manuell“ oder kürzen Sie sie.",

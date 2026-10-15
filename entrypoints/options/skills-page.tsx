@@ -307,9 +307,9 @@ function SkillItem({
             <ToggleGroupItem
               key={mode}
               value={mode}
-              tooltip={skillInvokeHint(t, mode)}
+              tooltip={t.options.skillInvoke[mode].hint}
             >
-              {skillInvokeLabel(t, mode)}
+              {t.options.skillInvoke[mode].label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -337,32 +337,12 @@ function Notice({
   );
 }
 
-function skillInvokeLabel(t: Messages, mode: SkillInvokeMode) {
-  return {
-    auto: t.options.skillInvokeAuto,
-    manual: t.options.skillInvokeManual,
-    off: t.options.skillInvokeOff,
-  }[mode];
-}
-
-function skillInvokeHint(t: Messages, mode: SkillInvokeMode) {
-  return {
-    auto: t.options.skillInvokeAutoHint,
-    manual: t.options.skillInvokeManualHint,
-    off: t.options.skillInvokeOffHint,
-  }[mode];
-}
-
 function skillCheckLabel(t: Messages, id: string, ok: boolean) {
-  const labels: Record<string, string> = {
-    entry: ok ? t.options.skillCheckEntry : t.options.skillCheckEntryMissing,
-    name: ok ? t.options.skillCheckName : t.options.skillCheckNameInvalid,
-    description: ok
-      ? t.options.skillCheckDescription
-      : t.options.skillCheckDescriptionMissing,
-    size: ok ? t.options.skillCheckSize : skillTooLargeText(t),
-  };
-  return labels[id] || id;
+  const labels: Record<string, { ok: string; failed: string }> =
+    t.options.skillCheck;
+  if (!Object.hasOwn(labels, id)) return id;
+  if (ok) return labels[id].ok;
+  return id === "size" ? skillTooLargeText(t) : labels[id].failed;
 }
 
 function formatSkillDate(value?: number) {

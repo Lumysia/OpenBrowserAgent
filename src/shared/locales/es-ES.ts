@@ -543,15 +543,19 @@ export const esES: LocaleMessages = {
     deleteFile: "Eliminar archivo",
     updatedAt: "Actualizado",
     skillSize: "Tamaño de la habilidad",
-    skillCheckEntry: "SKILL.md existe",
-    skillCheckEntryMissing: "Falta SKILL.md",
-    skillCheckName: "El nombre en los metadatos usa kebab-case",
-    skillCheckNameInvalid: "El nombre en los metadatos debe usar kebab-case",
-    skillCheckDescription: "Tiene descripción",
-    skillCheckDescriptionMissing: "Falta la descripción",
-    skillCheckSize: "El tamaño está dentro del límite",
-    skillCheckTooLarge:
-      "Los archivos de una habilidad pueden tener {max} caracteres en total",
+    skillCheck: {
+      entry: { ok: "SKILL.md existe", failed: "Falta SKILL.md" },
+      name: {
+        ok: "El nombre en los metadatos usa kebab-case",
+        failed: "El nombre en los metadatos debe usar kebab-case",
+      },
+      description: { ok: "Tiene descripción", failed: "Falta la descripción" },
+      size: {
+        ok: "El tamaño está dentro del límite",
+        failed:
+          "Los archivos de una habilidad pueden tener {max} caracteres en total",
+      },
+    },
     deleteSkill: "Eliminar habilidad",
     builtinSkillBadge: "Integrada",
     overrideSkillBadge: "Habilidad integrada personalizada",
@@ -561,12 +565,11 @@ export const esES: LocaleMessages = {
     revertSkillToBuiltin: "Volver a la versión integrada",
     viewFile: "Ver archivo",
     skillInvokeMode: "Uso",
-    skillInvokeAuto: "Automático",
-    skillInvokeManual: "Manual",
-    skillInvokeOff: "Desactivada",
-    skillInvokeAutoHint: "Se usa cuando tu petición encaja",
-    skillInvokeManualHint: "Solo cuando la eliges con / o +",
-    skillInvokeOffHint: "No se usa nunca",
+    skillInvoke: {
+      auto: { label: "Automático", hint: "Se usa cuando tu petición encaja" },
+      manual: { label: "Manual", hint: "Solo cuando la eliges con / o +" },
+      off: { label: "Desactivada", hint: "No se usa nunca" },
+    },
     skillListOverBudget: "La lista de habilidades es larga",
     skillListOverBudgetDescription:
       "Las descripciones de las habilidades en Automático ocupan {chars} de {limit} caracteres. Pon en Manual las que uses poco o acórtalas.",
