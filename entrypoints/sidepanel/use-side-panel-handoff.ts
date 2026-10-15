@@ -11,7 +11,7 @@ import {
   isSidePanelRequest,
   sidePanelRequest,
 } from "../../src/shared/side-panel-requests";
-import { getBrowserApi } from "../../src/shared/storage";
+import { getBrowserApi } from "../../src/shared/browser-api";
 import type { AttachmentTab, Chat, SelectedText } from "../../src/shared/types";
 import { handoffSelectedText } from "./selected-text";
 import { continuedChat } from "./side-panel-handoff";

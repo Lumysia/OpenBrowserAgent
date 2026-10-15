@@ -1,5 +1,5 @@
 import { delay } from "../../shared/cancellation";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { adoptAgentTab } from "../agent-tabs";
 import {

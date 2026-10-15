@@ -2,7 +2,7 @@ import { trimmedString } from "../../shared/values";
 import { isScriptableUrl } from "../../shared/browser";
 import { delay } from "../../shared/cancellation";
 import { TAB_LOAD_WAIT_TIMEOUT_MS } from "../../shared/config";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { adoptAgentTab, agentTabIds, openAgentTab } from "../agent-tabs";
 import { callPage } from "../page-agent";

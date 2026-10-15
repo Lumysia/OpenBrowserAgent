@@ -1,3 +1,4 @@
+import { CHAT_PART_STATE } from "../shared/types";
 import { chatContent, chatMeta, withChatFacts } from "../shared/chats";
 import { saveChatContent } from "../shared/chat-storage";
 import { streamPartFromChunk } from "../shared/chat-stream-parts";
@@ -96,7 +97,7 @@ export async function runSubAgentChat(options: {
         const existing = progress.find(
           (item) =>
             item.toolName === part.toolName &&
-            item.state !== "output-available",
+            item.state !== CHAT_PART_STATE.outputAvailable,
         );
         if (existing) existing.state = part.state;
         else progress.push({ toolName: part.toolName, state: part.state });

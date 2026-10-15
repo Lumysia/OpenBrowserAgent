@@ -4,7 +4,8 @@ import { getMessages } from "../../shared/i18n";
 // right-click menu, "Translate this page"), and installs the caption file
 // observer it asks for (see main-world.ts).
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
+import { storage } from "../../shared/storage";
 import {
   CAPTION_RESPONSE_MAX_CHARS,
   MIN_VIDEO_SIZE,

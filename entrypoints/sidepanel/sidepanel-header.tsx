@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import { storage, type SyncStatus } from "../../src/shared/storage";
+import { storage } from "../../src/shared/storage";
+import type { SyncStatus } from "../../src/shared/sync/state";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { describeSyncStatus, type SyncTone } from "../../src/ui/sync-status";

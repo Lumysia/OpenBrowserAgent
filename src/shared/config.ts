@@ -151,6 +151,7 @@ export const OPTIONS_ROUTE = {
   debug: "/debug",
 } as const;
 
+// The same routes as location hashes ("#/agents").
 export const OPTIONS_HASH = Object.fromEntries(
   Object.entries(OPTIONS_ROUTE).map(([page, route]) => [page, `#${route}`]),
 ) as {

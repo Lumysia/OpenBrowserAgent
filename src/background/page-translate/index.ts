@@ -13,7 +13,8 @@ import {
   type PageTranslateView,
 } from "../../shared/page-translate/protocol";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { flashBadge, showPageNote } from "../page-feedback";
 import { pageToastTheme } from "../page-toast";
 import { startVideoSubtitles, stopVideoSubtitles } from "../video-subtitles";

@@ -1,5 +1,5 @@
 import { VIDEO_SUBTITLES_SCRIPT } from "../../shared/video-subtitles/protocol";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 
 const SCRIPT_ID = "oba-video-button";
 const MATCHES = ["http://*/*", "https://*/*"];

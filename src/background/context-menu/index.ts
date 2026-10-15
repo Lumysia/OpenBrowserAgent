@@ -7,7 +7,8 @@ import {
 } from "../../shared/context-menu";
 import { getMessages } from "../../shared/i18n";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { togglePageTranslation, translateMenuTitle } from "../page-translate";
 import { handOffToSidePanel } from "../side-panel-handoff";
 import { toggleVideoSubtitles } from "../video-subtitles";

@@ -4,7 +4,7 @@ import {
   type SmartBarSettings,
 } from "../../shared/smart-bar";
 import { SMART_BAR_SCRIPT } from "../../shared/smart-bar-protocol";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 
 const SCRIPT_ID = "oba-smart-bar";
 

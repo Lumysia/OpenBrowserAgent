@@ -38,10 +38,6 @@ import type {
   SyncBackendConfig,
 } from "./types";
 
-export { DEFAULT_SYNC_GROUP_SETTINGS, STORAGE_KEYS, SYNC_GROUPS };
-export type { SyncGroup, SyncGroupSettings, SyncStatus };
-export { getBrowserApi };
-
 // Every value lives in storage.local. Sync runs in the background: it notices
 // changes through storage events and writes other devices' changes back
 // into the same keys, under the same per-key lock as `set` and `update`.

@@ -1,7 +1,8 @@
 import { isScriptableUrl } from "../../shared/browser";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { getMessages } from "../../shared/i18n";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { pageToastTheme } from "../page-toast";
 import { callPage } from "../page-agent";
 import { flashBadge, showPageNote } from "../page-feedback";

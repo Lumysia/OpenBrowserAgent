@@ -29,7 +29,8 @@ import {
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import {
   normalizeColorScheme,
   normalizeTheme,

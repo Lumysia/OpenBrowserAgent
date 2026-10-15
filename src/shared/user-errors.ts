@@ -5,6 +5,7 @@ import { formatMessage } from "./text";
 // user in the UI language; the English message stays for logs.
 export const USER_ERROR_CODE = {
   noModel: "noModel",
+  noImageModel: "noImageModel",
   baseUrlRequired: "baseUrlRequired",
   providerConsent: "providerConsent",
   bridgeNotFound: "bridgeNotFound",

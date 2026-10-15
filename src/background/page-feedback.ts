@@ -5,7 +5,7 @@ import {
   type PageToastOptions,
   type PageToastTheme,
 } from "../shared/page-toast";
-import { getBrowserApi } from "../shared/storage";
+import { getBrowserApi } from "../shared/browser-api";
 
 // How long the toolbar badge shows.
 const BADGE_MS = 4_000;

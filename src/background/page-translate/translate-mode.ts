@@ -1,4 +1,4 @@
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 
 // A tab's translate mode: once the user translates a page, every later page
 // loaded in that tab is translated too (links, typed addresses, redirects,

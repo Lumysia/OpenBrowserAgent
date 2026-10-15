@@ -1,6 +1,6 @@
 import { bytesToBase64 } from "../../shared/binary";
 import { OFFSCREEN_MESSAGE } from "../../shared/offscreen";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { offscreenRequest } from "../offscreen";
 import type { RunContext } from "../tools/types";
 import { nameFromUrl, safeDownloadPath } from "./filenames";

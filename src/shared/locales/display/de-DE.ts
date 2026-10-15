@@ -51,6 +51,8 @@ export const displayDeDE: DisplayMessages = {
   errors: {
     noModel:
       "Es ist kein Modell eingerichtet. Fügen Sie unter „Einstellungen“ → „KI-Anbieter“ einen Anbieter hinzu.",
+    noImageModel:
+      "Es ist kein Bildmodell eingerichtet. Wählen Sie unter „Einstellungen“ → „KI-Anbieter“ eines aus.",
     baseUrlRequired: "Geben Sie eine Basis-URL ein.",
     bridgeNotFound: "Diese Ausführungs-Bridge gibt es nicht mehr.",
     bridgeHostRequired: "Geben Sie den Namen des Native-Messaging-Hosts ein.",

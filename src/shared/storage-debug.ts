@@ -1,4 +1,5 @@
-import { storage, STORAGE_KEYS } from "./storage";
+import { storage } from "./storage";
+import { STORAGE_KEYS } from "./storage-keys";
 import { resetSync } from "./sync/client";
 
 const STORAGE_KEY_GROUPS = {

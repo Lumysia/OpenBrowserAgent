@@ -64,5 +64,8 @@ export async function resolveImageModel(modelId?: string) {
   ]);
   const choice = chooseImageModel(providers, preferences, modelId);
   if (choice) return providerModel(choice);
-  throw new Error("No image model configured. Select a model in Settings.");
+  throw new UserError(
+    USER_ERROR_CODE.noImageModel,
+    "No image model configured. Select a model in Settings.",
+  );
 }

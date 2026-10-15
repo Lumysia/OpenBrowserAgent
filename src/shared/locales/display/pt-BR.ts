@@ -54,6 +54,8 @@ export const displayPtBR: DisplayMessages = {
   errors: {
     noModel:
       "Nenhum modelo configurado. Adicione um provedor em “Configurações” → “Provedores de IA”.",
+    noImageModel:
+      "Nenhum modelo de imagem configurado. Escolha um em “Configurações” → “Provedores de IA”.",
     baseUrlRequired: "Informe uma URL base.",
     bridgeNotFound: "Esta ponte de execução não existe mais.",
     bridgeHostRequired: "Informe o nome do host de mensagens nativas.",

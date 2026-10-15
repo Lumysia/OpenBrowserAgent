@@ -46,6 +46,7 @@ export const displayZhTW: DisplayMessages = {
   },
   errors: {
     noModel: "尚未設定模型。請在「設定」→「AI 提供者」中新增提供者。",
+    noImageModel: "尚未設定圖像模型。請在「設定」→「AI 提供者」中選擇。",
     baseUrlRequired: "請輸入 Base URL。",
     bridgeNotFound: "這個執行橋已不存在。",
     bridgeHostRequired: "請輸入原生訊息主機名稱。",

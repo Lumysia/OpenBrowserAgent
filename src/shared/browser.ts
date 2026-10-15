@@ -1,4 +1,5 @@
-import { getBrowserApi, storage } from "./storage";
+import { storage } from "./storage";
+import { getBrowserApi } from "./browser-api";
 import { normalizeColorScheme } from "./theme/themes";
 import { themeTokens } from "./theme/tokens";
 import type { AttachmentTab } from "./types";

@@ -1,7 +1,7 @@
 import { delay, withCancellationTimeout } from "../../shared/cancellation";
 import { DEFAULT_SCREENSHOT_QUALITY } from "../../shared/config";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { withCdp, type CdpSend } from "../cdp";
 import { RUN_TAB_ID_PARAM } from "../run-tab";

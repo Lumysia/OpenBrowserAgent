@@ -1,5 +1,5 @@
 import { OPTIONS_HASH } from "./config";
-import { getBrowserApi } from "./storage";
+import { getBrowserApi } from "./browser-api";
 
 export async function openOrFocusOptions(hash: string = OPTIONS_HASH.general) {
   const api = getBrowserApi();

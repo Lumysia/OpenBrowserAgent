@@ -50,6 +50,8 @@ export const displayKo: DisplayMessages = {
   errors: {
     noModel:
       "설정된 모델이 없어요. ‘설정’ → ‘AI 제공업체’에서 제공업체를 추가하세요.",
+    noImageModel:
+      "설정된 이미지 모델이 없어요. ‘설정’ → ‘AI 제공업체’에서 선택하세요.",
     baseUrlRequired: "Base URL을 입력하세요.",
     bridgeNotFound: "이 실행 브리지는 더 이상 없습니다.",
     bridgeHostRequired: "네이티브 메시징 호스트 이름을 입력하세요.",

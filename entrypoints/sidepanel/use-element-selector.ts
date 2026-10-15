@@ -5,7 +5,7 @@ import {
   isScriptableUrl,
 } from "../../src/shared/browser";
 import type { Messages } from "../../src/shared/i18n";
-import { getBrowserApi } from "../../src/shared/storage";
+import { getBrowserApi } from "../../src/shared/browser-api";
 
 const ELEMENT_SELECTOR_MESSAGE = {
   selected: "getSelectedElement",

@@ -7,7 +7,7 @@ import {
 } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { SyncStatus } from "../../src/shared/storage";
+import type { SyncStatus } from "../../src/shared/sync/state";
 import type {
   AttachmentTab,
   Agent,

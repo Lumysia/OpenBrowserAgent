@@ -54,6 +54,8 @@ export const displayFrFR: DisplayMessages = {
   errors: {
     noModel:
       "Aucun modèle n’est configuré. Ajoutez un fournisseur dans « Paramètres » → « Fournisseurs d’IA ».",
+    noImageModel:
+      "Aucun modèle d’image n’est configuré. Choisissez-en un dans « Paramètres » → « Fournisseurs d’IA ».",
     baseUrlRequired: "Saisissez une URL de base.",
     bridgeNotFound: "Ce pont d’exécution n’existe plus.",
     bridgeHostRequired: "Saisissez le nom de l’hôte de messagerie native.",

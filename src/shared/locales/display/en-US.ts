@@ -55,6 +55,8 @@ export const displayEnUS = {
   },
   errors: {
     noModel: "No model is set up. Add a provider in Settings → AI providers.",
+    noImageModel:
+      "No image model is set up. Choose one in Settings → AI providers.",
     baseUrlRequired: "Enter a base URL.",
     bridgeNotFound: "This execution bridge no longer exists.",
     bridgeHostRequired: "Enter the native messaging host name.",
