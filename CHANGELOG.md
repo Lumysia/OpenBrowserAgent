@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- When a page the agent works on opens a new tab, your tab now always comes back to the front; before, it sometimes stayed on the new tab.
+
 ## 0.2.0-beta.9 - 2026-10-14
 
 - **Translated video subtitles**: choose "Translate subtitles" in a video's right-click menu or press the small button on its corner, and its subtitles show the original line with its translation under it, also in fullscreen; "Translate this page" translates the subtitles of the page's videos too. It works with the video's own subtitle tracks, the caption files a player loads and captions a player draws on the video, on any site.
