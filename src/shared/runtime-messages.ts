@@ -1,14 +1,32 @@
 import { getBrowserApi } from "./browser-api";
 import { errorMessage } from "./error-message";
-import { UserError, type UserErrorCode } from "./user-errors";
+import {
+  ProviderConsentError,
+  UserError,
+  type UserErrorCode,
+} from "./user-errors";
 
 // The reply to a runtime request between extension pages, the background
 // and the offscreen document. `code` carries a UserError across, so the
 // receiving UI can still show it in its language.
+// A consent error also carries the provider and host its text names.
 export type RuntimeReply<T = unknown> =
-  { ok: true; value?: T } | { ok: false; error: string; code?: UserErrorCode };
+  | { ok: true; value?: T }
+  | {
+      ok: false;
+      error: string;
+      code?: UserErrorCode;
+      consent?: { providerId: string; host: string };
+    };
 
 export function failureReply(error: unknown): RuntimeReply<never> {
+  if (error instanceof ProviderConsentError)
+    return {
+      ok: false,
+      error: error.message,
+      code: error.code,
+      consent: { providerId: error.providerId, host: error.host },
+    };
   return error instanceof UserError
     ? { ok: false, error: error.message, code: error.code }
     : { ok: false, error: errorMessage(error) };
@@ -35,9 +53,11 @@ export function replyValue<T>(
 ): T {
   if (!reply) throw new Error(`${receiver} did not respond.`);
   if (!reply.ok)
-    throw reply.code
-      ? new UserError(reply.code, reply.error)
-      : new Error(reply.error);
+    throw reply.consent
+      ? new ProviderConsentError(reply.consent.providerId, reply.consent.host)
+      : reply.code
+        ? new UserError(reply.code, reply.error)
+        : new Error(reply.error);
   return reply.value as T;
 }
 
