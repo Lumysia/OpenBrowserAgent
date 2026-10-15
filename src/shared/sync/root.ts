@@ -1,3 +1,4 @@
+import { isRecord } from "../values";
 import { gunzip, gzip, isBlobHash, jsonBytes, bytesText } from "./codec";
 import { compareClocks, isClock, type Clock } from "./hlc";
 
@@ -75,7 +76,7 @@ export const isRecordId = (id: string) => RECORD_ID_PATTERN.test(id);
 // A root is applied only after every part of it checked out: a truncated or
 // foreign file must never turn into deletions or overwrite local data.
 export function validateRoot(value: unknown): Root {
-  if (!isObject(value))
+  if (!isRecord(value))
     throw new SyncFormatError("Sync root is not an object.");
   if (value.format !== ROOT_FORMAT) {
     const version = formatVersion(value.format);
@@ -88,7 +89,7 @@ export function validateRoot(value: unknown): Root {
   }
   if (typeof value.writer !== "string")
     throw new SyncFormatError("Sync root has no writer.");
-  if (!isObject(value.records))
+  if (!isRecord(value.records))
     throw new SyncFormatError("Sync root has no records.");
   for (const [id, record] of Object.entries(value.records)) {
     const problem = recordProblem(id, record);
@@ -98,7 +99,7 @@ export function validateRoot(value: unknown): Root {
     throw new SyncFormatError("Sync root has no garbage list.");
   for (const entry of value.garbage)
     if (
-      !isObject(entry) ||
+      !isRecord(entry) ||
       !isBlobHash(entry.blob) ||
       typeof entry.since !== "number" ||
       !Number.isFinite(entry.since)
@@ -111,7 +112,7 @@ export function validateRoot(value: unknown): Root {
 
 function recordProblem(id: string, record: unknown) {
   if (!isRecordId(id)) return "invalid id";
-  if (!isObject(record)) return "not an object";
+  if (!isRecord(record)) return "not an object";
   if (!isClock(record.clock)) return "invalid clock";
   if (
     record.seen !== undefined &&
@@ -170,15 +171,11 @@ export function referencedBlobs(root: Root) {
 
 function isKeyring(value: unknown) {
   return (
-    isObject(value) &&
+    isRecord(value) &&
     typeof value.salt === "string" &&
     typeof value.check === "string" &&
     typeof value.iterations === "number" &&
     Number.isInteger(value.iterations) &&
     value.iterations > 0
   );
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
 }

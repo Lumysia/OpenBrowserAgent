@@ -281,6 +281,19 @@ export const CHAT_PART_STATE = {
   outputError: "output-error",
 } as const;
 
+// How far a tool part has got, for merging two copies of it: the later
+// state wins; other states rank lowest.
+const TOOL_STATE_ORDER: readonly string[] = [
+  CHAT_PART_STATE.inputStreaming,
+  CHAT_PART_STATE.inputAvailable,
+  CHAT_PART_STATE.outputAvailable,
+  CHAT_PART_STATE.outputError,
+];
+
+export function toolStateRank(state: string | undefined) {
+  return state ? TOOL_STATE_ORDER.indexOf(state) + 1 : 0;
+}
+
 export type ChatPart = {
   id: string;
   type: "text" | "reasoning" | "summary" | "notice" | ToolPartType;

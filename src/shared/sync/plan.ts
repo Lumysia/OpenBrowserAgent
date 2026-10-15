@@ -1,3 +1,4 @@
+import { isRecord } from "../values";
 import { includes, type Version } from "./clocks";
 import { sameJson } from "./codec";
 import { compareClocks } from "./hlc";
@@ -145,6 +146,3 @@ export function mergeFields(
   if (sameJson(merged, mine)) return mine;
   return merged;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);

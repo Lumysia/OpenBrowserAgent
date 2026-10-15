@@ -69,7 +69,8 @@ export function ensureAgentWorkspaces(
 
 export function normalizeWorkspaces(value: AgentWorkspace[] | undefined) {
   if (!Array.isArray(value)) return [];
-  const now = Date.now();
+  // A missing time reads as 0 (unknown): reading never invents one.
+  const now = 0;
   const byAgent = new Map<string, AgentWorkspace>();
   for (const item of value) {
     if (!item?.agentId) continue;

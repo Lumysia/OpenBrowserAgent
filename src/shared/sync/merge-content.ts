@@ -1,3 +1,4 @@
+import { isRecord } from "../values";
 import { sameJson } from "./codec";
 
 // Merges of content both devices changed since they last agreed (`base`,
@@ -72,9 +73,6 @@ function mergeList(base: Keyed[], preferred: Keyed[], other: Keyed[]) {
   }
   return result;
 }
-
-const isRecord = (value: unknown): value is Keyed =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 // A list of objects with string ids (agents, servers, models).
 const isList = (value: unknown): value is Keyed[] =>

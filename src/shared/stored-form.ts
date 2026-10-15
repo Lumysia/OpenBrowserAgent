@@ -1,3 +1,4 @@
+import { isRecord } from "./values";
 import { READ_KEYS } from "./read-ids";
 import { sameJson } from "./sync/codec";
 
@@ -115,6 +116,3 @@ function uniqueById(items: unknown[], ids: Array<string | undefined>) {
   for (const id of repeated) byId.delete(id);
   return byId;
 }
-
-const isRecord = (value: unknown): value is Fields =>
-  !!value && typeof value === "object" && !Array.isArray(value);

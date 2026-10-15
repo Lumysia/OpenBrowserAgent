@@ -1,8 +1,10 @@
 import { readId } from "./read-ids";
+import { finiteNumber, recordOf, stringOf } from "./values";
 import { CHAT_NOTICE_KIND } from "./run-stop";
 import {
   CHAT_PART_STATE,
   isToolPartType,
+  toolStateRank,
   type Chat,
   type ChatContent,
   type ChatMessage,
@@ -20,10 +22,10 @@ const CHAT_PART_STATES = new Set<string>(Object.values(CHAT_PART_STATE));
 export function normalizeChatSummaries(value: unknown): ChatSummary[] {
   if (!Array.isArray(value)) return [];
   return value.map((item, index) => {
-    const summary = objectValue(item);
+    const summary = recordOf(item);
     return {
       ...chatMeta(normalizeChat(item, index)),
-      messageCount: numberValue(summary.messageCount, 0),
+      messageCount: finiteNumber(summary.messageCount, 0),
       running: summary.running === true || undefined,
       attachmentIds: stringArray(summary.attachmentIds),
     };
@@ -222,8 +224,8 @@ function isCurrentRunNewer(current: ChatMessage, incoming: ChatMessage) {
   const currentMetrics = runMetrics(current);
   if (typeof currentMetrics.startedAt !== "number") return false;
   const incomingMetrics = runMetrics(incoming);
-  const currentIndex = numberValue(currentMetrics.streamEventIndex, 0);
-  const incomingIndex = numberValue(incomingMetrics.streamEventIndex, 0);
+  const currentIndex = finiteNumber(currentMetrics.streamEventIndex, 0);
+  const incomingIndex = finiteNumber(incomingMetrics.streamEventIndex, 0);
   return (
     currentIndex > incomingIndex ||
     current.content.length > incoming.content.length ||
@@ -309,12 +311,12 @@ function reconcileRunMetadata(
       firstTokenAt: currentMetrics.firstTokenAt || incomingMetrics.firstTokenAt,
       endedAt: incomingMetrics.endedAt || currentMetrics.endedAt,
       streamEventIndex: Math.max(
-        numberValue(currentMetrics.streamEventIndex, 0),
-        numberValue(incomingMetrics.streamEventIndex, 0),
+        finiteNumber(currentMetrics.streamEventIndex, 0),
+        finiteNumber(incomingMetrics.streamEventIndex, 0),
       ),
       outputCharacters: Math.max(
-        numberValue(currentMetrics.outputCharacters, 0),
-        numberValue(incomingMetrics.outputCharacters, 0),
+        finiteNumber(currentMetrics.outputCharacters, 0),
+        finiteNumber(incomingMetrics.outputCharacters, 0),
       ),
       usage: {
         ...(currentMetrics.usage || {}),
@@ -348,21 +350,12 @@ function partProgress(parts: ChatPart[] | undefined) {
   );
 }
 
-function toolStateRank(state: ChatPart["state"]) {
-  if (state === CHAT_PART_STATE.outputError) return 4;
-  if (state === CHAT_PART_STATE.outputAvailable) return 3;
-  if (state === CHAT_PART_STATE.inputAvailable) return 2;
-  if (state === CHAT_PART_STATE.inputStreaming) return 1;
-  return 0;
-}
-
 // `index`: its place in a stored list, which names it when it has no id.
 function normalizeChat(value: unknown, index = 0): Chat {
-  const chat = objectValue(value);
-  const now = Date.now();
+  const chat = recordOf(value);
   return {
     id: readId(value, index),
-    title: stringValue(chat.title),
+    title: stringOf(chat.title),
     messages: Array.isArray(chat.messages)
       ? chat.messages.map((message, at) => normalizeChatMessage(message, at))
       : [],
@@ -376,21 +369,23 @@ function normalizeChat(value: unknown, index = 0): Chat {
       ? chat.imageGenerationJobs
       : undefined,
     sources: Array.isArray(chat.sources) ? chat.sources : undefined,
-    pinnedAt: optionalNumber(chat.pinnedAt),
-    createdAt: numberValue(chat.createdAt, now),
-    updatedAt: numberValue(chat.updatedAt, now),
+    pinnedAt: finiteNumber(chat.pinnedAt),
+    // 0: unknown (a record stored without it); reading never invents a
+    // time, so two reads give the same chat.
+    createdAt: finiteNumber(chat.createdAt, 0),
+    updatedAt: finiteNumber(chat.updatedAt, 0),
   };
 }
 
 function normalizeChatMessage(value: unknown, index: number): ChatMessage {
-  const message = objectValue(value);
+  const message = recordOf(value);
   return {
     id: readId(value, index),
-    role: CHAT_MESSAGE_ROLES.has(stringValue(message.role))
+    role: CHAT_MESSAGE_ROLES.has(stringOf(message.role))
       ? (message.role as ChatMessage["role"])
       : "user",
-    content: stringValue(message.content),
-    createdAt: numberValue(message.createdAt, Date.now()),
+    content: stringOf(message.content),
+    createdAt: finiteNumber(message.createdAt, 0),
     parts: Array.isArray(message.parts)
       ? message.parts
           .map((part, at) => normalizeChatPart(part, at))
@@ -404,10 +399,10 @@ function normalizeChatPart(
   value: unknown,
   index: number,
 ): ChatPart | undefined {
-  const part = objectValue(value);
-  const type = stringValue(part.type);
+  const part = recordOf(value);
+  const type = stringOf(part.type);
   if (!TEXT_PART_TYPES.has(type) && !isToolPartType(type)) return undefined;
-  const state = stringValue(part.state);
+  const state = stringOf(part.state);
   return {
     id: readId(value, index),
     type: type as ChatPart["type"],
@@ -424,14 +419,14 @@ function normalizeChatPart(
     result: toolResultValue(part.result),
     step: optionalString(part.step),
     error: optionalString(part.error),
-    ...(NOTICE_KINDS.has(stringValue(part.kind))
+    ...(NOTICE_KINDS.has(stringOf(part.kind))
       ? { kind: part.kind as ChatPart["kind"] }
       : {}),
   };
 }
 
 function toolResultValue(value: unknown): ChatPart["result"] {
-  const result = objectValue(value);
+  const result = recordOf(value);
   if (typeof result.text !== "string") return undefined;
   return {
     text: result.text,
@@ -442,35 +437,14 @@ function toolResultValue(value: unknown): ChatPart["result"] {
   };
 }
 
-function objectValue(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
 function plainRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === "object"
     ? (value as Record<string, unknown>)
     : undefined;
 }
 
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value : "";
-}
-
 function optionalString(value: unknown) {
-  const text = stringValue(value);
-  return text || undefined;
-}
-
-function numberValue(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : undefined;
+  return stringOf(value) || undefined;
 }
 
 function stringArray(value: unknown) {

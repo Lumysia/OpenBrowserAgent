@@ -2,6 +2,7 @@
 // module.
 import { matchLanguageTag, normalizeLanguageTag } from "../language-tags";
 import { PAGE_TRANSLATE_LANGUAGES } from "./languages";
+import { oneOf } from "../values";
 
 // Where translations come from. `model`: the user's AI provider. `browser`:
 // the browser's on-device translator (Chrome's Translator API). `google`
@@ -74,16 +75,16 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
 export function normalizePageTranslateSettings(
   value: Partial<PageTranslateSettings> | undefined,
 ): PageTranslateSettings {
-  const engine = PAGE_TRANSLATE_ENGINES.includes(
-    value?.engine as PageTranslateEngine,
-  )
-    ? (value?.engine as PageTranslateEngine)
-    : DEFAULT_PAGE_TRANSLATE_SETTINGS.engine;
-  const display = Object.values(PAGE_TRANSLATE_DISPLAY).includes(
-    value?.display as PageTranslateDisplay,
-  )
-    ? (value?.display as PageTranslateDisplay)
-    : DEFAULT_PAGE_TRANSLATE_SETTINGS.display;
+  const engine = oneOf(
+    PAGE_TRANSLATE_ENGINES,
+    value?.engine,
+    DEFAULT_PAGE_TRANSLATE_SETTINGS.engine,
+  );
+  const display = oneOf(
+    Object.values(PAGE_TRANSLATE_DISPLAY),
+    value?.display,
+    DEFAULT_PAGE_TRANSLATE_SETTINGS.display,
+  );
   return {
     engine,
     modelId: typeof value?.modelId === "string" ? value.modelId : "",

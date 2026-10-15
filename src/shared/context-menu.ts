@@ -1,3 +1,4 @@
+import { knownValues } from "./values";
 // The right-click menu: its settings and the items it shows.
 
 // Items in menu order, as the settings name them.
@@ -30,13 +31,9 @@ export const DEFAULT_CONTEXT_MENU_SETTINGS: ContextMenuSettings = {
 export function normalizeContextMenuSettings(
   value: Partial<ContextMenuSettings> | undefined,
 ): ContextMenuSettings {
-  const items = new Set<string>(CONTEXT_MENU_ITEMS);
-  const disabled = Array.isArray(value?.disabledItems)
-    ? value.disabledItems.filter((item) => items.has(item))
-    : [];
   return {
     enabled: value?.enabled !== false,
-    disabledItems: [...new Set(disabled)],
+    disabledItems: knownValues(CONTEXT_MENU_ITEMS, value?.disabledItems),
   };
 }
 
