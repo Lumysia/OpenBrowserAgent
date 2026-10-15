@@ -7,5 +7,8 @@
   },
   "smartBarCommand": {
     "message": "为选中的文本显示智能工具栏"
+  },
+  "translatePageCommand": {
+    "message": "翻译此页面或显示原文"
   }
 }

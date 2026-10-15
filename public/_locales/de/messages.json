@@ -7,5 +7,8 @@
   },
   "smartBarCommand": {
     "message": "Smart Bar für den markierten Text anzeigen"
+  },
+  "translatePageCommand": {
+    "message": "Diese Seite übersetzen oder das Original anzeigen"
   }
 }

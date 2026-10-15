@@ -8,7 +8,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   menuItemLabel: "Traduzir esta página / Mostrar original",
   settingsTitle: "Tradução de páginas",
   settingsDescription:
-    "Escolha “Traduzir esta página” no menu de contexto para traduzir uma página e “Mostrar original” para voltar ao original.",
+    "Traduza uma página com o botão na borda, o atalho de teclado ou “Traduzir esta página” no menu de contexto. Repita para voltar ao original.",
   engine: "Mecanismo de tradução",
   engineDescription: "Escolha o que traduz as páginas.",
   engines: {
@@ -90,6 +90,28 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     "Não foi possível começar a traduzir esta página. Recarregue a página e tente novamente.",
   unavailablePage:
     "Não é possível traduzir esta página: o navegador não permite que extensões a alterem.",
+  button: {
+    translating: "Traduzindo…",
+    hide: "Ocultar o botão de tradução",
+    hideOnSite: "Ocultar em {site}",
+    hideEverywhere: "Ocultar em todos os sites",
+    setting: "Botão de tradução nas páginas",
+    settingDescription:
+      "Um pequeno botão na borda das páginas da web traduz a página ou mostra o original. Arraste-o para movê-lo; ele fica na borda mais próxima da janela.",
+    move: "As setas o movem ao longo da borda; E o leva para a próxima borda.",
+    hiddenSites: "Oculto nestes sites",
+    hiddenSitesDescription:
+      "O botão não aparece nestes sites. Um site inclui seus subdomínios.",
+  },
+  shortcut: {
+    setting: "Atalho de teclado",
+    settingDescription: "Traduz a página ou mostra o original.",
+    current: "Atalho: {shortcut}",
+    none: "Nenhum atalho definido",
+    change: "Alterar atalho",
+    firefoxHint:
+      "Para alterá-lo, abra about:addons, clique no botão de engrenagem e escolha “Gerenciar atalhos de extensões”.",
+  },
   subtitles: {
     menu: "Traduzir legendas",
     menuItemLabel: "Traduzir legendas / Ocultá-las (em vídeos)",

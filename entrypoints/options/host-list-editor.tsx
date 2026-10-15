@@ -1,6 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
-import { normalizeHost } from "../../src/shared/smart-bar";
+import { normalizeHost } from "../../src/shared/site-hosts";
 import {
   EMPTY_STATE_VARIANT,
   EmptyState,

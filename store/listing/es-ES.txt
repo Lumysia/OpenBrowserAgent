@@ -10,7 +10,7 @@ QUÉ PUEDES HACER
 • Editar una página directamente, por ejemplo para traducirla, y hacer capturas de pantalla o descargar archivos.
 • Seleccionar texto en cualquier página para usar acciones rápidas (explicar, traducir, mejorar la redacción, leer en voz alta). Esta función está desactivada hasta que la actives, y puedes limitarla a los sitios que elijas.
 • Hacer clic derecho en una página, un enlace o texto seleccionado para preguntar, resumir, buscar en la web o copiar la página como Markdown. Puedes desactivar el menú o cada uno de sus elementos.
-• Traducir el contenido de una página desde el menú contextual, junto al original o en su lugar, sin alterar el diseño de la página, y volver con «Mostrar original». Las siguientes páginas que abras en esa pestaña también se traducen, hasta que la vuelvas a cargar. Con tu modelo de IA, el traductor integrado del navegador (si lo tiene) o la traducción gratuita de Google o Microsoft (el texto de la página se envía entonces a ellos).
+• Traducir el contenido de una página con el botón del borde de la página, un atajo de teclado o el menú contextual, junto al original o en su lugar, sin alterar el diseño de la página, y volver con «Mostrar original». Las siguientes páginas que abras en esa pestaña también se traducen, hasta que la vuelvas a cargar. Con tu modelo de IA, el traductor integrado del navegador (si lo tiene) o la traducción gratuita de Google o Microsoft (el texto de la página se envía entonces a ellos).
 
 AGENTES Y HABILIDADES
 

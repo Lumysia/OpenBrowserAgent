@@ -2,6 +2,7 @@ import {
   PAGE_TRANSLATE_MESSAGE,
   type PageTranslateStateMessage,
 } from "../shared/page-translate/protocol";
+import { setPageTranslateShared } from "../shared/page-translate/button";
 import { getBrowserApi } from "../shared/browser-api";
 import {
   claimPageScript,
@@ -29,7 +30,14 @@ export function installPageTranslate() {
       .runtime.sendMessage(message)
       .catch(() => undefined);
   };
-  const controller = createController(report);
+  // The page button (in this world too) follows both.
+  const controller = createController(
+    (translated) => {
+      setPageTranslateShared({ translated, starting: translated });
+      report(translated);
+    },
+    () => setPageTranslateShared({ starting: false }),
+  );
   claimPageScript("page-translate", () => controller.stop());
   getBrowserApi().runtime.onMessage.addListener(
     (message, _sender, sendResponse) => {

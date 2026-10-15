@@ -7,5 +7,8 @@
   },
   "smartBarCommand": {
     "message": "Show the smart bar for the selected text"
+  },
+  "translatePageCommand": {
+    "message": "Translate this page or show the original"
   }
 }

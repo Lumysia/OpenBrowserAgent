@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Translate button on pages**: a small button on the edge of web pages translates the page or shows the original. Drag it to any edge of the window; it stays where you put it on every site. Point at it to hide it on that site or everywhere; Settings → Page translation lists the sites it is hidden on.
+- **Keyboard shortcut for page translation**: Alt+A (Control+Shift+A on macOS) translates the page or shows the original. Change it in the browser's shortcut settings, or turn it off in Settings → Page translation.
 - Translate in the smart bar now writes a word's dictionary entry in your language every time (in English when the word is already in your language); before, the first try often came back in the page's language.
 - Removed the "Diagnostic logging" switch in Settings → Debug: it no longer did anything. Its stored setting is cleared on update.
 - Links you open in a new tab from a translated page are translated too, like the next pages in the same tab.

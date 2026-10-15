@@ -2,6 +2,12 @@
 // module.
 import { matchLanguageTag, normalizeLanguageTag } from "../language-tags";
 import { PAGE_TRANSLATE_LANGUAGES } from "./languages";
+import {
+  hostListed,
+  normalizeHostList,
+  webPagesExcept,
+  type SiteMatchPatterns,
+} from "../site-hosts";
 import { oneOf } from "../values";
 
 // Where translations come from. `model`: the user's AI provider. `browser`:
@@ -59,6 +65,12 @@ export type PageTranslateSettings = {
   // A button on the corner of videos (on hover) that translates their
   // subtitles.
   videoButton: boolean;
+  // A button on an edge of the page that translates the page or shows the
+  // original, except on the sites listed (each with its subdomains).
+  pageButton: boolean;
+  pageButtonHiddenHosts: string[];
+  // The keyboard shortcut (a browser command) for the same.
+  shortcut: boolean;
 };
 
 // The browser's translator by default: where the browser has none, pages
@@ -70,6 +82,9 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
   translateMenus: false,
   videoButton: true,
+  pageButton: true,
+  pageButtonHiddenHosts: [],
+  shortcut: true,
 };
 
 export function normalizePageTranslateSettings(
@@ -85,6 +100,12 @@ export function normalizePageTranslateSettings(
     value?.display,
     DEFAULT_PAGE_TRANSLATE_SETTINGS.display,
   );
+  const flag = (
+    key: "translateMenus" | "videoButton" | "pageButton" | "shortcut",
+  ) =>
+    typeof value?.[key] === "boolean"
+      ? value[key]
+      : DEFAULT_PAGE_TRANSLATE_SETTINGS[key];
   return {
     engine,
     modelId: typeof value?.modelId === "string" ? value.modelId : "",
@@ -93,15 +114,43 @@ export function normalizePageTranslateSettings(
         normalizeLanguageTag(value.targetLanguage)) ||
       "",
     display,
-    translateMenus:
-      typeof value?.translateMenus === "boolean"
-        ? value.translateMenus
-        : DEFAULT_PAGE_TRANSLATE_SETTINGS.translateMenus,
-    videoButton:
-      typeof value?.videoButton === "boolean"
-        ? value.videoButton
-        : DEFAULT_PAGE_TRANSLATE_SETTINGS.videoButton,
+    translateMenus: flag("translateMenus"),
+    videoButton: flag("videoButton"),
+    pageButton: flag("pageButton"),
+    pageButtonHiddenHosts: normalizeHostList(value?.pageButtonHiddenHosts),
+    shortcut: flag("shortcut"),
   };
+}
+
+// Where the page button's script is registered; undefined while it is off.
+export function pageButtonMatchPatterns(
+  settings: PageTranslateSettings,
+): SiteMatchPatterns | undefined {
+  return settings.pageButton
+    ? webPagesExcept(settings.pageButtonHiddenHosts)
+    : undefined;
+}
+
+export function isPageButtonShownOn(
+  settings: PageTranslateSettings,
+  host: string,
+) {
+  return (
+    settings.pageButton && !hostListed(settings.pageButtonHiddenHosts, host)
+  );
+}
+
+// "Hide on this site".
+export function hidePageButtonOnHost(
+  settings: PageTranslateSettings,
+  host: string,
+): PageTranslateSettings {
+  return hostListed(settings.pageButtonHiddenHosts, host)
+    ? settings
+    : {
+        ...settings,
+        pageButtonHiddenHosts: [...settings.pageButtonHiddenHosts, host],
+      };
 }
 
 // The language pages are translated into: the setting, else the extension's

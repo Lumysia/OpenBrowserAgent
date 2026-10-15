@@ -39,29 +39,22 @@ import { resolveModel } from "../model-resolver";
 import { QUICK_TASK_PRIORITY, requestQuickText } from "../quick-tasks";
 import { handOffToSidePanel } from "../side-panel-handoff";
 import { smartBarPrompt } from "./prompts";
+import { pageHost } from "../../shared/site-hosts";
 import {
   injectTrigger,
   injectUi,
-  pageHost,
-  syncSmartBarRegistration,
+  registerSmartBarTrigger,
 } from "./registration";
 
 type Sender = chrome.runtime.MessageSender;
 
 export function setupSmartBar() {
-  let registration = Promise.resolve();
-  const sync = (settings: SmartBarSettings) => {
-    registration = registration
-      .then(() => syncSmartBarRegistration(settings))
-      .catch((error) => console.warn("Smart bar registration failed", error));
-  };
-  void readSettings().then(sync);
+  registerSmartBarTrigger();
   // The first change after the worker starts is always announced: the
   // settings it read at startup may already be the changed ones.
   let announced: string | undefined;
   storage.preferences.watch((preferences) => {
     const settings = normalizeSmartBarSettings(preferences.smartBar);
-    sync(settings);
     const key = JSON.stringify(settings);
     if (key === announced) return;
     announced = key;

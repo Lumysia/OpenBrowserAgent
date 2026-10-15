@@ -8,7 +8,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   menuItemLabel: "이 페이지 번역 / 원문 보기",
   settingsTitle: "페이지 번역",
   settingsDescription:
-    '컨텍스트 메뉴에서 "이 페이지 번역"을 선택하면 번역되고, "원문 보기"를 선택하면 원래대로 돌아갑니다.',
+    '페이지 가장자리의 버튼, 키보드 단축키 또는 컨텍스트 메뉴의 "이 페이지 번역"으로 페이지를 번역합니다. 한 번 더 하면 원문으로 돌아갑니다.',
   engine: "번역 엔진",
   engineDescription: "페이지를 번역하는 데 사용할 엔진을 선택합니다.",
   engines: {
@@ -88,6 +88,28 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     "이 페이지의 번역을 시작하지 못했습니다. 페이지를 새로고침한 후 다시 시도하세요.",
   unavailablePage:
     "이 페이지는 번역할 수 없습니다. 브라우저가 확장 프로그램의 변경을 허용하지 않습니다.",
+  button: {
+    translating: "번역 중…",
+    hide: "번역 버튼 숨기기",
+    hideOnSite: "{site}에서 숨기기",
+    hideEverywhere: "모든 사이트에서 숨기기",
+    setting: "페이지의 번역 버튼",
+    settingDescription:
+      "웹 페이지 가장자리에 작은 버튼을 표시해 페이지를 번역하거나 원문을 보여 줍니다. 드래그해 옮길 수 있으며, 창의 가장 가까운 가장자리에 붙습니다.",
+    move: "화살표 키로 가장자리를 따라 옮기고, E 키로 다음 가장자리로 옮깁니다.",
+    hiddenSites: "숨긴 사이트",
+    hiddenSitesDescription:
+      "이 사이트에서는 버튼이 표시되지 않습니다. 사이트에는 하위 도메인도 포함됩니다.",
+  },
+  shortcut: {
+    setting: "키보드 단축키",
+    settingDescription: "페이지를 번역하거나 원문을 보여 줍니다.",
+    current: "단축키: {shortcut}",
+    none: "설정된 단축키가 없습니다",
+    change: "단축키 변경",
+    firefoxHint:
+      '변경하려면 about:addons를 열고 톱니바퀴 버튼을 클릭한 다음 "확장 기능 단축키 관리"를 선택하세요.',
+  },
   subtitles: {
     menu: "자막 번역",
     menuItemLabel: "자막 번역 / 번역 숨기기(동영상에서)",

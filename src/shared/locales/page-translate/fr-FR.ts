@@ -8,7 +8,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   menuItemLabel: "Traduire cette page / Afficher l’original",
   settingsTitle: "Traduction de page",
   settingsDescription:
-    "Choisissez « Traduire cette page » dans le menu contextuel pour traduire une page, et « Afficher l’original » pour revenir au texte d’origine.",
+    "Traduisez une page avec le bouton sur son bord, le raccourci clavier ou « Traduire cette page » dans le menu contextuel. Recommencez pour revenir à l’original.",
   engine: "Moteur de traduction",
   engineDescription: "Choisissez ce qui traduit les pages.",
   engines: {
@@ -90,6 +90,28 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     "Impossible de lancer la traduction de cette page. Rechargez la page et réessayez.",
   unavailablePage:
     "Impossible de traduire cette page : le navigateur ne permet pas aux extensions de la modifier.",
+  button: {
+    translating: "Traduction…",
+    hide: "Masquer le bouton de traduction",
+    hideOnSite: "Masquer sur {site}",
+    hideEverywhere: "Masquer partout",
+    setting: "Bouton de traduction sur les pages",
+    settingDescription:
+      "Un petit bouton sur le bord des pages web traduit la page ou affiche l’original. Faites-le glisser pour le déplacer ; il reste sur le bord le plus proche de la fenêtre.",
+    move: "Les flèches le déplacent le long du bord ; E le place sur le bord suivant.",
+    hiddenSites: "Masqué sur ces sites",
+    hiddenSitesDescription:
+      "Le bouton n’apparaît pas sur ces sites. Un site inclut ses sous-domaines.",
+  },
+  shortcut: {
+    setting: "Raccourci clavier",
+    settingDescription: "Traduit la page ou affiche l’original.",
+    current: "Raccourci : {shortcut}",
+    none: "Aucun raccourci défini",
+    change: "Modifier le raccourci",
+    firefoxHint:
+      "Pour le modifier, ouvrez about:addons, cliquez sur l’engrenage et choisissez « Gérer les raccourcis d’extensions ».",
+  },
   subtitles: {
     menu: "Traduire les sous-titres",
     menuItemLabel: "Traduire les sous-titres / Les masquer (sur les vidéos)",

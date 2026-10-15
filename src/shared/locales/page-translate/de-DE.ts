@@ -8,7 +8,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   menuItemLabel: "Diese Seite übersetzen / Original anzeigen",
   settingsTitle: "Seitenübersetzung",
   settingsDescription:
-    "Wählen Sie im Kontextmenü „Diese Seite übersetzen“, um eine Seite zu übersetzen, und „Original anzeigen“, um zum Original zurückzukehren.",
+    "Übersetzen Sie eine Seite mit der Schaltfläche an ihrem Rand, der Tastenkombination oder „Diese Seite übersetzen“ im Kontextmenü. Dasselbe noch einmal zeigt das Original.",
   engine: "Übersetzungsdienst",
   engineDescription: "Wählen Sie, womit Seiten übersetzt werden.",
   engines: {
@@ -90,6 +90,28 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     "Die Übersetzung dieser Seite konnte nicht gestartet werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
   unavailablePage:
     "Diese Seite kann nicht übersetzt werden: Der Browser lässt Erweiterungen sie nicht ändern.",
+  button: {
+    translating: "Wird übersetzt…",
+    hide: "Übersetzen-Schaltfläche ausblenden",
+    hideOnSite: "Auf {site} ausblenden",
+    hideEverywhere: "Überall ausblenden",
+    setting: "Übersetzen-Schaltfläche auf Seiten",
+    settingDescription:
+      "Eine kleine Schaltfläche am Rand von Webseiten übersetzt die Seite oder zeigt das Original. Ziehen Sie sie, um sie zu verschieben; sie bleibt am nächsten Fensterrand.",
+    move: "Pfeiltasten verschieben sie am Rand entlang; E setzt sie an den nächsten Rand.",
+    hiddenSites: "Auf diesen Websites ausgeblendet",
+    hiddenSitesDescription:
+      "Die Schaltfläche erscheint auf diesen Websites nicht. Eine Website umfasst ihre Subdomains.",
+  },
+  shortcut: {
+    setting: "Tastenkombination",
+    settingDescription: "Übersetzt die Seite oder zeigt das Original.",
+    current: "Tastenkombination: {shortcut}",
+    none: "Keine Tastenkombination festgelegt",
+    change: "Tastenkombination ändern",
+    firefoxHint:
+      "Öffnen Sie dazu about:addons, klicken Sie auf das Zahnrad und wählen Sie „Erweiterungs-Tastenkombinationen verwalten“.",
+  },
   subtitles: {
     menu: "Untertitel übersetzen",
     menuItemLabel: "Untertitel übersetzen / ausblenden (bei Videos)",

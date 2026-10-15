@@ -8,7 +8,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   menuItemLabel: "Traducir esta página / Mostrar original",
   settingsTitle: "Traducción de páginas",
   settingsDescription:
-    "Elige «Traducir esta página» en el menú contextual para traducir una página y «Mostrar original» para volver al original.",
+    "Traduce una página con el botón de su borde, el atajo de teclado o «Traducir esta página» en el menú contextual. Repítelo para volver al original.",
   engine: "Motor de traducción",
   engineDescription: "Elige con qué se traducen las páginas.",
   engines: {
@@ -90,6 +90,28 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     "No se ha podido empezar a traducir esta página. Vuelve a cargar la página e inténtalo de nuevo.",
   unavailablePage:
     "No se puede traducir esta página: el navegador no permite que las extensiones la modifiquen.",
+  button: {
+    translating: "Traduciendo…",
+    hide: "Ocultar el botón de traducir",
+    hideOnSite: "Ocultar en {site}",
+    hideEverywhere: "Ocultar en todas partes",
+    setting: "Botón de traducir en las páginas",
+    settingDescription:
+      "Un pequeño botón en el borde de las páginas web traduce la página o muestra el original. Arrástralo para moverlo; se queda en el borde más cercano de la ventana.",
+    move: "Las flechas lo mueven a lo largo del borde; E lo lleva al borde siguiente.",
+    hiddenSites: "Oculto en estos sitios",
+    hiddenSitesDescription:
+      "El botón no aparece en estos sitios. Un sitio incluye sus subdominios.",
+  },
+  shortcut: {
+    setting: "Atajo de teclado",
+    settingDescription: "Traduce la página o muestra el original.",
+    current: "Atajo: {shortcut}",
+    none: "No hay ningún atajo asignado",
+    change: "Cambiar atajo",
+    firefoxHint:
+      "Para cambiarlo, abre about:addons, haz clic en el botón del engranaje y elige «Administrar atajos de extensiones».",
+  },
   subtitles: {
     menu: "Traducir subtítulos",
     menuItemLabel: "Traducir subtítulos / Ocultarlos (en vídeos)",

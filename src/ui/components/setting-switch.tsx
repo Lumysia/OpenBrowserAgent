@@ -57,11 +57,16 @@ export function SettingSwitch({
   );
 }
 
-export function SettingSwitchCard(props: Props) {
+// `children`: the setting's details, below the switch.
+export function SettingSwitchCard({
+  children,
+  ...props
+}: Props & { children?: ReactNode }) {
   return (
     <Card>
-      <CardContent>
+      <CardContent className={children ? "stack" : undefined}>
         <SettingSwitch {...props} />
+        {children}
       </CardContent>
     </Card>
   );

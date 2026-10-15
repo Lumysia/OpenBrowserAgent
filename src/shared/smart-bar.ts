@@ -1,6 +1,14 @@
 // Smart bar settings and site rules. Dependency-free: the page scripts import
 // this module, so it must stay small.
 import { primaryLanguage } from "./language-tags";
+import {
+  hostListed,
+  hostMatches,
+  hostMatchPattern,
+  normalizeHostList,
+  webPagesExcept,
+  type SiteMatchPatterns,
+} from "./site-hosts";
 import { knownValues, oneOf } from "./values";
 
 export const SMART_BAR_TRIGGER = {
@@ -141,49 +149,21 @@ export function normalizeSmartBarSettings(
       merged.siteMode,
       DEFAULT_SMART_BAR_SETTINGS.siteMode,
     ),
-    blockedHosts: hostList(merged.blockedHosts),
-    allowedHosts: hostList(merged.allowedHosts),
+    blockedHosts: normalizeHostList(merged.blockedHosts),
+    allowedHosts: normalizeHostList(merged.allowedHosts),
     disabledPageActions: actionList(merged.disabledPageActions),
     disabledEditActions: actionList(merged.disabledEditActions),
     modelId: typeof merged.modelId === "string" ? merged.modelId : "",
   };
 }
 
-function hostList(list: unknown) {
-  if (!Array.isArray(list)) return [];
-  const hosts = list.map((item) => normalizeHost(String(item)));
-  return [...new Set(hosts.filter((host): host is string => !!host))];
-}
-
-// A host as typed or pasted ("https://www.example.com/path", "Example.com")
-// to "www.example.com"; undefined when it is not a host name.
-export function normalizeHost(value: string) {
-  const text = value.trim().toLowerCase();
-  if (!text) return undefined;
-  let host = text;
-  try {
-    host = new URL(text.includes("://") ? text : `http://${text}`).hostname;
-  } catch {
-    return undefined;
-  }
-  host = host.replace(/^\*\./, "").replace(/\.$/, "");
-  return /^[a-z0-9-]+(\.[a-z0-9-]+)*$/.test(host) ? host : undefined;
-}
-
-// A listed host covers its subdomains.
-function hostMatches(host: string, listed: string) {
-  return host === listed || host.endsWith(`.${listed}`);
-}
-
 export function isSmartBarAllowedOnHost(
   settings: SmartBarSettings,
   host: string,
 ) {
-  const listed = (list: string[]) =>
-    list.some((entry) => hostMatches(host, entry));
   return settings.siteMode === SMART_BAR_SITE_MODE.allowList
-    ? listed(settings.allowedHosts)
-    : !listed(settings.blockedHosts);
+    ? hostListed(settings.allowedHosts, host)
+    : !hostListed(settings.blockedHosts, host);
 }
 
 // "Hide on this site": block the host, or in allow-list mode drop every
@@ -215,43 +195,20 @@ export function smartBarHideSite(settings: SmartBarSettings, host: string) {
   return covering.sort((a, b) => a.length - b.length)[0] ?? host;
 }
 
-const ALL_PAGES = ["http://*/*", "https://*/*"];
-const hostPattern = (host: string) => `*://*.${host}/*`;
-
-type SmartBarMatchPatterns = {
-  matches: string[];
-  excludeMatches: string[];
-};
-
 // Where the page script is registered; undefined when it runs nowhere.
 // Pages already open are checked again by the background on each selection.
 export function smartBarMatchPatterns(
   settings: SmartBarSettings,
-): SmartBarMatchPatterns | undefined {
+): SiteMatchPatterns | undefined {
   if (!settings.enabled) return undefined;
-  const patterns = (hosts: string[]) => hosts.map(hostPattern);
   if (settings.siteMode === SMART_BAR_SITE_MODE.allowList)
     return settings.allowedHosts.length
-      ? { matches: patterns(settings.allowedHosts), excludeMatches: [] }
+      ? {
+          matches: settings.allowedHosts.map(hostMatchPattern),
+          excludeMatches: [],
+        }
       : undefined;
-  return {
-    matches: ALL_PAGES,
-    excludeMatches: patterns(settings.blockedHosts),
-  };
-}
-
-// Whether patterns from smartBarMatchPatterns cover a host.
-export function smartBarPatternsCover(
-  patterns: Partial<SmartBarMatchPatterns>,
-  host: string,
-) {
-  const covers = (list: string[] = []) =>
-    list.some((pattern) => {
-      if (ALL_PAGES.includes(pattern)) return true;
-      const listed = pattern.match(/^\*:\/\/\*\.(.+)\/\*$/)?.[1];
-      return !!listed && hostMatches(host, listed);
-    });
-  return covers(patterns.matches) && !covers(patterns.excludeMatches);
+  return webPagesExcept(settings.blockedHosts);
 }
 
 export function smartBarActions(
