@@ -157,7 +157,13 @@ export function ModelList({
             <>
               {onTestModel && (
                 <TestButton
-                  state={testingModelId === model.id ? "testing" : "idle"}
+                  state={
+                    testingModelId === model.id
+                      ? "testing"
+                      : testResult?.modelId === model.id && testResult.ok
+                        ? "done"
+                        : "idle"
+                  }
                   label={t.options.testModel}
                   testingLabel={t.options.testingModel}
                   onClick={() => onTestModel(model)}

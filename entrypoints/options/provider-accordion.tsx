@@ -45,7 +45,7 @@ import { ProviderThinkingSwitch } from "./provider-thinking-switch";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
-import { testProviderModel } from "./test-provider-model";
+import { testProviderModel } from "../../src/shared/provider-test";
 import { errorWithDetail } from "../../src/ui/error-text";
 import { useTransient } from "../../src/ui/use-transient";
 
@@ -165,7 +165,7 @@ export function ProviderAccordion({
     setTestingModelId(model.id);
     setTestResult(undefined);
     try {
-      await testProviderModel(draft, model.name || model.id);
+      await testProviderModel(providerId, draft, model.name || model.id);
       setTestResult({
         modelId: model.id,
         ok: true,
