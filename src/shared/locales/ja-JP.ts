@@ -599,9 +599,6 @@ export const jaJP: LocaleMessages = {
     debugResetting: "消去中…",
     debugResetSuccess: "OpenBrowserAgent のデータを消去しました。",
     debugResetError: "データを消去できませんでした",
-    debugLoggingTitle: "診断ログ",
-    debugLoggingDescription:
-      "ストリーム、ツール、アシスタントの順序診断用の一時的なコンソールログを有効にします。",
     debugToolsTitle: "登録済みツール",
     debugToolsDescription: "選択中のエージェントのツール（{count}個）。",
     debugToolCore: "常時読み込み",

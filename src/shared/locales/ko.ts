@@ -561,9 +561,6 @@ export const ko: LocaleMessages = {
     debugResetting: "지우는 중…",
     debugResetSuccess: "OpenBrowserAgent 데이터가 지워졌습니다.",
     debugResetError: "데이터를 지우지 못했어요",
-    debugLoggingTitle: "진단 로깅",
-    debugLoggingDescription:
-      "스트리밍, 도구, 어시스턴트 순서 진단을 위한 임시 콘솔 로그를 활성화합니다.",
     debugToolsTitle: "등록된 도구",
     debugToolsDescription: "선택한 에이전트의 도구({count}개).",
     debugToolCore: "항상 불러옴",

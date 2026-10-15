@@ -252,8 +252,4 @@ export const storage = {
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
     () => false,
   ),
-  debugLoggingEnabled: createItem<boolean>(
-    STORAGE_KEYS.debugLoggingEnabled,
-    () => false,
-  ),
 };

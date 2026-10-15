@@ -598,9 +598,6 @@ export const enUS = {
     debugResetting: "Clearing…",
     debugResetSuccess: "OpenBrowserAgent data was cleared.",
     debugResetError: "Couldn’t clear the data",
-    debugLoggingTitle: "Diagnostic logging",
-    debugLoggingDescription:
-      "Enable temporary console logs for stream, tool, and assistant ordering diagnostics.",
     debugToolsTitle: "Registered tools",
     debugToolsDescription: "Tools of the selected agent ({count}).",
     debugToolCore: "Always loaded",

@@ -17,6 +17,7 @@ type Migration = {
 };
 
 const REMOVED_USER_ID_KEY = "userId";
+const REMOVED_DEBUG_LOGGING_KEY = "debug-logging-enabled";
 
 const MIGRATIONS: readonly Migration[] = [
   {
@@ -44,6 +45,12 @@ const MIGRATIONS: readonly Migration[] = [
     id: "remove-user-id",
     until: "0.2.0-beta.8",
     run: () => getBrowserApi().storage.local.remove(REMOVED_USER_ID_KEY),
+  },
+  {
+    // The "Diagnostic logging" switch, removed: nothing logged with it.
+    id: "remove-debug-logging",
+    until: "0.2.0-beta.9",
+    run: () => getBrowserApi().storage.local.remove(REMOVED_DEBUG_LOGGING_KEY),
   },
 ];
 

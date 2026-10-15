@@ -195,7 +195,6 @@ async function runInExtension(config) {
           models: [{ id: "acceptance-model", name: config.model }],
         },
       },
-      "debug-logging-enabled": false,
       preferences: { maxToolSteps: 3 },
     });
     // The background answers an attach to a run it does not have with

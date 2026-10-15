@@ -636,9 +636,6 @@ export const deDE: LocaleMessages = {
     debugResetting: "Wird gelöscht…",
     debugResetSuccess: "OpenBrowserAgent-Daten wurden gelöscht.",
     debugResetError: "Daten konnten nicht gelöscht werden",
-    debugLoggingTitle: "Diagnoseprotokolle",
-    debugLoggingDescription:
-      "Aktiviert temporäre Konsolenprotokolle zur Diagnose der Reihenfolge von Stream-, Tool- und Assistentenereignissen.",
     debugToolsTitle: "Registrierte Tools",
     debugToolsDescription: "Tools des gewählten Agenten ({count}).",
     debugToolCore: "Immer geladen",

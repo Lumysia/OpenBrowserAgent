@@ -627,9 +627,6 @@ export const ptBR: LocaleMessages = {
     debugResetting: "Limpando…",
     debugResetSuccess: "Os dados do OpenBrowserAgent foram limpos.",
     debugResetError: "Não foi possível limpar os dados",
-    debugLoggingTitle: "Logs de diagnóstico",
-    debugLoggingDescription:
-      "Ativa logs temporários no console para diagnosticar a ordem do streaming, das ferramentas e das respostas do assistente.",
     debugToolsTitle: "Ferramentas registradas",
     debugToolsDescription: "Ferramentas do agente selecionado ({count}).",
     debugToolCore: "Sempre carregada",

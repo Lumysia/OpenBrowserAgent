@@ -45,7 +45,6 @@ export const STORAGE_KEYS = {
   syncKeyring: "sync-keyring",
   // The sync format local sync data was last cleaned up for.
   syncFormat: "sync-format",
-  debugLoggingEnabled: "debug-logging-enabled",
   // The local day a holiday burst last played (see holidays.ts).
   holidayBurstDay: "holiday-burst-day",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",

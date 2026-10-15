@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Removed the "Diagnostic logging" switch in Settings → Debug: it no longer did anything. Its stored setting is cleared on update.
 - Links you open in a new tab from a translated page are translated too, like the next pages in the same tab.
 - The browser's built-in translator leaves text that is already in your language as it is, also on pages that mix languages (such as a feed with posts in several languages); before, it could garble it.
 - An MCP server or bridge test error saved by an earlier version no longer repeats "Server test failed" or "Bridge test failed" in front of the reason.
