@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
+
 ## 0.2.0-beta.11 - 2026-10-15
 
 - **Translate video subtitles everywhere**: turn on "Translate video subtitles" in Settings → Page translation, and every video with subtitles shows each line with its translation under it by itself, on any site, including the first captions a player loads (no need to turn the player's captions off and on again). "Translate subtitles" in a video's right-click menu turns them off or on for that video. The switch is off by default; while it is off, the menu and "Translate this page" translate subtitles as before.
