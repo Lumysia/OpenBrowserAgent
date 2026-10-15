@@ -152,7 +152,7 @@ export function startVideoSession(
   }
 
   // Each frame while playing with lines, so they change on time and the
-  // layer follows the video when the page scrolls or resizes.
+  // layer follows the video as it moves.
   function loop() {
     frame = undefined;
     update();
@@ -170,7 +170,6 @@ export function startVideoSession(
     liveLines.length = 0;
     refreshLines();
   };
-  const placed = () => overlay.place();
   const events: Array<[EventTarget, string, () => void]> = [
     [video, "play", play],
     [video, "seeked", seeked],
@@ -180,8 +179,6 @@ export function startVideoSession(
     [document, "fullscreenchange", update],
     [video, "enterpictureinpicture", update],
     [video, "leavepictureinpicture", update],
-    [window, "resize", placed],
-    [window, "scroll", placed],
   ];
   for (const [target, type, listener] of events)
     target.addEventListener(type, listener, { passive: true, capture: true });

@@ -14,6 +14,7 @@ import { inShadowRoot } from "./shadow-roots.mjs";
 import {
   hasCaptionObserver,
   isLayerRoot,
+  layerBox,
   lineAt,
   seek,
   shownLine,
@@ -292,6 +293,53 @@ test(
           await toggle();
           await seek(page, 41);
           await shownLine(page, lineAt(40));
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: the layer stays on the part of the video its player shows",
+        async () => {
+          const page = await browser.open(url("/clipped"));
+          const resize = (width) =>
+            page.send("Emulation.setDeviceMetricsOverride", {
+              width,
+              height: 900,
+              deviceScaleFactor: 1,
+              mobile: false,
+            });
+          await resize(1200);
+          // Over the player, never past its edges, whatever size it has
+          // laid itself out to.
+          const placedIn = async (width) => {
+            const player = await page.call((width) => {
+              const rect = document
+                .getElementById("player")
+                .getBoundingClientRect();
+              return Math.round(rect.width) === Math.round(width * 0.6)
+                ? rect.toJSON()
+                : null;
+            }, width);
+            const layer = player && (await layerBox(page));
+            if (!layer) return null;
+            const near = (a, b) => Math.abs(a - b) <= 1;
+            return near(layer.left, player.left) &&
+              near(layer.right, player.right) &&
+              layer.top >= player.top &&
+              layer.bottom < player.bottom
+              ? { player, layer }
+              : null;
+          };
+          await seek(page, 31);
+          await shownLine(page, lineAt(30));
+          assert.ok(await poll(() => placedIn(1200)));
+          // Paused: the player lays itself out after the window's resize.
+          await resize(900);
+          assert.ok(await poll(() => placedIn(900)));
+          // Playing.
+          await page.call(() => document.getElementById("video").play());
+          await resize(1300);
+          assert.ok(await poll(() => placedIn(1300)));
           await page.send("Page.close");
         },
       );

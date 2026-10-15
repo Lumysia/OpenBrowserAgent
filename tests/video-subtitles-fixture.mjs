@@ -93,6 +93,25 @@ ${VIDEO_TAG}></video>
 ${VIDEO_TAG}></video>
 <script>const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en&start'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();</script>
 </body></html>`,
+  // A player that clips a video larger than itself and offset in it, and
+  // lays itself out again a moment after the window changes size.
+  "/clipped": `<!doctype html><html lang="en"><head><title>Clipped player</title>${STYLE}</head><body>
+<div id="player" style="position:relative;overflow:hidden;background:#000">
+<video id="video" src="/blank.webm" muted playsinline loop preload="auto" style="position:absolute;left:0;top:12%;width:115%;height:115%"><track kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
+</div>
+<p>The video's title, under the player.</p>
+<script>
+const player = document.getElementById("player");
+const layout = () => {
+  const width = Math.round(innerWidth * 0.6);
+  player.style.width = width + "px";
+  player.style.height = Math.round((width * 9) / 16) + "px";
+};
+layout();
+let timer;
+addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(layout, 250); });
+</script>
+</body></html>`,
   // The same player that loaded its file before the user started.
   "/stub-earlier": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
 ${VIDEO_TAG}></video>
@@ -166,6 +185,16 @@ export function shownLine(page, original) {
   return poll(async () => {
     const shown = await subtitles(page);
     return shown?.original === original && shown.translation ? shown : null;
+  });
+}
+
+// The subtitle layer's box in the viewport, or null where none shows.
+export function layerBox(page) {
+  return inShadowRoot(page, isLayerRoot, (root) => {
+    const layer = root?.querySelector(".layer");
+    if (!layer || layer.hidden) return null;
+    const { left, top, right, bottom } = layer.getBoundingClientRect();
+    return { left, top, right, bottom };
   });
 }
 

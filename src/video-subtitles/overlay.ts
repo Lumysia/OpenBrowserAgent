@@ -3,17 +3,20 @@
 // keeps the page's styles and scripts out. The layer sits in the element
 // that is fullscreen (a player's fullscreen box), so it stays visible
 // there; a video that is itself fullscreen or in picture-in-picture shows
-// the lines through its own text track instead (see native-track.ts).
+// the lines through its own text track instead (see native-track.ts). It
+// covers the part of the video the user sees (see placement.ts) and
+// follows it when the window, the video or the player around it changes
+// size, also while the video is paused.
+import {
+  clippingAncestors,
+  layerPlacement,
+  visibleBox,
+  type ClippingAncestor,
+} from "./placement";
 
 // Marks the extension's elements in the page, so the caption finder and
 // page translation leave them alone.
 export const OWN_ATTRIBUTE = "data-oba-subtitles";
-
-// Caption conventions rather than the page's look: light text on a dark
-// box, sized from the video's height.
-const SIZE = { share: 0.042, min: 12, max: 34 } as const;
-// Above the player's control bar, as a share of the video's height.
-const BOTTOM_SHARE = 0.1;
 
 const CSS = `
 :host { all: initial; }
@@ -77,6 +80,7 @@ export function createOverlay(video: HTMLVideoElement) {
   shadow.append(style, layer);
 
   let content: OverlayContent | undefined;
+  let clips: ClippingAncestor[] | undefined;
 
   // The fullscreen element when the video is inside it, else the page.
   function mount() {
@@ -88,25 +92,57 @@ export function createOverlay(video: HTMLVideoElement) {
     if (host.parentNode !== parent) parent.append(host);
   }
 
+  // The boxes that clip the video, watched with it for size changes (a
+  // player that lays itself out after the window changed size). Found again
+  // when the window or fullscreen changes.
+  const resized = new ResizeObserver(() => place());
+  function clipping() {
+    if (clips?.every(({ element }) => element.isConnected)) return clips;
+    clips = clippingAncestors(video);
+    resized.disconnect();
+    resized.observe(video);
+    for (const { element } of clips) resized.observe(element);
+    return clips;
+  }
+
   function place() {
-    const rect = video.getBoundingClientRect();
     const covered =
       document.fullscreenElement === video ||
       document.pictureInPictureElement === video;
     const visible =
-      !!content?.original && !covered && rect.width > 0 && rect.height > 0;
+      content?.original && !covered
+        ? visibleBox(
+            video.getBoundingClientRect(),
+            clipping().map(({ element, x, y }) => ({
+              box: element.getBoundingClientRect(),
+              x,
+              y,
+            })),
+            { left: 0, top: 0, right: innerWidth, bottom: innerHeight },
+          )
+        : undefined;
     layer.hidden = !visible;
     if (!visible) return;
     mount();
-    const size = Math.min(
-      SIZE.max,
-      Math.max(SIZE.min, rect.height * SIZE.share),
-    );
-    layer.style.setProperty("--oba-subtitle-size", `${size}px`);
-    layer.style.left = `${rect.left}px`;
-    layer.style.width = `${rect.width}px`;
-    layer.style.bottom = `${innerHeight - rect.bottom + rect.height * BOTTOM_SHARE}px`;
+    const placement = layerPlacement(visible, innerHeight);
+    layer.style.setProperty("--oba-subtitle-size", `${placement.size}px`);
+    layer.style.left = `${placement.left}px`;
+    layer.style.width = `${placement.width}px`;
+    layer.style.bottom = `${placement.bottom}px`;
   }
+
+  // The layout changed around the video.
+  const relaid = () => {
+    clips = undefined;
+    place();
+  };
+  const events: Array<[EventTarget, string, () => void]> = [
+    [window, "resize", relaid],
+    [window, "scroll", place],
+    [document, "fullscreenchange", relaid],
+  ];
+  for (const [target, type, listener] of events)
+    target.addEventListener(type, listener, { passive: true, capture: true });
 
   return {
     // What shows; undefined hides the layer.
@@ -126,6 +162,9 @@ export function createOverlay(video: HTMLVideoElement) {
     },
     place,
     dispose() {
+      for (const [target, type, listener] of events)
+        target.removeEventListener(type, listener, { capture: true });
+      resized.disconnect();
       host.remove();
     },
   };
