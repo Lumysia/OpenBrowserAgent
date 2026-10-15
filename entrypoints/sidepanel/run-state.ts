@@ -1,8 +1,4 @@
-import {
-  CHAT_PART_STATE,
-  type Chat,
-  type ChatMessage,
-} from "../../src/shared/types";
+import type { Chat, ChatMessage } from "../../src/shared/types";
 
 // Whether a reply's run is over. A reply stored without an end whose run the
 // background does not have (it died, or ran on another device) is over too;
@@ -21,13 +17,10 @@ function startedWithoutEnd(message: ChatMessage) {
   );
 }
 
+// A failed tool does not end the run: the model goes on after it.
 export function messageRunEnded(message: ChatMessage, stopped: boolean) {
   const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
-  return (
-    stopped ||
-    !!metrics?.endedAt ||
-    !!message.parts?.some((part) => part.state === CHAT_PART_STATE.outputError)
-  );
+  return stopped || !!metrics?.endedAt;
 }
 
 // The latest reply whose run may still be going in the background.

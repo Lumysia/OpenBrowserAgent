@@ -135,9 +135,7 @@ export function MessageBubble({
   const cut = assistantEnded ? replyCutOff(message) : undefined;
   const chatExists = (chatId: string) =>
     chats.some((chat) => chat.id === chatId);
-  const assistantPartEntries = chronologicalAssistantPartEntries(
-    message.parts || [],
-  );
+  const assistantParts = chronologicalAssistantParts(message.parts || []);
   return (
     <div
       className={cn(
@@ -169,11 +167,10 @@ export function MessageBubble({
               hideActions={!assistantEnded}
             />
           )}
-          {assistantPartEntries.map(({ part, index }) => (
+          {assistantParts.map((part) => (
             <AssistantPart
               key={part.id}
               part={part}
-              partIndex={index}
               sources={sources}
               onFork={() => onFork?.(message, part.id)}
               message={message}
@@ -267,41 +264,32 @@ function selectedElementsFromMetadata(
     : [];
 }
 
-function chronologicalAssistantPartEntries(
-  parts: NonNullable<ChatMessage["parts"]>,
-) {
-  const entries: Array<{
-    part: NonNullable<ChatMessage["parts"]>[number];
-    index: number;
-  }> = [];
-  let reasoningGroup:
-    { firstIndex: number; ids: string[]; texts: string[] } | undefined;
+// Consecutive reasoning parts show as one.
+function chronologicalAssistantParts(parts: NonNullable<ChatMessage["parts"]>) {
+  const result: NonNullable<ChatMessage["parts"]> = [];
+  let reasoningGroup: { ids: string[]; texts: string[] } | undefined;
 
-  parts.forEach((part, index) => {
+  parts.forEach((part) => {
     if (part.type === "reasoning") {
       const text = part.text?.trim();
       if (!text) return;
-      if (!reasoningGroup)
-        reasoningGroup = { firstIndex: index, ids: [], texts: [] };
+      if (!reasoningGroup) reasoningGroup = { ids: [], texts: [] };
       reasoningGroup.ids.push(part.id);
       reasoningGroup.texts.push(text);
       return;
     }
     flushReasoningGroup();
-    entries.push({ part, index });
+    result.push(part);
   });
   flushReasoningGroup();
-  return entries;
+  return result;
 
   function flushReasoningGroup() {
     if (!reasoningGroup) return;
-    entries.push({
-      index: reasoningGroup.firstIndex,
-      part: {
-        id: `merged-reasoning-${reasoningGroup.ids.join("-")}`,
-        type: "reasoning" as const,
-        text: reasoningGroup.texts.join("\n\n"),
-      },
+    result.push({
+      id: `merged-reasoning-${reasoningGroup.ids.join("-")}`,
+      type: "reasoning" as const,
+      text: reasoningGroup.texts.join("\n\n"),
     });
     reasoningGroup = undefined;
   }

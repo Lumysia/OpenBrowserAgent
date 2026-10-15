@@ -88,6 +88,7 @@ export const esES: LocaleMessages = {
     questionSubmit: "Enviar respuestas",
     questionCustomPlaceholder: "Escribe tu propia respuesta…",
     questionNoAnswer: "Sin respuesta",
+    questionUnanswered: "Pregunta sin responder",
     forkTitleSuffix: "Bifurcación",
     messageCount: plural({
       one: "{count} mensaje",

@@ -41,7 +41,7 @@ export function ToolPart({
   const { title, failed, description, references, subAgentProgress } =
     toolDisplay(name, part, t, runEnded);
   const kind = TOOL_CARD_KINDS[name];
-  const waiting = !runEnded && !!kind?.waiting?.(part);
+  const waiting = !!kind?.waiting?.(part, runEnded);
   const loading =
     waiting ||
     (!runEnded &&

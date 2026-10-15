@@ -89,6 +89,7 @@ export const deDE: LocaleMessages = {
     questionSubmit: "Antworten senden",
     questionCustomPlaceholder: "Eigene Antwort eingeben…",
     questionNoAnswer: "Keine Antwort",
+    questionUnanswered: "Frage nicht beantwortet",
     forkTitleSuffix: "Verzweigung",
     messageCount: plural({
       one: "{count} Nachricht",

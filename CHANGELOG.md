@@ -21,6 +21,7 @@ What changed in each release. The release workflow publishes the section for the
 - A download's progress in the side panel shows its percentage the way the extension's language writes it (such as "42 %" in German and French).
 - A model that refused images or mid-chat tool updates once is sent requests without them from the start in later chats, instead of failing first each time; editing the model in Settings lets it try again.
 - Loading the model list of an Anthropic or Gemini provider now shows all of its models, not only the first page.
+- A question the assistant asks in the side panel can always be answered while it waits, also after a step that failed; writing in the message box instead sends your message as the reply. A question nothing waits for any more (the response was stopped or ended) shows as not answered, instead of "Asking a question" with options you couldn't click.
 
 ## 0.2.0-beta.9 - 2026-10-14
 

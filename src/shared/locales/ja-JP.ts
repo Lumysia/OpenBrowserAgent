@@ -89,6 +89,7 @@ export const jaJP: LocaleMessages = {
     questionSubmit: "回答を送信",
     questionCustomPlaceholder: "自由に回答を入力…",
     questionNoAnswer: "回答なし",
+    questionUnanswered: "未回答の質問",
     forkTitleSuffix: "分岐",
     messageCount: plural({ other: "{count}件のメッセージ" }),
     relativeMinutesAgo: "{count}分前",

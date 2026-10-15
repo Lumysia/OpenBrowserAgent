@@ -6,7 +6,8 @@ import { Button } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
-import { isQuestionPending, QuestionToolForm } from "./tool-question-form";
+import { isQuestionPending } from "./question-state";
+import { QuestionToolForm } from "./tool-question-form";
 
 type ToolBodyProps = {
   part: ChatPart;
@@ -32,7 +33,7 @@ type ToolCardKind = {
   replacesDescription?: boolean;
   // The run waits on the part while this holds (a question for the user);
   // the card shows as working.
-  waiting?: (part: ChatPart) => boolean;
+  waiting?: (part: ChatPart, runEnded: boolean) => boolean;
 };
 
 const output = (part: ChatPart) =>
