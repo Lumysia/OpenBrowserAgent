@@ -184,21 +184,14 @@ export async function launchExtension({
       );
       const page = await connectTo(target.webSocketDebuggerUrl);
       connections.push(page);
-      await poll(() =>
-        page.call((requestedUrl) => {
-          const expected = new URL(requestedUrl);
-          return (
-            location.href === expected.href &&
-            document.readyState === "complete" &&
-            (expected.protocol !== "chrome-extension:" ||
-              typeof globalThis.chrome?.storage?.local?.set === "function")
-          );
-        }, url),
-      );
+      await loaded(page, url);
       return page;
     };
     // Connect to an existing target, e.g. a tab the extension opened or its
     // service worker.
+    // A page or frame target is listed with the URL it is going to before
+    // that document commits; until then it holds the initial about:blank
+    // document (no extension APIs), so wait for its own document to load.
     // A service worker target can show up while the worker is still
     // starting (or one that is stopping), before extension APIs exist in
     // it; wait for a connection whose `chrome.runtime` is there.
@@ -210,8 +203,10 @@ export async function launchExtension({
           ),
         );
       if (type !== "service_worker") {
-        const page = await connectTo((await find()).webSocketDebuggerUrl);
+        const target = await find();
+        const page = await connectTo(target.webSocketDebuggerUrl);
         connections.push(page);
+        await loaded(page, target.url);
         return page;
       }
       return poll(async () => {
@@ -232,6 +227,25 @@ export async function launchExtension({
     await close();
     throw error;
   }
+}
+
+// Waits until `page` shows `url`, loaded, with the extension's APIs on an
+// extension page. A check that runs as the document commits fails with its
+// context; the next one runs in the new document.
+function loaded(page, url) {
+  return poll(() =>
+    page
+      .call((requestedUrl) => {
+        const expected = new URL(requestedUrl);
+        return (
+          location.href === expected.href &&
+          document.readyState === "complete" &&
+          (expected.protocol !== "chrome-extension:" ||
+            typeof globalThis.chrome?.storage?.local?.set === "function")
+        );
+      }, url)
+      .catch(() => false),
+  );
 }
 
 export async function poll(getValue, timeoutMs = 15000) {
