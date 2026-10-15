@@ -51,7 +51,7 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   },
   translateMenus: "同时翻译菜单和按钮",
   translateMenusDescription:
-    "关闭时只翻译页面的正文，导航、菜单、按钮、标签页和页脚保持不变。",
+    "关闭时，导航、菜单、按钮、标签页和页脚中的简短标签保持不变；其中的标题、句子和问题仍会翻译。",
   cache: "已保存的译文",
   cacheDescription:
     "译文会在此设备上保留 30 天，翻译过的页面再次打开时会立即显示。",

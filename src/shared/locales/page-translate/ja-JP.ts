@@ -56,7 +56,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   },
   translateMenus: "メニューとボタンも翻訳",
   translateMenusDescription:
-    "オフのときはページの本文だけを翻訳し、ナビゲーション、メニュー、ボタン、タブ、フッターはそのままにします。",
+    "オフのときは、ナビゲーション、メニュー、ボタン、タブ、フッターの短いラベルはそのままにします。その中の見出し、文、質問は翻訳します。",
   cache: "保存された翻訳",
   cacheDescription:
     "翻訳はこのデバイスに 30 日間保存され、翻訳済みのページはすぐに表示されます。",

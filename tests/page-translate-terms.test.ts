@@ -79,8 +79,10 @@ test("metadata: dates, relative times, numbers and names, in the page's language
 });
 
 test("metadata: names and counts only where the page sets the text apart as a label", () => {
-  const kinds = (texts: string[], label: boolean) =>
-    texts.map((text) => metadataOf(text, { language: "en", label }) ?? null);
+  const kinds = (texts: string[], label: boolean, name = false) =>
+    texts.map(
+      (text) => metadataOf(text, { language: "en", label, name }) ?? null,
+    );
   // The same shapes are sentences in running text: a title-case phrase, a
   // German noun, a number of things.
   const shapes = [
@@ -92,7 +94,18 @@ test("metadata: names and counts only where the page sets the text apart as a la
     "12 replies",
   ];
   assert.deepEqual(kinds(shapes, false), [null, null, null, null, null, null]);
+  // A label (a link's whole text) has numbers of things; a capitalized name
+  // only where the page marks a name (an author, a byline): a link's
+  // title-case headline has the same shape.
   assert.deepEqual(kinds(shapes, true), [
+    null,
+    null,
+    null,
+    null,
+    "number",
+    "number",
+  ]);
+  assert.deepEqual(kinds(shapes, true, true), [
     "name",
     "name",
     "name",

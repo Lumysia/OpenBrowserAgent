@@ -7,7 +7,7 @@ import {
   type WalkOptions,
 } from "../src/page-translate/blocks";
 import { roleOf } from "../src/page-translate/context";
-import { controlOf } from "../src/page-translate/dom-rules";
+import { controlOf } from "../src/page-translate/chrome";
 import { isQuestion } from "../src/shared/text";
 import { PAGE_TRANSLATE_ROLE } from "../src/shared/page-translate/context";
 
@@ -34,9 +34,10 @@ test("controls: a label that reads as a sentence or a question is content", () =
       <button>Read more</button>
       <button>Log in</button>
       <button aria-haspopup="menu">Choose which notifications you want to receive</button>
-      <div role="dialog"><button>Accept all cookies and continue to the site</button></div>
+      <div role="dialog"><button>Accept all cookies and continue to the site</button><button>Accept</button></div>
     </main>`;
-  // The same with menus and buttons translated or not: these are content.
+  // The same with menus and buttons translated or not: these are content,
+  // also in a dialog.
   const content = [
     "How many saves can I upload?",
     "How many saves can I upload?",
@@ -44,13 +45,17 @@ test("controls: a label that reads as a sentence or a question is content", () =
     "我可以上传多少个存档？",
     "Tell me how the storage of saves works",
   ];
-  assert.deepEqual(texts(page), content);
+  assert.deepEqual(texts(page), [
+    ...content,
+    "Accept all cookies and continue to the site",
+  ]);
   assert.deepEqual(texts(page, { translateMenus: true }), [
     ...content,
     "Read more",
     "Log in",
     "Choose which notifications you want to receive",
     "Accept all cookies and continue to the site",
+    "Accept",
   ]);
   // Content is placed and described as a title, not as a control.
   const [, question] = paragraphsOf(page);

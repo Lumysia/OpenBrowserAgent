@@ -2,7 +2,13 @@
 // new content is found, and paragraphs whose text changed are translated
 // again once the text has stopped changing.
 import { walkParagraphs, type Paragraph, type WalkOptions } from "./blocks";
-import { isInline, isOwn, TRANSLATION_ATTRIBUTE } from "./dom-rules";
+import {
+  HIDING_ATTRIBUTES,
+  isHiddenElement,
+  isInline,
+  isOwn,
+  TRANSLATION_ATTRIBUTE,
+} from "./dom-rules";
 import type { Placement } from "./layout";
 import { forgetSwapped } from "./originals";
 import type { Tooltip } from "./render";
@@ -132,6 +138,13 @@ export function createUnits(events: UnitEvents, options: WalkOptions) {
   const onMutations = (records: MutationRecord[]) => {
     for (const record of records) {
       if (insideOwn(record.target)) continue;
+      // Content the page shows again (a carousel's next slide) is looked
+      // at; content it hides keeps its translations for when it shows.
+      if (
+        record.type === "attributes" &&
+        isHiddenElement(record.target as Element)
+      )
+        continue;
       // The page wrote over text we swapped in: its text is the original.
       if (record.type === "characterData") forgetSwapped(record.target as Text);
       if (
@@ -161,6 +174,8 @@ export function createUnits(events: UnitEvents, options: WalkOptions) {
         childList: true,
         subtree: true,
         characterData: true,
+        attributes: true,
+        attributeFilter: HIDING_ATTRIBUTES,
       });
       walked = scan(root);
       await walked;

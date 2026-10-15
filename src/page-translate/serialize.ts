@@ -11,6 +11,7 @@ import {
   type PlaceholderTree,
 } from "../shared/page-translate/placeholders";
 import { compact } from "../shared/text";
+import { isControl } from "./chrome";
 import {
   isAtom,
   isCopiedInTranslation,
@@ -58,16 +59,16 @@ export function serializeNodes(nodes: Node[]): Serialized {
     // Icons and images aren't part of the text (see isDecorative).
     if (isDecorative(element)) return;
     const text = originalContent(element);
-    // Code and images, and elements with nothing to translate in them
-    // (footnote marks such as [1]), stay as they are.
-    if (isAtom(element) || (text.trim() && !LETTER.test(text))) {
+    // Code, images and controls in the sentence, and elements with nothing
+    // to translate in them (footnote marks such as [1]), stay as they are.
+    if (isKept(element) || (text.trim() && !LETTER.test(text))) {
       const id = elements.size + 1;
       elements.set(id, [element]);
       marked += atomTag(id);
       tokens.push({ type: "atom", id });
       // Line breaks read as spaces; marks are read as they are.
       if (element.localName === "br") plain += " ";
-      else if (!isAtom(element)) plain += text;
+      else if (!isKept(element)) plain += text;
       return;
     }
     // An element holding only a space (a non-breaking space between links)
@@ -105,6 +106,10 @@ export function serializeNodes(nodes: Node[]): Serialized {
   return { text: tidyMarkers(compact(marked)), plain, elements, tokens };
 }
 
+// Atoms (see isAtom), and the page's controls inside a sentence: a
+// paragraph never holds a control's label as its text (see blocks.ts).
+const isKept = (element: Element) => isAtom(element) || isControl(element);
+
 // An element and the elements nested in it around the same content, as one
 // pair of markers (fewer markers translate better). Plain wrappers add
 // nothing and are left out.
@@ -114,7 +119,7 @@ function wrappers(element: Element) {
     if (!isPlainWrapper(current)) chain.push(current);
     const only = onlyChild(current);
     current =
-      only && !isAtom(only) && LETTER.test(originalContent(only))
+      only && !isKept(only) && LETTER.test(originalContent(only))
         ? only
         : undefined;
   }
@@ -125,7 +130,7 @@ function innermost(element: Element) {
   let current = element;
   for (
     let only = onlyChild(current);
-    only && !isAtom(only) && LETTER.test(originalContent(only));
+    only && !isKept(only) && LETTER.test(originalContent(only));
     only = onlyChild(current)
   )
     current = only;

@@ -56,7 +56,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   translateMenus: "Traduire aussi les menus et les boutons",
   translateMenusDescription:
-    "Désactivé, seul le contenu principal de la page est traduit ; la navigation, les menus, les boutons, les onglets et les pieds de page restent tels quels.",
+    "Désactivé, les libellés courts de la navigation, des menus, des boutons, des onglets et des pieds de page restent tels quels ; les titres, les phrases et les questions qu’ils contiennent sont quand même traduits.",
   cache: "Traductions enregistrées",
   cacheDescription:
     "Les traductions sont conservées 30 jours sur cet appareil : les pages traduites s’affichent tout de suite.",

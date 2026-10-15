@@ -12,7 +12,7 @@ import {
   type PageTranslateRole,
 } from "../shared/page-translate/context";
 import type { Paragraph } from "./blocks";
-import { contentControlOf, controlOf, isMenuItem } from "./dom-rules";
+import { contentControlOf, controlOf, isMenuItem } from "./chrome";
 import type { Unit } from "./units";
 
 const CAPTION_SELECTOR = "figcaption, caption";

@@ -2,16 +2,22 @@
 // text and inline elements, and runs of text and inline elements next to
 // blocks in mixed content. The DOM is not changed.
 import {
-  isChrome,
+  contentControlOf,
+  isControl,
+  isInsideChrome,
+  isListLink,
+  isRegion,
+  isTextBlock,
+} from "./chrome";
+import {
   isDecorative,
   isHeading,
   isInline,
-  isInsideChrome,
   isOwn,
   isSkipped,
-  isTextBlock,
 } from "./dom-rules";
-import { compact } from "../shared/text";
+import { BLOCK_SELECTOR } from "../shared/dom-vocabulary";
+import { compact, readsAsSentence } from "../shared/text";
 import { labelsOf } from "./labels";
 import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
@@ -33,6 +39,11 @@ export type Paragraph = {
   // goes after it, not into it: it isn't a second link, isn't cut by the
   // element's box and takes no part in its layout.
   wrapper?: Element;
+  // The text reads as the page's content, not as a label of its interface:
+  // a heading, a sentence or a question, a control whose label is content
+  // (see chrome.ts). Only such text is translated in the page's chrome and
+  // over its article while menus and buttons aren't.
+  content: boolean;
 };
 
 // Short text in other blocks than headings and paragraphs reads inline.
@@ -52,25 +63,55 @@ export function* walkParagraphs(
 ): Generator<Paragraph | undefined> {
   const host =
     root.nodeType === 1 ? (root as Element) : (root as ShadowRoot).host;
-  if (!options.translateMenus && isInsideChrome(host)) return;
-  yield* walk(root, options);
+  // Inside an element left as it is, or a control left as it is, there is
+  // nothing to translate; inside a region of the page's interface only what
+  // reads as content.
+  let region = false;
+  for (let current = parentOf(host); current; current = parentOf(current)) {
+    if (isSkipped(current)) return;
+    if (options.translateMenus) continue;
+    if (isControl(current)) return;
+    region ||= isRegion(current);
+  }
+  if (!options.translateMenus && isControl(host)) return;
+  yield* walk(root, options, regionOf(host, region, options));
 }
 
+const parentOf = (element: Element) =>
+  element.parentElement ??
+  ((element.parentNode as ShadowRoot | null)?.host || null);
+
+// Whether paragraphs in `element` are in a region of the page's interface
+// while its labels aren't translated (see isRegion).
+const regionOf = (element: Element, region: boolean, options: WalkOptions) =>
+  !options.translateMenus && (region || isRegion(element));
+
+// `region`: `root` is in a region of the page's interface (see regionOf).
 function* walk(
   root: Element | ShadowRoot,
   options: WalkOptions,
+  region: boolean,
 ): Generator<Paragraph | undefined> {
   if (root.nodeType === 1 && isSkipped(root as Element)) return;
   const parent =
     root.nodeType === 1 ? (root as Element) : (root as ShadowRoot).host;
   let run: Node[] = [];
+  // A control inside a sentence ("Press <button>Save</button> to keep your
+  // changes") stays in it, kept as it is like inline code (see
+  // serialize.ts); controls at a run's edges are their own, translated
+  // with menus and buttons.
   const flush = function* () {
-    const nodes = run;
+    const { head, inner, tail } = splitControlEdges(run);
     run = [];
-    for (const part of splitBlockEdges(nodes)) {
-      const paragraph = makeParagraph(parent, root, part);
+    for (const element of head) yield* walkControl(element);
+    for (const part of splitBlockEdges(inner)) {
+      const paragraph = makeParagraph(parent, root, part, region);
       if (paragraph) yield paragraph;
     }
+    for (const element of tail) yield* walkControl(element);
+  };
+  const walkControl = function* (element: Element) {
+    if (options.translateMenus) yield* walk(element, options, region);
   };
   for (const child of Array.from(root.childNodes)) {
     if (child.nodeType === 3) run.push(child);
@@ -78,29 +119,59 @@ function* walk(
     else if (isOwn(child)) yield* flush();
     else {
       const element = child as Element;
-      if (!options.translateMenus && isChrome(element)) yield* flush();
-      else if (splitsLines(parent, element)) yield* flush();
+      if (splitsLines(parent, element)) yield* flush();
       else if (isSkipped(element)) {
         // Inline code and images stay part of the sentence around them.
         if (isInline(element)) run.push(element);
         else yield* flush();
+      } else if (isControl(element)) {
+        if (element.querySelector(BLOCK_SELECTOR)) {
+          yield* flush();
+          yield* walkControl(element);
+        } else run.push(element);
+      } else if (isListLink(element) && !isTextBlock(parent)) {
+        // Links in a menu are items of their own, not one sentence.
+        yield* flush();
+        run.push(element);
+        yield* flush();
       } else if (isInline(element) && !element.shadowRoot) run.push(element);
       else {
         yield* flush();
-        yield* walk(element, options);
+        yield* walk(element, options, regionOf(element, region, options));
       }
     }
   }
   yield* flush();
   if (root.nodeType === 1 && (root as Element).shadowRoot)
-    yield* walk((root as Element).shadowRoot!, options);
+    yield* walk((root as Element).shadowRoot!, options, region);
   yield undefined;
+}
+
+// The controls at the start and the end of a run, and what is between them.
+function splitControlEdges(nodes: Node[]) {
+  const isEdge = (node: Node) =>
+    isBlank(node) || (node.nodeType === 1 && isControl(node as Element));
+  let start = 0;
+  let end = nodes.length;
+  while (start < end && isEdge(nodes[start])) start++;
+  while (end > start && isEdge(nodes[end - 1])) end--;
+  const controls = (part: Node[]) =>
+    part.filter(
+      (node): node is Element =>
+        node.nodeType === 1 && isControl(node as Element),
+    );
+  return {
+    head: controls(nodes.slice(0, start)),
+    inner: nodes.slice(start, end),
+    tail: controls(nodes.slice(end)),
+  };
 }
 
 function makeParagraph(
   parent: Element,
   root: Element | ShadowRoot,
   nodes: Node[],
+  region: boolean,
   wrapper?: Element,
 ): Paragraph | undefined {
   if (!nodes.length) return undefined;
@@ -130,6 +201,7 @@ function makeParagraph(
       lone as Element,
       lone as Element,
       Array.from(lone.childNodes),
+      region,
       wrapper ?? (lone as Element),
     );
   const source = serializeNodes(trimmed);
@@ -138,14 +210,21 @@ function makeParagraph(
   if (isCodeView(parent)) return undefined;
   // The element the translation goes into.
   const host = wrapper?.parentElement ?? parent;
-  if (!isHeading(parent) && !isHeading(host)) {
-    const labels = labelsOf(parent, trimmed, source.plain, wrapper);
-    // Dates, numbers, names and bylines stay; so do labels of menus and
-    // buttons, unless those are translated: "Home" there is a word, not a
-    // name. Headings are always text.
-    if (labels && (labels !== "name" || !isInsideChrome(parent)))
-      return undefined;
-  }
+  const heading = isHeading(parent) || isHeading(host);
+  // Headings are always text.
+  const labels = heading
+    ? undefined
+    : labelsOf(parent, trimmed, source.plain, wrapper);
+  // Dates, numbers, names and bylines stay; so do labels of menus and
+  // buttons, unless those are translated: "Home" there is a word, not a
+  // name.
+  if (labels && (labels !== "name" || !isInsideChrome(parent)))
+    return undefined;
+  const content =
+    heading ||
+    !!contentControlOf(parent) ||
+    (!labels && readsAsSentence(source.plain));
+  if (region && !content) return undefined;
   return {
     parent,
     nodes: trimmed,
@@ -154,6 +233,7 @@ function makeParagraph(
       whole && !isTextBlock(host) && source.plain.length <= INLINE_MAX_CHARS,
     source,
     wrapper,
+    content,
   };
 }
 
