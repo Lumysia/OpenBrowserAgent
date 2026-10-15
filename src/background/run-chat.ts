@@ -151,19 +151,7 @@ export async function runChat(
 // chat export.
 export async function describeRun(agentId: string | undefined) {
   const prepared = await runSetup({ agentId }, false, createRunTab(""));
-  const unused = () => {
-    throw new Error("Not available in a run description.");
-  };
-  const toolSet = createToolSet({
-    ...prepared.setup,
-    chatId: "",
-    session: undefined as unknown as StreamSession,
-    storeArtifact: unused,
-    readArtifact: unused,
-    askHelper: unused,
-    addUsage: unused,
-    helperInputChars: 0,
-  });
+  const toolSet = createToolSet(prepared.setup);
   const schema = (tool: ToolDefinition) => ({
     type: "function",
     function: {

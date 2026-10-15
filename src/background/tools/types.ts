@@ -58,6 +58,13 @@ export type RunContext = {
   ): Promise<string>;
 };
 
+// What decides which tools a run gets (createToolSet), so the tools can be
+// listed without a running chat.
+export type ToolSetup = Pick<
+  RunContext,
+  "agent" | "mcpServers" | "preferences" | "depth" | "workspace"
+>;
+
 // The chat a run's tabs and downloads belong to: a sub-agent's are its
 // parent chat's.
 export function ownerChat(run: Pick<RunContext, "chatId" | "parentChatId">) {
@@ -97,7 +104,7 @@ export type ToolDefinition = {
   compactArgs?: boolean;
   // Overrides the default time limit of page tools.
   timeoutMs?: number;
-  available?(run: RunContext): boolean;
+  available?(setup: ToolSetup): boolean;
   execute(
     input: Record<string, unknown>,
     context: ToolContext,

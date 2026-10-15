@@ -16,7 +16,7 @@ import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
 import { screenshotTool } from "./screenshot";
 import { tabsTool, webSearchTool } from "./tabs";
-import { schema, type RunContext, type ToolDefinition } from "./types";
+import { schema, type ToolSetup, type ToolDefinition } from "./types";
 import { workspaceTool } from "./workspace";
 
 export const BUILTIN_TOOLS: ToolDefinition[] = [
@@ -50,10 +50,10 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
 // the provider supports it (see piModel), a loaded tool is declared in a
 // message after the cached prefix; elsewhere the tool list grows, which costs
 // one cache miss per load.
-export function createToolSet(run: RunContext, loaded: string[] = []) {
-  const allowed = [...BUILTIN_TOOLS, ...mcpToolDefinitions(run.mcpServers)]
-    .filter((tool) => !tool.group || hasToolGroup(run.agent, tool.group))
-    .filter((tool) => tool.available?.(run) ?? true);
+export function createToolSet(setup: ToolSetup, loaded: string[] = []) {
+  const allowed = [...BUILTIN_TOOLS, ...mcpToolDefinitions(setup.mcpServers)]
+    .filter((tool) => !tool.group || hasToolGroup(setup.agent, tool.group))
+    .filter((tool) => tool.available?.(setup) ?? true);
   const core = allowed.filter((tool) => !tool.onDemand);
   const onDemand = allowed.filter((tool) => tool.onDemand);
   const loadedTools: ToolDefinition[] = [];
