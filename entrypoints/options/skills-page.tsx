@@ -29,7 +29,6 @@ import {
   validateSkill,
 } from "../../src/shared/skills";
 import { formatBytes, formatDateTime } from "../../src/shared/format";
-import { storage } from "../../src/shared/storage";
 import type { Skill, SkillInvokeMode } from "../../src/shared/types";
 import {
   Accordion,
@@ -45,14 +44,14 @@ import { skillDisplay, skillTooLargeText } from "../../src/ui/skill-display";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function SkillsPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const { entries, setSkills, setSettings } = useSkillCatalog();
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});

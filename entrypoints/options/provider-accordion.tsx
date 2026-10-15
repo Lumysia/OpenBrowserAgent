@@ -6,7 +6,6 @@ import {
   providerHasConsent,
   withProviderConsent,
 } from "../../src/shared/provider-consent";
-import { storage } from "../../src/shared/storage";
 import {
   providerDefaultBaseUrls,
   type ModelConfig,
@@ -39,7 +38,6 @@ import {
   providerNameDisplay,
   providerTypeLabel,
 } from "../../src/ui/provider-display";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { ProviderConsentField } from "./provider-consent-field";
 import { ProviderThinkingSwitch } from "./provider-thinking-switch";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
@@ -48,6 +46,7 @@ import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "../../src/shared/provider-test";
 import { errorWithDetail } from "../../src/ui/error-text";
 import { useTransient } from "../../src/ui/use-transient";
+import { useUiLanguage } from "../../src/ui/messages";
 
 const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
   glm: ["https://api.z.ai/api/paas/v4", "https://open.bigmodel.cn/api/paas/v4"],
@@ -67,7 +66,7 @@ export function ProviderAccordion({
   onDelete: () => void;
   onModelAdded: (model: ModelConfig) => void;
 }) {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [draft, setDraft] = useState(value);
   const [modelName, setModelName] = useState("");
   const [fetchedModelSearch, setFetchedModelSearch] = useState("");

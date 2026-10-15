@@ -13,9 +13,10 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function SyncPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [syncGroups] = useStoredState(storage.syncGroups);
   const [syncStatus] = useStoredState(storage.syncStatus);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);

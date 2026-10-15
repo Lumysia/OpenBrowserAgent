@@ -39,9 +39,10 @@ import { AgentWorkspaceEditor } from "./agent-workspace-editor";
 import { downloadAgentZip, importAgentZip } from "./workspace-import";
 import { importErrorText } from "./import-errors";
 import { useLatest } from "../../src/ui/use-latest";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function AgentsPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [agents, setAgents] = useStoredState(storage.agents);
   const [workspaces] = useStoredState(storage.agentWorkspaces);

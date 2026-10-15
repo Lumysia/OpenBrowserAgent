@@ -37,7 +37,6 @@ export function ComposerBox({
   input,
   composerRef,
   editingMessageId,
-  aiWorking,
   streaming,
   openMenu,
   addMenuView,
@@ -69,7 +68,6 @@ export function ComposerBox({
   input: string;
   composerRef: RefObject<HTMLTextAreaElement | null>;
   editingMessageId?: string;
-  aiWorking: boolean;
   streaming: boolean;
   openMenu: ComposerMenu | null;
   addMenuView: AddMenuView;
@@ -177,7 +175,7 @@ export function ComposerBox({
                         variant="outline"
                         size="icon"
                         aria-label={t.common.add}
-                        disabled={aiWorking}
+                        disabled={streaming}
                       >
                         <Plus size={20} />
                       </Button>
@@ -224,7 +222,7 @@ export function ComposerBox({
               configuredModels={configuredModels}
               agents={agents}
               openMenu={openMenu}
-              aiWorking={aiWorking}
+              streaming={streaming}
               onSetOpenMenu={onSetOpenMenu}
               onSetPreferences={onSetPreferences}
             />

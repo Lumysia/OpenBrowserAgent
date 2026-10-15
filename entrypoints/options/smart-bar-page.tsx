@@ -22,9 +22,10 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { HostListEditor } from "./host-list-editor";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function SmartBarPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const t = getMessages(language);
   const s = t.smartBar;

@@ -34,9 +34,11 @@ import { providerTypeLabel } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
 import { ProviderAccordion } from "./provider-accordion";
+import { DEFAULT_PREFERENCES } from "../../src/shared/default-preferences";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function ProvidersPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [providerState, setProviderState] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [providerType, setProviderType] = useState<ProviderId>("openai");
@@ -239,8 +241,11 @@ export function ProvidersPage() {
               <Label className="provider-size-field">
                 {t.options.imageGenerationSize}
                 <Input
-                  value={preferences.imageGenerationSize || "1024x1024"}
-                  placeholder="1024x1024"
+                  value={
+                    preferences.imageGenerationSize ||
+                    DEFAULT_PREFERENCES.imageGenerationSize
+                  }
+                  placeholder={DEFAULT_PREFERENCES.imageGenerationSize}
                   disabled={!preferences.imageGenerationEnabled}
                   onChange={(event) =>
                     setPreferences((previous) => ({

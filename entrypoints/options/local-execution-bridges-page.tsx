@@ -36,9 +36,10 @@ import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function LocalExecutionBridgesPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [bridges, setBridges] = useStoredState(storage.localExecutionBridges);
   const [testingBridgeId, setTestingBridgeId] = useState("");
   const [testedBridgeId, showTested] = useTransient<string>();

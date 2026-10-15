@@ -14,9 +14,10 @@ import {
   SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function ContextMenuPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const s = getMessages(language).contextMenu;
   const p = getPageTranslateMessages(language);

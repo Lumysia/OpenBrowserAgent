@@ -343,7 +343,7 @@ export function AgentSelector({
   agents,
   preferences,
   openMenu,
-  aiWorking,
+  streaming,
   onSetOpenMenu,
   onSetPreferences,
 }: {
@@ -351,7 +351,7 @@ export function AgentSelector({
   agents: Agent[];
   preferences?: Preferences;
   openMenu: ComposerMenu | null;
-  aiWorking: boolean;
+  streaming: boolean;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
@@ -370,7 +370,7 @@ export function AgentSelector({
         <Button
           variant="outline"
           className="composer-trigger composer-agent-trigger"
-          disabled={aiWorking}
+          disabled={streaming}
           aria-label={
             selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
           }

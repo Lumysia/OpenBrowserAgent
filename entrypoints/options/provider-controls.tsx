@@ -7,7 +7,6 @@ import {
   parseModelDisplayName,
   providerDisplayName,
 } from "../../src/shared/model-display";
-import { storage } from "../../src/shared/storage";
 import { type ModelConfig, type ProviderConfig } from "../../src/shared/types";
 import {
   Accordion,
@@ -27,7 +26,7 @@ import {
   SettingsAccordionItem,
   TestButton,
 } from "../../src/ui/components";
-import { useStoredState } from "../../src/ui/useStoredState";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function FetchedModelPicker({
   t,
@@ -129,7 +128,7 @@ export function ModelList({
   onTestModel?: (model: ModelConfig) => void;
   onChange: (value: ProviderConfig) => void;
 }) {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const t = getMessages(language);
   return (
     <Accordion type="multiple" className="model-table model-accordion">

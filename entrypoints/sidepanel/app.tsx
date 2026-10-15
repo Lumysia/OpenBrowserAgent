@@ -431,7 +431,6 @@ export function SidepanelApp() {
       openMenu={openMenu}
       addMenuView={addMenuView}
       showHistory={showHistory}
-      aiWorking={currentChatStreaming}
       editingMessageId={editingMessage?.messageId}
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}

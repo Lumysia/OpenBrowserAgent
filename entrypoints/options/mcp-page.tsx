@@ -40,9 +40,10 @@ import { errorWithDetail } from "../../src/ui/error-text";
 import { ResetDefaultsCard } from "./reset-defaults-card";
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function McpPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [servers, setServers] = useStoredState(storage.mcpServers);
   const [importDraft, setImportDraft] = useState("");
   const [importMessage, setImportMessage] = useState("");

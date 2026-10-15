@@ -48,6 +48,7 @@ import {
 import { errorWithDetail } from "../../src/ui/error-text";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
+import { useUiLanguage } from "../../src/ui/messages";
 
 // Select value for "follow the extension's language"; stored as "".
 const FOLLOW_INTERFACE = "interface";
@@ -56,7 +57,7 @@ const FOLLOW_INTERFACE = "interface";
 const hasBrowserTranslator = "Translator" in globalThis;
 
 export function PageTranslatePage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [cacheState, setCacheState] = useState<"idle" | "clearing" | "cleared">(
     "idle",

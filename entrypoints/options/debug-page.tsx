@@ -32,9 +32,10 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function DebugPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [preferences] = useStoredState(storage.preferences);
   const [debugLoggingEnabled, setDebugLoggingEnabled] = useStoredState(
     storage.debugLoggingEnabled,
