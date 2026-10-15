@@ -9,8 +9,11 @@ import {
 import { modelDisplayName, providerDisplayName } from "../shared/model-display";
 import { assertProviderConsent } from "../shared/provider-consent";
 import {
+  MODEL_LIST_MAX_PAGES,
   modelListRequest,
+  nextModelListPage,
   parseModelList,
+  type ListedModel,
 } from "../shared/provider-model-list";
 import { providerTypeFromId } from "../shared/provider-instances";
 import type { ModelConfig } from "../shared/types";
@@ -43,21 +46,28 @@ export async function listModels({
   // The request carries the user's API key, so it goes only where chat may.
   assertProviderConsent(providerId, config);
   const type = providerTypeFromId(providerId, config.type);
-  const { url, headers } = modelListRequest(type, config);
-  const response = await fetch(url, { headers });
-  if (!response.ok)
-    throw new Error(
-      (await response.text()).trim() || `HTTP ${response.status}`,
-    );
+  const listed = new Map<string, ListedModel>();
+  let cursor: Record<string, string> | undefined;
+  for (let page = 0; page < MODEL_LIST_MAX_PAGES; page++) {
+    const { url, headers } = modelListRequest(type, config, cursor);
+    const response = await fetch(url, { headers });
+    if (!response.ok)
+      throw new Error(
+        (await response.text()).trim() || `HTTP ${response.status}`,
+      );
+    const data = await response.json();
+    for (const model of parseModelList(type, data))
+      if (!listed.has(model.name)) listed.set(model.name, model);
+    cursor = nextModelListPage(type, data);
+    if (!cursor) break;
+  }
   const provider = providerDisplayName({ ...config, type });
-  return parseModelList(type, await response.json()).map(
-    ({ name, label, contextLength }) => ({
-      id: `${providerId}:${name}`,
-      name,
-      displayName: modelDisplayName(provider, label || name),
-      ...(contextLength ? { contextLength } : {}),
-    }),
-  );
+  return [...listed.values()].map(({ name, label, contextLength }) => ({
+    id: `${providerId}:${name}`,
+    name,
+    displayName: modelDisplayName(provider, label || name),
+    ...(contextLength ? { contextLength } : {}),
+  }));
 }
 
 export function handleProviderRequestMessage(
