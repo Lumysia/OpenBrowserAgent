@@ -46,6 +46,7 @@ import {
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
+import { PageTranslateAccess } from "./page-translate-access";
 import { useMessages, useUiLanguage } from "../../src/ui/messages";
 
 // Select value for "follow the extension's language"; stored as "".
@@ -104,6 +105,7 @@ export function PageTranslatePage() {
         title={p.settingsTitle}
         description={p.settingsDescription}
       />
+      <PageTranslateAccess settings={settings} update={update} />
       <SettingsSection
         icon={<Cpu />}
         title={p.engine}

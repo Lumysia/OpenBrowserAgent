@@ -168,3 +168,7 @@ export function clampMaxToolSteps(value: number | undefined) {
   if (!Number.isFinite(value)) return DEFAULT_MAX_TOOL_STEPS;
   return Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.trunc(value || 0)));
 }
+
+// Where Chromium browsers (Edge too) let the user change extension keyboard
+// shortcuts. Firefox has no URL for it (see pageTranslate.shortcut.firefoxHint).
+export const BROWSER_SHORTCUTS_URL = "chrome://extensions/shortcuts";

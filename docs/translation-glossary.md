@@ -241,31 +241,41 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 
 "Translate this page" in the context menu translates the whole page; the same item then reads "Show original". Its strings live in `src/shared/locales/page-translate/`. A translation **engine** is where translations come from (the AI model, the browser's built-in translator, or a free web service); it is not a "provider", which stays the AI model provider. The display is either "Original and translation" (each paragraph keeps its original with the translation under it) or "Translation only" (the page's text is replaced by its translation in place). By default only the page's **main content** is translated; "Also translate menus and buttons" adds the page's own chrome: navigation, menus, buttons, tabs and footers. "Menus and buttons" means the web page's, never the extension's or the browser's; avoid "sidebar" there (in Chinese and German it reads as the extension's side panel). Google Translate and Microsoft Translator keep their product names in each language's usual form; "(free)" marks the unofficial free services. When an engine can't translate a page and its fallback takes over (one free service for the other, the AI model for the built-in translator), the page's note says the switch is for this page only, names the free services by company alone ("Google", "Microsoft") and the others by their in-sentence names (`engineNames`: "the AI model", "the built-in translator"). Notes put those names where the language needs no other form of them (no sentence start, no contraction or case change): "Switched to Microsoft for this page: Google is limiting requests." The engine's default model is "the same model as the chat" (Chinese 与对话相同的模型), not "the chat's selected model".
 
-| English                          | 简体中文           | 繁體中文           | 日本語                 | 한국어             |
-| -------------------------------- | ------------------ | ------------------ | ---------------------- | ------------------ |
-| page translation                 | 网页翻译           | 網頁翻譯           | ページ翻訳             | 페이지 번역        |
-| Translate this page              | 翻译此页面         | 翻譯此頁面         | このページを翻訳       | 이 페이지 번역     |
-| Show original                    | 显示原文           | 顯示原文           | 原文を表示             | 원문 보기          |
-| translation engine               | 翻译引擎           | 翻譯引擎           | 翻訳エンジン           | 번역 엔진          |
-| built-in translator              | 内置翻译器         | 內建翻譯器         | 組み込み翻訳           | 내장 번역기        |
-| Original and translation         | 原文和译文         | 原文和譯文         | 原文と訳文             | 원문과 번역        |
-| Translation only                 | 仅译文             | 僅譯文             | 訳文のみ               | 번역만             |
-| saved translations               | 已保存的译文       | 已儲存的譯文       | 保存された翻訳         | 저장된 번역        |
-| main content (of a page)         | 正文               | 正文               | 本文                   | 본문               |
-| Also translate menus and buttons | 同时翻译菜单和按钮 | 同時翻譯選單和按鈕 | メニューとボタンも翻訳 | 메뉴와 버튼도 번역 |
+The **translate button** sits on an edge of web pages (the edge of the window, never "sidebar"); its close control offers "Hide on {site}" and "Hide everywhere", and Settings lists the sites it is hidden on. The **keyboard shortcut** is the browser's extension shortcut for the same toggle; the browser names the place to change it, so Firefox's hint quotes Firefox's own menu label ("Manage Extension Shortcuts").
 
-| English                          | Français                                | Deutsch                                 | Español                          | Português (Brasil)             |
-| -------------------------------- | --------------------------------------- | --------------------------------------- | -------------------------------- | ------------------------------ |
-| page translation                 | traduction de page                      | Seitenübersetzung                       | traducción de páginas            | tradução de páginas            |
-| Translate this page              | Traduire cette page                     | Diese Seite übersetzen                  | Traducir esta página             | Traduzir esta página           |
-| Show original                    | Afficher l’original                     | Original anzeigen                       | Mostrar original                 | Mostrar original               |
-| translation engine               | moteur de traduction                    | Übersetzungsdienst                      | motor de traducción              | mecanismo de tradução          |
-| built-in translator              | traducteur intégré                      | integrierter Übersetzer                 | traductor integrado              | tradutor integrado             |
-| Original and translation         | Original et traduction                  | Original und Übersetzung                | Original y traducción            | Original e tradução            |
-| Translation only                 | Traduction seule                        | Nur Übersetzung                         | Solo traducción                  | Somente tradução               |
-| saved translations               | traductions enregistrées                | gespeicherte Übersetzungen              | traducciones guardadas           | traduções salvas               |
-| main content (of a page)         | contenu principal                       | Hauptinhalt                             | contenido principal              | conteúdo principal             |
-| Also translate menus and buttons | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen | Traducir también menús y botones | Traduzir também menus e botões |
+| English                          | 简体中文                            | 繁體中文                            | 日本語                                   | 한국어                                     |
+| -------------------------------- | ----------------------------------- | ----------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| page translation                 | 网页翻译                            | 網頁翻譯                            | ページ翻訳                               | 페이지 번역                                |
+| Translate this page              | 翻译此页面                          | 翻譯此頁面                          | このページを翻訳                         | 이 페이지 번역                             |
+| Show original                    | 显示原文                            | 顯示原文                            | 原文を表示                               | 원문 보기                                  |
+| translation engine               | 翻译引擎                            | 翻譯引擎                            | 翻訳エンジン                             | 번역 엔진                                  |
+| built-in translator              | 内置翻译器                          | 內建翻譯器                          | 組み込み翻訳                             | 내장 번역기                                |
+| Original and translation         | 原文和译文                          | 原文和譯文                          | 原文と訳文                               | 원문과 번역                                |
+| Translation only                 | 仅译文                              | 僅譯文                              | 訳文のみ                                 | 번역만                                     |
+| saved translations               | 已保存的译文                        | 已儲存的譯文                        | 保存された翻訳                           | 저장된 번역                                |
+| main content (of a page)         | 正文                                | 正文                                | 本文                                     | 본문                                       |
+| Also translate menus and buttons | 同时翻译菜单和按钮                  | 同時翻譯選單和按鈕                  | メニューとボタンも翻訳                   | 메뉴와 버튼도 번역                         |
+| translate button (on pages)      | 翻译按钮                            | 翻譯按鈕                            | 翻訳ボタン                               | 번역 버튼                                  |
+| edge (of the page/window)        | 边缘                                | 邊緣                                | 端                                       | 가장자리                                   |
+| Hide on {site} / Hide everywhere | 在 {site} 上隐藏 / 在所有网站上隐藏 | 在 {site} 上隱藏 / 在所有網站上隱藏 | {site} で非表示 / すべてのサイトで非表示 | {site}에서 숨기기 / 모든 사이트에서 숨기기 |
+| keyboard shortcut                | 键盘快捷键                          | 鍵盤快速鍵                          | キーボードショートカット                 | 키보드 단축키                              |
+
+| English                          | Français                                | Deutsch                                    | Español                                     | Português (Brasil)                            |
+| -------------------------------- | --------------------------------------- | ------------------------------------------ | ------------------------------------------- | --------------------------------------------- |
+| page translation                 | traduction de page                      | Seitenübersetzung                          | traducción de páginas                       | tradução de páginas                           |
+| Translate this page              | Traduire cette page                     | Diese Seite übersetzen                     | Traducir esta página                        | Traduzir esta página                          |
+| Show original                    | Afficher l’original                     | Original anzeigen                          | Mostrar original                            | Mostrar original                              |
+| translation engine               | moteur de traduction                    | Übersetzungsdienst                         | motor de traducción                         | mecanismo de tradução                         |
+| built-in translator              | traducteur intégré                      | integrierter Übersetzer                    | traductor integrado                         | tradutor integrado                            |
+| Original and translation         | Original et traduction                  | Original und Übersetzung                   | Original y traducción                       | Original e tradução                           |
+| Translation only                 | Traduction seule                        | Nur Übersetzung                            | Solo traducción                             | Somente tradução                              |
+| saved translations               | traductions enregistrées                | gespeicherte Übersetzungen                 | traducciones guardadas                      | traduções salvas                              |
+| main content (of a page)         | contenu principal                       | Hauptinhalt                                | contenido principal                         | conteúdo principal                            |
+| Also translate menus and buttons | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen    | Traducir también menús y botones            | Traduzir também menus e botões                |
+| translate button (on pages)      | bouton de traduction                    | Übersetzen-Schaltfläche                    | botón de traducir                           | botão de tradução                             |
+| edge (of the page/window)        | bord                                    | Rand                                       | borde                                       | borda                                         |
+| Hide on {site} / Hide everywhere | Masquer sur {site} / Masquer partout    | Auf {site} ausblenden / Überall ausblenden | Ocultar en {site} / Ocultar en todas partes | Ocultar em {site} / Ocultar em todos os sites |
+| keyboard shortcut                | raccourci clavier                       | Tastenkombination                          | atajo de teclado                            | atalho de teclado                             |
 
 ## Notes per language
 
