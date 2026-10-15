@@ -9,14 +9,14 @@ import type { SyncEnv } from "./env";
 export type LocalEntry = { data: unknown; body?: unknown };
 
 // Lazy collections read only the bodies that may have changed.
-export type NeedsBody = (id: string) => boolean;
+type NeedsBody = (id: string) => boolean;
 
 export type Change = { id: string; entry: LocalEntry | null };
 
 // Stores a write's items in one storage call. The engine stores the clocks
 // of the records written with them, so a remote change never looks like a
 // local edit.
-export type Commit = (
+type Commit = (
   items: Record<string, unknown>,
   written: Set<string>,
 ) => Promise<void>;
@@ -24,14 +24,11 @@ export type Commit = (
 // Runs a write's checks and its commit as one step, inside the collection's
 // item locks. The engine's step holds the clock lock, so the clocks its
 // checks compare are the ones its commit stores the data with.
-export type WriteStep = <T>(run: () => Promise<T>) => Promise<T>;
+type WriteStep = <T>(run: () => Promise<T>) => Promise<T>;
 
-export type Verify = (
-  id: string,
-  current: LocalEntry | undefined,
-) => Promise<boolean>;
+type Verify = (id: string, current: LocalEntry | undefined) => Promise<boolean>;
 
-export type WriteHooks = {
+type WriteHooks = {
   verify: Verify;
   commit?: Commit;
   step?: WriteStep;
@@ -39,7 +36,7 @@ export type WriteHooks = {
 
 // The entries one stored key holds. `complete`: a record missing from it is
 // gone (a key that holds one chat's content is not).
-export type KeyEntries = {
+type KeyEntries = {
   entries: Map<string, LocalEntry>;
   complete: boolean;
 };

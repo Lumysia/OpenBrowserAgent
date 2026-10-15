@@ -65,7 +65,7 @@ const TEXT_APPLICATION_TYPES = new Set([
 const HTML_TYPES = new Set(["text/html", "application/xhtml+xml"]);
 
 // "text/html; charset=utf-8" -> "text/html".
-export function baseType(type: string) {
+function baseType(type: string) {
   return type.split(";")[0].trim().toLowerCase();
 }
 

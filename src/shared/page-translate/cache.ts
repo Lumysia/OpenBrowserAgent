@@ -5,7 +5,7 @@
 import { idbStore } from "../idb-store";
 import { sha256Hex } from "../sync/codec";
 
-export const TRANSLATION_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const TRANSLATION_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Oldest entries go beyond this many.
 const MAX_ENTRIES = 50_000;
 

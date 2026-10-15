@@ -13,13 +13,13 @@ import { USER_ERROR_CODE, UserError } from "./user-errors";
 // Each provider's model list is fetched live from its endpoint: the request
 // and the reading of its answer for each kind of list.
 
-export type ModelListRequest = {
+type ModelListRequest = {
   url: string;
   headers: Record<string, string>;
 };
 
 // A model an endpoint lists: the name requests use, and what it tells of it.
-export type ListedModel = {
+type ListedModel = {
   name: string;
   label?: string;
   contextLength?: number;

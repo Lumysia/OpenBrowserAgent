@@ -2,7 +2,7 @@ import { knownValues } from "./values";
 // The right-click menu: its settings and the items it shows.
 
 // Items in menu order, as the settings name them.
-export const CONTEXT_MENU_ITEM = {
+const CONTEXT_MENU_ITEM = {
   ask: "ask",
   summarizePage: "summarizePage",
   translatePage: "translatePage",
@@ -12,7 +12,7 @@ export const CONTEXT_MENU_ITEM = {
   copyMarkdown: "copyMarkdown",
 } as const;
 
-export type ContextMenuItem =
+type ContextMenuItem =
   (typeof CONTEXT_MENU_ITEM)[keyof typeof CONTEXT_MENU_ITEM];
 
 export const CONTEXT_MENU_ITEMS = Object.values(CONTEXT_MENU_ITEM);
@@ -51,10 +51,9 @@ export const CONTEXT_MENU_ID = {
   copyMarkdown: "oba-copy-markdown",
 } as const;
 
-export type ContextMenuId =
-  (typeof CONTEXT_MENU_ID)[keyof typeof CONTEXT_MENU_ID];
+type ContextMenuId = (typeof CONTEXT_MENU_ID)[keyof typeof CONTEXT_MENU_ID];
 
-export type ContextMenuTitles = {
+type ContextMenuTitles = {
   parent: string;
   ask: string;
   summarizePage: string;

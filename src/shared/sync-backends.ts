@@ -25,7 +25,7 @@ export type SyncCapabilities = {
   announcesChanges: boolean;
 };
 
-export type SyncBackendRegistryItem = {
+type SyncBackendRegistryItem = {
   id: string;
   type: SyncBackendType;
   defaultName: string;
@@ -91,7 +91,7 @@ export async function getStoredSyncBackends() {
   );
 }
 
-export async function getStoredActiveSyncBackendId() {
+async function getStoredActiveSyncBackendId() {
   const result = await getBrowserApi().storage.local.get(
     STORAGE_KEYS.activeSyncBackendId,
   );
@@ -108,10 +108,6 @@ export async function getActiveSyncBackendConfig() {
   return (await getStoredSyncBackends()).find(
     (backend) => backend.id === activeId,
   );
-}
-
-export async function isSyncBackendEnabled() {
-  return (await getStoredActiveSyncBackendId()) !== NO_SYNC_BACKEND_ID;
 }
 
 export function syncBackendCapabilities(

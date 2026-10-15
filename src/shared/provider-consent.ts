@@ -88,17 +88,6 @@ export async function grantProviderConsent(providerId: string, host: string) {
   return granted;
 }
 
-export function withdrawProviderConsent(providerId: string) {
-  return storage.provider.update((providers) => {
-    const provider = providers[providerId];
-    if (!provider?.consent) return providers;
-    return {
-      ...providers,
-      [providerId]: withProviderConsent(provider, false),
-    };
-  });
-}
-
 // Throws unless the provider may receive content now.
 export function assertProviderConsent(
   providerId: string,

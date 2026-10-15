@@ -15,7 +15,7 @@ type SyncConfigCodePayload = {
   syncGroups?: SyncGroupSettings;
 };
 
-export type ParsedSyncConfigCode = {
+type ParsedSyncConfigCode = {
   backend: SyncBackendConfig;
   syncGroups: SyncGroupSettings;
 };

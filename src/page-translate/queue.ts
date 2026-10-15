@@ -9,7 +9,7 @@ export const PRIORITY = {
   near: 1,
 } as const;
 
-export type QueuedItem = {
+type QueuedItem = {
   id: number;
   text: string;
   priority: number;

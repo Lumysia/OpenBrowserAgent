@@ -26,7 +26,7 @@ const isRecord = (value: unknown): value is Item =>
 // exist: it creates and deletes items. Any other part only changes the
 // items there are, and has no record for an item that holds none of it, so
 // a device without that content never uploads an empty part.
-export type ItemPart = {
+type ItemPart = {
   owner: boolean;
   // The part's record of an item; undefined: the item holds none of it.
   split(item: Item): LocalEntry | undefined;

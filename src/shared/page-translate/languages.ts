@@ -1,7 +1,7 @@
 // Languages pages can be translated into, with the code each engine uses for
 // them. Dependency-free: the page script imports this module.
 
-export type PageTranslateLanguage = {
+type PageTranslateLanguage = {
   // A BCP 47 tag; names come from Intl.DisplayNames in the UI language.
   tag: string;
   google?: string;
@@ -50,7 +50,7 @@ export const PAGE_TRANSLATE_LANGUAGES: readonly PageTranslateLanguage[] = [
   { tag: "vi" },
 ];
 
-export type PageTranslateCodeEngine = "google" | "microsoft" | "browser";
+type PageTranslateCodeEngine = "google" | "microsoft" | "browser";
 
 // The engine's code for `tag`, or undefined when the engine lacks it.
 export function engineLanguageCode(

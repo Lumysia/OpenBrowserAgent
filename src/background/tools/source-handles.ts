@@ -13,7 +13,7 @@ const PREFIX = {
   workspace: "workspace:",
 } as const;
 
-export const RUN_TAB_SOURCE = "tab";
+const RUN_TAB_SOURCE = "tab";
 
 export type Source =
   | { kind: "tab"; tabId?: number }

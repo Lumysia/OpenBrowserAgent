@@ -5,7 +5,7 @@ import { SyncFormatError, type Root } from "./root";
 // Where records are stored: a WebDAV folder, or the browser account's sync
 // storage. The engine talks to both through this interface.
 
-export type RootRead =
+type RootRead =
   | { status: "unchanged" }
   | { status: "missing" }
   | { status: "ok"; root: Root; etag?: string }
@@ -19,14 +19,14 @@ export type RootRead =
       previous?: Root;
     };
 
-export type RootWriteOptions = {
+type RootWriteOptions = {
   // The good root being replaced, kept as a copy until the write is done.
   previous?: Root;
   // Replace a damaged root that has no validator.
   replace?: boolean;
 };
 
-export type RootWrite =
+type RootWrite =
   | { status: "ok"; etag?: string }
   // Another write got there first (a stale If-Match).
   | { status: "conflict" }

@@ -1,7 +1,7 @@
 import { isToolPartType, toolStateRank, type ChatPart } from "./types";
 
 // Picks a text part's text from its two versions.
-export type PartTextRule = (earlier: ChatPart, later: ChatPart) => string;
+type PartTextRule = (earlier: ChatPart, later: ChatPart) => string;
 
 // How two versions of one chat part combine. Both the live stream
 // (applyPart: the update that just came in) and two stored copies of a

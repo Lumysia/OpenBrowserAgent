@@ -65,7 +65,7 @@ function touched(collection: Collection, changes: StorageChanges) {
   return result;
 }
 
-export async function recordLocalChanges(
+async function recordLocalChanges(
   env: SyncEnv,
   device: string,
   changes: StorageChanges,

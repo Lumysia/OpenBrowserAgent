@@ -58,7 +58,7 @@ async function translateWithMicrosoft(request: EngineRequest) {
 
 // The service aligns tags in its input, so markers pass as they are; other
 // `<` and `&` are escaped so they can't read as tags.
-export function toMicrosoftText(text: string) {
+function toMicrosoftText(text: string) {
   return tokenizePlaceholders(text)
     .map((token) =>
       token.type === "text"
@@ -72,6 +72,6 @@ export function toMicrosoftText(text: string) {
     .join("");
 }
 
-export function fromMicrosoftText(text: string) {
+function fromMicrosoftText(text: string) {
   return decodeEntities(text).trim();
 }

@@ -12,7 +12,7 @@ import type { RunTab } from "../run-tab";
 import type { UsageMetrics } from "../run-usage";
 import type { StreamSession } from "../stream-sessions";
 
-export type VisionImage = { dataUrl: string; type?: string };
+type VisionImage = { dataUrl: string; type?: string };
 
 export type SourceInput = Omit<ChatSource, "id" | "createdAt">;
 
@@ -80,7 +80,7 @@ export type ToolContext = {
   progress(details: Record<string, unknown>): void;
 };
 
-export type JsonSchema = Record<string, unknown>;
+type JsonSchema = Record<string, unknown>;
 
 export type ToolDefinition = {
   name: string;

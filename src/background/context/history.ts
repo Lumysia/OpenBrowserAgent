@@ -27,7 +27,7 @@ import { getUploadedAttachments, renderMessageText } from "../message-helpers";
 import { DROPPED_IMAGE, shrinkArguments } from "./engine";
 import { CONTEXT_POLICY, tokenChars } from "./policy";
 
-export type HistoryOptions = {
+type HistoryOptions = {
   model: Model<Api>;
   // Attachments of the request, for the latest user message.
   attachments: UploadedAttachment[];

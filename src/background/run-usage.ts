@@ -46,7 +46,7 @@ export function createUsageMeter() {
   };
 }
 
-export function addTokenUsage(
+function addTokenUsage(
   total: TokenUsage | undefined,
   usage: TokenUsage | undefined,
 ): TokenUsage | undefined {

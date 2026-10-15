@@ -58,8 +58,6 @@ export type OverlayContent = {
   pending?: boolean;
 };
 
-export type Overlay = ReturnType<typeof createOverlay>;
-
 export function createOverlay(video: HTMLVideoElement) {
   const host = document.createElement("div");
   host.setAttribute(OWN_ATTRIBUTE, "");

@@ -12,8 +12,7 @@ import { yieldToMain } from "./yield";
 
 // `skipped`: a control's label, not sent while menus and buttons aren't
 // translated.
-export type UnitState =
-  "idle" | "queued" | "sent" | "done" | "failed" | "skipped";
+type UnitState = "idle" | "queued" | "sent" | "done" | "failed" | "skipped";
 
 export type Unit = {
   id: number;
@@ -41,7 +40,7 @@ const MAX_WAIT_MS = 2_000;
 // Time slices for walking the page.
 const SLICE_MS = 12;
 
-export type UnitEvents = {
+type UnitEvents = {
   added: (unit: Unit) => void;
   removed: (unit: Unit) => void;
 };

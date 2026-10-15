@@ -57,7 +57,7 @@ hljs.registerLanguage("tsx", typescript);
 hljs.registerLanguage("html", xml);
 hljs.registerLanguage("xml", xml);
 
-export type MarkdownRenderOptions = {
+type MarkdownRenderOptions = {
   copiedCodeId: string | null;
   loadedImages: readonly string[];
   animatedFromChar?: number;

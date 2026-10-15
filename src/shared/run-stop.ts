@@ -33,7 +33,7 @@ export function errorNoticePart(text: string): ChatPart {
   };
 }
 
-export function noticeParts(message: ChatMessage, kind: ChatNoticeKind) {
+function noticeParts(message: ChatMessage, kind: ChatNoticeKind) {
   return (message.parts || []).filter(
     (part) => part.type === "notice" && part.kind === kind,
   );

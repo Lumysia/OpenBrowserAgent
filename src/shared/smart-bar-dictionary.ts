@@ -16,7 +16,7 @@ export type SmartBarResultFormat =
 
 // What counts as a word or short phrase. Scripts written without spaces
 // (Chinese, Japanese) count characters; the others count words.
-export const SMART_BAR_SHORT_SELECTION = {
+const SMART_BAR_SHORT_SELECTION = {
   maxWords: 4,
   maxUnspacedChars: 8,
   maxChars: 40,
@@ -58,7 +58,7 @@ export function smartBarResultFormat(
     : SMART_BAR_RESULT_FORMAT.text;
 }
 
-export type DictionaryExample = { text: string; translation?: string };
+type DictionaryExample = { text: string; translation?: string };
 
 // The answer the model gives, as the prompt asks for it. Everything but the
 // headword may be missing: the model leaves out what it is unsure about.
@@ -74,7 +74,7 @@ export type DictionaryEntry = {
   translation?: string;
 };
 
-export type DictionaryReading =
+type DictionaryReading =
   // Still streaming and nothing to show yet.
   | { kind: "pending" }
   | { kind: "entry"; entry: DictionaryEntry }
@@ -114,7 +114,7 @@ function embeddedObject(answer: string) {
   }
 }
 
-export function dictionaryEntry(value: unknown): DictionaryEntry | undefined {
+function dictionaryEntry(value: unknown): DictionaryEntry | undefined {
   const headword = stringField(value, "headword");
   if (!headword) return undefined;
   const record = value as Record<string, unknown>;

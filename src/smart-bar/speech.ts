@@ -10,7 +10,7 @@ const VOICES_WAIT_MS = 1000;
 
 let current: { stop: () => void } | undefined;
 
-export type SpeakOptions = {
+type SpeakOptions = {
   // Runs once when reading finishes, fails or is stopped.
   onEnd: () => void;
   // Languages no installed voice reads, once per read.

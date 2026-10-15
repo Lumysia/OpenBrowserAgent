@@ -30,7 +30,7 @@ import type { CurrentChatStatus } from "./use-current-chat";
 import type { QueuedMessage } from "./use-queued-messages";
 
 // The chat list, the open chat and its run, and what can be done to them.
-export type ChatState = {
+type ChatState = {
   chats: ChatSummary[];
   activeChatId: string;
   currentChat?: Chat;
@@ -63,7 +63,7 @@ export type ChatState = {
 
 // What the composer shows and edits: the message, its context and files,
 // the menus, and the model, effort and agent the next send uses.
-export type ComposerState = {
+type ComposerState = {
   input: string;
   setInput: (value: string) => void;
   composerRef: RefObject<HTMLTextAreaElement | null>;

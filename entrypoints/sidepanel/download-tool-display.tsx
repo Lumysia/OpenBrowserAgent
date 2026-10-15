@@ -44,7 +44,7 @@ function progress(record: DownloadRecord, language: string) {
 }
 
 // What became of one download, in the interface language.
-export function downloadSummary(record: DownloadRecord, t: Messages) {
+function downloadSummary(record: DownloadRecord, t: Messages) {
   const messages = t.downloads;
   const language = languageOf(t);
   const name = record.name;

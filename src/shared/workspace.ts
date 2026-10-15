@@ -35,7 +35,7 @@ const DEFAULT_WORKSPACE_FILE_CONTENT: Record<string, string> = {
   [WORKSPACE_FILE_PATH.notes]: "# Notes\n\n",
 };
 
-export type WorkspacePatchOperation = "replace" | "append" | "prepend";
+type WorkspacePatchOperation = "replace" | "append" | "prepend";
 
 export type WorkspaceMutationResult =
   | { ok: true; workspace: AgentWorkspace; file?: WorkspaceFile }
@@ -94,7 +94,7 @@ export function normalizeWorkspaces(value: AgentWorkspace[] | undefined) {
   return [...byAgent.values()];
 }
 
-export function normalizeWorkspace(
+function normalizeWorkspace(
   workspace: AgentWorkspace | undefined,
   now = Date.now(),
 ): AgentWorkspace {

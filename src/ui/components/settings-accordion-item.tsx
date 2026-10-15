@@ -66,7 +66,7 @@ export function SettingsAccordionItem({
   );
 }
 
-export type TestState = "idle" | "testing" | "done";
+type TestState = "idle" | "testing" | "done";
 
 // The icon button that tests a connection: a flask, a spinner while it
 // runs, and a check for a moment after it passed.

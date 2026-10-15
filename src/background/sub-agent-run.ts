@@ -23,7 +23,7 @@ import * as sessions from "./stream-sessions";
 
 const PERSIST_INTERVAL_MS = 2_000;
 
-export type SubAgentProgress = { toolName: string; state?: string };
+type SubAgentProgress = { toolName: string; state?: string };
 
 // A sub-agent chat run by the service worker, whether or not the side panel
 // is open. The chat is stored like any other (linked to its parent), and its

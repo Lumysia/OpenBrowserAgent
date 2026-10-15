@@ -13,8 +13,6 @@ export function isOwnTrack(track: TextTrack) {
   return own.has(track);
 }
 
-export type NativeTrack = ReturnType<typeof createNativeTrack>;
-
 export function createNativeTrack(video: HTMLVideoElement) {
   let track = tracks.get(video);
   let cue: VTTCue | undefined;

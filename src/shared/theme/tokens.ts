@@ -14,7 +14,7 @@ import {
 } from "./themes";
 
 // Every color the UI uses, as CSS custom properties (without the `--`).
-export type ThemeTokens = Record<(typeof TOKEN_NAMES)[number], string>;
+type ThemeTokens = Record<(typeof TOKEN_NAMES)[number], string>;
 
 export const TOKEN_NAMES = [
   "background",

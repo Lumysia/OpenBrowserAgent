@@ -14,7 +14,7 @@ export const GARBAGE_GRACE_MS = 24 * 60 * 60_000;
 export const ORPHAN_SWEEP_INTERVAL_MS = 7 * 24 * 60 * 60_000;
 // How long a device keeps checking a blob it uploaded while another device
 // may have been collecting it: far longer than a round's deletions take.
-export const UPLOAD_CHECK_MS = 10 * 60_000;
+const UPLOAD_CHECK_MS = 10 * 60_000;
 
 export function parseBody(collection: Collection, payload: Uint8Array) {
   return collection.body === "bytes" ? payload : JSON.parse(bytesText(payload));

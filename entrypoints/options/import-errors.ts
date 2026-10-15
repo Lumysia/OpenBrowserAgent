@@ -6,7 +6,7 @@ import { workspaceErrorText } from "./workspace-error-text";
 
 // Why an agent or skill archive could not be imported. The import helpers
 // throw these; the page shows them in the UI language.
-export type ImportProblem =
+type ImportProblem =
   | { kind: "missingAgentManifest" }
   | { kind: "invalidAgentManifest" }
   | { kind: "missingSkillEntry" }

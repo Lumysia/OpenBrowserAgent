@@ -2,7 +2,7 @@
 // scripts import this module.
 import { normalizeLanguageTag, primaryLanguage } from "./language-tags";
 
-export type SpeechVoice = Pick<
+type SpeechVoice = Pick<
   SpeechSynthesisVoice,
   "lang" | "localService" | "default"
 >;

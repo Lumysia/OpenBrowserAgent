@@ -8,7 +8,7 @@ import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
 import { isQuestionPending, QuestionToolForm } from "./tool-question-form";
 
-export type ToolBodyProps = {
+type ToolBodyProps = {
   part: ChatPart;
   loading: boolean;
   // The run waits on this part (see ToolCardKind.waiting).

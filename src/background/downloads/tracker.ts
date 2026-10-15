@@ -18,9 +18,9 @@ import { downloadRecord } from "./records";
 const ENTRY_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const POLL_MS = 1000;
 // `wait` without an id looks this far back for a download to report.
-export const RECENT_DOWNLOAD_MS = 2 * 60 * 1000;
+const RECENT_DOWNLOAD_MS = 2 * 60 * 1000;
 
-export const DOWNLOADS_UNAVAILABLE =
+const DOWNLOADS_UNAVAILABLE =
   "This browser does not let extensions download files or see downloads (Safari has no downloads API). To get a file, open its URL in a tab with tabs so the browser downloads or shows it, or give the user the link.";
 
 type Entry = {

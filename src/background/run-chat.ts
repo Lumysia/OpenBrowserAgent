@@ -29,7 +29,7 @@ import { createSystemPrompt } from "./system-prompt";
 import { createToolSet } from "./tools/registry";
 import type { ToolDefinition } from "./tools/types";
 
-export type RunRequest = {
+type RunRequest = {
   agentId?: string;
   modelId?: string;
   attachments?: UploadedAttachment[];

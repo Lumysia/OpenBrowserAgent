@@ -72,7 +72,7 @@ export type PartsSeen = {
   save(seen: Record<string, number>): Promise<void>;
 };
 
-export function memoryPartsSeen(): PartsSeen {
+function memoryPartsSeen(): PartsSeen {
   let seen: Record<string, number> = {};
   return {
     load: async () => ({ ...seen }),
