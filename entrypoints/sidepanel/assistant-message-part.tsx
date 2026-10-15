@@ -25,7 +25,7 @@ import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 import { cn } from "../../src/ui/utils";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 export const NO_SOURCES: ChatSource[] = [];
 
@@ -196,6 +196,7 @@ export function AssistantText({
   hideActions?: boolean;
 }) {
   const t = useMessages();
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const runEnded = !hideActions;
   const { text: displayText, animatedFrom } = useThrottledText(
@@ -259,7 +260,10 @@ export function AssistantText({
           </div>
           {(modelLabel || createdAt) && (
             <span className="assistant-model-meta">
-              {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]
+              {[
+                modelLabel,
+                createdAt ? formatMessageTime(locale, createdAt) : "",
+              ]
                 .filter(Boolean)
                 .join(" · ")}
             </span>

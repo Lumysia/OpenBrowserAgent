@@ -30,7 +30,7 @@ import {
   downloadSkillFile,
   readReplacementSkillFile,
 } from "./skill-import";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 // Without edit handlers the files are read-only (built-in skills).
 export function SkillFileList({
@@ -53,6 +53,7 @@ export function SkillFileList({
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
   const t = useMessages();
+  const locale = useLocale();
   const files = normalizeSkill(skill).files;
   const editingFile = files.find((file) => file.path === editPath);
 
@@ -159,8 +160,8 @@ export function SkillFileList({
                         </span>
                         <small>
                           {file.kind} · {file.encoding || "utf-8"} ·{" "}
-                          {formatBytes(file.content.length, "kb")} ·{" "}
-                          {formatDate(file.updatedAt)}
+                          {formatBytes(locale, file.content.length, "kb")} ·{" "}
+                          {formatDate(locale, file.updatedAt)}
                         </small>
                       </span>
                       <div className="option-file-actions">
@@ -263,6 +264,6 @@ export function SkillFileActionButton({
   );
 }
 
-function formatDate(value?: number) {
-  return value ? formatDateTime(value) : "-";
+function formatDate(locale: string, value?: number) {
+  return value ? formatDateTime(locale, value) : "-";
 }

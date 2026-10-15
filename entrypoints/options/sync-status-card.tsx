@@ -39,7 +39,7 @@ export function SyncStatusCard() {
 
   const details = [
     status?.lastSyncAt
-      ? t.sync.lastSync.replace("{time}", formatTime(status.lastSyncAt))
+      ? t.sync.lastSync.replace("{time}", formatTime(t, status.lastSyncAt))
       : "",
     status?.pausedUntil && status.pausedUntil > Date.now() && status.pauseStatus
       ? t.sync.pausedRateLimit.replace("{status}", String(status.pauseStatus))
