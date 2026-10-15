@@ -44,7 +44,7 @@ export function OptionsApp() {
                   href={hash}
                 >
                   <Icon size={16} />
-                  {title(t, language)}
+                  {title(t)}
                 </a>
               ))}
               <a

@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { toolDisplay } from "../entrypoints/sidepanel/tool-part-detail";
 import { BUILTIN_TOOLS } from "../src/background/tools/registry";
-import { getMessages, i18nRegistry } from "../src/shared/i18n";
+import { getMessages } from "../src/shared/i18n";
+import { UI_LANGUAGES } from "../src/shared/ui-languages";
 import { TOOL_NAME } from "../src/shared/tool-names";
 import {
   CHAT_PART_STATE,
@@ -10,12 +11,7 @@ import {
   type ChatPart,
 } from "../src/shared/types";
 
-// Each supported language once (some tags share messages).
-const LANGUAGES = [
-  ...new Map(
-    Object.entries(i18nRegistry).map(([tag, messages]) => [messages, tag]),
-  ).values(),
-];
+const LANGUAGES = UI_LANGUAGES.map(({ code }) => code);
 
 function part(
   toolName: string,
@@ -47,7 +43,7 @@ test("every tool action has a step word in every language", () => {
   assert.ok(toolActions.length > 30);
   for (const language of LANGUAGES) {
     const actions: Record<string, string> =
-      i18nRegistry[language].display.toolSteps.actions;
+      getMessages(language).display.toolSteps.actions;
     for (const [, action] of toolActions)
       assert.ok(actions[action]?.trim(), `${action} in ${language}`);
   }

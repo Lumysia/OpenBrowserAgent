@@ -17,7 +17,7 @@ export const displayFrFR: DisplayMessages = {
     gemini: "Compatible Gemini",
     ollama: "Compatible Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Recherche web et extraction du contenu des pages.",
     parallel: "Recherche web avec extraits et récupération de pages.",
     tinyfish: "Recherche web et d’actualités.",
@@ -54,7 +54,12 @@ export const displayFrFR: DisplayMessages = {
   errors: {
     noModel:
       "Aucun modèle n’est configuré. Ajoutez un fournisseur dans « Paramètres » → « Fournisseurs d’IA ».",
+    noImageModel:
+      "Aucun modèle d’image n’est configuré. Choisissez-en un dans « Paramètres » → « Fournisseurs d’IA ».",
     baseUrlRequired: "Saisissez une URL de base.",
+    bridgeNotFound: "Ce pont d’exécution n’existe plus.",
+    bridgeHostRequired: "Saisissez le nom de l’hôte de messagerie native.",
+    bridgeTimeout: "Le pont d’exécution n’a pas répondu à temps.",
   },
   toolSteps: {
     failed: "Échec",

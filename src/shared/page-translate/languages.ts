@@ -63,18 +63,3 @@ export function engineLanguageCode(
   if (code === null) return undefined;
   return code ?? language.tag;
 }
-
-// A source language reported by an engine or detector, as a tag to compare
-// with the target ("zh-Hans" and "zh-CN" are the same here).
-export function sameLanguage(a: string | undefined, b: string) {
-  if (!a) return false;
-  const simplify = (tag: string) => {
-    const lower = tag.toLowerCase().replace(/_/g, "-");
-    if (/^zh-(hant|tw|hk|mo)/.test(lower)) return "zh-hant";
-    if (lower.startsWith("zh")) return "zh";
-    if (lower === "iw") return "he";
-    if (lower === "no" || lower === "nb") return "nb";
-    return lower.split("-")[0];
-  };
-  return simplify(a) === simplify(b);
-}

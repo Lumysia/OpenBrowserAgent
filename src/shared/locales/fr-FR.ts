@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { providerConsentFrFR } from "./provider-consent/fr-FR";
 import { displayFrFR } from "./display/fr-FR";
+import { pageTranslateFrFR } from "./page-translate/fr-FR";
 import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
@@ -459,9 +460,10 @@ export const frFR: LocaleMessages = {
     deleteMcpServer: "Supprimer le serveur MCP",
     resetDefaults: "Réinitialiser",
     resetBuiltins: "Réinitialiser les éléments intégrés",
-    resetDefaultMcpServers: "Réinitialiser les serveurs MCP par défaut",
-    resetDefaultMcpServersDescription:
-      "Rétablit les serveurs MCP intégrés et supprime les serveurs personnalisés.",
+    mcpPresets: "Serveurs recommandés",
+    mcpPresetsDescription:
+      "Serveurs de recherche hébergés qui fonctionnent sans clé API. Chacun envoie vos recherches à son propre service. Un serveur ajouté reste désactivé tant que vous ne l’avez pas testé.",
+    mcpPresetAdd: "Ajouter",
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
@@ -637,4 +639,5 @@ export const frFR: LocaleMessages = {
   sync: syncFrFR,
   themes: themesFrFR,
   display: displayFrFR,
+  pageTranslate: pageTranslateFrFR,
 };

@@ -14,7 +14,7 @@ export const displayKo: DisplayMessages = {
     gemini: "Gemini 호환",
     ollama: "Ollama 호환",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "웹 검색과 웹페이지 내용 추출.",
     parallel: "발췌문이 포함된 웹 검색과 웹페이지 가져오기.",
     tinyfish: "웹 및 뉴스 검색.",
@@ -50,7 +50,12 @@ export const displayKo: DisplayMessages = {
   errors: {
     noModel:
       "설정된 모델이 없어요. ‘설정’ → ‘AI 제공업체’에서 제공업체를 추가하세요.",
+    noImageModel:
+      "설정된 이미지 모델이 없어요. ‘설정’ → ‘AI 제공업체’에서 선택하세요.",
     baseUrlRequired: "Base URL을 입력하세요.",
+    bridgeNotFound: "이 실행 브리지는 더 이상 없습니다.",
+    bridgeHostRequired: "네이티브 메시징 호스트 이름을 입력하세요.",
+    bridgeTimeout: "실행 브리지가 제때 응답하지 않았습니다.",
   },
   toolSteps: {
     failed: "실패",

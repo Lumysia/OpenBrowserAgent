@@ -3,12 +3,12 @@ import {
   modelDisplayName,
   providerDisplayName,
 } from "../../src/shared/model-display";
+import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
+import { providerType, type ProviderId } from "../../src/shared/providers";
 import {
-  providerDefaultBaseUrls,
-  type ModelConfig,
-  type ProviderConfig,
-  type ProviderId,
-} from "../../src/shared/types";
+  normalizeBaseUrl,
+  providerApiBase,
+} from "../../src/shared/provider-urls";
 import { USER_ERROR_CODE, UserError } from "../../src/shared/user-errors";
 
 export async function loadProviderModels(
@@ -16,10 +16,12 @@ export async function loadProviderModels(
   provider: ProviderId,
   config: ProviderConfig,
 ): Promise<ModelConfig[]> {
-  if (provider === "gemini")
+  const { api } = providerType(provider);
+  if (api === "google-generative-ai")
     return loadGeminiModels(providerId, provider, config);
+  // Ollama lists its models in its own API.
   if (provider === "ollama") return loadOllamaModels(providerId, config);
-  if (provider === "anthropic")
+  if (api === "anthropic-messages")
     return loadAnthropicModels(providerId, provider, config);
   return loadOpenAICompatibleModels(providerId, provider, config);
 }
@@ -30,7 +32,7 @@ async function loadGeminiModels(
   config: ProviderConfig,
 ) {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(config.apiKey || "")}`,
+    `${providerType(provider).sdkEndpoint}/v1beta/models?key=${encodeURIComponent(config.apiKey || "")}`,
   );
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
@@ -54,11 +56,7 @@ async function loadOpenAICompatibleModels(
   provider: ProviderId,
   config: ProviderConfig,
 ) {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls[provider] ||
-    ""
-  ).replace(/\/$/, "");
+  const baseUrl = providerApiBase(provider, config.baseUrl);
   if (!baseUrl)
     throw new UserError(
       USER_ERROR_CODE.baseUrlRequired,
@@ -88,11 +86,7 @@ async function loadAnthropicModels(
   provider: ProviderId,
   config: ProviderConfig,
 ) {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls[provider] ||
-    ""
-  ).replace(/\/$/, "");
+  const baseUrl = providerApiBase(provider, config.baseUrl);
   if (!baseUrl)
     throw new UserError(
       USER_ERROR_CODE.baseUrlRequired,
@@ -150,11 +144,10 @@ async function loadOllamaModels(
   providerId: string,
   config: ProviderConfig,
 ): Promise<ModelConfig[]> {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls.ollama ||
-    ""
-  ).replace(/\/$/, "");
+  // Ollama's own API, beside the OpenAI one under /v1.
+  const baseUrl = normalizeBaseUrl(
+    config.baseUrl || providerType("ollama").defaultBaseUrl || "",
+  );
   const response = await fetch(`${baseUrl}/api/tags`);
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();

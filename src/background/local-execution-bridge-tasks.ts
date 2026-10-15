@@ -1,9 +1,29 @@
-import { resolveLocalExecutionBridge } from "../shared/local-execution-bridges";
+import { getBrowserApi } from "../shared/browser-api";
+import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../shared/config";
+import { errorMessage } from "../shared/error-message";
+import {
+  BRIDGE_MESSAGE,
+  bridgeCommand,
+} from "../shared/local-execution-bridge-protocol";
+import {
+  localExecutionBridgeCommandTimeout,
+  resolveLocalExecutionBridge,
+} from "../shared/local-execution-bridges";
 import { storage } from "../shared/storage";
-import type {
-  AgentWorkspace,
-  LocalExecutionBridgeConfig,
-} from "../shared/types";
+import type { LocalExecutionBridgeConfig } from "../shared/types";
+import { stringOf, trimmedString } from "../shared/values";
+import { bridgeHostError } from "./bridge-connection";
+
+// What the localCommand tool asks a bridge to run.
+export type LocalCommandRequest = {
+  command: string;
+  // Bridge id or name; the first bridge when empty.
+  bridge?: string;
+  cwd?: string;
+  shell?: string;
+  // Asked for by the model; the bridge's own timeout when missing.
+  timeoutMs?: unknown;
+};
 
 type Task = {
   taskId: string;
@@ -18,6 +38,7 @@ type Task = {
   error?: string;
   result?: unknown;
   events: Record<string, unknown>[];
+  timeoutMs: number;
   startedAt: number;
   updatedAt: number;
   port?: chrome.runtime.Port;
@@ -28,6 +49,10 @@ const tasks = new Map<string, Task>();
 const EVENT_LIMIT = 80;
 const OUTPUT_LIMIT = 64 * 1024;
 const FINISHED_TASK_LIMIT = 20;
+const OUTPUT_MESSAGES = new Set<string>([
+  BRIDGE_MESSAGE.stdout,
+  BRIDGE_MESSAGE.stderr,
+]);
 
 export function bridgeTaskCounts() {
   const taskStates: Record<string, number> = {};
@@ -36,18 +61,13 @@ export function bridgeTaskCounts() {
   return { activeTaskCount: taskStates.running || 0, taskStates };
 }
 
-async function startTask(
-  input: Record<string, unknown>,
-  context?: { chatId?: string; messageId?: string; toolCallId?: string },
-  workspace?: AgentWorkspace,
-  signal?: AbortSignal,
-) {
+async function startTask(request: LocalCommandRequest, signal?: AbortSignal) {
   const bridges = await storage.localExecutionBridges.get();
   signal?.throwIfAborted();
   const bridge = resolveLocalExecutionBridge(
     bridges,
-    text(input.bridgeId),
-    text(input.bridgeName),
+    request.bridge,
+    request.bridge,
   );
   if (!bridge)
     return {
@@ -55,9 +75,7 @@ async function startTask(
       error: "No local execution bridge is configured.",
       state: "missing",
     };
-  const commandLine = text(
-    input.command || input.shellCommand || input.task || input.prompt,
-  );
+  const commandLine = request.command.trim();
   if (!commandLine)
     return {
       success: false,
@@ -77,6 +95,7 @@ async function startTask(
     output: "",
     received: 0,
     events: [],
+    timeoutMs: localExecutionBridgeCommandTimeout(bridge, request.timeoutMs),
     startedAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -86,13 +105,14 @@ async function startTask(
   for (const old of finished.slice(0, -FINISHED_TASK_LIMIT))
     tasks.delete(old.taskId);
   try {
+    const runtime = getBrowserApi().runtime;
     // No ping first: command.run reports a bad key or secret itself.
-    const port = chrome.runtime.connectNative(bridge.hostName);
+    const port = runtime.connectNative(bridge.hostName);
     task.port = port;
     const receive = (message: unknown) => receiveMessage(task, message);
     const disconnect = () => {
       // Read lastError even on terminal disconnects to consume Chrome's error.
-      const error = chrome.runtime.lastError?.message;
+      const error = runtime.lastError?.message;
       if (task.state === "running")
         finish(
           task,
@@ -112,68 +132,37 @@ async function startTask(
       task.port = undefined;
     };
     port.postMessage({
-      type: "command.run",
+      type: BRIDGE_MESSAGE.run,
       taskId: task.taskId,
-      command: {
-        id: bridge.id,
-        key: bridge.bridgeKey || bridge.id,
-        name: bridge.name,
-        hostAddress: bridge.hostAddress || "",
-        secret: bridge.secret || "",
-      },
+      command: bridgeCommand(bridge),
       commandLine,
-      shell: text(input.shell),
-      title: text(input.title),
-      cwd: text(input.cwd) || bridge.defaultCwd || "",
-      context: {
-        ...context,
-        workspaceFiles: workspace?.files?.map(({ path, kind, content }) => ({
-          path,
-          kind,
-          content,
-        })),
-        inputContext: input.context,
-      },
-      timeoutMs: input.timeoutMs || bridge.timeoutMs,
+      shell: trimmedString(request.shell),
+      cwd: trimmedString(request.cwd) || bridge.defaultCwd || "",
+      timeoutMs: task.timeoutMs,
     });
   } catch (error) {
-    finish(
-      task,
-      "error",
-      error instanceof Error ? error.message : String(error),
-    );
+    finish(task, "error", errorMessage(error));
   }
   return status(task.taskId);
 }
 
-const DEFAULT_COMMAND_TIMEOUT_MS = 10 * 60_000;
-const MAX_COMMAND_TIMEOUT_MS = 30 * 60_000;
-const START_SETTLE_MS = 1_000;
-
 // Runs one command and resolves when it finishes, fails, times out or the
-// run is stopped (which cancels it).
+// run is stopped (which cancels it). The host stops the command at its
+// timeout; the extension stops waiting a little later in case the host
+// cannot say so.
 export async function runLocalCommand(
-  input: Record<string, unknown>,
-  context: { chatId?: string; messageId?: string; toolCallId?: string },
-  workspace?: AgentWorkspace,
+  request: LocalCommandRequest,
   signal?: AbortSignal,
 ) {
-  const started = await startTask(input, context, workspace, signal);
+  const started = await startTask(request, signal);
   const task = tasks.get(String((started as { taskId?: string }).taskId || ""));
   if (!task) return started;
-  const requested = Number(input.timeoutMs);
-  const timeout = Math.min(
-    MAX_COMMAND_TIMEOUT_MS,
-    Number.isFinite(requested) && requested > 0
-      ? requested
-      : DEFAULT_COMMAND_TIMEOUT_MS,
-  );
   await new Promise<void>((resolve) => {
     if (task.state !== "running") return resolve();
     const timer = setTimeout(() => {
       cancelTask(task);
-      task.error = `Timed out after ${Math.round(timeout / 1000)} s.`;
-    }, timeout);
+      task.error = `Timed out after ${Math.round(task.timeoutMs / 1000)} s.`;
+    }, task.timeoutMs + LOCAL_EXECUTION_BRIDGE_LIMITS.timeoutGraceMs);
     task.settled = () => {
       clearTimeout(timer);
       resolve();
@@ -184,17 +173,16 @@ export async function runLocalCommand(
 }
 
 // Starts a command that keeps running after the call returns (a dev server,
-// a long job). Stopping the chat does not cancel it; cancel does.
-export async function startLocalCommand(
-  input: Record<string, unknown>,
-  context: { chatId?: string; messageId?: string; toolCallId?: string },
-  workspace?: AgentWorkspace,
-) {
-  const started = await startTask(input, context, workspace);
+// a long job) until it ends, times out or is cancelled. Stopping the chat
+// does not cancel it.
+export async function startLocalCommand(request: LocalCommandRequest) {
+  const started = await startTask(request);
   const task = tasks.get(String((started as { taskId?: string }).taskId || ""));
   // A command that fails at once (bad key, unknown shell) says so now.
   if (task?.state === "running")
-    await new Promise((resolve) => setTimeout(resolve, START_SETTLE_MS));
+    await new Promise((resolve) =>
+      setTimeout(resolve, LOCAL_EXECUTION_BRIDGE_LIMITS.startSettleMs),
+    );
   return task ? status(task.taskId) : started;
 }
 
@@ -213,7 +201,10 @@ export function cancelLocalCommand(taskId: string) {
 function cancelTask(task: Task) {
   if (task.state !== "running") return;
   try {
-    task.port?.postMessage({ type: "command.cancel", taskId: task.taskId });
+    task.port?.postMessage({
+      type: BRIDGE_MESSAGE.cancel,
+      taskId: task.taskId,
+    });
   } catch {
     // The port is already gone; disconnect below still applies.
   }
@@ -229,25 +220,16 @@ function receiveMessage(task: Task, value: unknown) {
   if (task.events.length > EVENT_LIMIT)
     task.events.splice(0, task.events.length - EVENT_LIMIT);
   // Preserve command output whitespace; trimming corrupts streamed text.
-  if (
-    ["stdout", "stderr", "message_delta", "text"].includes(
-      text(event.event || event.type),
-    )
-  ) {
-    const chunk = String(event.data ?? event.text ?? "");
+  if (OUTPUT_MESSAGES.has(stringOf(event.type))) {
+    const chunk = stringOf(event.data);
     task.output = (task.output + chunk).slice(-OUTPUT_LIMIT);
     task.received += chunk.length;
   }
   if (event.result !== undefined) task.result = event.result;
-  if (event.error !== undefined) task.error = text(event.error);
-  const type = text(event.type || event.event);
-  if (type === "command.error" || type === "error")
-    finish(task, "error", task.error || "Local command failed.");
-  else if (type === "command.done" || type === "done")
-    finish(
-      task,
-      event.event === "canceled" ? "canceled" : task.error ? "error" : "done",
-    );
+  if (event.type === BRIDGE_MESSAGE.error)
+    finish(task, "error", bridgeHostError(event).message);
+  else if (event.type === BRIDGE_MESSAGE.done)
+    finish(task, event.event === "canceled" ? "canceled" : "done");
 }
 
 function finish(task: Task, state: Task["state"], error?: string) {
@@ -273,10 +255,8 @@ function status(taskId: string) {
     result: task.result,
     ...(task.error ? { error: task.error } : {}),
     progress: task.events.slice(-8),
+    timeoutMs: task.timeoutMs,
     startedAt: task.startedAt,
     updatedAt: task.updatedAt,
   };
-}
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
 }

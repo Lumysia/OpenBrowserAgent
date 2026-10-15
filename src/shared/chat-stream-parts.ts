@@ -4,8 +4,9 @@ import {
   isToolPartType,
   toolNameFromPartType,
   toolPartType,
+  toolStateRank,
+  type ChatPart,
 } from "./types";
-import type { ChatPart } from "./types";
 
 export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
   const index = parts.findIndex((candidate) => candidate.id === part.id);
@@ -46,14 +47,6 @@ function mergeToolState(current: ChatPart["state"], next: ChatPart["state"]) {
   if (!next) return current;
   if (!current) return next;
   return toolStateRank(next) >= toolStateRank(current) ? next : current;
-}
-
-function toolStateRank(state: ChatPart["state"]) {
-  if (state === CHAT_PART_STATE.outputError) return 4;
-  if (state === CHAT_PART_STATE.outputAvailable) return 3;
-  if (state === CHAT_PART_STATE.inputAvailable) return 2;
-  if (state === CHAT_PART_STATE.inputStreaming) return 1;
-  return 0;
 }
 
 function definedPart(part: ChatPart) {

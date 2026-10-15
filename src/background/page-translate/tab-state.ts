@@ -1,43 +1,40 @@
+import { getMessages } from "../../shared/i18n";
 import { CONTEXT_MENU_ID } from "../../shared/context-menu";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   type PageTranslateQueryMessage,
 } from "../../shared/page-translate/protocol";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
+import { sessionRecord } from "../../shared/session-record";
+import { storage } from "../../shared/storage";
+import { STORAGE_KEYS } from "../../shared/storage-keys";
 
 // Which tabs show a translated page, for the menu item's title: "Translate
 // this page", or "Show original" there. Kept in session storage too, so a
 // restarted service worker still knows.
-const SESSION_KEY = "page-translate-tabs";
-
-let translated: Promise<Set<number>> | undefined;
-
-function translatedTabs() {
-  translated ??= (async () => {
-    const area = getBrowserApi().storage.session;
-    const values: Record<string, unknown> = area
-      ? await area.get(SESSION_KEY).catch(() => ({}))
-      : {};
-    const stored = values[SESSION_KEY];
-    return new Set(Array.isArray(stored) ? stored : []);
-  })();
-  return translated;
-}
+const translatedTabs = sessionRecord<number[]>(
+  STORAGE_KEYS.pageTranslateTabs,
+  () => [],
+);
 
 export async function setTabTranslated(tabId: number, value: boolean) {
-  const tabs = await translatedTabs();
-  if (tabs.has(tabId) === value) return;
-  if (value) tabs.add(tabId);
-  else tabs.delete(tabId);
-  await getBrowserApi()
-    .storage.session?.set({ [SESSION_KEY]: [...tabs] })
+  let changed = false;
+  await translatedTabs
+    .update((tabs) => {
+      const next = new Set(Array.isArray(tabs) ? tabs : []);
+      changed = next.has(tabId) !== value;
+      if (value) next.add(tabId);
+      else next.delete(tabId);
+      return [...next];
+    })
     .catch(() => undefined);
-  await refreshMenuTitle();
+  if (changed) await refreshMenuTitle();
 }
 
-export async function isTabTranslated(tabId: number | undefined) {
-  return tabId !== undefined && (await translatedTabs()).has(tabId);
+async function isTabTranslated(tabId: number | undefined) {
+  if (tabId === undefined) return false;
+  const tabs = await translatedTabs.get();
+  return Array.isArray(tabs) && tabs.includes(tabId);
 }
 
 // The item's title for the active tab.
@@ -45,15 +42,15 @@ export async function translateMenuTitle(language?: string) {
   const [tab] = await getBrowserApi()
     .tabs.query({ active: true, lastFocusedWindow: true })
     .catch(() => []);
-  const messages = getPageTranslateMessages(
+  const messages = getMessages(
     language ?? (await storage.language.get()),
-  );
+  ).pageTranslate;
   return (await isTabTranslated(tab?.id))
     ? messages.menu.showOriginal
     : messages.menu.translatePage;
 }
 
-export async function refreshMenuTitle() {
+async function refreshMenuTitle() {
   const menus = getBrowserApi().contextMenus;
   if (!menus) return;
   const title = (await translateMenuTitle()).replaceAll("&", "&&");
@@ -94,7 +91,7 @@ export function watchTabs() {
 }
 
 // Whether the tab's page is translated; false where it has no page script.
-export async function queryTab(tabId: number) {
+async function queryTab(tabId: number) {
   const message: PageTranslateQueryMessage = {
     type: PAGE_TRANSLATE_MESSAGE.query,
   };

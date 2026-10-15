@@ -1,3 +1,4 @@
+import { isTextType, typeForName } from "./mime";
 export const ATTACHMENT_KIND = {
   audio: "audio",
   document: "document",
@@ -18,23 +19,6 @@ export const ATTACHMENT_MIME_PREFIX = {
   video: "video/",
 } as const;
 
-export const TEXT_ATTACHMENT_MIME_TYPES = new Set([
-  "application/json",
-  "application/xml",
-  "application/yaml",
-  "image/svg+xml",
-  "text/css",
-  "text/csv",
-  "text/html",
-  "text/javascript",
-  "text/markdown",
-  "text/plain",
-  "text/xml",
-]);
-
-export const TEXT_ATTACHMENT_EXTENSION_PATTERN =
-  /\.(csv|css|html?|json|jsonl|log|md|markdown|svg|tsv|txt|xml|ya?ml)$/i;
-
 export const DOCUMENT_ATTACHMENT_EXTENSION_PATTERN =
   /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;
 
@@ -47,10 +31,7 @@ export const DOCUMENT_ATTACHMENT_MIME_HINTS = [
 ] as const;
 
 export function classifyAttachment(name: string, type: string) {
-  if (
-    TEXT_ATTACHMENT_MIME_TYPES.has(type) ||
-    TEXT_ATTACHMENT_EXTENSION_PATTERN.test(name)
-  )
+  if (isTextType(type) || isTextType(typeForName(name)))
     return ATTACHMENT_KIND.text;
   if (type.startsWith(ATTACHMENT_MIME_PREFIX.image))
     return ATTACHMENT_KIND.image;

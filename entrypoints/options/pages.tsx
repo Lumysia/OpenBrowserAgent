@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { OPTIONS_HASH, OPTIONS_ROUTE } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import { AgentsPage } from "./agents-page";
 import { ContextMenuPage } from "./context-menu-page";
 import { DebugPage } from "./debug-page";
@@ -35,7 +34,7 @@ export type OptionsPage = {
   route: string;
   hash: string;
   icon: LucideIcon;
-  title: (t: Messages, language: string | undefined) => string;
+  title: (t: Messages) => string;
   Page: ComponentType;
 };
 
@@ -74,7 +73,7 @@ const PAGES: Record<
   },
   pageTranslate: {
     icon: Languages,
-    title: (_t, language) => getPageTranslateMessages(language).settingsTitle,
+    title: (t) => t.pageTranslate.settingsTitle,
     Page: PageTranslatePage,
   },
   debug: { icon: Bug, title: (t) => t.options.debug, Page: DebugPage },

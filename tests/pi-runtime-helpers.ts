@@ -1,7 +1,7 @@
 import type { Artifact, ArtifactStore } from "../src/shared/artifacts";
 import { afterEach, beforeEach, mock } from "node:test";
 import type { ServerResponse } from "node:http";
-import type { ProviderId } from "../src/shared/types";
+import type { ProviderId } from "../src/shared/providers";
 import { DEFAULT_AGENT } from "../src/shared/agents";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";

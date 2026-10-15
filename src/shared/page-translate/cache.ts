@@ -3,6 +3,7 @@
 // its own in-memory copy for the session; this one makes pages translated
 // before come back at once, also after a restart.
 import { idbStore } from "../idb-store";
+import { sha256Hex } from "../sync/codec";
 
 export const TRANSLATION_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 // Oldest entries go beyond this many.
@@ -23,13 +24,9 @@ export async function translationCacheKey(
   target: string,
   text: string,
 ) {
-  const bytes = new TextEncoder().encode(
-    `${engine}\u0000${target}\u0000${text}`,
+  return sha256Hex(
+    new TextEncoder().encode(`${engine}\u0000${target}\u0000${text}`),
   );
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
 }
 
 export async function readTranslations(keys: string[]) {

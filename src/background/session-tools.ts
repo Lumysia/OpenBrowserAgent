@@ -1,3 +1,4 @@
+import { clampInt } from "../shared/values";
 import {
   deleteChats,
   readChat,
@@ -23,8 +24,12 @@ export async function searchChatHistory(input: Record<string, unknown>) {
   const query = String(input.query || "")
     .trim()
     .toLowerCase();
-  const offset = clampOffset(input.offset);
-  const limit = clampLimit(input.limit, CHAT_SEARCH_LIMIT, 1, 30);
+  const offset = clampInt(input.offset, { fallback: 0, min: 0 });
+  const limit = clampInt(input.limit, {
+    fallback: CHAT_SEARCH_LIMIT,
+    min: 1,
+    max: 30,
+  });
   // Titles of every chat; messages only of chats whose content is on this
   // device, so a search never downloads every synced chat.
   const chats = await Promise.all(
@@ -69,13 +74,17 @@ export async function readChatThread(input: Record<string, unknown>) {
   const chatId = String(input.chatId || input.id || "").trim();
   if (!chatId) return { error: "Missing chatId" };
   const requestedOffset = input.offset;
-  const limit = clampLimit(input.limit, CHAT_READ_MESSAGE_LIMIT, 1, 200);
+  const limit = clampInt(input.limit, {
+    fallback: CHAT_READ_MESSAGE_LIMIT,
+    min: 1,
+    max: 200,
+  });
   const chat = await readChat(chatId);
   if (!chat) return { error: "Chat thread not found", chatId };
   const offset =
     requestedOffset === undefined
       ? Math.max(0, chat.messages.length - limit)
-      : clampOffset(requestedOffset);
+      : clampInt(requestedOffset, { fallback: 0, min: 0 });
   const messages = chat.messages
     .slice(offset, offset + limit)
     .map(readableMessage);
@@ -147,20 +156,4 @@ function messageText(message: ChatMessage) {
 
 function truncate(text: string, limit: number) {
   return text.length <= limit ? text : `${text.slice(0, limit)}\n[truncated]`;
-}
-
-function clampOffset(value: unknown) {
-  const offset = Number(value);
-  return Number.isFinite(offset) ? Math.max(0, Math.trunc(offset)) : 0;
-}
-
-function clampLimit(
-  value: unknown,
-  fallback: number,
-  minimum: number,
-  maximum: number,
-) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.min(maximum, Math.max(minimum, Math.trunc(number)));
 }

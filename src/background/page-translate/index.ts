@@ -1,4 +1,5 @@
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
+import { getMessages } from "../../shared/i18n";
+import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   PAGE_TRANSLATE_PORT,
@@ -12,7 +13,8 @@ import {
   type PageTranslateView,
 } from "../../shared/page-translate/protocol";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { flashBadge, showPageNote } from "../page-feedback";
 import { pageToastTheme } from "../page-toast";
 import { startVideoSubtitles, stopVideoSubtitles } from "../video-subtitles";
@@ -53,17 +55,17 @@ export function setupPageTranslate() {
 export function handlePageTranslateMessage(
   message: unknown,
   sender: Sender,
-  sendResponse: (response: unknown) => void,
+  sendResponse: (reply: RuntimeReply) => void,
 ) {
   const request = (message || {}) as Partial<PageTranslateStateMessage>;
   if (request.type !== PAGE_TRANSLATE_MESSAGE.state) return false;
   const tabId = sender.tab?.id;
-  if (tabId !== undefined && !sender.frameId)
-    void setTabTranslated(tabId, request.translated === true).finally(() =>
-      sendResponse({ ok: true }),
-    );
-  else sendResponse({ ok: true });
-  return true;
+  return respondWith(
+    tabId !== undefined && !sender.frameId
+      ? setTabTranslated(tabId, request.translated === true)
+      : Promise.resolve(),
+    sendResponse,
+  );
 }
 
 // "Translate this page" and "Show original": the page script knows which
@@ -90,7 +92,7 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
     storage.language.get(),
     storage.preferences.get(),
   ]);
-  const messages = getPageTranslateMessages(language);
+  const messages = getMessages(language).pageTranslate;
   const noted =
     injected &&
     (await showPageNote(

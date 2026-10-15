@@ -1,4 +1,4 @@
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
 import { pageHeader } from "./page";

@@ -1,3 +1,6 @@
+import { isHtmlType, isTextType, typeForName } from "../../shared/mime";
+import { clampInt, trimmedString } from "../../shared/values";
+import { errorMessage } from "../../shared/error-message";
 import {
   ATTACHMENT_KIND,
   base64FromDataUrl,
@@ -15,16 +18,17 @@ import type { UploadedAttachment } from "../../shared/types";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { callPage, pageTab } from "../page-agent";
 import { pageHeader, pageSource } from "./page";
+import { findWorkspaceFile } from "./workspace-source";
 import {
-  WORKSPACE_SOURCE_PREFIX,
-  findWorkspaceFile,
+  attachmentSource,
+  parseSource,
+  skillSource,
+  tabSource,
   workspaceSource,
-  workspaceSourcePath,
-} from "./workspace-source";
+} from "./source-handles";
 import {
   fail,
   schema,
-  stringArg,
   type RunContext,
   type SourceInput,
   type ToolDefinition,
@@ -47,38 +51,13 @@ export function textSlice(
 // The range textSlice returns: from `offset`, at most `limit` and `max`
 // characters.
 function sliceRange(text: string, input: Record<string, unknown>, max: number) {
-  const offset = Math.min(
-    text.length,
-    Math.max(0, Math.trunc(Number(input.offset) || 0)),
-  );
-  const limit = Math.min(
-    max,
-    Math.max(1, Math.trunc(Number(input.limit) || max)),
-  );
+  const offset = clampInt(input.offset, {
+    fallback: 0,
+    min: 0,
+    max: text.length,
+  });
+  const limit = clampInt(input.limit, { fallback: max, min: 1, max });
   return { offset, end: Math.min(text.length, offset + limit) };
-}
-
-export type ReadSource =
-  | { kind: "tab"; tabId?: number }
-  | { kind: "artifact"; handle: string }
-  | { kind: "url"; url: string }
-  | { kind: "attachment"; id: string }
-  | { kind: "skill"; name: string; path: string }
-  | { kind: "workspace"; path: string };
-
-export function parseSource(value: string): ReadSource {
-  if (!value || value === "tab") return { kind: "tab" };
-  if (/^tab:\d+$/.test(value))
-    return { kind: "tab", tabId: Number(value.slice(4)) };
-  if (/^art-/.test(value)) return { kind: "artifact", handle: value };
-  if (/^(https?:|data:)/i.test(value)) return { kind: "url", url: value };
-  if (value.startsWith("skill:")) {
-    const [name, ...path] = value.slice(6).split("/");
-    return { kind: "skill", name, path: path.join("/") || SKILL_ENTRY_PATH };
-  }
-  if (value.startsWith(WORKSPACE_SOURCE_PREFIX))
-    return { kind: "workspace", path: workspaceSourcePath(value) };
-  return { kind: "attachment", id: value.replace(/^attachment:/, "") };
 }
 
 export const readTool: ToolDefinition = {
@@ -100,7 +79,7 @@ export const readTool: ToolDefinition = {
     },
   }),
   async execute(input, context) {
-    const source = parseSource(stringArg(input.source));
+    const source = parseSource(trimmedString(input.source));
     const { run, signal } = context;
     if (source.kind === "tab") {
       if (!hasToolGroup(run.agent, "pages"))
@@ -116,7 +95,7 @@ export const readTool: ToolDefinition = {
       return {
         text: textSlice(pageHeader(current), value.text, input),
         details: {
-          source: `tab:${tab.id}`,
+          source: tabSource(tab.id),
           title,
           url,
           chars: value.text.length,
@@ -178,13 +157,13 @@ function readSkill(
     path === SKILL_ENTRY_PATH && skill.files.length > 1
       ? `\n[Other files: ${skill.files
           .filter((item) => item !== file)
-          .map((item) => `skill:${skill.name}/${item.path}`)
+          .map((item) => skillSource(skill.name, item.path))
           .join(", ")}]`
       : "";
   // Read whole up to a higher limit than other sources; a cut says so at
   // the end, where the reader stops. A skill is instructions, not a source
   // to cite, so it adds none.
-  const source = `skill:${skill.name}/${file.path}`;
+  const source = skillSource(skill.name, file.path);
   const max = tokenChars(CONTEXT_POLICY.skillReadMaxTokens);
   const { offset, end } = sliceRange(file.content, input, max);
   const total = file.content.length;
@@ -218,7 +197,7 @@ async function readAttachment(
       `No attachment "${id}". Use an id from available_attachments, written as attachment:ID.`,
     );
   const details = {
-    source: `attachment:${attachment.id}`,
+    source: attachmentSource(attachment.id),
     name: attachment.name,
   };
   const sources = [{ kind: "file" as const, title: attachment.name }];
@@ -274,8 +253,6 @@ async function binaryResult(
   return { text: textSlice(label, text, input), details, sources };
 }
 
-const TEXT_TYPE = /^text\/|json|xml|yaml|csv|markdown|javascript/;
-const HTML_TYPE = /^(text\/html|application\/xhtml\+xml)/;
 // Fetched HTML with less text than this is likely a shell that needs
 // JavaScript, a login or a bot check.
 const THIN_PAGE_CHARS = 200;
@@ -293,16 +270,14 @@ async function readUrl(
     response = await fetch(url, { credentials: "include", signal });
   } catch (error) {
     signal?.throwIfAborted();
-    return fail(
-      `Could not fetch ${url}: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    return fail(`Could not fetch ${url}: ${errorMessage(error)}`);
   }
   if (!response.ok)
     return fail(`Fetching ${url} failed with HTTP ${response.status}.`);
   const blob = await response.blob();
   const type = blob.type || "application/octet-stream";
   const details = { source: url, type, size: blob.size };
-  if (HTML_TYPE.test(type))
+  if (isHtmlType(type))
     return readHtml(
       response.url || url,
       decodeHtml(
@@ -314,9 +289,9 @@ async function readUrl(
       hasToolGroup(run.agent, "browser"),
     );
   if (
-    TEXT_TYPE.test(type) ||
+    isTextType(type) ||
     (type === "application/octet-stream" &&
-      /\.(txt|md|json|csv|xml|ya?ml)(\?|#|$)/i.test(url))
+      isTextType(typeForName(new URL(url).pathname)))
   )
     return {
       text: textSlice(url, await blob.text(), input),

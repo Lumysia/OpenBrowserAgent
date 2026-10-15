@@ -24,6 +24,11 @@ export type ToolGroup = (typeof TOOL_GROUPS)[number];
 // Groups that need the Chrome debugger; hidden where it does not exist.
 export const DEBUGGER_TOOL_GROUPS: ToolGroup[] = ["scripts", "devtools"];
 
+// Groups whose tools talk to pages, where a dialog or a hung page could
+// stall the run: their calls are bounded by BROWSER_TOOL_TIMEOUT_MS unless
+// a tool sets its own timeout.
+export const PAGE_TOOL_GROUPS: ToolGroup[] = ["pages", "browser", "web"];
+
 export const DEFAULT_AGENT_ID = "general-agent";
 export const ASK_AGENT_ID = "ask-agent";
 
@@ -86,30 +91,29 @@ export function createAgentDraft(name: string): Agent {
   };
 }
 
+// Reading never invents a time: a missing one reads as 0 (unknown), so two
+// reads give the same agents.
 export function normalizeAgents(value: Agent[] | undefined) {
-  const now = Date.now();
   const agents = Array.isArray(value)
     ? value.filter((agent) => !!agent?.id && typeof agent.name === "string")
     : [];
   const existingIds = new Set(agents.map((agent) => agent.id));
   return [
-    ...BUILTIN_AGENTS.filter((agent) => !existingIds.has(agent.id)).map(
-      (agent) => ({ ...agent, createdAt: now, updatedAt: now }),
-    ),
+    ...BUILTIN_AGENTS.filter((agent) => !existingIds.has(agent.id)),
     ...agents.map((agent) => {
       const builtin = BUILTIN_AGENTS.find((item) => item.id === agent.id);
       if (builtin)
         return {
           ...builtin,
-          createdAt: agent.createdAt || now,
-          updatedAt: agent.updatedAt || now,
+          createdAt: agent.createdAt || 0,
+          updatedAt: agent.updatedAt || 0,
         };
-      return normalizeAgent(agent, now);
+      return normalizeAgent(agent);
     }),
   ];
 }
 
-function normalizeAgent(agent: Agent, now: number): Agent {
+function normalizeAgent(agent: Agent): Agent {
   return {
     ...agent,
     name: agent.name.trim() || DEFAULT_AGENT.name,
@@ -119,8 +123,8 @@ function normalizeAgent(agent: Agent, now: number): Agent {
       : [...CUSTOM_AGENT_TOOL_GROUPS],
     modelId: agent.modelId || undefined,
     workspace: agent.workspace !== false,
-    createdAt: agent.createdAt || now,
-    updatedAt: agent.updatedAt || agent.createdAt || now,
+    createdAt: agent.createdAt || 0,
+    updatedAt: agent.updatedAt || agent.createdAt || 0,
   };
 }
 

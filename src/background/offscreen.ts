@@ -1,8 +1,5 @@
-import {
-  OFFSCREEN_PATH,
-  type OffscreenReply,
-  type OffscreenRequest,
-} from "../shared/offscreen";
+import { OFFSCREEN_PATH, type OffscreenRequest } from "../shared/offscreen";
+import type { RuntimeReply } from "../shared/runtime-messages";
 
 let creating: Promise<void> | undefined;
 
@@ -38,7 +35,7 @@ export async function offscreenRequest<T>(
 ): Promise<T> {
   await ensureOffscreen();
   const reply = (await chrome.runtime.sendMessage(request)) as
-    OffscreenReply<T> | undefined;
+    RuntimeReply<T> | undefined;
   if (!reply?.ok) throw new Error(reply?.error || failure);
-  return reply.value;
+  return reply.value as T;
 }

@@ -19,7 +19,7 @@ import type {
   SyncBackendConfig,
   WebDavSyncBackendConfig,
 } from "../../src/shared/types";
-import { DEFAULT_LANGUAGE, languageLabels } from "../../src/shared/i18n";
+import { resolveLanguage, UI_LANGUAGES } from "../../src/shared/ui-languages";
 import {
   Badge,
   Button,
@@ -215,7 +215,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                   >
                     <div className="bootstrap-actions">
                       <Select
-                        value={language || DEFAULT_LANGUAGE}
+                        value={resolveLanguage(language)}
                         onValueChange={setLanguage}
                       >
                         <SelectTrigger>
@@ -223,7 +223,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.entries(languageLabels).map(([id, label]) => (
+                          {UI_LANGUAGES.map(({ code: id, label }) => (
                             <SelectItem key={id} value={id}>
                               {label}
                             </SelectItem>

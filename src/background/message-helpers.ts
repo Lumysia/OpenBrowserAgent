@@ -3,6 +3,7 @@ import {
   isMetadataOnlyAttachment,
 } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
+import { skillSource } from "./tools/source-handles";
 import {
   renderSelectedText,
   selectedTextsFromMetadata,
@@ -38,7 +39,7 @@ export function renderMessageText(
   if (options.latest && message.role === "user")
     return renderLatestUserMessage(message, options);
   const picked = pickedSkillsFromMetadata(message.metadata)
-    .map((skill) => `skill:${skill.name}`)
+    .map((skill) => skillSource(skill.name))
     .join(", ");
   return [
     picked && `[The user picked ${picked} for this message.]`,

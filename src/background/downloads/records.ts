@@ -5,7 +5,8 @@ import {
   type DownloadStatus,
 } from "../../shared/downloads";
 import { TOOL_NAME } from "../../shared/tool-names";
-import { baseName, extensionOf, nameFromUrl } from "./filenames";
+import { extensionOf, isHtmlType } from "../../shared/mime";
+import { baseName, nameFromUrl } from "./filenames";
 
 // With no file name after this long, the browser is waiting for its Save
 // dialog rather than still choosing a name itself.
@@ -114,7 +115,7 @@ export function downloadRecord(
   // A web page where the name or the URL promised another kind of file.
   const html =
     current === DOWNLOAD_STATUS.completed &&
-    /^(text\/html|application\/xhtml\+xml)/i.test(item.mime || "") &&
+    isHtmlType(item.mime || "") &&
     [name, nameFromUrl(item.finalUrl || item.url)].some((value) => {
       const extension = extensionOf(value);
       return !!extension && !HTML_EXTENSION.test(extension);

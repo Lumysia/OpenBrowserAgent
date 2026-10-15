@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { Agent } from "@earendil-works/pi-agent-core";
 import { createProviderStream, piModel } from "../src/background/pi-provider";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
-import type { ProviderId } from "../src/shared/types";
+import type { ProviderId } from "../src/shared/providers";
 import { providerFixture, reply, toolResults } from "./provider-fixtures";
 
 for (const provider of [

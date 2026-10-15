@@ -1,14 +1,16 @@
-import { getBrowserApi, storage } from "../shared/storage";
-import type { RunContext } from "./tools/types";
+import { getBrowserApi } from "../shared/browser-api";
+import { PRODUCT_NAME } from "../shared/config";
+import { sessionRecord } from "../shared/session-record";
+import { storage } from "../shared/storage";
+import { STORAGE_KEYS } from "../shared/storage-keys";
+import { ownerChat, type RunContext } from "./tools/types";
 
 // Tabs the agent opens stay in one tab group per chat, so they never mix
 // with the user's own tabs, and `tabs list` can tell them apart. A group
 // cannot span windows: a chat gets one group in each window it opens tabs
 // in. The record lives in session storage and ends with the browser session.
 
-const AGENT_TABS_KEY = "agentTabs";
 const GROUP_TITLE_MAX_CHARS = 30;
-const FALLBACK_GROUP_TITLE = "OpenBrowserAgent";
 
 type ChatTabs = {
   tabs: number[];
@@ -17,38 +19,17 @@ type ChatTabs = {
   title?: string;
 };
 
-const memory: Record<string, ChatTabs> = {};
-let queue: Promise<unknown> = Promise.resolve();
-
-// Sub-agents open tabs for the chat that started them.
-function ownerChat(run: Pick<RunContext, "chatId" | "parentChatId">) {
-  return run.parentChatId || run.chatId;
-}
-
-async function load(): Promise<Record<string, ChatTabs>> {
-  const area = getBrowserApi().storage.session;
-  if (!area) return memory;
-  return ((await area.get(AGENT_TABS_KEY))[AGENT_TABS_KEY] || {}) as Record<
-    string,
-    ChatTabs
-  >;
-}
-
-async function save(record: Record<string, ChatTabs>) {
-  await getBrowserApi().storage.session?.set({ [AGENT_TABS_KEY]: record });
-}
-
-// Record updates run one at a time: parallel runs must not lose tabs.
-function serialized<T>(task: () => Promise<T>) {
-  const result = queue.then(task, task);
-  queue = result.catch(() => undefined);
-  return result;
-}
+// By the chat that owns the tabs. Updates run one at a time: parallel runs
+// must not lose tabs.
+const agentTabs = sessionRecord<Record<string, ChatTabs>>(
+  STORAGE_KEYS.agentTabs,
+  () => ({}),
+);
 
 export async function agentTabIds(
   run: Pick<RunContext, "chatId" | "parentChatId">,
 ) {
-  return new Set((await load())[ownerChat(run)]?.tabs || []);
+  return new Set((await agentTabs.get())[ownerChat(run)]?.tabs || []);
 }
 
 // Opens a tab for the agent and puts it in the chat's group.
@@ -63,21 +44,22 @@ export async function openAgentTab(
 // Records a tab the agent opened and puts it in the chat's group of its
 // window. Returns the group's title, or nothing when the browser has no tab
 // groups or the tab cannot be grouped (such as in a popup window).
-export function adoptAgentTab(
+export async function adoptAgentTab(
   run: Pick<RunContext, "chatId" | "parentChatId">,
   tab: chrome.tabs.Tab,
 ) {
-  return serialized(async () => {
-    if (tab.id === undefined) return undefined;
-    const chatId = ownerChat(run);
-    const record = await load();
+  if (tab.id === undefined) return undefined;
+  const tabId = tab.id;
+  const chatId = ownerChat(run);
+  let group: string | undefined;
+  await agentTabs.update(async (record) => {
     const entry = (record[chatId] ||= { tabs: [], groups: [] });
-    entry.tabs = [...new Set([...entry.tabs, tab.id])];
+    entry.tabs = [...new Set([...entry.tabs, tabId])];
     const title = await groupTitle(chatId);
-    const group = await groupTab(entry, tab, title).catch(() => undefined);
-    await save(record);
-    return group;
+    group = await groupTab(entry, tab, title).catch(() => undefined);
+    return record;
   });
+  return group;
 }
 
 async function groupTab(
@@ -115,7 +97,7 @@ async function groupTab(
 
 async function groupTitle(chatId: string) {
   const chat = (await storage.chats.get()).find((item) => item.id === chatId);
-  const title = chat?.title.replace(/\s+/g, " ").trim() || FALLBACK_GROUP_TITLE;
+  const title = chat?.title.replace(/\s+/g, " ").trim() || PRODUCT_NAME;
   return title.length > GROUP_TITLE_MAX_CHARS
     ? `${title.slice(0, GROUP_TITLE_MAX_CHARS - 1)}…`
     : title;

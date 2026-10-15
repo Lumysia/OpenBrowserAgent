@@ -61,19 +61,10 @@ test("stored items reading dropped stay, in their place", () => {
   );
 });
 
-test("built-in MCP servers read back in the order they were shown, whichever are stored", () => {
-  const ids = (value: unknown) =>
-    normalizeMcpServers(value).map((server) => server.id);
-  const all = ids(undefined);
-  assert.deepEqual(ids([{ id: all[1], url: "u" }]), all);
-  assert.deepEqual(
-    ids([
-      { id: all[2], url: "u" },
-      { id: "own", url: "u" },
-    ]),
-    [...all, "own"],
-  );
-  // Reading what reading gave changes nothing.
-  const shown = normalizeMcpServers(undefined);
+test("reading an MCP server list that reading gave changes nothing", () => {
+  const shown = normalizeMcpServers([
+    { id: "a", url: "u" },
+    { name: "no id", url: "v" },
+  ]);
   assert.deepEqual(normalizeMcpServers(shown), shown);
 });

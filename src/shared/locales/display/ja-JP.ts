@@ -14,7 +14,7 @@ export const displayJaJP: DisplayMessages = {
     gemini: "Gemini 互換",
     ollama: "Ollama 互換",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "ウェブ検索とページ内容の抽出。",
     parallel: "抜粋付きのウェブ検索とページの取得。",
     tinyfish: "ウェブとニュースの検索。",
@@ -50,7 +50,12 @@ export const displayJaJP: DisplayMessages = {
   errors: {
     noModel:
       "モデルが設定されていません。「設定」→「AI プロバイダー」でプロバイダーを追加してください。",
+    noImageModel:
+      "画像モデルが設定されていません。「設定」→「AI プロバイダー」で選んでください。",
     baseUrlRequired: "ベース URL を入力してください。",
+    bridgeNotFound: "この実行ブリッジはもうありません。",
+    bridgeHostRequired: "ネイティブメッセージングホスト名を入力してください。",
+    bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
   },
   toolSteps: {
     failed: "失敗",

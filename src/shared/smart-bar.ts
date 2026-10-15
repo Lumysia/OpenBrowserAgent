@@ -1,6 +1,7 @@
 // Smart bar settings and site rules. Dependency-free: the page scripts import
 // this module, so it must stay small.
 import { primaryLanguage } from "./language-tags";
+import { knownValues, oneOf } from "./values";
 
 export const SMART_BAR_TRIGGER = {
   selection: "selection",
@@ -126,19 +127,20 @@ export function normalizeSmartBarSettings(
   value: Partial<SmartBarSettings> | undefined,
 ): SmartBarSettings {
   const merged = { ...DEFAULT_SMART_BAR_SETTINGS, ...value };
-  const actions = new Set<string>(Object.values(SMART_BAR_ACTION));
-  const actionList = (list: unknown) =>
-    Array.isArray(list)
-      ? (list.filter((item) => actions.has(item)) as SmartBarAction[])
-      : [];
+  const actions: SmartBarAction[] = Object.values(SMART_BAR_ACTION);
+  const actionList = (list: unknown) => knownValues(actions, list);
   return {
     enabled: merged.enabled === true,
-    trigger: Object.values(SMART_BAR_TRIGGER).includes(merged.trigger)
-      ? merged.trigger
-      : DEFAULT_SMART_BAR_SETTINGS.trigger,
-    siteMode: Object.values(SMART_BAR_SITE_MODE).includes(merged.siteMode)
-      ? merged.siteMode
-      : DEFAULT_SMART_BAR_SETTINGS.siteMode,
+    trigger: oneOf(
+      Object.values(SMART_BAR_TRIGGER),
+      merged.trigger,
+      DEFAULT_SMART_BAR_SETTINGS.trigger,
+    ),
+    siteMode: oneOf(
+      Object.values(SMART_BAR_SITE_MODE),
+      merged.siteMode,
+      DEFAULT_SMART_BAR_SETTINGS.siteMode,
+    ),
     blockedHosts: hostList(merged.blockedHosts),
     allowedHosts: hostList(merged.allowedHosts),
     disabledPageActions: actionList(merged.disabledPageActions),

@@ -1,3 +1,4 @@
+import { errorMessage } from "../error-message";
 import {
   canonicalJson,
   gunzip,
@@ -307,7 +308,7 @@ async function guard(write: () => Promise<void>) {
   try {
     await write();
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = errorMessage(error);
     if (/MAX_WRITE_OPERATIONS/i.test(message))
       throw new SyncHttpError(message, 429, WRITE_QUOTA_PAUSE_MS);
     if (/QUOTA_BYTES/i.test(message)) throw new SyncQuotaError(message);

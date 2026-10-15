@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { storage, updateById } from "../src/shared/storage";
+import {
+  findMcpServerPreset,
+  mcpServerFromPreset,
+} from "../src/shared/mcp-presets";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import type { McpServerConfig } from "../src/shared/mcp";
 import { onDevice } from "./sync-app-fixture";
@@ -10,7 +14,11 @@ const MCP = STORAGE_KEYS.mcpServers;
 const exaOf = (list: McpServerConfig[] | undefined) =>
   (list ?? []).find((server) => server.id === "builtin_exa");
 
-const enableExa = (server: McpServerConfig): McpServerConfig => ({
+const enableExa = (
+  server: McpServerConfig = mcpServerFromPreset(
+    findMcpServerPreset("builtin_exa")!,
+  ),
+): McpServerConfig => ({
   ...server,
   headers: { Authorization: "Bearer KEY" },
   tools: [{ name: "search", enabled: true }],
@@ -18,9 +26,9 @@ const enableExa = (server: McpServerConfig): McpServerConfig => ({
   enabled: true,
 });
 
-// A customised built-in MCP server (B) vs. a device that stores the MCP list
+// An MCP server added from a preset and customised (B) vs. a device that stores the MCP list
 // for an unrelated reason before it has downloaded that (A).
-test("review7 B1: an unrelated MCP edit leaves another device's customised built-in as it is", async () => {
+test("review7 B1: an unrelated MCP edit leaves another device's customised preset server as it is", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
   const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
@@ -45,9 +53,9 @@ test("review7 B1: an unrelated MCP edit leaves another device's customised built
   await a.sync("edit");
   await b.sync();
   clock.now += 60_000;
-  // B: user tests and enables the built-in exa server.
+  // B: user adds the exa preset, tests and enables it.
   await onDevice(b, () =>
-    updateById(storage.mcpServers, "builtin_exa", enableExa),
+    storage.mcpServers.update((list) => [...list, enableExa()]),
   );
   await b.sync("edit");
   clock.now += 10_000;
@@ -67,12 +75,12 @@ test("review7 B1: an unrelated MCP edit leaves another device's customised built
 
 // New browser: the user adds one MCP server before turning sync on. Docs:
 // it "keeps exactly those changes and takes the account's other settings".
-test("review7 B1b: a new browser that adds one MCP server before joining keeps the account's built-ins", async () => {
+test("review7 B1b: a new browser that adds one MCP server before joining keeps the account's servers", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
   const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
   await onDevice(b, () =>
-    updateById(storage.mcpServers, "builtin_exa", enableExa),
+    storage.mcpServers.update((list) => [...list, enableExa()]),
   );
   await b.sync("edit");
   clock.now += 3_600_000;

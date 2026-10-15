@@ -11,7 +11,8 @@ import {
   withoutChats,
 } from "./chats";
 import { storageLockName, withLock } from "./locks";
-import { getBrowserApi, storage } from "./storage";
+import { storage } from "./storage";
+import { getBrowserApi } from "./browser-api";
 import { keepStoredForm } from "./stored-form";
 import { loadSyncedContent } from "./sync/client";
 import { sameJson } from "./sync/codec";

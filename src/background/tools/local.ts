@@ -1,21 +1,27 @@
+import { trimmedString } from "../../shared/values";
+import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../../shared/config";
 import { TOOL_NAME } from "../../shared/tool-names";
 import {
   cancelLocalCommand,
   localCommandStatus,
+  type LocalCommandRequest,
   runLocalCommand,
   startLocalCommand,
 } from "../local-execution-bridge-tasks";
-import { runLocalBridgesAction } from "../local-execution-bridge-tools";
+import {
+  LOCAL_BRIDGE_ACTIONS,
+  runLocalBridgesAction,
+} from "../local-execution-bridge-tools";
 import {
   fail,
   json,
   schema,
-  stringArg,
   type ToolDefinition,
   type ToolResult,
 } from "./types";
 
 const OUTPUT_SHOWN = 4_000;
+const minutes = (ms: number) => ms / 60_000;
 
 export const localCommandTool: ToolDefinition = {
   name: TOOL_NAME.localCommand,
@@ -40,12 +46,12 @@ export const localCommandTool: ToolDefinition = {
     shell: { type: "string" },
     timeoutMs: {
       type: "number",
-      description: "run: defaults to 10 minutes, at most 30.",
+      description: `run and start: the command is stopped after this long. Defaults to the bridge's timeout (${minutes(LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs)} minutes unless the user changed it), at most ${minutes(LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs)} minutes.`,
     },
   }),
-  async execute(input, { run, toolCallId, messageId, signal }) {
-    const action = stringArg(input.action) || "run";
-    const taskId = stringArg(input.taskId);
+  async execute(input, { signal }) {
+    const action = trimmedString(input.action) || "run";
+    const taskId = trimmedString(input.taskId);
     if (action === "status" || action === "cancel") {
       if (!taskId) return fail(`taskId is required to ${action}.`);
       const record =
@@ -57,14 +63,18 @@ export const localCommandTool: ToolDefinition = {
         ? { ...result, isError: false }
         : result;
     }
-    if (!stringArg(input.command)) return fail("command is required.");
-    const bridge = stringArg(input.bridge);
-    const request = { ...input, bridgeId: bridge, bridgeName: bridge };
-    const context = { chatId: run.chatId, messageId, toolCallId };
+    const request: LocalCommandRequest = {
+      command: trimmedString(input.command),
+      bridge: trimmedString(input.bridge),
+      cwd: trimmedString(input.cwd),
+      shell: trimmedString(input.shell),
+      timeoutMs: input.timeoutMs,
+    };
+    if (!request.command) return fail("command is required.");
     const record =
       action === "start"
-        ? await startLocalCommand(request, context, run.workspace)
-        : await runLocalCommand(request, context, run.workspace, signal);
+        ? await startLocalCommand(request)
+        : await runLocalCommand(request, signal);
     return taskResult(record, 0);
   },
 };
@@ -119,7 +129,7 @@ export const localBridgesTool: ToolDefinition = {
     {
       action: {
         type: "string",
-        enum: ["list", "status", "add", "update", "test", "delete"],
+        enum: LOCAL_BRIDGE_ACTIONS,
       },
       bridgeId: { type: "string" },
       name: { type: "string" },

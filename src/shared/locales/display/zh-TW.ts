@@ -14,7 +14,7 @@ export const displayZhTW: DisplayMessages = {
     gemini: "Gemini 相容",
     ollama: "Ollama 相容",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "網頁搜尋和網頁內容擷取。",
     parallel: "附摘錄的網頁搜尋和網頁擷取。",
     tinyfish: "網頁和新聞搜尋。",
@@ -46,7 +46,11 @@ export const displayZhTW: DisplayMessages = {
   },
   errors: {
     noModel: "尚未設定模型。請在「設定」→「AI 提供者」中新增提供者。",
+    noImageModel: "尚未設定圖像模型。請在「設定」→「AI 提供者」中選擇。",
     baseUrlRequired: "請輸入 Base URL。",
+    bridgeNotFound: "這個執行橋已不存在。",
+    bridgeHostRequired: "請輸入原生訊息主機名稱。",
+    bridgeTimeout: "執行橋沒有及時回應。",
   },
   toolSteps: {
     failed: "失敗",

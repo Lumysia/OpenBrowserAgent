@@ -2,7 +2,7 @@
 // If-Match when the suite has one (a write may then replace another): chats
 // continued, regenerated and deleted on either device, settings edited at
 // once, a device closed with unsent edits for two days, a lost root-write
-// answer, a long reply, a provider rename, built-in MCP servers and default
+// answer, a long reply, a provider rename, recommended MCP servers and default
 // workspaces. Both devices must end with the same, expected data.
 import assert from "node:assert/strict";
 import { renameProviderDraft } from "../entrypoints/options/provider-drafts";
@@ -10,7 +10,11 @@ import { loadContent } from "../src/background/sync/service";
 import { createAgentDraft, DEFAULT_AGENT_ID } from "../src/shared/agents";
 import { deleteChats, saveChatContent } from "../src/shared/chat-storage";
 import { createMcpServerDraft, type McpServerConfig } from "../src/shared/mcp";
-import { storage, updateById } from "../src/shared/storage";
+import {
+  findMcpServerPreset,
+  mcpServerFromPreset,
+} from "../src/shared/mcp-presets";
+import { storage } from "../src/shared/storage";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
 import type { Agent, AgentWorkspace, ChatContent } from "../src/shared/types";
@@ -257,16 +261,19 @@ export function dayOfUseCases(baseA: string, baseB: string) {
       await onDevice(b, () => saveChatContent("c3", copy, copy));
     await twice();
 
-    // a sets up a built-in MCP server; b, before its next round, adds one
-    // of its own (neither had stored the list).
+    // a adds and sets up a recommended MCP server; b, before its next
+    // round, adds one of its own (neither had stored the list).
     await onDevice(a, () =>
-      updateById(storage.mcpServers, "builtin_exa", (server) => ({
-        ...server,
-        headers: { Authorization: "Bearer KEY" },
-        tools: [{ name: "search", enabled: true }],
-        testedAt: clock.now,
-        enabled: true,
-      })),
+      storage.mcpServers.update((list) => [
+        ...list,
+        {
+          ...mcpServerFromPreset(findMcpServerPreset("builtin_exa")!),
+          headers: { Authorization: "Bearer KEY" },
+          tools: [{ name: "search", enabled: true }],
+          testedAt: clock.now,
+          enabled: true,
+        },
+      ]),
     );
     await sync(a, "edit");
     await onDevice(b, () =>

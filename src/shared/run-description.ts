@@ -1,4 +1,4 @@
-import { getBrowserApi } from "./browser-api";
+import { sendRuntimeRequest } from "./runtime-messages";
 
 // The system prompt and tools a run of an agent starts with, computed by the
 // background (which owns the run setup). Used by chat export.
@@ -21,11 +21,9 @@ export type RunDescription = {
   onDemandTools: ToolSchema[];
 };
 
-export async function describeRun(agentId: string) {
-  const response = (await getBrowserApi().runtime.sendMessage({
-    type: DESCRIBE_RUN,
-    agentId,
-  })) as { ok: boolean; value?: RunDescription; error?: string };
-  if (!response?.ok) throw new Error(response?.error || "No run description.");
-  return response.value!;
+export function describeRun(agentId: string) {
+  return sendRuntimeRequest<RunDescription>(
+    { type: DESCRIBE_RUN, agentId },
+    "Run description",
+  );
 }

@@ -3,8 +3,10 @@ import {
   IMAGE_ALT_MAX_LENGTH,
   IMAGE_FILENAME_MAX_LABEL_LENGTH,
   MAX_IMAGES_PER_DOWNLOAD,
+  MAX_SCANNED_ELEMENTS_FOR_IMAGES,
 } from "../../shared/config";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
+import { extensionForType, extensionOf } from "../../shared/mime";
 import { safeSegment } from "./filenames";
 
 // The tab's images (img elements and CSS backgrounds) in one zip file.
@@ -13,8 +15,9 @@ export async function tabImagesZip(tabId: number, signal?: AbortSignal) {
   const tab = await api.tabs.get(tabId);
   const [result] = await api.scripting.executeScript({
     target: { tabId },
-    args: [IMAGE_ALT_MAX_LENGTH],
-    func: (altMaxLength) => {
+    args: [IMAGE_ALT_MAX_LENGTH, MAX_SCANNED_ELEMENTS_FOR_IMAGES],
+    // Runs in the page: self-contained.
+    func: (altMaxLength: number, maxElements: number) => {
       const seen = new Set<string>();
       const images: Array<{
         src: string;
@@ -23,67 +26,49 @@ export async function tabImagesZip(tabId: number, signal?: AbortSignal) {
         type: string;
       }> = [];
       let index = 0;
-      for (const img of Array.from(document.querySelectorAll("img"))) {
-        if (
-          !img.src ||
-          !img.src.startsWith("http") ||
-          img.src.startsWith("data:") ||
-          img.src.startsWith("blob:") ||
-          !img.complete ||
-          img.naturalWidth <= 0 ||
-          img.naturalHeight <= 0 ||
-          seen.has(img.src)
-        )
-          continue;
-        seen.add(img.src);
-        images.push({
-          src: img.src,
-          alt: img.alt || `img-${index}`,
-          index: index++,
-          type: "img",
-        });
-      }
-      const selectors = [
-        "div",
-        "section",
-        "header",
-        "footer",
-        "article",
-        "aside",
-        "main",
-        ".hero",
-        ".banner",
-        ".background",
-        ".cover",
-        ".image",
-        '[style*="background"]',
-        '[class*="bg-"]',
-        '[class*="background"]',
-      ];
-      for (const element of Array.from(
-        document.querySelectorAll(selectors.join(",")),
-      ) as HTMLElement[]) {
-        const backgroundImage = getComputedStyle(element).backgroundImage;
-        const match = backgroundImage?.match(/url\(['"]?([^'"]*?)['"]?\)/);
-        if (!match?.[1]) continue;
-        let src = match[1];
-        if (src.startsWith("/")) src = window.location.origin + src;
-        else if (!src.startsWith("http"))
-          src = new URL(src, window.location.href).href;
-        if (src.startsWith("data:") || src.startsWith("blob:") || seen.has(src))
-          continue;
+      // A web URL, resolved against the page; data: and blob: URLs and
+      // other schemes are left out.
+      const webUrl = (value: string) => {
+        try {
+          const url = new URL(value, location.href);
+          return /^https?:$/.test(url.protocol) ? url.href : "";
+        } catch {
+          return "";
+        }
+      };
+      const add = (value: string, alt: string, type: string) => {
+        const src = webUrl(value);
+        if (!src || seen.has(src)) return;
         seen.add(src);
+        images.push({
+          src,
+          alt: alt.slice(0, altMaxLength),
+          index: index++,
+          type,
+        });
+      };
+      // currentSrc is the source the browser chose from srcset or <picture>.
+      for (const img of Array.from(document.images))
+        if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0)
+          add(img.currentSrc || img.src, img.alt || `img-${index}`, "img");
+      // Any element can carry CSS background images, several per element.
+      const walker = document.createTreeWalker(
+        document.body || document.documentElement,
+        NodeFilter.SHOW_ELEMENT,
+      );
+      for (
+        let element = walker.currentNode as Element | null, scanned = 0;
+        element && scanned < maxElements;
+        element = walker.nextNode() as Element | null, scanned++
+      ) {
+        const background = getComputedStyle(element).backgroundImage;
+        if (!background || background === "none") continue;
         const label =
           element.getAttribute("aria-label") ||
           element.getAttribute("title") ||
-          element.classList[0] ||
           element.tagName.toLowerCase();
-        images.push({
-          src,
-          alt: `bg-${label}-${index}`.slice(0, altMaxLength),
-          index: index++,
-          type: "background",
-        });
+        for (const match of background.matchAll(/url\(["']?(.*?)["']?\)/g))
+          add(match[1], `bg-${label}-${index}`, "background");
       }
       return images;
     },
@@ -122,12 +107,9 @@ export async function tabImagesZip(tabId: number, signal?: AbortSignal) {
 }
 
 function imageExtension(contentType: string | null, url: string) {
-  const fromType = contentType
-    ?.split("/")[1]
-    ?.split(";")[0]
-    ?.replace("jpeg", "jpg")
-    .replace("svg+xml", "svg");
-  if (fromType && /^[a-z0-9]+$/i.test(fromType)) return fromType;
-  const match = new URL(url).pathname.match(/\.([a-z0-9]{2,5})$/i);
-  return match?.[1] || "jpg";
+  return (
+    extensionForType(contentType || "") ||
+    extensionOf(new URL(url).pathname) ||
+    "jpg"
+  );
 }

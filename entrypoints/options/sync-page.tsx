@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
-import { storage, SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage";
+import { storage } from "../../src/shared/storage";
+import { SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage-keys";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 import { SyncKeysDetail } from "./sync-keys-detail";

@@ -1,9 +1,12 @@
 import { hasToolGroup, resolveAgent } from "../shared/agents";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
-import { replyWith } from "../shared/message-reply";
+import { respondWith } from "../shared/runtime-messages";
 import { DESCRIBE_RUN } from "../shared/run-description";
-import { normalizeLocalExecutionBridges } from "../shared/local-execution-bridges";
+import {
+  isLocalExecutionBridgeTested,
+  normalizeLocalExecutionBridges,
+} from "../shared/local-execution-bridges";
 import {
   availableSkills,
   listedSkills,
@@ -82,7 +85,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     tab,
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
-    (bridge) => !!bridge.lastTestedAt && !bridge.lastTestError,
+    isLocalExecutionBridgeTested,
   ).length;
   return {
     agent,
@@ -182,6 +185,5 @@ export function handleDescribeRunMessage(
 ) {
   const request = (message || {}) as { type?: string; agentId?: string };
   if (request.type !== DESCRIBE_RUN) return false;
-  replyWith(describeRun(request.agentId), sendResponse);
-  return true;
+  return respondWith(describeRun(request.agentId), sendResponse);
 }

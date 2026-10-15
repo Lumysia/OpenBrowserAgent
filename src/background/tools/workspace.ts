@@ -1,3 +1,4 @@
+import { trimmedString } from "../../shared/values";
 import { TOOL_NAME } from "../../shared/tool-names";
 import {
   deleteWorkspaceFile,
@@ -11,7 +12,7 @@ import {
   mutateWorkspace,
   workspaceFileUnchanged,
 } from "../../shared/workspace-storage";
-import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
+import { fail, ok, schema, type ToolDefinition } from "./types";
 
 const WRITE_ACTIONS = ["write", "append", "replace", "delete"];
 const ACTIONS = ["list", ...WRITE_ACTIONS, "search"];
@@ -38,8 +39,8 @@ export const workspaceTool: ToolDefinition = {
   async execute(input, { run }) {
     const workspace = run.workspace;
     if (!workspace) return fail("This agent has no workspace.");
-    const action = stringArg(input.action);
-    const path = stringArg(input.path);
+    const action = trimmedString(input.action);
+    const path = trimmedString(input.path);
     const content = String(input.content ?? "");
     if (action === "list")
       return ok(
@@ -49,7 +50,7 @@ export const workspaceTool: ToolDefinition = {
         { action, count: workspace.files.length },
       );
     if (action === "search") {
-      const query = stringArg(input.query);
+      const query = trimmedString(input.query);
       const { results } = searchWorkspaceFiles(workspace, query);
       return ok(
         results

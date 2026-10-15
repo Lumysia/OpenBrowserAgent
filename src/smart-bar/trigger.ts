@@ -6,6 +6,7 @@ import {
   type SmartBarShowReason,
 } from "../shared/smart-bar-protocol";
 import { getBrowserApi } from "../shared/browser-api";
+import type { RuntimeReply } from "../shared/runtime-messages";
 import { claimSmartBarTrigger, getSmartBarUi, isSmartBarEvent } from "./bridge";
 import {
   isEditableSnapshot,
@@ -66,7 +67,7 @@ export function installSmartBarTrigger() {
     const response = (await Promise.resolve()
       .then(() => getBrowserApi().runtime.sendMessage(request))
       .catch(() => undefined)) as
-      { ok: boolean; value?: SmartBarPrepareResult } | undefined;
+      RuntimeReply<SmartBarPrepareResult> | undefined;
     if (!response?.ok || !response.value) return;
     onSelection = response.value.onSelection;
     const { config } = response.value;

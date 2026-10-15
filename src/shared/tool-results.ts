@@ -3,7 +3,35 @@ import {
   isToolPartType,
   type ChatPart,
   type ToolModelResult,
+  type UploadedAttachment,
 } from "./types";
+
+// A tool output's field with the sources it added to the chat (see
+// run-tool.ts), read back by extractSourcesFromPart.
+export const TOOL_OUTPUT_SOURCES = "_sources";
+
+// What a tool output says of an image moved to the chat's attachments, so
+// storage holds no inline data URL. Written by image generation and by
+// offloadToolOutputImages, read by the side panel.
+export type StoredToolImage = {
+  imageAttachmentId: string;
+  imageAttachmentName: string;
+  imageAttachmentType: string;
+  imageAttachmentSize: number;
+  imageStored: true;
+};
+
+export function storedToolImage(
+  attachment: Pick<UploadedAttachment, "id" | "name" | "type" | "size">,
+): StoredToolImage {
+  return {
+    imageAttachmentId: attachment.id,
+    imageAttachmentName: attachment.name,
+    imageAttachmentType: attachment.type,
+    imageAttachmentSize: attachment.size,
+    imageStored: true,
+  };
+}
 
 // Model-facing notes for calls without a recorded result, and the marker
 // that stands for an image in exported results.

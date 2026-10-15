@@ -27,7 +27,7 @@ import {
 import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
 import { workspaceErrorText } from "./workspace-error-text";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 
 type Draft = {
   originalPath: string;

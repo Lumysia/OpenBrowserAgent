@@ -1,3 +1,4 @@
+import { storedToolImage } from "./tool-results";
 import {
   ATTACHMENT_KIND,
   base64FromDataUrl,
@@ -186,14 +187,7 @@ function offloadInlineRecord({
   };
   writes.push(writeInlineAttachmentOnce(chatId, messageId, attachment));
   const { image: _image, _visionImage, ...rest } = record;
-  return {
-    ...rest,
-    imageAttachmentId: id,
-    imageAttachmentName: attachment.name,
-    imageAttachmentType: attachment.type,
-    imageAttachmentSize: attachment.size,
-    imageStored: true,
-  };
+  return { ...rest, ...storedToolImage(attachment) };
 }
 
 function dataImageUrl(value: unknown) {

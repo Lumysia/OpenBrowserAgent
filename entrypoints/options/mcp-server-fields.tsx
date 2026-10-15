@@ -48,7 +48,7 @@ export function McpServerFields({
         <CommitInput
           value={server.url}
           placeholder={t.options.mcpServerUrlPlaceholder}
-          onCommit={(url) => onUpdate({ url: url.trim(), ...untestedPatch() })}
+          onCommit={(url) => onUpdate({ url: url.trim() })}
         />
       </Label>
       <McpHeadersField
@@ -70,7 +70,7 @@ export function McpServerFields({
             : t.options.mcpOmitOriginUnsupported
         }
         checked={server.omitOrigin}
-        onChange={(omitOrigin) => onUpdate({ omitOrigin, ...untestedPatch() })}
+        onChange={(omitOrigin) => onUpdate({ omitOrigin })}
       />
       {!!server.tools?.length && (
         <McpToolList
@@ -124,16 +124,6 @@ function McpToolList({
       </AccordionItem>
     </Accordion>
   );
-}
-
-// A change to how the server is reached needs a new test before use.
-export function untestedPatch() {
-  return {
-    enabled: false,
-    tools: [],
-    testedAt: undefined,
-    lastTestError: "",
-  } satisfies Partial<McpServerConfig>;
 }
 
 function McpHeadersField({

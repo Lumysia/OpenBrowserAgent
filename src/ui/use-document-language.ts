@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import { resolveLanguage } from "../shared/i18n";
+import { resolveLanguage } from "../shared/ui-languages";
 
 // <html lang> follows the UI language, for screen readers, hyphenation and
 // fonts.

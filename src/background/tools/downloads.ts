@@ -1,3 +1,5 @@
+import { SAVE_SOURCES_HELP } from "./source-handles";
+import { clampInt, trimmedString } from "../../shared/values";
 import {
   DOWNLOAD_ACTION,
   DOWNLOAD_STATUS,
@@ -31,7 +33,6 @@ import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   fail,
   schema,
-  stringArg,
   type RunContext,
   type ToolDefinition,
   type ToolResult,
@@ -111,13 +112,13 @@ async function save(
   signal?: AbortSignal,
   extra: Record<string, unknown> = {},
 ) {
-  const filename = stringArg(input.filename);
+  const filename = trimmedString(input.filename);
   const path = safeDownloadPath(
     filename ? withExtension(filename, file.blob.type) : file.name,
-    stringArg(input.folder),
+    trimmedString(input.folder),
   );
   const id = await saveFile(run, { blob: file.blob, path }, signal);
-  return started(run, stringArg(input.action), id, input, signal, extra);
+  return started(run, trimmedString(input.action), id, input, signal, extra);
 }
 
 // Downloads this chat started; others are the user's to manage.
@@ -144,30 +145,30 @@ const ACTIONS: Record<
   ) => Promise<ToolResult>
 > = {
   async [DOWNLOAD_ACTION.download](input, run, signal) {
-    const url = stringArg(input.url);
+    const url = trimmedString(input.url);
     if (!/^https?:\/\//i.test(url))
       return fail("url must be an http or https URL of the file.");
     const id = await startDownload(
       run,
       {
         url,
-        filename: stringArg(input.filename),
-        folder: stringArg(input.folder),
+        filename: trimmedString(input.filename),
+        folder: trimmedString(input.folder),
       },
       signal,
     );
     return started(run, DOWNLOAD_ACTION.download, id, input, signal);
   },
   async [DOWNLOAD_ACTION.save](input, run, signal) {
-    const source = stringArg(input.source);
+    const source = trimmedString(input.source);
     if (typeof input.content === "string" && input.content)
       return save(
         run,
         fileFromContent({
           content: input.content,
-          filename: stringArg(input.filename),
-          mimeType: stringArg(input.mimeType),
-          encoding: stringArg(input.encoding),
+          filename: trimmedString(input.filename),
+          mimeType: trimmedString(input.mimeType),
+          encoding: trimmedString(input.encoding),
         }),
         input,
         signal,
@@ -193,11 +194,12 @@ const ACTIONS: Record<
     return save(run, zip.file, input, signal, counts);
   },
   async [DOWNLOAD_ACTION.list](input, run) {
-    const query = stringArg(input.query);
-    const limit = Math.min(
-      MAX_LIST_LIMIT,
-      Math.max(1, Math.trunc(Number(input.limit) || LIST_LIMIT)),
-    );
+    const query = trimmedString(input.query);
+    const limit = clampInt(input.limit, {
+      fallback: LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    });
     const items = await downloadsApi().search({
       orderBy: ["-startTime"],
       limit,
@@ -310,7 +312,7 @@ export const downloadsTool: ToolDefinition = {
     "Download files from URLs, save text or files you have to the user's device, and check, wait for, cancel or retry downloads",
   description: `Files on the user's device, in their Downloads folder. Each result states the outcome: completed (with the saved path and size), failed (with the reason), still downloading, held by the browser for the user to confirm, or waiting for the user in the browser's Save dialog. Tell the user a file is saved only once it is completed, and give its path.
 - download: url (http/https; the browser's cookies apply, redirects are followed). Without filename the server's name is kept. Use this when you know the file's URL; a PDF that opens in a tab is not saved until you download its URL.
-- save: a file from content you write (filename with extension; encoding base64 for bytes) or from source: "tab"/"tab:ID" (the page as Markdown), "art-…", "workspace:PATH", "attachment:ID" (also generated images).
+- save: a file from content you write (filename with extension; encoding base64 for bytes) or from source: ${SAVE_SOURCES_HELP} (also generated images).
 - images: the tab's images as a zip.
 - list: recent downloads (query filters by name or URL).
 - wait: by id; without id, the latest download a click started that you have not seen finish, or the next one to start (click with act first, then wait).
@@ -339,7 +341,7 @@ filename and folder are relative to the Downloads folder. Started downloads are 
   ),
   compactArgs: true,
   async execute(input, { run, signal }) {
-    const action = ACTIONS[stringArg(input.action)];
+    const action = ACTIONS[trimmedString(input.action)];
     if (!action)
       return fail(
         `action must be one of ${Object.values(DOWNLOAD_ACTION).join(", ")}.`,

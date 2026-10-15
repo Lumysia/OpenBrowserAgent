@@ -1,39 +1,5 @@
-import {
-  providerDefaultBaseUrls,
-  providerLabels,
-  type ProviderConfig,
-  type ProviderId,
-  type ProviderState,
-} from "./types";
-
-export const PROVIDER_TYPES: ProviderId[] = [
-  "openai",
-  "openai-responses",
-  "anthropic",
-  "ollama",
-  "gemini",
-  "deepseek",
-  "openrouter",
-  "aihubmix",
-  "glm",
-  "aigateway",
-  "minimax",
-];
-
-export const ADD_PROVIDER_TYPES: ProviderId[] = [
-  "openai",
-  "openai-responses",
-  "anthropic",
-  "ollama",
-  "gemini",
-];
-
-export const MANUAL_MODEL_PROVIDER_TYPES: ProviderId[] = [
-  "openai",
-  "openai-responses",
-  "anthropic",
-  "minimax",
-];
+import { isProviderId, providerType, type ProviderId } from "./providers";
+import type { ProviderConfig, ProviderState } from "./types";
 
 export function normalizeProviderState(state: ProviderState = {}) {
   return Object.fromEntries(
@@ -50,8 +16,8 @@ export function normalizeProviderConfig(id: string, config: ProviderConfig) {
     ...config,
     id,
     type,
-    label: config.label || providerLabels[type] || id,
-    baseUrl: config.baseUrl || providerDefaultBaseUrls[type],
+    label: config.label || providerType(type).label,
+    baseUrl: config.baseUrl || providerType(type).defaultBaseUrl,
     imageModels: config.imageModels || [],
   };
 }
@@ -66,9 +32,7 @@ export function createProviderConfig(
 
 export function providerTypeFromId(id: string, type?: ProviderId) {
   if (type) return type;
-  return PROVIDER_TYPES.includes(id as ProviderId)
-    ? (id as ProviderId)
-    : "openai";
+  return isProviderId(id) ? id : "openai";
 }
 
 function uniqueProviderId(type: ProviderId, existing: ProviderState) {

@@ -1,9 +1,10 @@
-import { mcpResultSources } from "../../shared/chat-sources";
+import { mcpResultSources } from "../../shared/mcp-sources";
 import { isMcpServerTested } from "../../shared/mcp";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { McpServerConfig } from "../../shared/types";
 import {
   executeMcpTool,
+  MCP_SERVER_ACTIONS,
   runMcpServersAction,
   mcpToolName,
   sanitizeMcpInputSchema,
@@ -21,7 +22,7 @@ export const mcpServersTool: ToolDefinition = {
     {
       action: {
         type: "string",
-        enum: ["list", "add", "update", "test", "delete"],
+        enum: MCP_SERVER_ACTIONS,
       },
       serverId: { type: "string" },
       name: { type: "string" },

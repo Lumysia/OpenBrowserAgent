@@ -1,3 +1,5 @@
+import { errorMessage } from "../../../shared/error-message";
+import { parseRetryAfter } from "../../../shared/retry-after";
 import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
 import { EngineError } from "./types";
 
@@ -17,7 +19,7 @@ export async function fetchJson(
     if (init.signal?.aborted) throw error;
     throw new EngineError(
       PAGE_TRANSLATE_ERROR.network,
-      `${service}: ${error instanceof Error ? error.message : String(error)}`,
+      `${service}: ${errorMessage(error)}`,
     );
   }
   const body = await response.text();
@@ -46,7 +48,7 @@ export function classifyFailure(
     return new EngineError(
       PAGE_TRANSLATE_ERROR.rateLimited,
       describe,
-      retryAfterMs(response.headers.get("retry-after")),
+      parseRetryAfter(response.headers.get("retry-after")),
     );
   if (status === 401 || status === 403 || /API_KEY_INVALID/.test(body))
     return new EngineError(PAGE_TRANSLATE_ERROR.refused, describe);
@@ -60,21 +62,6 @@ export function classifyFailure(
   if (status < 200 || status >= 300)
     return new EngineError(PAGE_TRANSLATE_ERROR.failed, describe);
   return undefined;
-}
-
-export function retryAfterMs(value: string | null) {
-  if (!value) return undefined;
-  const seconds = Number(value);
-  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
-  const date = Date.parse(value);
-  return Number.isFinite(date) ? Math.max(0, date - Date.now()) : undefined;
-}
-
-export function escapeHtml(text: string) {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
 }
 
 const ENTITIES: Record<string, string> = {

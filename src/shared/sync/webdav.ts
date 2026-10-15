@@ -5,7 +5,7 @@ import { decodeRoot, encodeRoot, SyncFormatError } from "./root";
 import {
   BlobIntegrityError,
   damagedRoot,
-  parseRetryAfter,
+  syncRetryAfter,
   SyncHttpError,
   type StoredBlob,
   type Transport,
@@ -84,7 +84,7 @@ export function createWebDavTransport(
         body ? ` - ${body.replace(/\s+/g, " ").slice(0, 160)}` : ""
       }`,
       response.status,
-      parseRetryAfter(response.headers.get("Retry-After")),
+      syncRetryAfter(response.headers.get("Retry-After")),
     );
   }
 

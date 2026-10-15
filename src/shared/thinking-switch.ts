@@ -1,4 +1,5 @@
-import type { ProviderConfig, ProviderId } from "./types";
+import type { ProviderConfig } from "./types";
+import { providerType, type ProviderId } from "./providers";
 
 // How a quick task (smart bar, page translation) tells a chat completions
 // endpoint to think as little as it can. "auto" uses the model's entry in
@@ -25,18 +26,8 @@ export const THINKING_SWITCH_OPTIONS: ThinkingSwitch[] = [
   THINKING_SWITCH.none,
 ];
 
-// Provider types whose endpoints take any OpenAI-compatible server. The
-// others have one wire format for thinking, set by their API.
-const THINKING_SWITCH_PROVIDER_TYPES = new Set<ProviderId>([
-  "openai",
-  "ollama",
-  "aihubmix",
-  "aigateway",
-  "minimax",
-]);
-
 export function hasThinkingSwitch(type: ProviderId) {
-  return THINKING_SWITCH_PROVIDER_TYPES.has(type);
+  return !!providerType(type).thinkingSwitch;
 }
 
 // The provider's switch; "auto" when unset or not offered for its type.

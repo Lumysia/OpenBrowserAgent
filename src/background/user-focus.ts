@@ -1,4 +1,4 @@
-import { getBrowserApi } from "../shared/storage";
+import { getBrowserApi } from "../shared/browser-api";
 
 // Pages the agent works on may open tabs or windows (a link with a target,
 // window.open), which the browser brings to the front. Unless the agent's

@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { formatCount, getMessages, type Messages } from "../../src/shared/i18n";
-import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
 import {
   providerHasConsent,
   withProviderConsent,
 } from "../../src/shared/provider-consent";
-import {
-  providerDefaultBaseUrls,
-  type ModelConfig,
-  type ProviderConfig,
-  type ProviderId,
-} from "../../src/shared/types";
+import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
+import { providerType, type ProviderId } from "../../src/shared/providers";
 import {
   AccordionContent,
   AccordionItem,
@@ -44,7 +39,7 @@ import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "../../src/shared/provider-test";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useUiLanguage } from "../../src/ui/messages";
 
@@ -87,7 +82,7 @@ export function ProviderAccordion({
   const t = getMessages(language);
   const dirty = JSON.stringify(draft) !== JSON.stringify(value);
   const consentMissing = !providerHasConsent(draft);
-  const canAddManualModel = MANUAL_MODEL_PROVIDER_TYPES.includes(provider);
+  const canAddManualModel = !!providerType(provider).manualModels;
   const selectableFetchedModels = fetchedModels
     .filter((model) => !models.some((candidate) => candidate.id === model.id))
     .filter((model) =>
@@ -375,7 +370,7 @@ function ProviderBaseUrl({
         <Select
           value={
             value.baseUrl ||
-            providerDefaultBaseUrls[provider] ||
+            providerType(provider).defaultBaseUrl ||
             baseUrlOptions[provider][0]
           }
           onValueChange={(baseUrl) => onChange({ ...value, baseUrl })}
@@ -394,13 +389,14 @@ function ProviderBaseUrl({
       </Label>
     );
   }
-  if (provider === "gemini") return null;
+  // The Gemini SDK has its own endpoint.
+  if (providerType(provider).sdkEndpoint) return null;
   return (
     <Label>
       {t.options.baseUrl}
       <Input
         value={value.baseUrl || ""}
-        placeholder={providerDefaultBaseUrls[provider]}
+        placeholder={providerType(provider).defaultBaseUrl}
         onChange={(event) =>
           onChange({ ...value, baseUrl: event.target.value })
         }

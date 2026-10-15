@@ -1,17 +1,26 @@
-import { Plug, Plus, Trash2, Upload } from "lucide-react";
+import { Plug, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { formatCount, getMessages } from "../../src/shared/i18n";
 import {
   createMcpServerDraft,
-  BUILTIN_MCP_SERVERS,
-  isBuiltinMcpServer,
   importMcpServersFromJson,
   isMcpServerTested,
+  mcpNeedsRetest,
+  mcpTestedPatch,
+  mcpUntestedPatch,
   parseHeadersJson,
 } from "../../src/shared/mcp";
+import {
+  mcpServerFromPreset,
+  missingMcpServerPresets,
+  type McpServerPreset,
+} from "../../src/shared/mcp-presets";
 import { listMcpServerTools } from "../../src/shared/mcp-client";
-import { mcpServerDescription } from "../../src/ui/mcp-display";
-import { McpServerFields, untestedPatch } from "./mcp-server-fields";
+import {
+  mcpPresetDescription,
+  mcpServerDescription,
+} from "../../src/ui/mcp-display";
+import { McpServerFields } from "./mcp-server-fields";
 import { storage } from "../../src/shared/storage";
 import type { McpServerConfig } from "../../src/shared/types";
 import {
@@ -34,10 +43,10 @@ import {
   ConfirmButton,
   SettingsAccordionItem,
   TestButton,
+  SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { errorWithDetail } from "../../src/ui/error-text";
-import { ResetDefaultsCard } from "./reset-defaults-card";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
 import { useUiLanguage } from "../../src/ui/messages";
@@ -52,6 +61,7 @@ export function McpPage() {
   const [testedServerId, showTested] = useTransient<string>();
   const t = getMessages(language);
   const items = servers || [];
+  const presets = missingMcpServerPresets(items);
 
   function addServer() {
     setServers((current) => [
@@ -60,11 +70,18 @@ export function McpPage() {
     ]);
   }
 
+  function addPreset(preset: McpServerPreset) {
+    const server = mcpServerFromPreset(preset);
+    setServers((current) => [...current, server]);
+  }
+
   function updateServer(serverId: string, patch: Partial<McpServerConfig>) {
+    const now = Date.now();
+    const retest = mcpNeedsRetest(patch) ? mcpUntestedPatch() : {};
     setServers((current) =>
       current.map((server) =>
         server.id === serverId
-          ? { ...server, ...patch, updatedAt: Date.now() }
+          ? { ...server, ...patch, ...retest, updatedAt: now }
           : server,
       ),
     );
@@ -72,10 +89,7 @@ export function McpPage() {
 
   function updateHeaders(serverId: string, value: string) {
     try {
-      updateServer(serverId, {
-        headers: parseHeadersJson(value),
-        ...untestedPatch(),
-      });
+      updateServer(serverId, { headers: parseHeadersJson(value) });
     } catch {
       // Keep the previous valid headers while the user edits invalid JSON.
     }
@@ -89,20 +103,12 @@ export function McpPage() {
     setTestingServerId(server.id);
     try {
       const tools = await listMcpServerTools(server);
-      updateServer(server.id, {
-        enabled: true,
-        tools: mergeToolSelections(server.tools || [], tools),
-        testedAt: Date.now(),
-        lastTestError: "",
-      });
+      updateServer(server.id, mcpTestedPatch(server, tools));
       showTested(server.id);
     } catch (error) {
       // Stored as the error's own text and localized when shown, like the
       // tests the agent runs.
-      updateServer(server.id, {
-        enabled: false,
-        lastTestError: errorMessage(error),
-      });
+      updateServer(server.id, mcpUntestedPatch(errorMessage(error)));
     } finally {
       setTestingServerId(null);
     }
@@ -124,24 +130,6 @@ export function McpPage() {
     } catch (error) {
       setImportMessage(errorWithDetail(t.options.mcpImportError, error, t));
     }
-  }
-
-  function resetDefaultMcpServers() {
-    setServers(cloneDefault(BUILTIN_MCP_SERVERS));
-    setImportDraft("");
-    setImportMessage("");
-    setImportMenuOpen(false);
-  }
-
-  function resetBuiltinMcpServers() {
-    const builtinIds = new Set(BUILTIN_MCP_SERVERS.map((server) => server.id));
-    setServers((current) => [
-      ...cloneDefault(BUILTIN_MCP_SERVERS),
-      ...current.filter((server) => !builtinIds.has(server.id)),
-    ]);
-    setImportDraft("");
-    setImportMessage("");
-    setImportMenuOpen(false);
   }
 
   return (
@@ -284,44 +272,39 @@ export function McpPage() {
                 )}
               </Feedback>
             )}
-            {!isBuiltinMcpServer(server.id) && (
-              <div className="row">
-                <ConfirmButton
-                  confirmLabel={t.common.confirm}
-                  cancelLabel={t.common.cancel}
-                  onConfirm={() => deleteServer(server.id)}
-                >
-                  <Trash2 size={15} /> {t.options.deleteMcpServer}
-                </ConfirmButton>
-              </div>
-            )}
+            <div className="row">
+              <ConfirmButton
+                confirmLabel={t.common.confirm}
+                cancelLabel={t.common.cancel}
+                onConfirm={() => deleteServer(server.id)}
+              >
+                <Trash2 size={15} /> {t.options.deleteMcpServer}
+              </ConfirmButton>
+            </div>
           </SettingsAccordionItem>
         ))}
       </Accordion>
-      <ResetDefaultsCard
-        t={t}
-        title={t.options.resetDefaultMcpServers}
-        description={t.options.resetDefaultMcpServersDescription}
-        onResetBuiltins={resetBuiltinMcpServers}
-        onResetAll={resetDefaultMcpServers}
-      />
+      {presets.length ? (
+        <SettingsSection
+          icon={<Sparkles />}
+          title={t.options.mcpPresets}
+          description={t.options.mcpPresetsDescription}
+          contentClassName="stack"
+        >
+          {presets.map((preset) => (
+            <div key={preset.id} className="setting-switch-row">
+              <SettingsSummary
+                icon={<Plug size={18} />}
+                title={preset.name}
+                description={mcpPresetDescription(preset, t)}
+              />
+              <Button variant="outline" onClick={() => addPreset(preset)}>
+                <Plus size={15} /> {t.options.mcpPresetAdd}
+              </Button>
+            </div>
+          ))}
+        </SettingsSection>
+      ) : null}
     </div>
   );
-}
-
-function cloneDefault<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function mergeToolSelections(
-  existing: McpServerConfig["tools"],
-  next: NonNullable<McpServerConfig["tools"]>,
-) {
-  const enabledByName = new Map(
-    (existing || []).map((tool) => [tool.name, tool.enabled]),
-  );
-  return next.map((tool) => ({
-    ...tool,
-    enabled: enabledByName.get(tool.name) ?? tool.enabled,
-  }));
 }

@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { providerConsentPtBR } from "./provider-consent/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
+import { pageTranslatePtBR } from "./page-translate/pt-BR";
 import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
@@ -461,9 +462,10 @@ export const ptBR: LocaleMessages = {
     deleteMcpServer: "Excluir servidor MCP",
     resetDefaults: "Redefinir padrões",
     resetBuiltins: "Redefinir integrados",
-    resetDefaultMcpServers: "Redefinir servidores MCP padrão",
-    resetDefaultMcpServersDescription:
-      "Restaura os servidores MCP integrados e remove os personalizados.",
+    mcpPresets: "Servidores recomendados",
+    mcpPresetsDescription:
+      "Servidores de busca hospedados que funcionam sem chave de API. Cada um envia suas buscas ao próprio serviço. Um servidor adicionado fica desativado até você testá-lo.",
+    mcpPresetAdd: "Adicionar",
     selectModel: "Selecionar modelo",
     selectModelDescription:
       "Escolha o modelo principal das conversas. Os agentes funcionam melhor com modelos compatíveis com chamadas de ferramentas.",
@@ -638,4 +640,5 @@ export const ptBR: LocaleMessages = {
   sync: syncPtBR,
   themes: themesPtBR,
   display: displayPtBR,
+  pageTranslate: pageTranslatePtBR,
 };

@@ -3,12 +3,16 @@ import { Plus, RefreshCw, TerminalSquare, Trash2 } from "lucide-react";
 import {
   LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
   LOCAL_EXECUTION_BRIDGE_DEFAULT_KEY,
-  LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
   createLocalExecutionBridgeDraft,
   generateLocalExecutionBridgeSecret,
+  isLocalExecutionBridgeTested,
+  localExecutionBridgeTestError,
+  localExecutionBridgeTestReset,
+  localExecutionBridgeTestResult,
   normalizeLocalExecutionBridges,
   LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
 } from "../../src/shared/local-execution-bridges";
+import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../../src/shared/config";
 import { sendLocalExecutionBridgeRuntimeRequest } from "../../src/shared/local-execution-bridge-runtime";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -33,9 +37,8 @@ import {
   TestButton,
 } from "../../src/ui/components";
 import { useTransient } from "../../src/ui/use-transient";
-import { errorMessage } from "../../src/shared/error-message";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useUiLanguage } from "../../src/ui/messages";
 
 export function LocalExecutionBridgesPage() {
@@ -63,7 +66,7 @@ export function LocalExecutionBridgesPage() {
           ? {
               ...bridge,
               ...patch,
-              ...testResetPatch(patch),
+              ...localExecutionBridgeTestReset(patch),
               updatedAt: Date.now(),
             }
           : bridge,
@@ -86,15 +89,12 @@ export function LocalExecutionBridgesPage() {
         operation: "test",
         bridgeId,
       });
-      updateBridge(bridgeId, { lastTestedAt: Date.now(), lastTestError: "" });
+      updateBridge(bridgeId, localExecutionBridgeTestResult());
       showTested(bridgeId);
       return true;
     } catch (error) {
-      // Stored as the error's own text and localized when shown.
-      updateBridge(bridgeId, {
-        lastTestedAt: undefined,
-        lastTestError: errorMessage(error),
-      });
+      // Stored as the error's own text and code, localized when shown.
+      updateBridge(bridgeId, localExecutionBridgeTestResult(error));
       return false;
     } finally {
       setTestingBridgeId("");
@@ -255,9 +255,11 @@ export function LocalExecutionBridgesPage() {
               {t.options.localExecutionBridgeTimeoutMs}
               <CommitInput
                 type="number"
-                min={1000}
+                min={LOCAL_EXECUTION_BRIDGE_LIMITS.minTimeoutMs}
+                max={LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs}
                 value={String(
-                  bridge.timeoutMs || LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
+                  bridge.timeoutMs ||
+                    LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs,
                 )}
                 onCommit={(timeoutMs) =>
                   updateBridge(bridge.id, { timeoutMs: Number(timeoutMs) })
@@ -268,7 +270,7 @@ export function LocalExecutionBridgesPage() {
               <Feedback error>
                 {errorWithDetail(
                   t.options.localExecutionBridgeTestError,
-                  bridge.lastTestError,
+                  localExecutionBridgeTestError(bridge),
                   t,
                 )}
               </Feedback>
@@ -299,19 +301,4 @@ function bridgeName(bridge: LocalExecutionBridgeConfig, t: Messages) {
   return bridge.name === LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME
     ? t.options.localExecutionBridgeUntitled
     : bridge.name;
-}
-
-function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
-  return !!bridge.lastTestedAt && !bridge.lastTestError;
-}
-
-function testResetPatch(patch: Partial<LocalExecutionBridgeConfig>) {
-  if (
-    !("hostName" in patch) &&
-    !("hostAddress" in patch) &&
-    !("secret" in patch) &&
-    !("bridgeKey" in patch)
-  )
-    return {};
-  return { lastTestedAt: undefined, lastTestError: "" };
 }

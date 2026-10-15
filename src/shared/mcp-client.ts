@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "./config";
 import type { McpServerConfig, McpToolConfig } from "./mcp";
 import { prepareMcpRequest } from "./mcp-origin-rules";
 
@@ -58,7 +59,7 @@ async function withMcpSession<T>(
     const initializedResult = (await request("initialize", {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: "OpenBrowserAgent", version: "0.1.0" },
+      clientInfo: { name: PRODUCT_NAME, version: "0.1.0" },
     })) as { protocolVersion?: string } | undefined;
     const negotiated = initializedResult?.protocolVersion;
     if (!negotiated || !SUPPORTED_PROTOCOL_VERSIONS.includes(negotiated))

@@ -17,7 +17,7 @@ export const displayEsES: DisplayMessages = {
     gemini: "Compatible con Gemini",
     ollama: "Compatible con Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Búsqueda web y extracción del contenido de páginas.",
     parallel: "Búsqueda web con fragmentos y descarga de páginas.",
     tinyfish: "Búsqueda web y de noticias.",
@@ -54,7 +54,12 @@ export const displayEsES: DisplayMessages = {
   errors: {
     noModel:
       "No hay ningún modelo configurado. Añade un proveedor en «Configuración» → «Proveedores de IA».",
+    noImageModel:
+      "No hay ningún modelo de imagen configurado. Elige uno en «Configuración» → «Proveedores de IA».",
     baseUrlRequired: "Introduce una URL base.",
+    bridgeNotFound: "Este puente de ejecución ya no existe.",
+    bridgeHostRequired: "Introduce el nombre del host de mensajería nativa.",
+    bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
   },
   toolSteps: {
     failed: "Error",

@@ -6,8 +6,8 @@ import {
   registerSyncHandler,
   SYNC_MESSAGE,
   type SyncRequest,
-  type SyncResponse,
 } from "../../shared/sync/client";
+import { respondWith } from "../../shared/runtime-messages";
 import {
   pruneSyncStates,
   loadSyncStatus,
@@ -233,15 +233,7 @@ export function setupSync() {
 
   api.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!isSyncRequest(message)) return false;
-    handle(message, sender.documentId)
-      .then((value) => sendResponse({ ok: true, value } satisfies SyncResponse))
-      .catch((error) =>
-        sendResponse({
-          ok: false,
-          error: error instanceof Error ? error.message : String(error),
-        } satisfies SyncResponse),
-      );
-    return true;
+    return respondWith(handle(message, sender.documentId), sendResponse);
   });
 
   api.storage.onChanged.addListener((changes, area) => {

@@ -2,10 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createQueue, PRIORITY } from "../src/page-translate/queue";
 import { translationCacheKey } from "../src/shared/page-translate/cache";
-import {
-  engineLanguageCode,
-  sameLanguage,
-} from "../src/shared/page-translate/languages";
+import { sameLanguage } from "../src/shared/language-tags";
+import { engineLanguageCode } from "../src/shared/page-translate/languages";
 import {
   createMarkedStreamParser,
   markItems,

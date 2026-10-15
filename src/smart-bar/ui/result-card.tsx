@@ -34,6 +34,7 @@ import type { SmartBarResult, SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
 import { ICON_SIZE } from "./icon-sizes";
 import { formatMessage } from "../../shared/text";
+import { languageName } from "../../shared/language-name";
 
 // One detector for the frame, created when first needed.
 const detectLanguage = languageDetect();
@@ -274,16 +275,9 @@ export function SmartBarResultCard({
 
 // "Japanese and Korean", in the UI language.
 function languageNames(languages: string[], uiLanguage: string) {
-  const names = languages.map((language) => {
-    try {
-      return (
-        new Intl.DisplayNames(uiLanguage, { type: "language" }).of(language) ||
-        language
-      );
-    } catch {
-      return language;
-    }
-  });
+  const names = languages.map((language) =>
+    languageName(language, { inLanguage: uiLanguage, fallback: language }),
+  );
   try {
     return new Intl.ListFormat(uiLanguage, { type: "conjunction" }).format(
       names,

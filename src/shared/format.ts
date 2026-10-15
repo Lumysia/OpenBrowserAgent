@@ -1,5 +1,5 @@
 import { BYTES_PER_KIB, BYTES_PER_MIB, MS_PER_SECOND } from "./config";
-import { resolveLanguage } from "./i18n";
+import { getFormatLanguage } from "./i18n";
 
 // Numbers, sizes and dates shown in the extension UI follow the UI language,
 // not the browser's, so they match the text around them.
@@ -8,7 +8,7 @@ export function formatNumber(
   value: number,
   options?: Intl.NumberFormatOptions,
 ) {
-  return new Intl.NumberFormat(resolveLanguage(), options).format(value);
+  return new Intl.NumberFormat(getFormatLanguage(), options).format(value);
 }
 
 export function formatBytes(value: number, maxUnit: "kb" | "mb" = "mb") {
@@ -60,7 +60,7 @@ export function formatDateTime(
     timeStyle: "short",
   },
 ) {
-  return new Intl.DateTimeFormat(resolveLanguage(), options).format(value);
+  return new Intl.DateTimeFormat(getFormatLanguage(), options).format(value);
 }
 
 // Drops blank lines before the first and after the last line of user-typed

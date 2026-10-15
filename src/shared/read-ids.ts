@@ -1,3 +1,4 @@
+import { isRecord } from "./values";
 import { canonicalJson } from "./sync/codec";
 
 // How reading names a stored list item. Normalizers read ids and paths with
@@ -55,6 +56,3 @@ function hashText(text: string) {
   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);

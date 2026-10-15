@@ -1,6 +1,6 @@
 import type { CodeRunResult } from "../../shared/code-sandbox/protocol";
 import { CODE_RUN_LIMITS } from "../../shared/config";
-import { workspaceSource } from "./workspace-source";
+import { workspaceSource } from "./source-handles";
 
 export type SavedFiles = {
   written: Array<{ path: string; chars: number }>;

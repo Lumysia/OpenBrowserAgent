@@ -1,9 +1,12 @@
+import { TOOL_OUTPUT_SOURCES } from "./tool-results";
+import { SOURCE_SNIPPET_MAX_CHARS, SOURCE_TITLE_MAX_CHARS } from "./config";
 import {
   CHAT_PART_STATE,
   isToolPartType,
   type ChatPart,
   type ChatSource,
 } from "./types";
+import { recordOf } from "./values";
 
 // Sources new to the chat are added; one it already has stays as it is (its
 // id is what the replies cite), so finding a page again changes nothing.
@@ -44,114 +47,16 @@ export function assignChatSources(
 export function extractSourcesFromPart(part?: ChatPart): ChatSource[] {
   if (!part || !isToolPartType(part.type)) return [];
   if (part.state !== CHAT_PART_STATE.outputAvailable) return [];
-  const output = recordValue(part.output);
-  return Array.isArray(output._sources)
-    ? output._sources
-        .map((source) => recordValue(source) as unknown as ChatSource)
+  const output = recordOf(part.output);
+  const sources = output[TOOL_OUTPUT_SOURCES];
+  return Array.isArray(sources)
+    ? sources
+        .map((source) => recordOf(source) as unknown as ChatSource)
         .filter((source) => source.id && source.title)
     : [];
 }
 
-// Pages an MCP tool result points to.
-export function mcpResultSources(output: Record<string, unknown>) {
-  return mcpSources(output, Date.now());
-}
-
-function mcpSources(output: Record<string, unknown>, now: number) {
-  const result = recordValue(output.result);
-  const sources: ChatSource[] = [];
-  const content = Array.isArray(result.content) ? result.content : [];
-
-  for (const item of content) {
-    const block = recordValue(item);
-    const uri = stringValue(block.uri || block.url);
-    if (uri)
-      sources.push(
-        compactSource({
-          id: "",
-          kind: "page",
-          title: stringValue(block.title || block.name) || uri,
-          url: uri,
-          snippet: stringValue(block.text),
-          createdAt: now,
-        }),
-      );
-    sources.push(...mcpTextSources(stringValue(block.text), now));
-  }
-
-  const structured = recordValue(result.structuredContent);
-  if (Object.keys(structured).length)
-    sources.push(...mcpStructuredSources(structured, now));
-
-  return dedupeSources(sources);
-}
-
-function mcpTextSources(text: string, now: number) {
-  if (!text) return [];
-  return text
-    .split(/\n\s*---\s*\n/g)
-    .flatMap((block) => sourcesFromTextBlock(block, now));
-}
-
-function sourcesFromTextBlock(block: string, now: number) {
-  const urls = [...block.matchAll(/^URL:\s*(https?:\/\/\S+)\s*$/gim)];
-  return urls.map((match) => {
-    const url = match[1];
-    const beforeUrl = block.slice(0, match.index || 0);
-    const afterUrl = block.slice((match.index || 0) + match[0].length);
-    return compactSource({
-      id: "",
-      kind: "page",
-      title: titleNearUrl(beforeUrl) || url,
-      url,
-      snippet: snippetNearUrl(afterUrl),
-      createdAt: now,
-    });
-  });
-}
-
-function titleNearUrl(text: string) {
-  const titleLine = [...text.matchAll(/^Title:\s*(.+)$/gim)].pop()?.[1];
-  if (titleLine) return titleLine.trim();
-  const headingLine = [...text.matchAll(/^#\s+(.+)$/gm)].pop()?.[1];
-  return headingLine?.trim() || "";
-}
-
-function snippetNearUrl(text: string) {
-  return text
-    .replace(/^Published:\s*.*$/gim, "")
-    .replace(/^Author:\s*.*$/gim, "")
-    .replace(/^Highlights:\s*/gim, "")
-    .replace(/^#+\s*/gm, "")
-    .replace(/\[\.\.\.\]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function mcpStructuredSources(value: Record<string, unknown>, now: number) {
-  const candidates = Array.isArray(value.results)
-    ? value.results
-    : Array.isArray(value.items)
-      ? value.items
-      : [];
-  return candidates.flatMap((item) => {
-    const record = recordValue(item);
-    const url = stringValue(record.url || record.uri || record.link);
-    if (!url) return [];
-    return [
-      compactSource({
-        id: "",
-        kind: "page",
-        title: stringValue(record.title || record.name) || url,
-        url,
-        snippet: stringValue(record.text || record.snippet || record.summary),
-        createdAt: now,
-      }),
-    ];
-  });
-}
-
-function dedupeSources(sources: ChatSource[]) {
+export function dedupeSources(sources: ChatSource[]) {
   const seen = new Set<string>();
   return sources.filter((source) => {
     const key = sourceKey(source);
@@ -175,20 +80,14 @@ function sourceKey(source: ChatSource) {
   return source.url || `${source.kind}:${source.tabId || ""}:${source.title}`;
 }
 
-function compactSource(source: ChatSource) {
+export function compactSource(source: ChatSource): ChatSource {
   return {
     ...source,
-    title: source.title.slice(0, 160),
-    snippet: source.snippet?.replace(/\s+/g, " ").trim().slice(0, 800),
+    title: source.title.slice(0, SOURCE_TITLE_MAX_CHARS),
+    snippet:
+      source.snippet
+        ?.replace(/\s+/g, " ")
+        .trim()
+        .slice(0, SOURCE_SNIPPET_MAX_CHARS) || undefined,
   };
-}
-
-function recordValue(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
 }

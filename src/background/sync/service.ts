@@ -1,3 +1,4 @@
+import { errorMessage } from "../../shared/error-message";
 import {
   deleteAttachment,
   getAttachment,
@@ -267,7 +268,7 @@ export function createSyncRunner(
     if (error instanceof SyncQuotaError) warnings.push(SYNC_WARNINGS.quota);
     await updateSyncStatus(env.local, {
       running: undefined,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage(error),
       warnings: [...new Set(warnings)],
     });
   }

@@ -1,4 +1,4 @@
-import type { ProviderId } from "./types";
+import { providerType, type ProviderId } from "./providers";
 
 export const REASONING_EFFORT = {
   default: "default",
@@ -24,21 +24,17 @@ export const REASONING_EFFORT_OPTIONS: ReasoningEffort[] = [
   REASONING_EFFORT.high,
 ];
 
-const OPENAI_REASONING_EFFORT_PROVIDERS = new Set<ProviderId>([
-  "openai",
-  "openai-responses",
-  "deepseek",
-  "aihubmix",
-  "glm",
-]);
-
 export function reasoningRequestParams(
   provider: ProviderId,
   effort: ReasoningEffort | undefined,
 ): Record<string, unknown> {
   if (!effort || effort === REASONING_EFFORT.default) return {};
-  if (provider === "openrouter") return { reasoning: { effort } };
-  if (OPENAI_REASONING_EFFORT_PROVIDERS.has(provider))
-    return { reasoning_effort: effort };
-  return {};
+  switch (providerType(provider).reasoningParam) {
+    case "reasoning.effort":
+      return { reasoning: { effort } };
+    case "reasoning_effort":
+      return { reasoning_effort: effort };
+    default:
+      return {};
+  }
 }

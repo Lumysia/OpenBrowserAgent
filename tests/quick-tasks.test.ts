@@ -12,7 +12,7 @@ import {
   providerThinkingSwitch,
   type ThinkingSwitch,
 } from "../src/shared/thinking-switch";
-import type { ProviderId } from "../src/shared/types";
+import type { ProviderId } from "../src/shared/providers";
 import { providerFixture, reply } from "./provider-fixtures";
 
 type Body = Record<string, any>;

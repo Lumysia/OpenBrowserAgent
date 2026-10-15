@@ -8,19 +8,9 @@ import type { ChatNoticeKind, RunStopReason } from "./run-stop";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
 import type { ThinkingSwitch } from "./thinking-switch";
+import type { UserErrorCode } from "./user-errors";
 
-export type ProviderId =
-  | "gemini"
-  | "ollama"
-  | "openai"
-  | "openai-responses"
-  | "anthropic"
-  | "openrouter"
-  | "aihubmix"
-  | "deepseek"
-  | "glm"
-  | "aigateway"
-  | "minimax";
+import type { ProviderId } from "./providers";
 
 export type ModelConfig = {
   id: string;
@@ -169,6 +159,8 @@ export type LocalExecutionBridgeConfig = {
   timeoutMs?: number;
   lastTestedAt?: number;
   lastTestError?: string;
+  // Set when the error is one the extension knows, so it shows localized.
+  lastTestErrorCode?: UserErrorCode;
   createdAt: number;
   updatedAt: number;
 };
@@ -291,6 +283,19 @@ export const CHAT_PART_STATE = {
   outputAvailable: "output-available",
   outputError: "output-error",
 } as const;
+
+// How far a tool part has got, for merging two copies of it: the later
+// state wins; other states rank lowest.
+const TOOL_STATE_ORDER: readonly string[] = [
+  CHAT_PART_STATE.inputStreaming,
+  CHAT_PART_STATE.inputAvailable,
+  CHAT_PART_STATE.outputAvailable,
+  CHAT_PART_STATE.outputError,
+];
+
+export function toolStateRank(state: string | undefined) {
+  return state ? TOOL_STATE_ORDER.indexOf(state) + 1 : 0;
+}
 
 export type ChatPart = {
   id: string;
@@ -450,39 +455,4 @@ export type QuestionToolAnswer = {
   question: string;
   answers: string[];
   customAnswer?: string;
-};
-
-export const providerLabels: Record<ProviderId, string> = {
-  gemini: "Gemini-compatible",
-  ollama: "Ollama-compatible",
-  openai: "OpenAI-compatible",
-  "openai-responses": "OpenAI Responses-compatible",
-  anthropic: "Anthropic-compatible",
-  openrouter: "OpenRouter",
-  aihubmix: "AIHubMix",
-  deepseek: "DeepSeek",
-  glm: "Z.ai (Zhipu)",
-  aigateway: "Vercel AI Gateway",
-  minimax: "Minimax",
-};
-
-// Default names older versions stored for new providers. They still show in
-// the UI language, like the current defaults.
-export const legacyProviderLabels: Partial<Record<ProviderId, string>> = {
-  gemini: "Gemini",
-  ollama: "Ollama",
-  "openai-responses": "OpenAI Responses",
-};
-
-export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
-  openai: "https://api.openai.com/v1",
-  "openai-responses": "https://api.openai.com/v1",
-  anthropic: "https://api.anthropic.com/v1",
-  openrouter: "https://openrouter.ai/api/v1",
-  aihubmix: "https://aihubmix.com/v1",
-  deepseek: "https://api.deepseek.com/v1",
-  glm: "https://api.z.ai/api/paas/v4",
-  aigateway: "https://api.ai-gateway.workers.dev/v1",
-  minimax: "https://api.minimax.io/v1",
-  ollama: "http://localhost:11434",
 };

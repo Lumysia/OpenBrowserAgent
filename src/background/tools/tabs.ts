@@ -1,7 +1,8 @@
+import { trimmedString } from "../../shared/values";
 import { isScriptableUrl } from "../../shared/browser";
 import { delay } from "../../shared/cancellation";
 import { TAB_LOAD_WAIT_TIMEOUT_MS } from "../../shared/config";
-import { getBrowserApi } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { adoptAgentTab, agentTabIds, openAgentTab } from "../agent-tabs";
 import { callPage } from "../page-agent";
@@ -10,7 +11,6 @@ import {
   fail,
   ok,
   schema,
-  stringArg,
   type RunContext,
   type ToolDefinition,
 } from "./types";
@@ -140,7 +140,7 @@ async function groupTabs(action: string, input: Record<string, unknown>) {
   const color = GROUP_COLORS.includes(String(input.color))
     ? (String(input.color) as chrome.tabGroups.Color)
     : undefined;
-  const title = stringArg(input.title);
+  const title = trimmedString(input.title);
   const groupIds: number[] = [];
   for (const windowTabs of byWindow.values()) {
     const groupId = await api.tabs.group({
@@ -215,12 +215,12 @@ export const tabsTool: ToolDefinition = {
   ),
   async execute(input, { run, signal }) {
     const api = getBrowserApi();
-    const action = stringArg(input.action) || "list";
-    if (action === "list") return listTabs(stringArg(input.query), run);
+    const action = trimmedString(input.action) || "list";
+    if (action === "list") return listTabs(trimmedString(input.query), run);
     if (action === "group" || action === "ungroup")
       return groupTabs(action, input);
     if (action === "open") {
-      const url = stringArg(input.url);
+      const url = trimmedString(input.url);
       if (!url) return fail("url is required to open a tab.");
       const { tab: created, group } = await openAgentTab(run, {
         url,
@@ -268,7 +268,7 @@ export const tabsTool: ToolDefinition = {
       });
     }
     if (action === "navigate") {
-      const url = stringArg(input.url);
+      const url = trimmedString(input.url);
       if (!url) return fail("url is required to navigate.");
       await api.tabs.update(tabId, { url });
     } else if (action === "back") await api.tabs.goBack(tabId);
@@ -303,7 +303,7 @@ export const webSearchTool: ToolDefinition = {
     "Search the web with the browser's default search engine and get the results (title, URL, snippet). Read a result with read and its URL; open it in a tab only to interact with it or to show it to the user.",
   parameters: schema({ query: { type: "string" } }, ["query"]),
   async execute(input, { run, signal }) {
-    const query = stringArg(input.query);
+    const query = trimmedString(input.query);
     if (!query) return fail("query is required.");
     const api = getBrowserApi();
     if (!api.search?.query)

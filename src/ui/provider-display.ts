@@ -3,19 +3,19 @@ import {
   modelDisplayName,
   parseModelDisplayName,
 } from "../shared/model-display";
+import type { ModelConfig } from "../shared/types";
 import {
-  legacyProviderLabels,
-  providerLabels,
-  type ModelConfig,
+  PROVIDER_TYPES,
+  providerType,
   type ProviderId,
-} from "../shared/types";
+} from "../shared/providers";
 import { formatMessage } from "../shared/text";
 
 // The kind of API a provider speaks, in the UI language. Brand names stay
 // as they are; only words like "compatible" are translated.
 export function providerTypeLabel(type: ProviderId, t: Messages) {
   const labels: Partial<Record<ProviderId, string>> = t.display.providerTypes;
-  return labels[type] || providerLabels[type] || type;
+  return labels[type] || providerType(type).label;
 }
 
 // A provider name as shown. A new provider is stored with its type's English
@@ -23,9 +23,10 @@ export function providerTypeLabel(type: ProviderId, t: Messages) {
 // in the UI language. A name the user chose shows as typed. Stored data is
 // not changed.
 export function providerNameDisplay(name: string, t: Messages) {
-  const type = (Object.keys(providerLabels) as ProviderId[]).find(
-    (id) => providerLabels[id] === name || legacyProviderLabels[id] === name,
-  );
+  const type = PROVIDER_TYPES.find((id) => {
+    const { label, legacyLabel } = providerType(id);
+    return label === name || legacyLabel === name;
+  });
   return type ? providerTypeLabel(type, t) : name;
 }
 

@@ -17,7 +17,7 @@ export const displayPtBR: DisplayMessages = {
     gemini: "Compatível com Gemini",
     ollama: "Compatível com Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Pesquisa na web e extração do conteúdo de páginas.",
     parallel: "Pesquisa na web com trechos e busca de páginas.",
     tinyfish: "Pesquisa na web e de notícias.",
@@ -54,7 +54,12 @@ export const displayPtBR: DisplayMessages = {
   errors: {
     noModel:
       "Nenhum modelo configurado. Adicione um provedor em “Configurações” → “Provedores de IA”.",
+    noImageModel:
+      "Nenhum modelo de imagem configurado. Escolha um em “Configurações” → “Provedores de IA”.",
     baseUrlRequired: "Informe uma URL base.",
+    bridgeNotFound: "Esta ponte de execução não existe mais.",
+    bridgeHostRequired: "Informe o nome do host de mensagens nativas.",
+    bridgeTimeout: "A ponte de execução não respondeu a tempo.",
   },
   toolSteps: {
     failed: "Falhou",

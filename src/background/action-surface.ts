@@ -1,4 +1,4 @@
-import { getBrowserApi } from "../shared/storage";
+import { getBrowserApi } from "../shared/browser-api";
 import { openOrFocusUrl } from "../shared/tab-navigation";
 
 const SIDE_PANEL_PAGE = "/sidepanel.html";

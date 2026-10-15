@@ -1,6 +1,8 @@
+import { errorMessage } from "../../shared/error-message";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 import { estimateMessageTokens } from "@earendil-works/pi-ai/utils/estimate";
+import { ESTIMATED_IMAGE_CHARS } from "../../shared/config";
 import type { ArtifactStore } from "../../shared/artifacts";
 import {
   buildCompactionPrompt,
@@ -209,9 +211,7 @@ export function createContextEngine(options: ContextEngineOptions) {
           next = view(messages);
         } catch (error) {
           if (signal?.aborted) throw error;
-          options.onCompactionFailed?.(
-            error instanceof Error ? error.message : String(error),
-          );
+          options.onCompactionFailed?.(errorMessage(error));
           // Retry once the transcript has grown noticeably.
           retryCompactionAbove =
             tokens + windowShare(window, CONTEXT_POLICY.keepRecentTokens);
@@ -231,7 +231,8 @@ function estimateTokens(messages: AgentMessage[]) {
 
 function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
   return message.content.reduce(
-    (sum, part) => sum + (part.type === "text" ? part.text.length : 4_800),
+    (sum, part) =>
+      sum + (part.type === "text" ? part.text.length : ESTIMATED_IMAGE_CHARS),
     0,
   );
 }
@@ -240,8 +241,8 @@ function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
 // call already ran and its effect is on the page.
 export function shrinkArguments(value: unknown): unknown {
   if (typeof value === "string")
-    return value.length > 120
-      ? `${value.slice(0, 40)}… [${value.length} chars, already applied]`
+    return value.length > CONTEXT_POLICY.shrinkArgumentChars
+      ? `${value.slice(0, CONTEXT_POLICY.shrinkArgumentKeepChars)}… [${value.length} chars, already applied]`
       : value;
   if (Array.isArray(value)) return value.map(shrinkArguments);
   if (value && typeof value === "object")

@@ -3,6 +3,7 @@ import {
   SKILL_MAX_CHARS,
   SKILL_NAME_MAX_LENGTH,
 } from "./config";
+import { finiteNumber, stringOf } from "./values";
 import { readId, readPath } from "./read-ids";
 import type { PickedSkill, Skill, SkillFile, SkillFileKind } from "./types";
 
@@ -105,9 +106,9 @@ export function pickedSkillsFromMetadata(
     .filter((skill) => typeof skill?.name === "string" && !!skill.name)
     .map((skill) =>
       toPickedSkill({
-        id: stringValue(skill.id),
-        name: stringValue(skill.name),
-        description: stringValue(skill.description),
+        id: stringOf(skill.id),
+        name: stringOf(skill.name),
+        description: stringOf(skill.description),
       }),
     );
 }
@@ -138,15 +139,15 @@ export function normalizeSkill(
   const source = skill || {};
   const id =
     index === undefined
-      ? stringValue(source.id) || crypto.randomUUID()
+      ? stringOf(source.id) || crypto.randomUUID()
       : readId(skill, index);
-  const name = normalizeSkillName(stringValue(source.name)) || "skill";
-  const description = stringValue(source.description).trim();
+  const name = normalizeSkillName(stringOf(source.name)) || "skill";
+  const description = stringOf(source.description).trim();
   const files = Array.isArray(source.files)
     ? source.files.map(normalizeSkillFile).filter(isSkillFile)
     : [];
-  const createdAt = numberValue(source.createdAt);
-  const updatedAt = numberValue(source.updatedAt);
+  const createdAt = finiteNumber(source.createdAt, 0);
+  const updatedAt = finiteNumber(source.updatedAt, 0);
 
   if (files.length)
     return {
@@ -170,28 +171,18 @@ export function normalizeSkill(
 
 function normalizeSkillFile(file: Partial<SkillFile>): SkillFile | undefined {
   const path = readPath(file?.path);
-  const content = stringValue(file?.content);
+  const content = stringOf(file?.content);
   if (!path) return undefined;
   return {
     path,
     kind: skillFileKind(path),
     content,
-    updatedAt: numberValue(file?.updatedAt),
+    updatedAt: finiteNumber(file?.updatedAt, 0),
   };
 }
 
 function isSkillFile(file: SkillFile | undefined): file is SkillFile {
   return !!file;
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value : "";
-}
-
-function numberValue(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : Date.now();
 }
 
 export function duplicateSkill(skill: Skill, existingNames: string[]): Skill {

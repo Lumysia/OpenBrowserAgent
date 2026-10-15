@@ -1,3 +1,5 @@
+export const PRODUCT_NAME = "OpenBrowserAgent";
+
 export const DEFAULT_MAX_TOOL_STEPS = 50;
 
 export const AUTO_RETRY_IDLE_MS = 30_000;
@@ -30,7 +32,15 @@ export const AUTO_SCROLL_AT_BOTTOM_PX = 2;
 // A scroll up by less than this is rounding, not the reader moving.
 export const AUTO_SCROLL_SUBPIXEL_PX = 1;
 export const AUTO_SCROLL_STREAM_THROTTLE_MS = 180;
-export const ESTIMATED_CHARS_PER_TOKEN = 4;
+// Token estimates where no tokenizer runs, as Pi estimates them
+// (pi-ai utils/estimate, whose constants are private): characters per
+// token, and the characters an image counts as.
+export const ESTIMATED_CHARS_PER_TOKEN = 3.5;
+export const ESTIMATED_IMAGE_CHARS = 4_800;
+
+// Page translation batches at once on one cloud endpoint (a provider type
+// can set its own, see providers.ts).
+export const QUICK_TASK_CONCURRENCY = 4;
 
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;
@@ -60,6 +70,8 @@ export const MAX_IMAGES_PER_DOWNLOAD = 80;
 export const MERMAID_RENDER_CACHE_SIZE = 40;
 // A downloaded diagram PNG, in pixels per SVG unit.
 export const MERMAID_PNG_SCALE = 2;
+// Elements checked for CSS background images, so a huge page stays quick.
+export const MAX_SCANNED_ELEMENTS_FOR_IMAGES = 20_000;
 export const DEFAULT_SCREENSHOT_QUALITY = 35;
 export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
 export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;
@@ -67,6 +79,9 @@ export const BINARY_STRING_CHUNK_SIZE = 0x8000;
 
 export const SELECTED_ELEMENT_HTML_MAX_CHARS = 4_000;
 export const TAB_CONTENT_MAX_CHARS = 12_000;
+// What a chat keeps of a source a tool found.
+export const SOURCE_TITLE_MAX_CHARS = 160;
+export const SOURCE_SNIPPET_MAX_CHARS = 800;
 
 export const COPY_FEEDBACK_MS = 1_800;
 export const QUICK_FEEDBACK_MS = 1_200;
@@ -104,6 +119,19 @@ export const CODE_RUN_LIMITS = {
   // Runs at once; more wait their turn (each has its own interpreter heap).
   maxConcurrent: 2,
 } as const;
+// Local execution bridge commands. The native host enforces the timeout it
+// is sent, and has the same maximum (packages/local-execution-bridge).
+export const LOCAL_EXECUTION_BRIDGE_LIMITS = {
+  defaultTimeoutMs: 2 * 60_000,
+  minTimeoutMs: 1_000,
+  maxTimeoutMs: 30 * 60_000,
+  // How long past the timeout the extension waits for the host to report it
+  // before cancelling the task itself.
+  timeoutGraceMs: 5_000,
+  pingTimeoutMs: 5_000,
+  // How long start waits so a command that fails at once says so.
+  startSettleMs: 1_000,
+} as const;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;
@@ -123,6 +151,7 @@ export const OPTIONS_ROUTE = {
   debug: "/debug",
 } as const;
 
+// The same routes as location hashes ("#/agents").
 export const OPTIONS_HASH = Object.fromEntries(
   Object.entries(OPTIONS_ROUTE).map(([page, route]) => [page, `#${route}`]),
 ) as {

@@ -1,9 +1,15 @@
+import { storedToolImage } from "../shared/tool-results";
+import { errorMessage } from "../shared/error-message";
 import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import { writeChatAttachments } from "../shared/chat-attachments";
 import type { UploadedAttachment } from "../shared/types";
+import { providerApiUrl } from "../shared/provider-urls";
+import { clampInt, trimmedString } from "../shared/values";
 import { resolveImageModel } from "./model-resolver";
 
+// Size rules of OpenAI's image models, which the images API other
+// services copy.
 const DEFAULT_IMAGE_SIZE = "1024x1024";
 const MIN_IMAGE_PIXELS = 655_360;
 const MAX_IMAGE_PIXELS = 8_294_400;
@@ -25,9 +31,9 @@ export async function generateImage(
   if (!prompt) return { success: false, error: "Missing image prompt" };
   const jobId = context.toolCallId || crypto.randomUUID();
   const preferences = await storage.preferences.get();
-  const model = await resolveImageModel(stringInput(input.modelId));
+  const model = await resolveImageModel(trimmedString(input.modelId));
   const requestedSize =
-    stringInput(input.size) || preferences.imageGenerationSize;
+    trimmedString(input.size) || preferences.imageGenerationSize;
   const size = normalizeImageSize(requestedSize);
   const references = referenceAttachments(
     attachments,
@@ -69,7 +75,7 @@ export async function generateImage(
       },
       signal,
     );
-    const error = stringInput(displayResult.error);
+    const error = trimmedString(displayResult.error);
     const output = {
       ...displayResult,
       success: !error,
@@ -83,7 +89,7 @@ export async function generateImage(
     return output;
   } catch (error) {
     signal?.throwIfAborted();
-    const message = error instanceof Error ? error.message : String(error);
+    const message = errorMessage(error);
     return {
       success: false,
       error: message,
@@ -104,7 +110,7 @@ async function createImage(
   signal?: AbortSignal,
 ) {
   const response = await fetch(
-    `${model.baseUrl.replace(/\/$/, "")}/images/generations`,
+    providerApiUrl(model.provider, model.baseUrl, "/images/generations"),
     {
       method: "POST",
       signal,
@@ -116,8 +122,8 @@ async function createImage(
         model: model.modelName,
         prompt,
         size,
-        quality: stringInput(input.quality) || undefined,
-        n: numberInput(input.count) || 1,
+        quality: trimmedString(input.quality) || undefined,
+        n: imageCount(input.count),
         response_format: "b64_json",
       }),
     },
@@ -137,10 +143,10 @@ async function editImage(
   form.append("model", model.modelName);
   form.append("prompt", prompt);
   form.append("size", size);
-  form.append("n", String(numberInput(input.count) || 1));
+  form.append("n", String(imageCount(input.count)));
   form.append("image", dataUrlFile(image));
   const response = await fetch(
-    `${model.baseUrl.replace(/\/$/, "")}/images/edits`,
+    providerApiUrl(model.provider, model.baseUrl, "/images/edits"),
     {
       method: "POST",
       signal,
@@ -167,14 +173,19 @@ async function parseImageResponse(response: Response) {
       success: false,
       error: "Image generation response did not include an image",
     };
+  const mimeType = b64?.startsWith?.("data:")
+    ? b64.slice(5, b64.indexOf(";"))
+    : b64
+      ? imageTypeOf(b64)
+      : "image/png";
   return {
     success: true,
     image: b64?.startsWith?.("data:")
       ? b64
       : b64
-        ? `data:image/png;base64,${b64}`
+        ? `data:${mimeType};base64,${b64}`
         : url,
-    mimeType: "image/png",
+    mimeType,
     revisedPrompt: typeof first === "string" ? undefined : first.revised_prompt,
   };
 }
@@ -192,7 +203,7 @@ async function storeGeneratedImageResult(
   context: { jobId: string; chatId?: string; messageId?: string },
   signal?: AbortSignal,
 ) {
-  const image = stringInput(result.image);
+  const image = trimmedString(result.image);
   if (!image.startsWith("data:image/") || !context.chatId || !context.messageId)
     return result;
   const type = image.match(/^data:([^;,]+)/)?.[1] || "image/png";
@@ -213,19 +224,12 @@ async function storeGeneratedImageResult(
       signal,
     });
     const { image: _image, ...rest } = result;
-    return {
-      ...rest,
-      imageAttachmentId: id,
-      imageAttachmentName: attachment.name,
-      imageAttachmentType: attachment.type,
-      imageAttachmentSize: attachment.size,
-      imageStored: true,
-    };
+    return { ...rest, ...storedToolImage(attachment) };
   } catch (error) {
     signal?.throwIfAborted();
     return {
       ...result,
-      imageStorageError: error instanceof Error ? error.message : String(error),
+      imageStorageError: errorMessage(error),
     };
   }
 }
@@ -238,13 +242,23 @@ function dataUrlFile(attachment: UploadedAttachment) {
   return new File([bytes], attachment.name || "reference.png", { type });
 }
 
-function stringInput(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
+// The image type of base64 data, from its first bytes; PNG when unknown.
+const IMAGE_SIGNATURES: ReadonlyArray<[prefix: string, type: string]> = [
+  ["iVBORw0KGgo", "image/png"],
+  ["/9j/", "image/jpeg"],
+  ["UklGR", "image/webp"],
+  ["R0lGOD", "image/gif"],
+];
+
+function imageTypeOf(base64: string) {
+  return (
+    IMAGE_SIGNATURES.find(([prefix]) => base64.startsWith(prefix))?.[1] ??
+    "image/png"
+  );
 }
 
-function numberInput(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
+function imageCount(value: unknown) {
+  return clampInt(value, { fallback: 1, min: 1 });
 }
 
 function dataUrlSize(dataUrl: string) {

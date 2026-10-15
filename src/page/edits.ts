@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/error-message";
 import { compact } from "../shared/text";
 import { refFor, resolveRef } from "./refs";
 
@@ -66,7 +67,7 @@ export function runEdits(ops: EditOp[]): EditResult {
       const ref = apply(op);
       if (ref) inserted.push(ref);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       return {
         applied: index,
         inserted,

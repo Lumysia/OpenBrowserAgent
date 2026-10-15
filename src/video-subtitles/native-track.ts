@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../shared/config";
 // The lines as the video's own text track, which the browser draws where
 // page content can't go: over a video that is itself fullscreen, and in
 // picture-in-picture. Shown only there; the layer (overlay.ts) covers the
@@ -21,7 +22,7 @@ export function createNativeTrack(video: HTMLVideoElement) {
 
   function ensure() {
     if (!track) {
-      track = video.addTextTrack("subtitles", "OpenBrowserAgent");
+      track = video.addTextTrack("subtitles", PRODUCT_NAME);
       own.add(track);
       tracks.set(video, track);
     }

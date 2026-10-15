@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuZhTW } from "./context-menu/zh-TW";
 import { providerConsentZhTW } from "./provider-consent/zh-TW";
 import { displayZhTW } from "./display/zh-TW";
+import { pageTranslateZhTW } from "./page-translate/zh-TW";
 import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
@@ -376,9 +377,10 @@ export const zhTW: LocaleMessages = {
     deleteMcpServer: "刪除 MCP 伺服器",
     resetDefaults: "重設預設值",
     resetBuiltins: "重設內建項目",
-    resetDefaultMcpServers: "重設預設 MCP 伺服器",
-    resetDefaultMcpServersDescription:
-      "還原內建 MCP 伺服器，並移除自訂伺服器。",
+    mcpPresets: "推薦伺服器",
+    mcpPresetsDescription:
+      "不需 API Key 即可使用的託管搜尋伺服器。每個伺服器都會將你的搜尋傳送到它自己的服務。新增的伺服器在測試前保持關閉。",
+    mcpPresetAdd: "新增",
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
@@ -543,4 +545,5 @@ export const zhTW: LocaleMessages = {
   sync: syncZhTW,
   themes: themesZhTW,
   display: displayZhTW,
+  pageTranslate: pageTranslateZhTW,
 };

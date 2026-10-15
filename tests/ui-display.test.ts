@@ -1,13 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getMessages } from "../src/shared/i18n";
-import { BUILTIN_MCP_SERVERS } from "../src/shared/mcp";
-import { USER_ERROR_CODE, UserError } from "../src/shared/user-errors";
+import {
+  MCP_SERVER_PRESETS,
+  mcpServerFromPreset,
+} from "../src/shared/mcp-presets";
+import {
+  errorWithDetail,
+  USER_ERROR_CODE,
+  UserError,
+} from "../src/shared/user-errors";
 import {
   WORKSPACE_ERROR_TEXT,
   type WorkspaceErrorCode,
 } from "../src/shared/workspace-errors";
-import { errorWithDetail } from "../src/ui/error-text";
 import { workspaceErrorText } from "../entrypoints/options/workspace-error-text";
 import { mcpServerDescription } from "../src/ui/mcp-display";
 import {
@@ -39,16 +45,16 @@ test("default provider names show in the UI language, chosen ones as typed", () 
   assert.equal(modelNameDisplay({ name: "gpt-5" }, zh), "gpt-5");
 });
 
-test("built-in MCP servers keep a localized description until edited", () => {
-  const [exa] = BUILTIN_MCP_SERVERS;
-  assert.equal(mcpServerDescription(exa, zh), zh.display.builtinMcpServers.exa);
+test("servers added from a preset keep a localized description until edited", () => {
+  const exa = mcpServerFromPreset(MCP_SERVER_PRESETS[0]);
+  assert.equal(mcpServerDescription(exa, zh), zh.display.mcpServerPresets.exa);
   assert.equal(
     mcpServerDescription({ ...exa, description: "Mine" }, zh),
     "Mine",
   );
-  for (const server of BUILTIN_MCP_SERVERS)
+  for (const server of MCP_SERVER_PRESETS)
     assert.ok(
-      Object.hasOwn(zh.display.builtinMcpServers, server.name),
+      Object.hasOwn(zh.display.mcpServerPresets, server.name),
       server.name,
     );
 });

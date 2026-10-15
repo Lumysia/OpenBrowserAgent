@@ -1,4 +1,4 @@
-import { getBrowserApi } from "../browser-api";
+import { sendRuntimeRequest } from "../runtime-messages";
 import type { SyncBackendConfig } from "../types";
 import type { SyncStatus } from "./state";
 import type { ServerCheck } from "./transport";
@@ -44,9 +44,6 @@ export type SyncRequest =
 // and this was not it.
 export type PassphraseResult = "set" | "wrong";
 
-export type SyncResponse =
-  { ok: true; value?: unknown } | { ok: false; error: string };
-
 type Handler = (request: SyncRequest) => Promise<unknown>;
 
 let localHandler: Handler | undefined;
@@ -68,11 +65,7 @@ export function isSyncRequest(message: unknown): message is SyncRequest {
 
 async function send<T>(request: SyncRequest) {
   if (localHandler) return (await localHandler(request)) as T;
-  const response = (await getBrowserApi().runtime.sendMessage(request)) as
-    SyncResponse | undefined;
-  if (!response) throw new Error("Sync service did not respond.");
-  if (!response.ok) throw new Error(response.error);
-  return response.value as T;
+  return sendRuntimeRequest<T>(request, "Sync service");
 }
 
 export const syncNow = () => send<SyncStatus>({ type: SYNC_MESSAGE.now });

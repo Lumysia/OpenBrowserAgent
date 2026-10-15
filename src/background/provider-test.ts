@@ -1,4 +1,4 @@
-import { replyWith, type MessageReply } from "../shared/message-reply";
+import { respondWith, type RuntimeReply } from "../shared/runtime-messages";
 import {
   TEST_PROVIDER_MODEL,
   type TestProviderModelRequest,
@@ -27,7 +27,7 @@ async function testModel({
 export function handleProviderTestMessage(
   message: unknown,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response: MessageReply) => void,
+  sendResponse: (reply: RuntimeReply) => void,
 ) {
   const request = message as Partial<TestProviderModelRequest> | undefined;
   if (request?.type !== TEST_PROVIDER_MODEL) return false;
@@ -37,6 +37,8 @@ export function handleProviderTestMessage(
     !sender.url?.startsWith(chrome.runtime.getURL(""))
   )
     return false;
-  replyWith(testModel(request as TestProviderModelRequest), sendResponse);
-  return true;
+  return respondWith(
+    testModel(request as TestProviderModelRequest),
+    sendResponse,
+  );
 }

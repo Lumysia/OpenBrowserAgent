@@ -13,8 +13,6 @@ import {
   DEFAULT_SYNC_GROUP_SETTINGS,
   mergeSyncGroupSettings,
   STORAGE_KEYS,
-  SYNC_GROUPS,
-  type SyncGroup,
   type SyncGroupSettings,
 } from "./storage-keys";
 import { storageLockName, withLock } from "./locks";
@@ -22,6 +20,7 @@ import { keepStoredForm } from "./stored-form";
 import { sameJson } from "./sync/codec";
 import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
 import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
+import { resolveLanguage } from "./ui-languages";
 import { normalizeWorkspaces } from "./workspace";
 import type {
   Agent,
@@ -36,10 +35,6 @@ import type {
   LocalExecutionBridgeConfig,
   SyncBackendConfig,
 } from "./types";
-
-export { DEFAULT_SYNC_GROUP_SETTINGS, STORAGE_KEYS, SYNC_GROUPS };
-export type { SyncGroup, SyncGroupSettings, SyncStatus };
-export { getBrowserApi };
 
 // Every value lives in storage.local. Sync runs in the background: it notices
 // changes through storage events and writes other devices' changes back
@@ -178,9 +173,8 @@ async function removeContentOfRemovedChats(
 export type StorageItem<T> = ReturnType<typeof createItem<T>>;
 
 export const storage = {
-  language: createSyncedItem<string>(
-    STORAGE_KEYS.language,
-    () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
+  language: createSyncedItem<string>(STORAGE_KEYS.language, () =>
+    resolveLanguage(getBrowserApi().i18n?.getUILanguage?.()),
   ),
   preferences: createSyncedItem<Preferences>(
     STORAGE_KEYS.preferences,

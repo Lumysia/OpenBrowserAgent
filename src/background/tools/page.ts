@@ -1,3 +1,4 @@
+import { trimmedString } from "../../shared/values";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { callPage, pageTab, type PageTab } from "../page-agent";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
@@ -6,7 +7,6 @@ import {
   fail,
   ok,
   schema,
-  stringArg,
   type SourceInput,
   type ToolDefinition,
 } from "./types";
@@ -58,8 +58,8 @@ export const snapshotTool: ToolDefinition = {
       tab.id,
       TOOL_NAME.snapshot,
       {
-        ref: stringArg(input.ref) || undefined,
-        scope: stringArg(input.scope) || "auto",
+        ref: trimmedString(input.ref) || undefined,
+        scope: trimmedString(input.scope) || "auto",
         urls: input.urls === true,
         capChars: tokenChars(CONTEXT_POLICY.toolOutputCapTokens),
       },
@@ -103,7 +103,7 @@ export const findTool: ToolDefinition = {
     ["query"],
   ),
   async execute(input, { run, signal }) {
-    const query = stringArg(input.query);
+    const query = trimmedString(input.query);
     if (!query) return fail("query is required.");
     const tab = await pageTab(run.tab, input.tabId);
     const { value, title, url } = await callPage<{
@@ -159,7 +159,7 @@ export const extractTool: ToolDefinition = {
     ["question"],
   ),
   async execute(input, { run, signal }) {
-    const question = stringArg(input.question);
+    const question = trimmedString(input.question);
     if (!question) return fail("question is required.");
     const tab = await pageTab(run.tab, input.tabId);
     const { value, title, url } = await callPage<{ text: string }>(

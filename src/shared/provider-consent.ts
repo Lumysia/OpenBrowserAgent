@@ -1,10 +1,7 @@
 import { normalizeProviderConfig } from "./provider-instances";
 import { storage } from "./storage";
-import {
-  providerDefaultBaseUrls,
-  type ProviderConfig,
-  type ProviderId,
-} from "./types";
+import type { ProviderConfig } from "./types";
+import { providerType } from "./providers";
 import { ProviderConsentError } from "./user-errors";
 
 // Content the user shares (messages, page text, screenshots, files) goes to
@@ -12,20 +9,9 @@ import { ProviderConsentError } from "./user-errors";
 // host, stored with the provider (and synced with it). Endpoints on this
 // device or the local network need none.
 
-// The Gemini SDK's endpoint when the provider sets no base URL.
-const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com";
-
-// Providers that run on this device; the on-device built-in provider joins
-// this list when it is added.
-const ON_DEVICE_PROVIDER_TYPES = new Set<string>([]);
-
 function endpointUrl(provider: ProviderConfig) {
-  const type: ProviderId = provider.type || "openai";
-  return (
-    provider.baseUrl?.trim() ||
-    providerDefaultBaseUrls[type] ||
-    (type === "gemini" ? GEMINI_ENDPOINT : "")
-  );
+  const { defaultBaseUrl, sdkEndpoint } = providerType(provider.type);
+  return provider.baseUrl?.trim() || defaultBaseUrl || sdkEndpoint || "";
 }
 
 function parseEndpoint(provider: ProviderConfig) {
@@ -52,7 +38,6 @@ export function providerConsentHost(provider: ProviderConfig) {
 // Whether sending content to this provider needs the user's permission: its
 // endpoint is not on this device or the local network.
 export function providerNeedsConsent(provider: ProviderConfig) {
-  if (ON_DEVICE_PROVIDER_TYPES.has(provider.type || "")) return false;
   const endpoint = parseEndpoint(provider);
   return !!endpoint && !isLocalHost(endpoint.hostname);
 }

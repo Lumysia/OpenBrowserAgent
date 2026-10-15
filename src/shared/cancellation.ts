@@ -40,7 +40,15 @@ export function delay(
   });
 }
 
-// Gives up on `run` after `milliseconds`. Work that `run` wraps in `pause`
+// What withCancellationTimeout throws when it gives up.
+export class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeoutError";
+  }
+}
+
+// Gives up on `run` after `milliseconds`, with a TimeoutError of `message`. Work that `run` wraps in `pause`
 // (such as a request with limits of its own) does not count toward the limit.
 export async function withCancellationTimeout<T>(
   run: (signal: AbortSignal, pause: Pause) => Promise<T>,
@@ -58,7 +66,7 @@ export async function withCancellationTimeout<T>(
   const start = () => {
     started = Date.now();
     timer = setTimeout(
-      () => controller.abort(new Error(message)),
+      () => controller.abort(new TimeoutError(message)),
       Math.max(0, remaining),
     );
   };

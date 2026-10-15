@@ -4,8 +4,10 @@ import {
   needsUserForDownload,
   type DownloadRecord,
 } from "../../shared/downloads";
-import { getBrowserApi } from "../../shared/storage";
-import type { RunContext } from "../tools/types";
+import { getBrowserApi } from "../../shared/browser-api";
+import { sessionRecord } from "../../shared/session-record";
+import { STORAGE_KEYS } from "../../shared/storage-keys";
+import { ownerChat, type RunContext } from "../tools/types";
 import { downloadRecord } from "./records";
 
 // Which downloads each chat started (with the downloads tool or a click of
@@ -13,7 +15,6 @@ import { downloadRecord } from "./records";
 // record lives in session storage and ends with the browser session, like
 // download ids that are meaningful only on this device.
 
-const AGENT_DOWNLOADS_KEY = "agentDownloads";
 const ENTRY_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const POLL_MS = 1000;
 // `wait` without an id looks this far back for a download to report.
@@ -35,8 +36,11 @@ type Entry = {
 
 type Run = Pick<RunContext, "chatId" | "parentChatId">;
 
-const memory: Record<string, Entry> = {};
-let queue: Promise<unknown> = Promise.resolve();
+// By download id.
+const agentDownloads = sessionRecord<Record<string, Entry>>(
+  STORAGE_KEYS.agentDownloads,
+  () => ({}),
+);
 
 export class DownloadsUnavailableError extends Error {
   constructor() {
@@ -51,32 +55,17 @@ export function downloadsApi() {
   return downloads;
 }
 
-// Sub-agents download for the chat that started them.
-export function ownerChat(run: Run) {
-  return run.parentChatId || run.chatId;
-}
+const load = () => agentDownloads.get();
 
-async function load(): Promise<Record<string, Entry>> {
-  const area = getBrowserApi().storage.session;
-  if (!area) return memory;
-  return ((await area.get(AGENT_DOWNLOADS_KEY))[AGENT_DOWNLOADS_KEY] ||
-    {}) as Record<string, Entry>;
-}
-
-function update(change: (entries: Record<string, Entry>) => void) {
-  const task = async () => {
-    const entries = await load();
+// Changes the entries, dropping those past ENTRY_MAX_AGE_MS.
+async function update(change: (entries: Record<string, Entry>) => void) {
+  await agentDownloads.update((entries) => {
     const now = Date.now();
     for (const [id, entry] of Object.entries(entries))
       if (now - entry.at > ENTRY_MAX_AGE_MS) delete entries[id];
     change(entries);
-    await getBrowserApi().storage.session?.set({
-      [AGENT_DOWNLOADS_KEY]: entries,
-    });
-  };
-  const result = queue.then(task, task);
-  queue = result.catch(() => undefined);
-  return result;
+    return entries;
+  });
 }
 
 export function claimDownload(

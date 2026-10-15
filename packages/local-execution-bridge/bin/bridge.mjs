@@ -11,6 +11,29 @@ const configPath =
   resolve(scriptDir, "local-execution-bridge.config.json");
 const config = loadConfig(configPath);
 const tasks = new Map();
+// The protocol, as in the extension's src/shared/local-execution-bridge-protocol.ts
+// and LOCAL_EXECUTION_BRIDGE_LIMITS (this file is installed on its own).
+const MESSAGE = {
+  ping: "command.ping",
+  run: "command.run",
+  cancel: "command.cancel",
+  pong: "command.pong",
+  error: "command.error",
+  done: "command.done",
+  stdout: "stdout",
+  stderr: "stderr",
+};
+const ERROR = {
+  unknownShellConfig: "unknownShellConfig",
+  badSecret: "badSecret",
+  missingCommand: "missingCommand",
+  timeout: "timeout",
+  exitCode: "exitCode",
+  spawnFailed: "spawnFailed",
+  unknownMessage: "unknownMessage",
+};
+const DEFAULT_TIMEOUT_MS = 2 * 60_000;
+const MAX_TIMEOUT_MS = 30 * 60_000;
 const LOCAL_CLI_CANDIDATES = [
   { id: "claude", name: "Claude Code", command: "claude" },
   { id: "codex", name: "OpenAI Codex", command: "codex" },
@@ -60,20 +83,21 @@ function readMessages() {
 }
 
 function handleMessage(message) {
-  if (message.type === "command.ping") {
+  if (message.type === MESSAGE.ping) {
     pingCommand(message);
     return;
   }
-  if (message.type === "command.cancel") {
+  if (message.type === MESSAGE.cancel) {
     cancelTask(String(message.taskId || ""));
     return;
   }
-  if (message.type === "command.run") {
+  if (message.type === MESSAGE.run) {
     runCommand(message);
     return;
   }
   writeMessage({
-    type: "error",
+    type: MESSAGE.error,
+    code: ERROR.unknownMessage,
     error: `Unknown message type: ${message.type}`,
   });
 }
@@ -84,7 +108,7 @@ function pingCommand(message) {
   const shell = resolveShell(String(config.shell || ""));
   const localCli = detectLocalCli();
   writeMessage({
-    type: "command.pong",
+    type: MESSAGE.pong,
     command: message.command,
     shell: shell.command,
     shellArgsPreview: shell.args("<command>"),
@@ -106,12 +130,11 @@ function runCommand(message) {
   const taskId = String(message.taskId || cryptoRandomId());
   const config = resolveCommand(message, taskId);
   if (!config) return;
-  const commandLine = String(
-    message.commandLine || message.shellCommand || "",
-  ).trim();
+  const commandLine = String(message.commandLine || "").trim();
   if (!commandLine) {
     writeMessage({
-      type: "command.error",
+      type: MESSAGE.error,
+      code: ERROR.missingCommand,
       taskId,
       error: "Shell command is required.",
     });
@@ -133,7 +156,13 @@ function runCommand(message) {
   });
   // reason: why the process group is being stopped ("completed" when the
   // shell exited on its own); stopping: the kill in progress.
-  const task = { child, reason: undefined, stopping: undefined, error: "" };
+  const task = {
+    child,
+    reason: undefined,
+    stopping: undefined,
+    error: "",
+    code: undefined,
+  };
   tasks.set(taskId, task);
   const timer = setTimeout(
     () => cancelTask(taskId, "timeout"),
@@ -145,7 +174,7 @@ function runCommand(message) {
     taskId,
     data: commandLine,
   });
-  for (const stream of ["stdout", "stderr"])
+  for (const stream of [MESSAGE.stdout, MESSAGE.stderr])
     child[stream].on("data", (chunk) =>
       writeMessage({
         type: stream,
@@ -157,6 +186,7 @@ function runCommand(message) {
   // A spawn failure emits "error" and then "close"; report it from close.
   child.on("error", (error) => {
     task.error = formatSpawnError(error, shell.command);
+    task.code = ERROR.spawnFailed;
   });
   // Shell completion bounds the command's lifetime, including background work
   // that inherited its process group. Start cleanup on exit, not close: a child
@@ -169,16 +199,17 @@ function runCommand(message) {
     await task.stopping;
     tasks.delete(taskId);
     const canceled = task.reason === "canceled" && !task.error;
-    const error =
-      task.error ||
-      (task.reason === "timeout"
-        ? "Local command timed out."
+    const [errorCode, error] = task.error
+      ? [task.code, task.error]
+      : task.reason === "timeout"
+        ? [ERROR.timeout, "Local command timed out."]
         : canceled || code === 0
-          ? undefined
-          : `Local command exited with code ${code}`);
+          ? []
+          : [ERROR.exitCode, `Local command exited with code ${code}`];
     writeMessage({
-      type: error ? "command.error" : "command.done",
+      type: error ? MESSAGE.error : MESSAGE.done,
       ...(canceled ? { event: "canceled" } : {}),
+      ...(errorCode ? { code: errorCode } : {}),
       taskId,
       result: { code, signal },
       error,
@@ -194,7 +225,8 @@ function resolveCommand(message, taskId = "") {
   );
   if (!command) {
     writeMessage({
-      type: "command.error",
+      type: MESSAGE.error,
+      code: ERROR.unknownShellConfig,
       taskId,
       error: `Unknown shell config: ${key}`,
     });
@@ -204,7 +236,8 @@ function resolveCommand(message, taskId = "") {
   const actualSecret = String(message.command?.secret || "");
   if (!expectedSecret || actualSecret !== expectedSecret) {
     writeMessage({
-      type: "command.error",
+      type: MESSAGE.error,
+      code: ERROR.badSecret,
       taskId,
       error: "Execution bridge secret is missing or invalid.",
     });
@@ -265,8 +298,8 @@ async function terminateProcessTree(child) {
 function commandTimeout(value) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0
-    ? Math.min(30 * 60_000, Math.trunc(number))
-    : 60_000;
+    ? Math.min(MAX_TIMEOUT_MS, Math.trunc(number))
+    : DEFAULT_TIMEOUT_MS;
 }
 
 function loadConfig(path) {

@@ -1,10 +1,8 @@
 import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import type { UserMessage } from "@earendil-works/pi-ai";
 import type { AiStreamResponse } from "../shared/types";
-import {
-  ABORT_CHAT_STREAMS,
-  type AbortChatStreamsResponse,
-} from "../shared/chat-stream-control";
+import { ABORT_CHAT_STREAMS } from "../shared/chat-stream-control";
+import { failureReply, type RuntimeReply } from "../shared/runtime-messages";
 
 const STREAM_SESSION_RETENTION_MS = 5 * 60_000;
 const QUESTION_TIMEOUT_MS = 10 * 60_000;
@@ -121,7 +119,7 @@ export function abortSession(chatId: string) {
 
 export function handleChatStreamControlMessage(
   message: unknown,
-  sendResponse: (response: AbortChatStreamsResponse) => void,
+  sendResponse: (reply: RuntimeReply) => void,
 ) {
   if (
     !message ||
@@ -135,7 +133,7 @@ export function handleChatStreamControlMessage(
     !Array.isArray(message.chatIds) ||
     !message.chatIds.every((id) => typeof id === "string" && id.length > 0)
   ) {
-    sendResponse({ ok: false, error: "Chat IDs are required." });
+    sendResponse(failureReply(new Error("Chat IDs are required.")));
     return true;
   }
   message.chatIds.forEach(abortSession);

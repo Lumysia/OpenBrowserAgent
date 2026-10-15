@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../shared/config";
 import {
   CONTEXT_MENU_ID,
   contextMenuEntries,
@@ -5,9 +6,9 @@ import {
   type ContextMenuEntry,
 } from "../../shared/context-menu";
 import { getMessages } from "../../shared/i18n";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
-import { getBrowserApi, storage } from "../../shared/storage";
+import { storage } from "../../shared/storage";
+import { getBrowserApi } from "../../shared/browser-api";
 import { togglePageTranslation, translateMenuTitle } from "../page-translate";
 import { handOffToSidePanel } from "../side-panel-handoff";
 import { toggleVideoSubtitles } from "../video-subtitles";
@@ -66,8 +67,8 @@ async function menuEntries(menus: Menus) {
     {
       ...t,
       translatePage: await translateMenuTitle(language),
-      translateSubtitles: getPageTranslateMessages(language).subtitles.menu,
-      parent: name || "OpenBrowserAgent",
+      translateSubtitles: getMessages(language).pageTranslate.subtitles.menu,
+      parent: name || PRODUCT_NAME,
     },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.
     { tabContext: Object.values(menus.ContextType ?? {}).includes("tab") },

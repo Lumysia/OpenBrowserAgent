@@ -22,7 +22,7 @@ SEUS MODELOS, SUAS FERRAMENTAS
 
 • Conecte provedores compatíveis com OpenAI ou Anthropic, Gemini, OpenRouter, DeepSeek, Ollama e outros, com suas próprias chaves de API e URLs base.
 • Use um modelo auxiliar mais barato para ler páginas longas.
-• Conecte servidores MCP remotos (Streamable HTTP) para ter ferramentas extras. Servidores de busca na web que não precisam de chave de API estão incluídos, e cada um fica desativado até você ativá-lo.
+• Conecte servidores MCP remotos (Streamable HTTP) para ter ferramentas extras. Servidores de busca na web que não precisam de chave de API são recomendados e adicionados com um clique, e cada um fica desativado até você ativá-lo.
 • Números exatos: o agente pode executar o código JavaScript que escreve em uma sandbox no seu dispositivo, sem acesso à internet, para calcular, analisar tabelas e transformar dados.
 • Ponte de execução local opcional: permite que um agente execute comandos no seu computador, somente depois que você a instalar e ativar.
 

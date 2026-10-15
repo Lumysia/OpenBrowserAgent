@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuDeDE } from "./context-menu/de-DE";
 import { providerConsentDeDE } from "./provider-consent/de-DE";
 import { displayDeDE } from "./display/de-DE";
+import { pageTranslateDeDE } from "./page-translate/de-DE";
 import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
@@ -459,9 +460,10 @@ export const deDE: LocaleMessages = {
     deleteMcpServer: "MCP-Server löschen",
     resetDefaults: "Alle zurücksetzen",
     resetBuiltins: "Nur integrierte zurücksetzen",
-    resetDefaultMcpServers: "Standard-MCP-Server zurücksetzen",
-    resetDefaultMcpServersDescription:
-      "Stellt die integrierten MCP-Server wieder her und entfernt benutzerdefinierte.",
+    mcpPresets: "Empfohlene Server",
+    mcpPresetsDescription:
+      "Gehostete Suchserver, die ohne API-Schlüssel funktionieren. Jeder sendet Ihre Suchanfragen an seinen eigenen Dienst. Ein hinzugefügter Server bleibt aus, bis Sie ihn testen.",
+    mcpPresetAdd: "Hinzufügen",
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
@@ -638,4 +640,5 @@ export const deDE: LocaleMessages = {
   sync: syncDeDE,
   themes: themesDeDE,
   display: displayDeDE,
+  pageTranslate: pageTranslateDeDE,
 };

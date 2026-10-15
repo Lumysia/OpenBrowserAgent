@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuEnUS } from "./context-menu/en-US";
 import { providerConsentEnUS } from "./provider-consent/en-US";
 import { displayEnUS } from "./display/en-US";
+import { pageTranslateEnUS } from "./page-translate/en-US";
 import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
@@ -431,9 +432,10 @@ export const enUS = {
     deleteMcpServer: "Delete MCP server",
     resetDefaults: "Reset defaults",
     resetBuiltins: "Reset built-ins",
-    resetDefaultMcpServers: "Reset default MCP servers",
-    resetDefaultMcpServersDescription:
-      "Restores the built-in MCP servers and removes custom ones.",
+    mcpPresets: "Recommended servers",
+    mcpPresetsDescription:
+      "Hosted search servers that work without an API key. Each sends your searches to its own service. An added server stays off until you test it.",
+    mcpPresetAdd: "Add",
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
@@ -606,6 +608,7 @@ export const enUS = {
   sync: syncEnUS,
   themes: themesEnUS,
   display: displayEnUS,
+  pageTranslate: pageTranslateEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

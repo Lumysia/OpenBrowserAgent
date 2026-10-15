@@ -10,7 +10,7 @@ import {
   THINKING_SWITCH,
   type ThinkingSwitch,
 } from "../shared/thinking-switch";
-import type { ProviderId } from "../shared/types";
+import { providerType, type ProviderId } from "../shared/providers";
 import { catalogModel } from "./model-catalog";
 
 // Quick tasks (smart bar actions, page translation) ask the model to think
@@ -33,14 +33,6 @@ type QuickModel = {
 export type QuickThinking = { model: Model<Api>; level?: ThinkingLevel };
 
 type ThinkingFormat = NonNullable<OpenAICompletionsCompat["thinkingFormat"]>;
-
-// Chat completions services with their own thinking field. The others take
-// OpenAI's reasoning_effort.
-const PROVIDER_THINKING_FORMAT: Partial<Record<ProviderId, ThinkingFormat>> = {
-  openrouter: "openrouter",
-  deepseek: "deepseek",
-  glm: "zai",
-};
 
 // Catalog compat flags that decide how Pi writes a thinking level.
 const THINKING_COMPAT_KEYS = [
@@ -127,7 +119,8 @@ export function quickThinking(
   model: Model<Api>,
 ): QuickThinking | undefined {
   const known = catalogModel(config.provider, config.modelName);
-  const format = PROVIDER_THINKING_FORMAT[config.provider] || "openai";
+  const type = providerType(config.provider);
+  const format = type.thinkingFormat || "openai";
   if (model.api !== "openai-completions")
     return known ? fromCatalog(model, known, format) : undefined;
   switch (config.thinkingSwitch || THINKING_SWITCH.auto) {
@@ -139,7 +132,7 @@ export function quickThinking(
       return known ? fromCatalog(model, known, "openai") : effortNone(model);
     default:
       if (known) return fromCatalog(model, known, format);
-      if (config.provider === "ollama") return effortNone(model);
+      if (type.quickReasoningEffort) return effortNone(model);
       // Servers on this device or the local network (llama.cpp, vLLM,
       // SGLang) take the template switch; a cloud service is not sent a
       // field it may not know.

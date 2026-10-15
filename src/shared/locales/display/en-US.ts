@@ -18,8 +18,8 @@ export const displayEnUS = {
     gemini: "Gemini-compatible",
     ollama: "Ollama-compatible",
   },
-  // Built-in MCP servers, by name: what each offers.
-  builtinMcpServers: {
+  // Recommended MCP servers (mcp-presets.ts), by name: what each offers.
+  mcpServerPresets: {
     exa: "Web search and webpage content extraction.",
     parallel: "Web search with excerpts, and webpage fetching.",
     tinyfish: "Web and news search.",
@@ -55,7 +55,12 @@ export const displayEnUS = {
   },
   errors: {
     noModel: "No model is set up. Add a provider in Settings → AI providers.",
+    noImageModel:
+      "No image model is set up. Choose one in Settings → AI providers.",
     baseUrlRequired: "Enter a base URL.",
+    bridgeNotFound: "This execution bridge no longer exists.",
+    bridgeHostRequired: "Enter the native messaging host name.",
+    bridgeTimeout: "The execution bridge didn’t answer in time.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

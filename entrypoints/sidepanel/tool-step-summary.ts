@@ -1,6 +1,6 @@
 import {
   formatCount,
-  resolveLanguage,
+  getFormatLanguage,
   type Messages,
 } from "../../src/shared/i18n";
 import { stringValue } from "./tool-detail-format";
@@ -22,7 +22,7 @@ export function actStepsSummary(steps: unknown[], t: Messages) {
     counts.set(kind, (counts.get(kind) || 0) + 1);
   }
   if (!counts.size) return "";
-  const language = resolveLanguage();
+  const language = getFormatLanguage();
   const parts = [...counts]
     .sort(([a], [b]) => Number(a === "other") - Number(b === "other"))
     .map(([kind, count]) => formatCount(messages[kind], count));

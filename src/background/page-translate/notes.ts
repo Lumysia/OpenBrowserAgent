@@ -1,5 +1,4 @@
 import { getMessages } from "../../shared/i18n";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_ERROR,
   type PageTranslateEvent,
@@ -7,8 +6,11 @@ import {
 import type { PageTranslateEngine } from "../../shared/page-translate/settings";
 import type { PageToastTheme } from "../../shared/page-toast";
 import { formatMessage } from "../../shared/text";
-import { UserError, userErrorText } from "../../shared/user-errors";
-import { errorWithDetail } from "../../ui/error-text";
+import {
+  errorWithDetail,
+  UserError,
+  userErrorText,
+} from "../../shared/user-errors";
 import { EngineError } from "./engines/types";
 
 // The notes a page session shows: why translating failed, and which engine
@@ -32,8 +34,8 @@ export function errorEvent(
       : error instanceof UserError
         ? PAGE_TRANSLATE_ERROR.unavailable
         : PAGE_TRANSLATE_ERROR.failed;
-  const messages = getPageTranslateMessages(context.language);
   const t = getMessages(context.language);
+  const messages = t.pageTranslate;
   let message = messages.errors[kind].replaceAll(
     "{engine}",
     messages.engines[context.kind],
@@ -58,7 +60,7 @@ export function switchMessage(
   to: PageTranslateEngine,
   error: EngineError,
 ) {
-  const { switched } = getPageTranslateMessages(language);
+  const { switched } = getMessages(language).pageTranslate;
   return engineMessage(
     error.kind === PAGE_TRANSLATE_ERROR.rateLimited
       ? switched.rateLimited
@@ -78,7 +80,7 @@ function engineMessage(
   engine: PageTranslateEngine,
   fallback: PageTranslateEngine,
 ) {
-  const { engineNames } = getPageTranslateMessages(language);
+  const { engineNames } = getMessages(language).pageTranslate;
   return formatMessage(template, {
     engine: engineNames[engine],
     fallback: engineNames[fallback],

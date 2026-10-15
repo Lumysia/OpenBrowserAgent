@@ -1,9 +1,9 @@
-import { storage, STORAGE_KEYS } from "./storage";
+import { storage } from "./storage";
+import { STORAGE_KEYS } from "./storage-keys";
 import { resetSync } from "./sync/client";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
-    STORAGE_KEYS.userId,
     STORAGE_KEYS.language,
     STORAGE_KEYS.preferences,
     STORAGE_KEYS.shouldShowUpdateToast,
