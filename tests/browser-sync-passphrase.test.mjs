@@ -95,7 +95,8 @@ test(
         await deviceA.close();
       }
 
-      // Device B: the setup page, a sync code, then the passphrase.
+      // Device B: setup's AI provider step, a sync code, then the
+      // passphrase.
       const deviceB = await launchExtension();
       try {
         const setup = await deviceB.open(
@@ -105,8 +106,16 @@ test(
           (key) => chrome.storage.local.set({ [key]: "en-US" }),
           STORAGE_KEYS.language,
         );
+        // Setup's AI provider step offers the sync code.
+        await clickElement(setup, ".setup-forward", { text: t.setup.next });
         await poll(async () =>
           (await buttonTexts(setup)).includes(t.setup.joinLink),
+        );
+        assert.equal(
+          await setup.call(
+            () => document.querySelector(".setup-step h1").textContent,
+          ),
+          t.setup.providerTitle,
         );
         await clickElement(setup, "button", { text: t.setup.joinLink });
         await poll(() =>
@@ -133,6 +142,10 @@ test(
         assert.equal(await storedKey(), undefined);
         await clickElement(setup, "button", { text: t.setup.skip });
         await poll(() => hasText(setup, t.setup.connected));
+        // The synced provider has a model: the step is done.
+        await poll(async () =>
+          (await buttonTexts(setup)).includes(t.setup.next),
+        );
 
         // The side panel: the banner, and a chat says the key is locked
         // without sending anything.

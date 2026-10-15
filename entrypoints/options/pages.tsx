@@ -23,7 +23,7 @@ import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
 import { SyncPage } from "./sync-page";
 import { tabbedPage } from "./tabbed-page";
-import { WelcomePage } from "./welcome-page";
+import { SetupWizard } from "./setup-wizard";
 
 type OptionsPageId = keyof typeof OPTIONS_PAGE_ROUTE;
 
@@ -33,13 +33,13 @@ type OptionsPage = {
   icon: LucideIcon;
   title: (t: Messages) => string;
   Page: ComponentType<{ route: string }>;
-  // Reached by link only, not listed in the sidebar.
-  hidden?: boolean;
+  // A page of its own, without the sidebar, reached by link only.
+  standalone?: boolean;
 };
 
 const PAGES: Record<
   OptionsPageId,
-  Pick<OptionsPage, "icon" | "title" | "Page" | "hidden">
+  Pick<OptionsPage, "icon" | "title" | "Page" | "standalone">
 > = {
   general: {
     icon: SlidersHorizontal,
@@ -113,8 +113,8 @@ const PAGES: Record<
   welcome: {
     icon: Sparkles,
     title: (t) => t.setup.welcomeTitle,
-    Page: WelcomePage,
-    hidden: true,
+    Page: SetupWizard,
+    standalone: true,
   },
 };
 

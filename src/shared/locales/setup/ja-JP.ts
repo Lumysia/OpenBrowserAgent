@@ -3,12 +3,55 @@ import type { SetupMessages } from "./en-US";
 export const setupJaJP: SetupMessages = {
   title: "OpenBrowserAgent をセットアップ",
   description: "AI プロバイダーを追加するとチャットを始められます。",
+  continueSetup: "セットアップを続ける",
   openedSettings:
-    "設定を開きました。そこで AI プロバイダーを追加してから、ここに戻ってください。",
+    "セットアップを別のタブで開きました。終わったらここに戻ってください。",
+  runAgain: "セットアップをもう一度実行",
+  progressLabel: "セットアップの手順",
+  progressStep: "ステップ {current}/{total}：{step}",
+  steps: {
+    language: "言語",
+    provider: "AI プロバイダー",
+    pages: "ページ上の機能",
+    done: "完了",
+  },
+  back: "戻る",
+  next: "次へ",
+  skipStep: "スキップ",
+  languageTitle: "言語を選ぶ",
+  languageDescription:
+    "拡張機能の表示言語と、ページの翻訳先の言語です。ほとんどの場合はそのままで大丈夫です。",
+  providerTitle: "AI プロバイダーに接続",
+  providerDescription:
+    "チャットとエージェントには AI プロバイダーが必要です。サービスを選ぶか、OpenAI 互換または Anthropic 互換のサーバーをベース URL で指定してください。",
+  providerPlaceholder: "AI プロバイダーを選択",
+  providerReady: "{name} の準備ができました。「次へ」で進みます。",
+  testConnection: "接続をテスト",
+  testingConnection: "テスト中…",
+  connectionOk: "接続しました。{model} が応答しました。",
+  connectionFailed: "AI プロバイダーに接続できませんでした",
+  modelFailed: "接続しましたが、{model} が応答しませんでした",
+  noModelsListed:
+    "接続しましたが、AI プロバイダーからモデルの一覧が返されませんでした。モデル名を入力してください。",
+  model: "モデル",
+  modelName: "モデル名",
+  modelNameHint:
+    "AI プロバイダーがモデルの一覧を返さない場合は、モデル名を入力してもう一度テストしてください。",
+  pagesTitle: "ページ上の機能",
+  pagesDescription:
+    "OpenBrowserAgent がアクセスしたページに追加する機能です。あとで「設定 → ページ上の機能」で変更できます。",
+  translateButtonDescription:
+    "ページの端にある小さなボタンで、ページを翻訳したり原文に戻したりできます。",
+  smartBarTitle: "テキスト選択時のスマートバー",
+  smartBarDescription:
+    "選択したテキストの横にクイック操作を表示します。操作を選ぶまで何も送信されません。",
+  subtitlesDescription: "字幕のある動画で、各行の下に翻訳を表示します。",
+  doneTitle: "準備ができました",
+  doneDescription:
+    "サイドパネルを開いて、表示中のページについて質問しましょう。これらのキーはどのページでも使えます。",
+  noProviderNote:
+    "チャットには AI プロバイダーが必要です。組み込み翻訳を使うページ翻訳は AI プロバイダーなしで使えます。",
   welcomeTitle: "OpenBrowserAgent へようこそ",
-  welcomeDescription:
-    "AI プロバイダーとモデルを追加したら、サイドパネルを開いて表示中のページについて質問できます。",
-  openPanelTitle: "サイドパネルを開く",
   openPanelDescription:
     "ブラウザーの拡張機能メニューで OpenBrowserAgent を固定し、アイコンをクリックしてサイドパネルを開きます。",
   openPanel: "サイドパネルを開く",

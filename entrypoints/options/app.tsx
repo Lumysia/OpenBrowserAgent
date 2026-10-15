@@ -29,47 +29,53 @@ export function OptionsApp() {
   return languageLoading ? null : (
     <MessagesProvider language={language}>
       <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-        <div className="app-shell">
-          <aside className="settings-sidebar">
-            <div>
-              <div className="brand">{t.common.settings}</div>
-              <p className="muted">
-                {t.app.brandLine.replace("{tagline}", t.app.tagline)}
-              </p>
-            </div>
-            <nav className="stack">
-              {OPTIONS_PAGES.filter(({ hidden }) => !hidden).map(
-                ({ id, route: pageRoute, icon: Icon, title }) => (
-                  <a
-                    key={id}
-                    className={cn("nav-link", id === page.id && "active")}
-                    href={`#${pageRoute}`}
-                  >
-                    <Icon size={16} />
-                    {title(t)}
-                  </a>
-                ),
-              )}
-              <a
-                className="nav-link"
-                href={REPO_URL}
-                onClick={(event) => {
-                  event.preventDefault();
-                  openOrFocusUrl(REPO_URL).catch(console.warn);
-                }}
-              >
-                <CircleHelp size={16} />
-                {t.common.help}
-              </a>
-            </nav>
-            <div className="settings-sidebar-version">v{version}</div>
-          </aside>
-          <ScrollArea className="settings-main">
-            <div className="settings-content">
-              <page.Page route={route} />
-            </div>
-          </ScrollArea>
-        </div>
+        {page.standalone ? (
+          <div className="standalone-shell">
+            <page.Page route={route} />
+          </div>
+        ) : (
+          <div className="app-shell">
+            <aside className="settings-sidebar">
+              <div>
+                <div className="brand">{t.common.settings}</div>
+                <p className="muted">
+                  {t.app.brandLine.replace("{tagline}", t.app.tagline)}
+                </p>
+              </div>
+              <nav className="stack">
+                {OPTIONS_PAGES.filter(({ standalone }) => !standalone).map(
+                  ({ id, route: pageRoute, icon: Icon, title }) => (
+                    <a
+                      key={id}
+                      className={cn("nav-link", id === page.id && "active")}
+                      href={`#${pageRoute}`}
+                    >
+                      <Icon size={16} />
+                      {title(t)}
+                    </a>
+                  ),
+                )}
+                <a
+                  className="nav-link"
+                  href={REPO_URL}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openOrFocusUrl(REPO_URL).catch(console.warn);
+                  }}
+                >
+                  <CircleHelp size={16} />
+                  {t.common.help}
+                </a>
+              </nav>
+              <div className="settings-sidebar-version">v{version}</div>
+            </aside>
+            <ScrollArea className="settings-main">
+              <div className="settings-content">
+                <page.Page route={route} />
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </TooltipProvider>
     </MessagesProvider>
   );

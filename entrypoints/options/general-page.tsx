@@ -1,5 +1,4 @@
 import {
-  Languages,
   MessagesSquare,
   MonitorCog,
   Palette,
@@ -7,21 +6,18 @@ import {
   RefreshCw,
   ScrollText,
   SlidersHorizontal,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
-import { resolveLanguage, UI_LANGUAGES } from "../../src/shared/ui-languages";
+import { restartSetup } from "../../src/shared/setup-progress";
 import { storage } from "../../src/shared/storage";
 import {
   Accordion,
+  Button,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   SettingToggleRow,
   SettingsAccordionItem,
   SettingsSummary,
@@ -34,9 +30,10 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { ShortcutsSection } from "./shortcuts-section";
 import { ThemePicker } from "./theme-picker";
 import { TranslateIntoSection } from "./translate-into";
+import { UiLanguageSection } from "./ui-language-section";
 
 export function GeneralPage() {
-  const [language, setLanguage] = useStoredState(storage.language);
+  const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const t = getMessages(language);
 
@@ -48,26 +45,17 @@ export function GeneralPage() {
         icon={<SlidersHorizontal />}
         title={t.options.general}
         description={t.options.generalDescription}
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => restartSetup().catch(console.warn)}
+          >
+            <Sparkles size={16} /> {t.setup.runAgain}
+          </Button>
+        }
       />
       <TranslateIntoSection />
-      <SettingsSection
-        icon={<Languages />}
-        title={t.common.language}
-        description={t.options.languageDescription}
-      >
-        <Select value={resolveLanguage(language)} onValueChange={setLanguage}>
-          <SelectTrigger aria-label={t.common.language}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {UI_LANGUAGES.map(({ code: id, label }) => (
-              <SelectItem key={id} value={id}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SettingsSection>
+      <UiLanguageSection />
       <SettingsSection
         icon={<Palette />}
         title={t.options.colorScheme}

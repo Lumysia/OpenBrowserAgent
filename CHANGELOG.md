@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Guided setup**: installing OpenBrowserAgent opens a setup with one thing per step and Back / Next: your languages (the extension's and "Translate into"), an AI provider (with "Test connection" and a model to pick, or a sync code from another device), what to add to web pages (translate button, smart bar on selected text, video subtitles), and a last page with your keyboard shortcuts and "Open side panel". Every step can be skipped. If you close it, "Continue setup" on the side panel's card opens it where you left off.
+- Settings → General has "Run setup again", which opens the setup at its first step.
 - Page translation no longer skips paragraphs in Japanese and other languages written without spaces when they contain a number: such paragraphs were taken for a number and left untranslated.
 - The translate button on the page edge no longer flickers in and out when the pointer rests against the side of the screen; it now stays out until the pointer leaves it.
 - An AI provider of the "(or compatible)" kinds (OpenAI, OpenAI Responses, Anthropic, Ollama) asks for its Base URL first, next to the API key, instead of under "Advanced": that's where you say which server you use. Named services such as DeepSeek or OpenRouter keep their Base URL under "Advanced".

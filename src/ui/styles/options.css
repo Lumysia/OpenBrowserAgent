@@ -39,7 +39,8 @@
   font-weight: 600;
 }
 /* A wash in the theme's colors behind the page. */
-.settings-main {
+.settings-main,
+.standalone-shell {
   flex: 1;
   min-width: 0;
   min-height: 0;

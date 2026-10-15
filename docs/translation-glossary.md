@@ -207,6 +207,26 @@ Before content the user shares in chats (messages, page text, screenshots, files
 | Withdraw permission  | Retirer l’autorisation     | Erlaubnis widerrufen | Retirar el permiso | Retirar permissão  |
 | local endpoint       | point de terminaison local | lokaler Endpunkt     | endpoint local     | endpoint local     |
 
+## Guided setup
+
+Installing the extension opens the **setup**: one step per page (Language, AI provider, On web pages, Done) with "Back" and "Next", and "Skip" while a step isn't done. Step names reuse the settings' own words (the "On web pages" step is named like the settings page "On pages" in each language). The side panel's card says "Continue setup", and General has "Run setup again". "Test connection" checks that the AI provider answers; its failures name the part that failed ("Couldn’t connect to the AI provider: …", "Connected, but {model} didn’t answer: …").
+
+| English         | 简体中文         | 繁體中文         | 日本語                     | 한국어         |
+| --------------- | ---------------- | ---------------- | -------------------------- | -------------- |
+| setup           | 设置向导         | 設定精靈         | セットアップ               | 설정           |
+| Continue setup  | 继续设置         | 繼續設定         | セットアップを続ける       | 설정 계속하기  |
+| Run setup again | 重新运行设置向导 | 重新執行設定精靈 | セットアップをもう一度実行 | 설정 다시 실행 |
+| Skip (a step)   | 跳过             | 略過             | スキップ                   | 건너뛰기       |
+| Test connection | 测试连接         | 測試連線         | 接続をテスト               | 연결 테스트    |
+
+| English         | Français                   | Deutsch                    | Español                            | Português (Brasil)              |
+| --------------- | -------------------------- | -------------------------- | ---------------------------------- | ------------------------------- |
+| setup           | configuration              | Einrichtung                | configuración                      | configuração                    |
+| Continue setup  | Continuer la configuration | Einrichtung fortsetzen     | Continuar la configuración         | Continuar a configuração        |
+| Run setup again | Relancer la configuration  | Einrichtung erneut starten | Volver a ejecutar la configuración | Executar a configuração de novo |
+| Skip (a step)   | Passer                     | Überspringen               | Omitir                             | Pular                           |
+| Test connection | Tester la connexion        | Verbindung testen          | Probar conexión                    | Testar conexão                  |
+
 ## Built-in skills and tool steps
 
 Built-in skills show a translated name and a short description of what they do for the person (the instructions sent to the model stay in English). Tool steps in a chat show a one-line summary: act steps are counted per kind ("Typed in 2 fields, selected 2 options, clicked 1 element"), each kind a plural message, joined with the locale's list separator (`, `, Japanese `、`, Chinese `，`). Tab ids never appear in these lines.

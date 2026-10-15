@@ -1,6 +1,6 @@
-import { Bot, Plus } from "lucide-react";
-import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
-import { openOrFocusOptions } from "../../src/shared/tab-navigation";
+import { Bot, Sparkles } from "lucide-react";
+import { LOCAL_SETUP_FEEDBACK_MS } from "../../src/shared/config";
+import { openSetup } from "../../src/shared/setup-progress";
 import {
   Button,
   Card,
@@ -15,17 +15,17 @@ import { SyncJoinDisclosure } from "../../src/ui/sync-join-form";
 import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { useTransient } from "../../src/ui/use-transient";
 
-// The side panel before any model exists: add an AI provider on the setup
-// page, or join sync from another device.
+// The side panel before any model exists: continue the guided setup where it
+// was left, or join sync from another device.
 export function ProvidersEmptyState() {
   const t = useMessages();
   const [openedSettings, showOpenedSettings] = useTransient<true>(
     LOCAL_SETUP_FEEDBACK_MS,
   );
 
-  function addProvider() {
+  function continueSetup() {
     showOpenedSettings(true);
-    openOrFocusOptions(OPTIONS_HASH.welcome).catch(console.warn);
+    openSetup().catch(console.warn);
   }
 
   return (
@@ -40,8 +40,8 @@ export function ProvidersEmptyState() {
                 <CardDescription>{t.setup.description}</CardDescription>
               </CardHeader>
               <CardContent className="setup-card-actions">
-                <Button onClick={addProvider}>
-                  <Plus size={16} /> {t.sidepanel.addProvider}
+                <Button onClick={continueSetup}>
+                  <Sparkles size={16} /> {t.setup.continueSetup}
                 </Button>
                 <CardDescription
                   aria-hidden={!openedSettings}

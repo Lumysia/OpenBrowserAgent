@@ -1,6 +1,5 @@
-import { OPTIONS_HASH } from "../src/shared/config";
 import { storage } from "../src/shared/storage";
-import { openOrFocusOptions } from "../src/shared/tab-navigation";
+import { openSetup } from "../src/shared/setup-progress";
 import { runStorageMigrations } from "../src/shared/storage-migrations";
 import { handleDescribeRunMessage } from "../src/background/run-chat";
 import { handleProviderRequestMessage } from "../src/background/provider-requests";
@@ -56,8 +55,7 @@ export default defineBackground(() => {
       storage.shouldShowUpdateToast.set(true).catch(console.warn);
     if (reason === "install" || reason === "update")
       runStorageMigrations(reason === "install").catch(console.warn);
-    if (reason === "install")
-      openOrFocusOptions(OPTIONS_HASH.welcome).catch(console.warn);
+    if (reason === "install") openSetup().catch(console.warn);
   });
 
   chrome.runtime.onMessage.addListener(
