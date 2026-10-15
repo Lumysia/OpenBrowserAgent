@@ -1,6 +1,8 @@
-import { SettingsPageHeader } from "../../src/ui/components";
+import { Button, SettingsPageHeader } from "../../src/ui/components";
 import {
+  Check,
   Cloud,
+  Copy,
   FileText,
   KeyRound,
   MessagesSquare,
@@ -8,9 +10,18 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { storage } from "../../src/shared/storage";
-import { SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage-keys";
+import {
+  SYNC_GROUPS,
+  type SyncGroup,
+  type SyncGroupSettings,
+} from "../../src/shared/storage-keys";
+import { SYNC_BACKEND_TYPES } from "../../src/shared/sync-backends";
+import { createSyncConfigCode } from "../../src/shared/sync-config-code";
+import type { SyncBackendConfig } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
+import { useTransient } from "../../src/ui/use-transient";
+import { SyncBackendChoice } from "./sync-backend-choice";
+import { SyncDataList, type SyncDataToggle } from "./sync-data-list";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
 import { useMessages } from "../../src/ui/messages";
@@ -28,6 +39,9 @@ export function SyncPage() {
 
   if (!syncGroups || !syncBackends || !activeSyncBackendId || !syncStatus)
     return null;
+  const activeBackend = syncBackends.find(
+    (backend) => backend.id === activeSyncBackendId,
+  );
 
   // Settings apply at once; the background sync follows storage changes.
   function updateGroup(group: SyncGroup, value: boolean) {
@@ -90,16 +104,52 @@ export function SyncPage() {
         icon={<Cloud />}
         title={t.options.sync}
         description={t.options.syncSettingsDescription}
+        actions={
+          // Another device joins browser account sync by choosing it there.
+          activeBackend?.type === SYNC_BACKEND_TYPES.webDav && (
+            <CopySyncCodeButton
+              backend={activeBackend}
+              syncGroups={syncGroups}
+            />
+          )
+        }
       />
-      <SyncBackendCard
+      <SyncBackendChoice
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
-        dataToggles={dataToggles}
-        syncGroups={syncGroups}
         onActiveBackendChange={setActiveSyncBackendId}
         onBackendsChange={setSyncBackends}
       />
+      {activeBackend && (
+        <SyncDataList backendType={activeBackend.type} toggles={dataToggles} />
+      )}
       <SyncStatusCard />
     </div>
+  );
+}
+
+// The active backend and what syncs, as a code another device pastes.
+function CopySyncCodeButton({
+  backend,
+  syncGroups,
+}: {
+  backend: SyncBackendConfig;
+  syncGroups: SyncGroupSettings;
+}) {
+  const t = useMessages();
+  const [copied, showCopied] = useTransient<true>();
+  return (
+    <Button
+      variant="outline"
+      onClick={() =>
+        navigator.clipboard
+          .writeText(createSyncConfigCode({ backend, syncGroups }))
+          .then(() => showCopied(true))
+          .catch(console.warn)
+      }
+    >
+      {copied ? <Check size={15} /> : <Copy size={15} />}
+      {copied ? t.sync.codeCopied : t.sync.copyCode}
+    </Button>
   );
 }

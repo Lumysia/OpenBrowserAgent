@@ -521,20 +521,16 @@ export const enUS = {
     lightTheme: "Light",
     darkTheme: "Dark",
     syncSettingsDescription:
-      "Choose the backend, and below, what syncs. Settings always sync; keys, chats and files each have a switch.",
-    syncBackendDescription: "What syncs.",
+      "Keep your setup the same on every device: choose where it syncs, then what syncs.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
     syncBackendBrowserSyncHint:
       "Through the account this browser is signed in to.",
     syncBackendWebDavSyncHint:
       "Through a WebDAV server you choose; it can also hold chats and files.",
-    syncBackendName: "Backend name",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "Username",
     syncBackendPassword: "Password or app password",
-    syncBackendCopyConfig: "Copy config code",
-    syncBackendCopiedConfig: "Config code copied",
     autoScroll: "Auto scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",

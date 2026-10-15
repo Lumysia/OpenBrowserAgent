@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Simpler Sync page**: one choice, "Off / Browser account / WebDAV", instead of two switches; the WebDAV fields show only when you choose it, and it starts syncing once the server answers. "What syncs" shows once below the choice while sync is on, with what the chosen backend can't hold marked. You can now paste a sync code from another device on the Sync page too (its sync choices replace this device's), and "Copy sync code for another device" sits at the top of the page while you sync with WebDAV.
 - **Setup on install**: installing OpenBrowserAgent opens a setup page where you add an AI provider first. The side panel's setup card is shorter too: add an AI provider, or follow "Already use OpenBrowserAgent on another device? Paste a sync code". The language step (the interface already follows your browser's language) and the "Send your first task" step are gone.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 

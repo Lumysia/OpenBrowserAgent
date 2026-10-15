@@ -179,13 +179,22 @@ export function SyncJoinForm({ manual }: { manual?: boolean }) {
   );
 }
 
-// First-run setup: joining sync is for people with another device, so it
-// stays a link until asked for.
-export function SyncJoinDisclosure() {
+// Joining sync is for people with another device, so it stays a link
+// until asked for. First-run setup offers typing a backend too.
+export function SyncJoinDisclosure({
+  label,
+  manual = true,
+}: {
+  label?: string;
+  manual?: boolean;
+}) {
   const t = useMessages();
   return (
-    <Disclosure label={t.setup.joinLink} triggerClassName="setup-join-link">
-      <SyncJoinForm manual />
+    <Disclosure
+      label={label ?? t.setup.joinLink}
+      triggerClassName={manual ? "setup-join-link" : undefined}
+    >
+      <SyncJoinForm manual={manual} />
     </Disclosure>
   );
 }

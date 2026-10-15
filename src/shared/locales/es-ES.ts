@@ -556,8 +556,7 @@ export const esES: LocaleMessages = {
     lightTheme: "Claro",
     darkTheme: "Oscuro",
     syncSettingsDescription:
-      "Elige el backend y, debajo, qué se sincroniza. Los ajustes siempre se sincronizan; las claves, los chats y los archivos tienen cada uno su interruptor.",
-    syncBackendDescription: "Qué se sincroniza.",
+      "Mantén la misma configuración en todos tus dispositivos: elige dónde se sincroniza y luego qué se sincroniza.",
     syncBackendBrowserSync:
       "Sincronización integrada de la cuenta del navegador",
     syncBackendWebDavSync: "Sincronización WebDAV",
@@ -565,12 +564,9 @@ export const esES: LocaleMessages = {
       "A través de la cuenta con la que este navegador ha iniciado sesión.",
     syncBackendWebDavSyncHint:
       "A través de un servidor WebDAV que elijas; también puede guardar chats y archivos.",
-    syncBackendName: "Nombre del backend",
     syncBackendWebDavUrl: "URL de WebDAV",
     syncBackendUsername: "Usuario",
     syncBackendPassword: "Contraseña o contraseña de aplicación",
-    syncBackendCopyConfig: "Copiar código de configuración",
-    syncBackendCopiedConfig: "Código de configuración copiado",
     autoScroll: "Desplazamiento automático",
     autoScrollDescription:
       "Mantiene visible automáticamente la última respuesta de la IA mientras se generan los mensajes.",

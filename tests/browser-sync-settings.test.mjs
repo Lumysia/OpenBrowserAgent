@@ -7,8 +7,8 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { clickElement, typeText } from "./cdp-input.mjs";
 import { launchExtension, poll } from "./chromium.mjs";
 
-// The Sync page on browser account sync: settings always sync, chats and
-// files need WebDAV, and turning keys on asks for a passphrase first, which
+// The Sync page on browser account sync: one choice of backend, what syncs
+// shown once, settings always sync, chats and files need WebDAV, and turning keys on asks for a passphrase first, which
 // the background checks, stores and writes to the browser's sync storage.
 
 const t = enUS;
@@ -81,14 +81,27 @@ test(
         },
       );
       // The first page of a new profile takes a while to load.
-      const chevron = `.accordion-chevron-trigger[aria-label="${t.options.syncBackendBrowserSync}"]`;
-      await poll(
-        () =>
-          page.call((selector) => !!document.querySelector(selector), chevron),
-        20000,
-      );
-      await clickElement(page, chevron);
       await poll(async () => (await rows(page)).length >= 4, 20000);
+      // One choice of where to sync, with browser account sync on.
+      const choice = await page.call(() =>
+        [...document.querySelectorAll('[role="radio"]')].map((item) => ({
+          label: item.textContent.trim(),
+          on: item.dataset.state === "on",
+        })),
+      );
+      assert.deepEqual(choice, [
+        { label: t.sync.choiceOff, on: false },
+        { label: t.sync.choiceBrowser, on: true },
+        { label: t.sync.choiceWebDav, on: false },
+      ]);
+      const buttons = await page.call(() =>
+        [...document.querySelectorAll("button")].map((button) =>
+          button.textContent.trim(),
+        ),
+      );
+      // Another device joins browser account sync by choosing it: no code.
+      assert.equal(buttons.includes(t.sync.copyCode), false);
+      assert.ok(buttons.includes(t.sync.pasteCode));
       const shown = await rows(page);
       const row = (title) => shown.find((item) => item.title === title);
       assert.deepEqual(row(t.sync.groupSettings), {
@@ -160,6 +173,24 @@ test(
         },
       );
       assert.deepEqual(stored, { on: true, key: true, server: true });
+
+      // WebDAV without a server shows its fields and keeps sync where it
+      // was until it connects; Off hides what syncs.
+      const active = () =>
+        page.call(
+          async (key) => (await chrome.storage.local.get(key))[key],
+          STORAGE_KEYS.activeSyncBackendId,
+        );
+      await clickElement(page, '[role="radio"]', { text: t.sync.choiceWebDav });
+      await poll(() =>
+        page.call(
+          () => !!document.querySelector('input[placeholder^="https"]'),
+        ),
+      );
+      assert.equal(await active(), "browser-sync");
+      await clickElement(page, '[role="radio"]', { text: t.sync.choiceOff });
+      await poll(async () => (await active()) === "local");
+      await poll(async () => (await rows(page)).length === 0);
     } finally {
       await browser.close();
     }

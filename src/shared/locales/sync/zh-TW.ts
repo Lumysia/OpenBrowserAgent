@@ -75,4 +75,13 @@ export const syncZhTW: SyncMessages = {
     "本裝置上{collection}中 {total} 項裡有 {count} 項已不在。同步會在所有裝置上刪除它們。",
   massDeleteLocalApply: "在所有裝置上刪除",
   massDeleteLocalKeep: "在本裝置上還原",
+  choiceTitle: "同步本裝置",
+  choiceOff: "關閉",
+  choiceBrowser: "瀏覽器帳號",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "所有內容都只儲存在本裝置上。",
+  whatSyncs: "同步的內容",
+  copyCode: "複製同步碼以用於另一台裝置",
+  codeCopied: "已複製同步碼",
+  pasteCode: "貼上另一台裝置的同步碼",
 };

@@ -84,5 +84,14 @@ export const syncEnUS = {
     "{count} of {total} items in {collection} are gone from this device. Syncing would delete them on every device.",
   massDeleteLocalApply: "Delete on every device",
   massDeleteLocalKeep: "Restore on this device",
+  choiceTitle: "Sync this device",
+  choiceOff: "Off",
+  choiceBrowser: "Browser account",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "Everything stays on this device.",
+  whatSyncs: "What syncs",
+  copyCode: "Copy sync code for another device",
+  codeCopied: "Sync code copied",
+  pasteCode: "Paste a sync code from another device",
 };
 export type SyncMessages = typeof syncEnUS;

@@ -484,19 +484,15 @@ export const ko: LocaleMessages = {
     lightTheme: "라이트",
     darkTheme: "다크",
     syncSettingsDescription:
-      "백엔드를 고르고 아래에서 동기화할 항목을 고르세요. 설정은 항상 동기화되며 키, 채팅, 파일은 각각 스위치로 켜고 끕니다.",
-    syncBackendDescription: "동기화할 항목.",
+      "모든 기기에서 같은 설정을 유지합니다. 동기화할 위치를 고른 다음 동기화할 항목을 고르세요.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
     syncBackendBrowserSyncHint: "이 브라우저에 로그인한 계정으로 동기화합니다.",
     syncBackendWebDavSyncHint:
       "선택한 WebDAV 서버로 동기화하며, 채팅과 파일도 동기화할 수 있습니다.",
-    syncBackendName: "백엔드 이름",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "사용자 이름",
     syncBackendPassword: "비밀번호 또는 앱 비밀번호",
-    syncBackendCopyConfig: "구성 코드 복사",
-    syncBackendCopiedConfig: "구성 코드 복사됨",
     autoScroll: "자동 스크롤",
     autoScrollDescription:
       "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",

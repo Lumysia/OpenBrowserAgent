@@ -86,4 +86,13 @@ export const syncJaJP: SyncMessages = {
     "このデバイスの{collection}から {total} 件のうち {count} 件がなくなっています。同期すると、すべてのデバイスで削除されます。",
   massDeleteLocalApply: "すべてのデバイスで削除",
   massDeleteLocalKeep: "このデバイスに復元",
+  choiceTitle: "このデバイスの同期",
+  choiceOff: "オフ",
+  choiceBrowser: "ブラウザーアカウント",
+  choiceWebDav: "WebDAV",
+  choiceOffHint: "すべてこのデバイスにだけ保存されます。",
+  whatSyncs: "同期する内容",
+  copyCode: "別のデバイス用に同期コードをコピー",
+  codeCopied: "同期コードをコピーしました",
+  pasteCode: "別のデバイスの同期コードを貼り付け",
 };

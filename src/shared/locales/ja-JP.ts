@@ -519,20 +519,16 @@ export const jaJP: LocaleMessages = {
     lightTheme: "ライト",
     darkTheme: "ダーク",
     syncSettingsDescription:
-      "同期先を選び、下で同期する内容を選びます。設定は常に同期され、キー、チャット、ファイルはそれぞれスイッチで切り替えます。",
-    syncBackendDescription: "同期する内容。",
+      "どのデバイスでも同じ設定を使えます。同期先を選んでから、同期する内容を選びます。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
     syncBackendBrowserSyncHint:
       "このブラウザーにサインインしているアカウントで同期します。",
     syncBackendWebDavSyncHint:
       "選んだ WebDAV サーバーで同期します。チャットやファイルも同期できます。",
-    syncBackendName: "バックエンド名",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "ユーザー名",
     syncBackendPassword: "パスワードまたはアプリパスワード",
-    syncBackendCopyConfig: "設定コードをコピー",
-    syncBackendCopiedConfig: "設定コードをコピーしました",
     autoScroll: "自動スクロール",
     autoScrollDescription:
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",

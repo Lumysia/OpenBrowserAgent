@@ -553,19 +553,15 @@ export const frFR: LocaleMessages = {
     lightTheme: "Clair",
     darkTheme: "Sombre",
     syncSettingsDescription:
-      "Choisissez le backend et, plus bas, ce qui est synchronisé. Les paramètres sont toujours synchronisés ; les clés, les discussions et les fichiers ont chacun un interrupteur.",
-    syncBackendDescription: "Ce qui est synchronisé.",
+      "Gardez la même configuration sur tous vos appareils : choisissez où synchroniser, puis ce qui est synchronisé.",
     syncBackendBrowserSync: "Synchronisation intégrée du compte navigateur",
     syncBackendWebDavSync: "Synchronisation WebDAV",
     syncBackendBrowserSyncHint: "Par le compte connecté à ce navigateur.",
     syncBackendWebDavSyncHint:
       "Par un serveur WebDAV de votre choix ; il peut aussi contenir les discussions et les fichiers.",
-    syncBackendName: "Nom du backend",
     syncBackendWebDavUrl: "URL WebDAV",
     syncBackendUsername: "Nom d’utilisateur",
     syncBackendPassword: "Mot de passe ou mot de passe d’application",
-    syncBackendCopyConfig: "Copier le code de configuration",
-    syncBackendCopiedConfig: "Code de configuration copié",
     autoScroll: "Défilement automatique",
     autoScrollDescription:
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",
