@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.10 - 2026-10-15
+
 - **Translate button on pages**: a small button on the edge of web pages translates the page or shows the original. Drag it to any edge of the window; it stays where you put it on every site. Point at it to hide it on that site or everywhere; Settings → Page translation lists the sites it is hidden on.
 - **Keyboard shortcut for page translation**: Alt+A (Control+Shift+A on macOS) translates the page or shows the original. Change it in the browser's shortcut settings, or turn it off in Settings → Page translation.
 - Translate in the smart bar now writes a word's dictionary entry in your language every time (in English when the word is already in your language); before, the first try often came back in the page's language.
