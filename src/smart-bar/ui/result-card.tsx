@@ -77,6 +77,7 @@ export function SmartBarResultCard({
         source: result.sourceLanguage,
         page: pageLanguage,
         reply: config.replyLanguage,
+        translate: config.translateLanguage,
         ui: config.language,
       },
     };

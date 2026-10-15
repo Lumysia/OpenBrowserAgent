@@ -17,7 +17,15 @@ export const VIDEO_SUBTITLES_MESSAGE = {
   // if it isn't there yet (see caption-observer.ts). Answers
   // `{ ok: boolean }`.
   observe: "video-subtitles:observe",
+  // Page -> background: the frame's translated subtitles started or all
+  // stopped (the menus show it).
+  state: "video-subtitles:state",
 } as const;
+
+// Global symbol (Symbol.for) under which the subtitle script keeps whether
+// any of the frame's videos has translated subtitles, for the background's
+// probe in the extension's isolated world.
+export const VIDEO_SUBTITLES_ACTIVE_KEY = "oba.videoSubtitles.active";
 
 // The DOM event the caption observer passes caption files with; its detail
 // is the JSON of `{ url, text }`. Page data: the page can fire it too.

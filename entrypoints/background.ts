@@ -10,6 +10,10 @@ import { connectStreamPort } from "../src/background/chat-stream-port";
 import { openActionSurface } from "../src/background/action-surface";
 import { setupContextMenu } from "../src/background/context-menu";
 import {
+  handlePageToolsMessage,
+  setupPageTools,
+} from "../src/background/page-tools";
+import {
   handlePageTranslateMessage,
   setupPageTranslate,
 } from "../src/background/page-translate";
@@ -37,6 +41,7 @@ export default defineBackground(() => {
   });
 
   setupSmartBar();
+  setupPageTools();
   setupContextMenu();
   setupPageTranslate();
   registerPageButton();
@@ -57,6 +62,7 @@ export default defineBackground(() => {
       handlePageTranslateMessage(message, sender, sendResponse) ||
       handlePageButtonMessage(message, sender, sendResponse) ||
       handleVideoSubtitlesMessage(message, sender, sendResponse) ||
+      handlePageToolsMessage(message, sender, sendResponse) ||
       handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse) ||

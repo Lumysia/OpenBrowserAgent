@@ -9,6 +9,8 @@ import {
   smartBarResultFormat,
 } from "../src/shared/smart-bar-dictionary";
 
+const languages = (tag: string) => ({ reply: tag, translate: tag });
+
 test("short selections: words and short phrases in any script", () => {
   for (const text of [
     "serendipity",
@@ -69,7 +71,7 @@ test("only Translate on a short selection asks for a dictionary entry", () => {
       text: "ran",
       context: { before: "She ", after: " home." },
     },
-    "zh-CN",
+    languages("zh-CN"),
   );
   assert.match(word.system, /JSON object/);
   assert.match(word.prompt, /entry language is Chinese \(China\)/);
@@ -77,20 +79,23 @@ test("only Translate on a short selection asks for a dictionary entry", () => {
   assert.match(word.prompt, /She \[\[SELECTION\]\] home\./);
   const sentence = smartBarPrompt(
     { action: "translate", text: "She ran home." },
-    "zh-CN",
+    languages("zh-CN"),
   );
   assert.match(sentence.prompt, /^Translate the text below into Chinese/);
   assert.doesNotMatch(sentence.system, /JSON/);
   assert.match(
-    smartBarPrompt({ action: "explain", text: "ran" }, "en-US").prompt,
+    smartBarPrompt({ action: "explain", text: "ran" }, languages("en-US"))
+      .prompt,
     /^Explain the text below/,
   );
 });
 
 test("a known source language fixes the entry and target language", () => {
   const prompt = (text: string, sourceLanguage?: string) =>
-    smartBarPrompt({ action: "translate", text, sourceLanguage }, "zh-CN")
-      .prompt;
+    smartBarPrompt(
+      { action: "translate", text, sourceLanguage },
+      languages("zh-CN"),
+    ).prompt;
   // An English word for a Chinese reader: a Chinese entry, no choice left.
   const english = prompt("time", "en");
   assert.match(english, /The entry language is Chinese \(China\)\./);
@@ -262,5 +267,23 @@ test("a dictionary entry copies as plain text", () => {
       "- She runs every morning. (她每天早上跑步。)",
       "同义词: sprint",
     ].join("\n"),
+  );
+});
+
+test("Translate and the dictionary write in the shared Translate into language", () => {
+  // The extension in English, "Translate into" Japanese.
+  const languages = { reply: "en-US", translate: "ja" };
+  assert.match(
+    smartBarPrompt({ action: "translate", text: "She ran home." }, languages)
+      .prompt,
+    /^Translate the text below into Japanese/,
+  );
+  assert.match(
+    smartBarPrompt({ action: "translate", text: "ran" }, languages).prompt,
+    /entry language is Japanese/,
+  );
+  assert.match(
+    smartBarPrompt({ action: "explain", text: "ran" }, languages).prompt,
+    /below in American English/,
   );
 });

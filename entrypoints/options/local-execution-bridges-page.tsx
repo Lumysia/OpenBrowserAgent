@@ -41,6 +41,11 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { storedErrorReason } from "../../src/ui/error-text";
 import { useMessages } from "../../src/ui/messages";
+import {
+  bridgeForInstallerFields,
+  type InstallerFields,
+} from "../../src/shared/local-execution-bridge-install";
+import { LocalExecutionBridgeSetup } from "./local-execution-bridge-setup";
 
 export function LocalExecutionBridgesPage() {
   const [bridges, setBridges] = useStoredState(storage.localExecutionBridges);
@@ -101,6 +106,36 @@ export function LocalExecutionBridgesPage() {
     }
   }
 
+  // From the installer's output: the bridge it set up (the same host and
+  // shell config again updates it), then its test.
+  async function addFromInstaller(fields: InstallerFields) {
+    let bridgeId = "";
+    await storage.localExecutionBridges.update((current) => {
+      const list = normalizeLocalExecutionBridges(current);
+      const existing = bridgeForInstallerFields(list, fields);
+      if (existing) {
+        bridgeId = existing.id;
+        return list.map((bridge) =>
+          bridge.id === existing.id
+            ? {
+                ...bridge,
+                ...fields,
+                ...localExecutionBridgeTestReset(fields),
+                updatedAt: Date.now(),
+              }
+            : bridge,
+        );
+      }
+      const draft = createLocalExecutionBridgeDraft(
+        LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
+        fields,
+      );
+      bridgeId = draft.id;
+      return [...list, draft];
+    });
+    await testBridge(bridgeId);
+  }
+
   return (
     <div className="stack">
       <SettingsPageHeader
@@ -117,6 +152,7 @@ export function LocalExecutionBridgesPage() {
           ) : undefined
         }
       />
+      <LocalExecutionBridgeSetup onAdd={addFromInstaller} />
       {!items.length ? (
         <EmptyState
           icon={<TerminalSquare size={28} />}

@@ -62,6 +62,8 @@ export function normalizePageButtonPosition(
 export type PageButtonConfig = {
   // False where it doesn't show: turned off, or hidden on this site.
   enabled: boolean;
+  // "Translate into": the button stays away from pages already in it.
+  targetLanguage: string;
   position: PageButtonPosition;
   labels: {
     translate: string;

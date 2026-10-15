@@ -45,7 +45,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   defaultModel: "O mesmo modelo da conversa",
   targetLanguage: "Traduzir para",
   targetLanguageDescription:
-    "As páginas são traduzidas para este idioma. O idioma da extensão não muda.",
+    "As páginas, as legendas de vídeos e “Traduzir” da barra inteligente usam este idioma. O idioma da extensão não muda.",
   followInterface: "Idioma da extensão ({language})",
   display: "Exibição",
   displayDescription:
@@ -97,7 +97,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     hideEverywhere: "Ocultar em todos os sites",
     setting: "Botão de tradução nas páginas",
     settingDescription:
-      "Um pequeno botão na borda das páginas da web traduz a página ou mostra o original. Arraste-o para movê-lo; ele fica na borda mais próxima da janela.",
+      "Um pequeno botão na borda das páginas da web traduz a página ou mostra o original. Arraste-o para movê-lo; ele fica na borda mais próxima da janela. Ele só aparece em páginas que ainda não estão no idioma de “Traduzir para”.",
     move: "As setas o movem ao longo da borda; E o leva para a próxima borda.",
     hiddenSites: "Oculto nestes sites",
     hiddenSitesDescription:
@@ -114,6 +114,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traduzir legendas",
+    menuHide: "Ocultar legendas traduzidas",
     menuItemLabel: "Traduzir legendas / Ocultá-las (em vídeos)",
     noCaptions:
       "Ainda não foram encontradas legendas para este vídeo. Ative as legendas no player — elas são traduzidas assim que aparecem.",

@@ -4,6 +4,16 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Keyboard shortcut for the side panel**: Ctrl+Shift+Y (Command+Shift+Y on macOS) opens the side panel. The key suggested before was one the browser keeps for itself, so the side panel had no shortcut. If the key isn't set after the update, or another extension has it, pick one in the browser's shortcut settings.
+- **One "Translate into" language**: Translate in the smart bar and its dictionary entries now use the same language as page translation and video subtitles (Settings → Page translation → "Translate into"), instead of the extension's language. Nothing changes while "Translate into" is left at the extension's language.
+- The translate button on pages now only shows on pages that aren't already in your "Translate into" language (judged from the language the page declares and, where the browser can tell, from its text). On a page it can't tell, it still shows. The keyboard shortcut and the right-click menu still translate any page, and the button comes back on a translated page to show the original.
+- **Right-click the toolbar button** for the current page: translate it or show the original, pick the "Translate into" language, turn the translate button or the smart bar on or off for the site, and turn translated subtitles on or off when the page has a video. Clicking the button still opens the side panel.
+- **"This page" in the side panel**: a small line under the top bar with the same switches for the page you're on: translate it, the translate button and the smart bar on this site, and translated subtitles when the page has a video. Collapse it with "This page".
+- The right-click menu on selected text names it: "Ask about “…”", "Translate “…”" and "Search the web for “…”". "Translate “…”" shows the smart bar's translation (or dictionary entry) right there, also when the smart bar is turned off. "Summarize this page" and "Copy as Markdown" no longer show on a selection, and "Ask or act on this page" is now "Ask about this page".
+- Adding a recommended MCP server tests it and turns it on in one step; if the test fails it stays off with the reason shown.
+- Settings → Local execution bridges shows the installer command with this extension's ID already in it. Paste what the installer prints, and the bridge is added (or updated) and tested; no more copying the host name, shell config ID and secret by hand.
+- A video's right-click item reads "Hide translated subtitles" while its subtitles are translated.
+- With the smart bar set to "Only with the shortcut", its settings show the current key (or that none is set) and a "Change shortcut" button.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 
 ## 0.2.0-beta.11 - 2026-10-15

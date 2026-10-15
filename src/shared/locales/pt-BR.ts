@@ -3,6 +3,7 @@ import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { providerConsentPtBR } from "./provider-consent/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
 import { pageTranslatePtBR } from "./page-translate/pt-BR";
+import { pageToolsPtBR } from "./page-tools/pt-BR";
 import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
@@ -415,6 +416,18 @@ export const ptBR: LocaleMessages = {
     localExecutionBridgeKey: "ID da configuração de shell",
     localExecutionBridgeDefaultCwd: "Diretório de trabalho padrão",
     localExecutionBridgeTimeoutMs: "Tempo limite padrão (ms)",
+    localExecutionBridgeSetup: "Configurar neste computador",
+    localExecutionBridgeSetupDescription:
+      "Execute este comando em um terminal neste computador (é preciso ter o Node.js). Ele instala a ponte para esta extensão e mostra as configurações dela.",
+    localExecutionBridgeBrowser: "Navegador",
+    localExecutionBridgeInstallerOutput: "Saída do instalador",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "Cole tudo o que o instalador mostrou",
+    localExecutionBridgeInstallerOutputInvalid:
+      "Isto não é a saída do instalador: ela precisa do hostName e do secret que o instalador mostra.",
+    localExecutionBridgeInstallerHint:
+      "A ponte é adicionada (ou atualizada, se você executou o instalador de novo) e testada. Você também pode pedir ao agente para configurá-la.",
+    localExecutionBridgeAddFromOutput: "Adicionar e testar",
     localExecutionBridgeTest: "Testar ponte",
     localExecutionBridgeTesting: "Testando…",
     localExecutionBridgeTestSuccess: "A ponte respondeu com sucesso.",
@@ -465,7 +478,7 @@ export const ptBR: LocaleMessages = {
     resetBuiltins: "Redefinir integrados",
     mcpPresets: "Servidores recomendados",
     mcpPresetsDescription:
-      "Servidores de busca hospedados que funcionam sem chave de API. Cada um envia suas buscas ao próprio serviço. Um servidor adicionado fica desativado até você testá-lo.",
+      "Servidores de busca hospedados que funcionam sem chave de API. Cada um envia suas buscas ao próprio serviço. Ao adicionar, o servidor é testado e ativado se o teste passar.",
     mcpPresetAdd: "Adicionar",
     selectModel: "Selecionar modelo",
     selectModelDescription:
@@ -642,4 +655,5 @@ export const ptBR: LocaleMessages = {
   themes: themesPtBR,
   display: displayPtBR,
   pageTranslate: pageTranslatePtBR,
+  pageTools: pageToolsPtBR,
 };

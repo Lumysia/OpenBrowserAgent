@@ -4,6 +4,7 @@ import { matchLanguageTag, normalizeLanguageTag } from "../language-tags";
 import { PAGE_TRANSLATE_LANGUAGES } from "./languages";
 import {
   hostListed,
+  hostMatches,
   normalizeHostList,
   webPagesExcept,
   type SiteMatchPatterns,
@@ -154,9 +155,24 @@ export function hidePageButtonOnHost(
       };
 }
 
-// The language pages are translated into: the setting, else the extension's
+// "Translate button on this site" switched back on: the site leaves the
+// hidden list (with any entry covering it).
+export function showPageButtonOnHost(
+  settings: PageTranslateSettings,
+  host: string,
+): PageTranslateSettings {
+  return {
+    ...settings,
+    pageButtonHiddenHosts: settings.pageButtonHiddenHosts.filter(
+      (entry) => !hostMatches(host, entry),
+    ),
+  };
+}
+
+// The one "Translate into" language: pages, video subtitles and the smart
+// bar's Translate and dictionary use it. The setting, else the extension's
 // language, matched to a language the engines know.
-export function pageTranslateTarget(
+export function translateIntoLanguage(
   settings: PageTranslateSettings,
   uiLanguage: string | undefined,
 ) {

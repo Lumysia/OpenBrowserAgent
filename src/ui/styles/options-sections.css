@@ -407,3 +407,27 @@
     grid-row: 1 / span 2;
   }
 }
+
+/* The bridge installer command: one line that scrolls, its copy button
+   always in view. */
+.bridge-install-command {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.bridge-install-command code {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--field);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.bridge-install-command .ui-button {
+  flex: none;
+}

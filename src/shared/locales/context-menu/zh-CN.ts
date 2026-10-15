@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuZhCN: ContextMenuLocaleMessages = {
   items: {
-    ask: "询问或操作此页面",
+    ask: "询问此页面",
+    askSelection: "询问“%s”",
     summarizePage: "总结此页面",
     searchPage: "联网搜索此页面的相关信息",
     searchSelection: "联网搜索“%s”",
+    translateSelection: "翻译“%s”",
     summarizeLink: "总结链接页面",
     copyMarkdown: "复制为 Markdown",
   },
@@ -22,7 +24,8 @@ export const contextMenuZhCN: ContextMenuLocaleMessages = {
   itemsDescription:
     "打开侧边栏的操作会把页面交给智能体。“复制为 Markdown”不使用 AI。",
   itemLabels: {
-    ask: "询问或操作此页面",
+    ask: "询问此页面或所选文本",
+    translateSelection: "翻译所选文本（使用智能工具栏的“翻译”）",
     summarizePage: "总结此页面",
     searchWeb: "联网搜索此页面或所选文本的相关信息",
     summarizeLink: "总结链接页面（在链接上）",

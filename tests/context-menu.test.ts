@@ -57,25 +57,50 @@ test("menu entries: one parent, children with their own contexts", () => {
   const entries = contextMenuEntries(DEFAULT_CONTEXT_MENU_SETTINGS, TITLES, {
     tabContext: false,
   });
+  const notSelection = [
+    "page",
+    "frame",
+    "link",
+    "image",
+    "video",
+    "audio",
+    "editable",
+  ];
   assert.deepEqual(
     entries.map((entry) => [entry.id, entry.parentId, entry.contexts]),
     [
       [CONTEXT_MENU_ID.parent, undefined, ["all"]],
-      [CONTEXT_MENU_ID.ask, CONTEXT_MENU_ID.parent, ["all"]],
-      [CONTEXT_MENU_ID.summarizePage, CONTEXT_MENU_ID.parent, ["all"]],
+      [CONTEXT_MENU_ID.ask, CONTEXT_MENU_ID.parent, notSelection],
+      [CONTEXT_MENU_ID.askSelection, CONTEXT_MENU_ID.parent, ["selection"]],
+      [CONTEXT_MENU_ID.summarizePage, CONTEXT_MENU_ID.parent, notSelection],
+      [
+        CONTEXT_MENU_ID.translateSelection,
+        CONTEXT_MENU_ID.parent,
+        ["selection"],
+      ],
       [CONTEXT_MENU_ID.translatePage, CONTEXT_MENU_ID.parent, ["all"]],
       [CONTEXT_MENU_ID.translateSubtitles, CONTEXT_MENU_ID.parent, ["video"]],
-      [
-        CONTEXT_MENU_ID.searchPage,
-        CONTEXT_MENU_ID.parent,
-        ["page", "frame", "link", "image", "video", "audio", "editable"],
-      ],
+      [CONTEXT_MENU_ID.searchPage, CONTEXT_MENU_ID.parent, notSelection],
       [CONTEXT_MENU_ID.searchSelection, CONTEXT_MENU_ID.parent, ["selection"]],
       [CONTEXT_MENU_ID.summarizeLink, CONTEXT_MENU_ID.parent, ["link"]],
-      [CONTEXT_MENU_ID.copyMarkdown, CONTEXT_MENU_ID.parent, ["all"]],
+      [CONTEXT_MENU_ID.copyMarkdown, CONTEXT_MENU_ID.parent, notSelection],
     ],
   );
-  assert.equal(entries[6].title, 'Search the web for "%s"');
+  // On a selection the titles name it; the page-wide actions don't show.
+  const onSelection = entries.filter(
+    (entry) =>
+      entry.parentId &&
+      (entry.contexts.includes("selection") || entry.contexts.includes("all")),
+  );
+  assert.deepEqual(
+    onSelection.map((entry) => entry.title),
+    [
+      'Ask about "%s"',
+      'Translate "%s"',
+      "Translate this page",
+      'Search the web for "%s"',
+    ],
+  );
   // The tab strip's menu where the browser has it, never for selections or
   // links.
   const withTabs = contextMenuEntries(DEFAULT_CONTEXT_MENU_SETTINGS, TITLES, {
@@ -113,6 +138,7 @@ test("menu entries follow the settings; & is not an access key", () => {
     ids([
       "ask",
       "summarizePage",
+      "translateSelection",
       "translatePage",
       "translateSubtitles",
       "searchWeb",

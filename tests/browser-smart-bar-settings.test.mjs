@@ -323,6 +323,19 @@ test("smart bar settings", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       await pressKey(listed, "Escape");
       await poll(async () => (await barState(listed)) === "none");
       assert.deepEqual(await field(), [true, true]);
+      // The settings say the command has no key and offer to set one.
+      await options.send("Page.navigate", {
+        url: extensionUrl("options.html#/smart-bar"),
+      });
+      await poll(() =>
+        options.call(
+          () =>
+            document.body.textContent.includes("No shortcut set") &&
+            [...document.querySelectorAll("button")].some(
+              (button) => button.textContent === "Change shortcut",
+            ),
+        ),
+      );
     });
 
     await t.test("turned off from the bar, open tabs go quiet", async () => {

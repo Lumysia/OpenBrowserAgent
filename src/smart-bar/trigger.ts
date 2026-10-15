@@ -1,8 +1,10 @@
+import type { SmartBarGenerateAction } from "../shared/smart-bar";
 import {
   SMART_BAR_MESSAGE,
   type SmartBarPrepareRequest,
   type SmartBarPrepareResult,
   type SmartBarSettingsChangedMessage,
+  type SmartBarShowForSelectionMessage,
   type SmartBarShowReason,
 } from "../shared/smart-bar-protocol";
 import { getBrowserApi } from "../shared/browser-api";
@@ -55,6 +57,7 @@ export function installSmartBarTrigger() {
   const show = async (
     snapshot: SelectionSnapshot,
     reason: SmartBarShowReason,
+    action?: SmartBarGenerateAction,
   ) => {
     const current = ++generation;
     const request: SmartBarPrepareRequest = {
@@ -73,7 +76,7 @@ export function installSmartBarTrigger() {
     const { config } = response.value;
     if (!config || current !== generation) return;
     usingBar = false;
-    getSmartBarUi()?.show(snapshot, config, reason);
+    getSmartBarUi()?.show(snapshot, config, reason, action);
   };
 
   listen(document, "mousedown", (event) => {
@@ -140,17 +143,31 @@ export function installSmartBarTrigger() {
   listen(window, "blur", () => getSmartBarUi()?.frameBlurred(), false);
 
   getBrowserApi().runtime.onMessage.addListener(
-    (message: { type?: string } & Partial<SmartBarSettingsChangedMessage>) => {
+    (
+      message: { type?: string } & Partial<SmartBarSettingsChangedMessage> &
+        Partial<SmartBarShowForSelectionMessage>,
+      _sender: unknown,
+      sendResponse: (reply: { ok: boolean }) => void,
+    ) => {
       if (message?.type === SMART_BAR_MESSAGE.settingsChanged) {
         // Allowed again somewhere: this site is checked on the next mouseup.
         onSelection = message.onSelection ? undefined : false;
         return;
       }
       if (message?.type !== SMART_BAR_MESSAGE.showForSelection) return;
+      const snapshot = () => readSelection(null, undefined);
+      // The menu's item is sent to the frame it was opened in.
+      if (message.action) {
+        const selection = snapshot();
+        if (selection) void show(selection, "menu", message.action);
+        // Tells the background this script is here.
+        sendResponse({ ok: !!selection });
+        return;
+      }
       // Every frame of the tab gets the command; the focused one answers.
       if (!document.hasFocus()) return;
-      const snapshot = readSelection(null, undefined);
-      if (snapshot) void show(snapshot, "shortcut");
+      const selection = snapshot();
+      if (selection) void show(selection, "shortcut");
     },
   );
 }

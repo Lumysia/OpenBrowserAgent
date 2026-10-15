@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuJaJP: ContextMenuLocaleMessages = {
   items: {
-    ask: "このページについて質問・操作",
+    ask: "このページについて質問",
+    askSelection: "「%s」について質問",
     summarizePage: "このページを要約",
     searchPage: "このページの関連情報をウェブ検索",
     searchSelection: "「%s」をウェブ検索",
+    translateSelection: "「%s」を翻訳",
     summarizeLink: "リンク先のページを要約",
     copyMarkdown: "Markdown としてコピー",
   },
@@ -25,7 +27,8 @@ export const contextMenuJaJP: ContextMenuLocaleMessages = {
   itemsDescription:
     "サイドパネルを開く操作は、ページをエージェントに渡します。「Markdown としてコピー」は AI を使いません。",
   itemLabels: {
-    ask: "このページについて質問・操作",
+    ask: "このページまたは選択したテキストについて質問",
+    translateSelection: "選択したテキストを翻訳（スマートバーの「翻訳」）",
     summarizePage: "このページを要約",
     searchWeb: "このページまたは選択したテキストの関連情報をウェブ検索",
     summarizeLink: "リンク先のページを要約（リンク上）",

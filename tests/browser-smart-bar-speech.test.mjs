@@ -112,14 +112,15 @@ test("smart bar reads aloud per language", { timeout: 240000 }, async (t) => {
     await t.test("a mixed result is read in parts", async () => {
       await clickInBar(page, '[aria-label="Read result aloud"]');
       await idle();
+      // In the "Translate into" language: the extension's, as engines name it.
       assert.deepEqual(await spoken(), [
         {
           text: "The weather is lovely today. Let's take a walk in the park,",
-          lang: "en-US",
+          lang: "en",
           voice: "Stub English",
         },
         { text: "散步", lang: "zh", voice: "Stub Chinese" },
-        { text: "as they say.", lang: "en-US", voice: "Stub English" },
+        { text: "as they say.", lang: "en", voice: "Stub English" },
       ]);
     });
 

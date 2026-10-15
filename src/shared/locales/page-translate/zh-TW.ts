@@ -41,7 +41,8 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   modelDescription: "用於翻譯頁面的模型。",
   defaultModel: "與對話相同的模型",
   targetLanguage: "翻譯為",
-  targetLanguageDescription: "頁面會翻譯成此語言。這不會改變擴充功能的語言。",
+  targetLanguageDescription:
+    "網頁、影片字幕和智慧工具列的「翻譯」都使用此語言。這不會改變擴充功能的語言。",
   followInterface: "擴充功能的語言（{language}）",
   display: "顯示方式",
   displayDescription: "「原文和譯文」會保留每個段落，並在其下方加上譯文。",
@@ -83,7 +84,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     hideEverywhere: "在所有網站上隱藏",
     setting: "網頁上的翻譯按鈕",
     settingDescription:
-      "在網頁邊緣顯示一個小按鈕，用來翻譯此頁面或顯示原文。拖曳即可移動，放開後會停靠在視窗最近的邊緣。",
+      "在網頁邊緣顯示一個小按鈕，用來翻譯此頁面或顯示原文。拖曳即可移動，放開後會停靠在視窗最近的邊緣。已是「翻譯為」所選語言的頁面不會顯示它。",
     move: "方向鍵沿邊緣移動，E 鍵將它移到下一個邊緣。",
     hiddenSites: "在這些網站上隱藏",
     hiddenSitesDescription: "按鈕不會在這些網站上顯示。網站包含其子網域。",
@@ -99,6 +100,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "翻譯字幕",
+    menuHide: "隱藏翻譯的字幕",
     menuItemLabel: "翻譯字幕 / 隱藏譯文（影片上）",
     noCaptions:
       "尚未找到此影片的字幕。請在播放器中開啟字幕，字幕一出現就會翻譯。",

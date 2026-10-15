@@ -3,6 +3,7 @@ import { contextMenuKo } from "./context-menu/ko";
 import { providerConsentKo } from "./provider-consent/ko";
 import { displayKo } from "./display/ko";
 import { pageTranslateKo } from "./page-translate/ko";
+import { pageToolsKo } from "./page-tools/ko";
 import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
@@ -358,6 +359,18 @@ export const ko: LocaleMessages = {
     localExecutionBridgeKey: "셸 구성 ID",
     localExecutionBridgeDefaultCwd: "기본 작업 디렉터리",
     localExecutionBridgeTimeoutMs: "기본 제한 시간(ms)",
+    localExecutionBridgeSetup: "이 컴퓨터에서 설정",
+    localExecutionBridgeSetupDescription:
+      "이 컴퓨터의 터미널에서 이 명령을 실행하세요(Node.js가 필요합니다). 이 확장 프로그램용 브리지를 설치하고 설정을 출력합니다.",
+    localExecutionBridgeBrowser: "브라우저",
+    localExecutionBridgeInstallerOutput: "설치 프로그램 출력",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "설치 프로그램이 출력한 내용을 모두 붙여 넣으세요",
+    localExecutionBridgeInstallerOutputInvalid:
+      "설치 프로그램의 출력이 아닙니다. 설치 프로그램이 출력하는 hostName과 secret이 필요합니다.",
+    localExecutionBridgeInstallerHint:
+      "브리지를 추가하고(설치 프로그램을 다시 실행했다면 업데이트하고) 테스트합니다. 에이전트에게 설정을 요청할 수도 있습니다.",
+    localExecutionBridgeAddFromOutput: "추가 및 테스트",
     localExecutionBridgeTest: "브리지 테스트",
     localExecutionBridgeTesting: "테스트 중…",
     localExecutionBridgeTestSuccess: "브리지가 성공적으로 응답했습니다.",
@@ -401,7 +414,7 @@ export const ko: LocaleMessages = {
     resetBuiltins: "내장 항목 재설정",
     mcpPresets: "추천 서버",
     mcpPresetsDescription:
-      "API 키 없이 쓸 수 있는 호스팅 검색 서버입니다. 각 서버는 검색 내용을 자체 서비스로 보냅니다. 추가한 서버는 테스트할 때까지 꺼져 있습니다.",
+      "API 키 없이 쓸 수 있는 호스팅 검색 서버입니다. 각 서버는 검색 내용을 자체 서비스로 보냅니다. 추가하면 테스트하고, 테스트에 성공하면 켜집니다.",
     mcpPresetAdd: "추가",
     selectModel: "모델 선택",
     selectModelDescription:
@@ -576,4 +589,5 @@ export const ko: LocaleMessages = {
   themes: themesKo,
   display: displayKo,
   pageTranslate: pageTranslateKo,
+  pageTools: pageToolsKo,
 };

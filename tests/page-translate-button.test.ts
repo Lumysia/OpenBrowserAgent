@@ -15,6 +15,11 @@ import {
   pageButtonMatchPatterns,
   type PageTranslateSettings,
 } from "../src/shared/page-translate/settings";
+import {
+  offerPageTranslation,
+  pageButtonShown,
+  pageLanguage,
+} from "../src/shared/page-translate/page-language";
 import { patternsCover } from "../src/shared/site-hosts";
 
 test("the page button and the shortcut are on by default, also for settings stored before them", () => {
@@ -146,4 +151,50 @@ test("the button hears about each change of the page's translation state once", 
     { translated: true, starting: false },
   );
   shared.listeners.delete(listener);
+});
+
+test("the page's language: the detector when sure, the lang attribute otherwise", () => {
+  const sure = (language: string) => [
+    { detectedLanguage: language, confidence: 0.9 },
+  ];
+  // Only the attribute, or only the detector.
+  assert.equal(pageLanguage("en", undefined), "en");
+  assert.equal(pageLanguage(undefined, sure("de")), "de");
+  assert.equal(pageLanguage(undefined, undefined), undefined);
+  assert.equal(pageLanguage("und", undefined), undefined);
+  // A wrong attribute loses to the text.
+  assert.equal(pageLanguage("en", sure("ja")), "ja");
+  // The same language: the attribute says more.
+  assert.equal(pageLanguage("zh-TW", sure("zh")), "zh-TW");
+  // An unsure guess doesn't count.
+  assert.equal(
+    pageLanguage("fr", [{ detectedLanguage: "de", confidence: 0.3 }]),
+    "fr",
+  );
+  assert.equal(
+    pageLanguage(undefined, [{ detectedLanguage: "de", confidence: 0.3 }]),
+    undefined,
+  );
+});
+
+test("the button is offered on pages not in the target language; unknown pages get it", () => {
+  assert.equal(offerPageTranslation("en-GB", "en"), false);
+  assert.equal(offerPageTranslation("de", "en"), true);
+  assert.equal(offerPageTranslation(undefined, "en"), true);
+  // Simplified and Traditional Chinese are not the same for translation.
+  assert.equal(offerPageTranslation("zh-TW", "zh-CN"), true);
+  assert.equal(offerPageTranslation("zh-Hans", "zh-CN"), false);
+  const config = { enabled: true, targetLanguage: "en" };
+  // Hidden while the language is still being read.
+  assert.equal(pageButtonShown(config, undefined, false), false);
+  assert.equal(pageButtonShown(config, { language: "en" }, false), false);
+  assert.equal(pageButtonShown(config, { language: "ko" }, false), true);
+  assert.equal(pageButtonShown(config, { language: undefined }, false), true);
+  // A translated page keeps it, to show the original.
+  assert.equal(pageButtonShown(config, { language: "en" }, true), true);
+  // Off (or hidden on the site) wins.
+  assert.equal(
+    pageButtonShown({ ...config, enabled: false }, { language: "ko" }, true),
+    false,
+  );
 });
