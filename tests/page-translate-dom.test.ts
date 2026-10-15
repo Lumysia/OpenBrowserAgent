@@ -146,6 +146,74 @@ test("paragraphs: text held by one element is that element's content", () => {
   ]);
 });
 
+test("paragraphs: an inline element laid out as a block at a run's edge is a line of its own", () => {
+  // A card that is one link: a title, and a teaser whose "Read more" the
+  // page sets on a line of its own.
+  const { found } = paragraphsOf(`
+    <a href="/2026/09/cosmos-7-05/"><div>
+      <h2 id="title">Harbor - 7.05</h2>
+      <p id="teaser"> Patch 7.05 contains gameplay and stability fixes.<br />
+        <span id="more" style="display: block">Read more</span>
+      </p>
+    </div></a>
+    <p id="lead"><strong id="kicker" style="display: block">Update</strong> The patch is out now for everyone.</p>
+    <p id="inline">A sentence with <span id="note">a note</span><br><span>and its next line</span></p>
+    <p id="alone"><span id="only" style="display: block">Only this line</span></p>
+    <p id="drop"><span style="display: block; float: left">T</span>he story begins here today.</p>`);
+  assert.deepEqual(found.map(summary), [
+    { parent: "title", text: "Harbor - 7.05", whole: true, inline: false },
+    // The text's translation goes under the text, before "Read more".
+    {
+      parent: "teaser",
+      text: "Patch 7.05 contains gameplay and stability fixes.",
+      whole: false,
+      inline: false,
+    },
+    {
+      parent: "more",
+      text: "Read more",
+      whole: true,
+      inline: false,
+      wrapper: "more",
+    },
+    {
+      parent: "kicker",
+      text: "Update",
+      whole: true,
+      inline: false,
+      wrapper: "kicker",
+    },
+    {
+      parent: "lead",
+      text: "The patch is out now for everyone.",
+      whole: false,
+      inline: false,
+    },
+    // Inline elements stay part of the text, also after a line break.
+    {
+      parent: "inline",
+      text: "A sentence with <b1>a note</b1>{2}and its next line",
+      whole: true,
+      inline: false,
+    },
+    // Alone in its run, the element holds all of the text (its wrapper).
+    {
+      parent: "only",
+      text: "Only this line",
+      whole: true,
+      inline: false,
+      wrapper: "only",
+    },
+    // A box out of the flow (a drop cap) takes no line of its own.
+    {
+      parent: "drop",
+      text: "<b1>T</b1>he story begins here today.",
+      whole: true,
+      inline: false,
+    },
+  ]);
+});
+
 test("paragraphs: the main content only, unless menus are translated too", () => {
   const page = `
     <header id="site-header"><a href="/">Site name</a><p id="tagline">A tagline</p></header>

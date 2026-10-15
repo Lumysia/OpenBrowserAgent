@@ -15,7 +15,7 @@ import { compact } from "../shared/text";
 import { labelsOf } from "./labels";
 import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
-import { isCodeView, isVisuallyHidden } from "./styles";
+import { isBlockBox, isCodeView, isVisuallyHidden } from "./styles";
 
 export type Paragraph = {
   // The nodes are consecutive children of `parent`.
@@ -67,8 +67,10 @@ function* walk(
   const flush = function* () {
     const nodes = run;
     run = [];
-    const paragraph = makeParagraph(parent, root, nodes);
-    if (paragraph) yield paragraph;
+    for (const part of splitBlockEdges(nodes)) {
+      const paragraph = makeParagraph(parent, root, part);
+      if (paragraph) yield paragraph;
+    }
   };
   for (const child of Array.from(root.childNodes)) {
     if (child.nodeType === 3) run.push(child);
@@ -167,18 +169,48 @@ function splitsLines(parent: Element, element: Element) {
 // (page metadata) and decorative content (icons, a hidden tooltip after a
 // button) aren't part of the paragraph.
 
+const isBlank = (node: Node) =>
+  node.nodeType === 3
+    ? !originalText(node as Text).trim()
+    : node.nodeType !== 1 ||
+      (node as Element).localName === "br" ||
+      isDecorative(node as Element);
+
 function trimRun(nodes: Node[]) {
-  const blank = (node: Node) =>
-    node.nodeType === 3
-      ? !originalText(node as Text).trim()
-      : node.nodeType !== 1 ||
-        (node as Element).localName === "br" ||
-        isDecorative(node as Element);
   let start = 0;
   let end = nodes.length;
-  while (start < end && blank(nodes[start])) start++;
-  while (end > start && blank(nodes[end - 1])) end--;
+  while (start < end && isBlank(nodes[start])) start++;
+  while (end > start && isBlank(nodes[end - 1])) end--;
   return nodes.slice(start, end);
+}
+
+// An inline element the page lays out as a block at the start or end of a
+// run ("Read more" set on a line of its own under a teaser) is a line of
+// its own, not part of the sentence: it is a run of its own, and the
+// text's translation goes under the text, not under that line. Only the
+// run's edges are measured (see styles.ts); an element alone in its run
+// stays the run (see makeParagraph's wrapper).
+function splitBlockEdges(nodes: Node[]): Node[][] {
+  const head: Node[][] = [];
+  const tail: Node[][] = [];
+  let start = 0;
+  let end = nodes.length;
+  const content = () =>
+    nodes.slice(start, end).filter((node) => !isBlank(node));
+  const isBlockElement = (node: Node) =>
+    node.nodeType === 1 && isBlockBox(node as Element);
+  for (let edge = content(); edge.length > 1; edge = content()) {
+    const last = edge[edge.length - 1];
+    if (!isBlockElement(last)) break;
+    end = nodes.indexOf(last);
+    tail.unshift([last]);
+  }
+  for (let edge = content(); edge.length > 1; edge = content()) {
+    if (!isBlockElement(edge[0])) break;
+    start = nodes.indexOf(edge[0]) + 1;
+    head.push([edge[0]]);
+  }
+  return [...head, nodes.slice(start, end), ...tail];
 }
 
 // A copy of the text for screen readers next to the text as it shows (a
