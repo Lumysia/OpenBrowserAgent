@@ -6,7 +6,8 @@ import type { UploadedAttachment } from "../../shared/types";
 import { callPage, pageTab } from "../page-agent";
 import { parseSource } from "../tools/read";
 import type { RunContext } from "../tools/types";
-import { baseName, safeSegment, typeForName, withExtension } from "./filenames";
+import { typeForName } from "../../shared/mime";
+import { baseName, safeSegment, withExtension } from "./filenames";
 
 // Files made from what the agent has: text or bytes it writes, or a source
 // in the read tool's terms. Errors are messages for the model.

@@ -1,3 +1,4 @@
+import { isHtmlType, isTextType, typeForName } from "../../shared/mime";
 import { clampInt, trimmedString } from "../../shared/values";
 import { errorMessage } from "../../shared/error-message";
 import {
@@ -273,8 +274,6 @@ async function binaryResult(
   return { text: textSlice(label, text, input), details, sources };
 }
 
-const TEXT_TYPE = /^text\/|json|xml|yaml|csv|markdown|javascript/;
-const HTML_TYPE = /^(text\/html|application\/xhtml\+xml)/;
 // Fetched HTML with less text than this is likely a shell that needs
 // JavaScript, a login or a bot check.
 const THIN_PAGE_CHARS = 200;
@@ -299,7 +298,7 @@ async function readUrl(
   const blob = await response.blob();
   const type = blob.type || "application/octet-stream";
   const details = { source: url, type, size: blob.size };
-  if (HTML_TYPE.test(type))
+  if (isHtmlType(type))
     return readHtml(
       response.url || url,
       decodeHtml(
@@ -311,9 +310,9 @@ async function readUrl(
       hasToolGroup(run.agent, "browser"),
     );
   if (
-    TEXT_TYPE.test(type) ||
+    isTextType(type) ||
     (type === "application/octet-stream" &&
-      /\.(txt|md|json|csv|xml|ya?ml)(\?|#|$)/i.test(url))
+      isTextType(typeForName(new URL(url).pathname)))
   )
     return {
       text: textSlice(url, await blob.text(), input),

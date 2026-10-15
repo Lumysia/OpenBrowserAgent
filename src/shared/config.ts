@@ -70,6 +70,8 @@ export const MAX_IMAGES_PER_DOWNLOAD = 80;
 export const MERMAID_RENDER_CACHE_SIZE = 40;
 // A downloaded diagram PNG, in pixels per SVG unit.
 export const MERMAID_PNG_SCALE = 2;
+// Elements checked for CSS background images, so a huge page stays quick.
+export const MAX_SCANNED_ELEMENTS_FOR_IMAGES = 20_000;
 export const DEFAULT_SCREENSHOT_QUALITY = 35;
 export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
 export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;

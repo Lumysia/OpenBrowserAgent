@@ -1,3 +1,5 @@
+import { extensionForType, extensionOf } from "../../shared/mime";
+
 // File names the browser accepts and that stay inside the Downloads folder.
 // Browsers reject absolute paths, ".." and names Windows cannot hold, so
 // they are made safe here instead of failing the download.
@@ -12,65 +14,6 @@ const UNSAFE_CHARS =
 const WINDOWS_DEVICE = /^(con|prn|aux|nul|clock\$|com\d|lpt\d)(\.|$)/i;
 // Extensions the Windows shell runs instead of opening.
 const SHELL_EXTENSION = /\.(lnk|local|scf|url)$/i;
-
-const TYPES: Record<string, string> = {
-  txt: "text/plain",
-  md: "text/markdown",
-  csv: "text/csv",
-  tsv: "text/tab-separated-values",
-  json: "application/json",
-  html: "text/html",
-  htm: "text/html",
-  xml: "application/xml",
-  svg: "image/svg+xml",
-  css: "text/css",
-  js: "text/javascript",
-  ts: "text/plain",
-  py: "text/x-python",
-  sh: "text/x-shellscript",
-  sql: "application/sql",
-  yaml: "application/yaml",
-  yml: "application/yaml",
-  ics: "text/calendar",
-  vcf: "text/vcard",
-  srt: "application/x-subrip",
-  vtt: "text/vtt",
-  pdf: "application/pdf",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  avif: "image/avif",
-  zip: "application/zip",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-};
-
-// The extension for a MIME type: the first one listed for it.
-const EXTENSIONS = Object.entries(TYPES).reduce<Record<string, string>>(
-  (map, [extension, type]) => {
-    map[type] ??= extension;
-    return map;
-  },
-  {},
-);
-
-export function extensionOf(name: string) {
-  return name.match(/\.([a-z0-9]{1,8})$/i)?.[1]?.toLowerCase() || "";
-}
-
-export function typeForName(name: string) {
-  return TYPES[extensionOf(name)] || "";
-}
-
-export function extensionForType(type: string) {
-  const base = type.split(";")[0].trim().toLowerCase();
-  if (EXTENSIONS[base]) return EXTENSIONS[base];
-  if (base.startsWith("text/")) return "txt";
-  return "";
-}
 
 // One path segment: no separators, unsafe characters, leading or trailing
 // dots and spaces, device names or shell extensions; at most
