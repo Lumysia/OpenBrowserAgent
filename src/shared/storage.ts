@@ -13,8 +13,6 @@ import {
   DEFAULT_SYNC_GROUP_SETTINGS,
   mergeSyncGroupSettings,
   STORAGE_KEYS,
-  SYNC_GROUPS,
-  type SyncGroup,
   type SyncGroupSettings,
 } from "./storage-keys";
 import { storageLockName, withLock } from "./locks";

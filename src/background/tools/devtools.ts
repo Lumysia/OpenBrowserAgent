@@ -1,5 +1,4 @@
 import { trimmedString } from "../../shared/values";
-import { errorMessage } from "../../shared/error-message";
 import { PRODUCT_NAME } from "../../shared/config";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { TOOL_NAME } from "../../shared/tool-names";
@@ -250,7 +249,7 @@ async function evaluate(send: CdpSend, args: Record<string, unknown>) {
       throw new Error("CDP did not return a valid isolated execution context.");
   }
   const result = await send("Runtime.evaluate", {
-    expression: `(async () => { try { const value = await (0,eval)(${JSON.stringify(String(args.code))}); if(value === undefined) return {success:true,value:{type:'undefined'}}; try {return {success:true,value:JSON.parse(JSON.stringify(value))}} catch {return {success:true,value:String(value)}} } catch(error) {return {success:false,error:errorMessage(error)}} })()`,
+    expression: `(async () => { try { const value = await (0,eval)(${JSON.stringify(String(args.code))}); if(value === undefined) return {success:true,value:{type:'undefined'}}; try {return {success:true,value:JSON.parse(JSON.stringify(value))}} catch {return {success:true,value:String(value)}} } catch(error) {return {success:false,error:error instanceof Error ? error.message : String(error)}} })()`,
     awaitPromise: true,
     returnByValue: true,
     ...(contextId ? { contextId } : {}),
