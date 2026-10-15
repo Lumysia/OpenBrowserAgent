@@ -6,7 +6,11 @@ import {
   withProviderConsent,
 } from "../../src/shared/provider-consent";
 import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
-import { providerType, type ProviderId } from "../../src/shared/providers";
+import {
+  providerBaseUrlOptions,
+  providerType,
+  type ProviderId,
+} from "../../src/shared/providers";
 import {
   AccordionContent,
   AccordionItem,
@@ -37,16 +41,13 @@ import { ProviderConsentField } from "./provider-consent-field";
 import { ProviderThinkingSwitch } from "./provider-thinking-switch";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
-import { loadProviderModels } from "./provider-models";
-import { testProviderModel } from "../../src/shared/provider-test";
+import {
+  listProviderModels,
+  testProviderModel,
+} from "../../src/shared/provider-requests";
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useUiLanguage } from "../../src/ui/messages";
-
-const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
-  glm: ["https://api.z.ai/api/paas/v4", "https://open.bigmodel.cn/api/paas/v4"],
-  minimax: ["https://api.minimax.io/v1", "https://api.minimaxi.com/v1"],
-};
 
 export function ProviderAccordion({
   providerId,
@@ -115,7 +116,7 @@ export function ProviderAccordion({
     setFetching(true);
     setError("");
     try {
-      const fetched = await loadProviderModels(providerId, provider, draft);
+      const fetched = await listProviderModels(providerId, draft);
       setFetchedModels(fetched);
       setFetchedModelSearch("");
       const firstAvailable = fetched.find(
@@ -213,7 +214,7 @@ export function ProviderAccordion({
                 }
               />
             </Label>
-            {provider !== "ollama" && (
+            {!providerType(provider).keyless && (
               <Label>
                 {t.options.apiKey}
                 <Input
@@ -363,23 +364,20 @@ function ProviderBaseUrl({
   value: ProviderConfig;
   onChange: (value: ProviderConfig) => void;
 }) {
-  if (baseUrlOptions[provider]) {
+  const options = providerBaseUrlOptions(provider);
+  if (options.length) {
     return (
       <Label>
         {t.options.baseUrl}
         <Select
-          value={
-            value.baseUrl ||
-            providerType(provider).defaultBaseUrl ||
-            baseUrlOptions[provider][0]
-          }
+          value={value.baseUrl || options[0]}
           onValueChange={(baseUrl) => onChange({ ...value, baseUrl })}
         >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {baseUrlOptions[provider].map((url) => (
+            {options.map((url) => (
               <SelectItem key={url} value={url}>
                 {url}
               </SelectItem>
