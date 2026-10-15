@@ -161,6 +161,9 @@ test("settings: defaults, cleaned values, the target language", () => {
       display: "bilingual",
       translateMenus: false,
       videoButton: true,
+      pageButton: true,
+      pageButtonHiddenHosts: [],
+      shortcut: true,
     },
   );
   // Settings stored before the video button existed get it, on.

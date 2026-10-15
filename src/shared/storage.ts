@@ -11,6 +11,11 @@ import {
   normalizeLearnedModelLimits,
   type LearnedModelLimits,
 } from "./model-limits";
+import {
+  DEFAULT_PAGE_BUTTON_POSITION,
+  normalizePageButtonPosition,
+  type PageButtonPosition,
+} from "./page-translate/button";
 import { normalizeProviderState } from "./provider-instances";
 import { normalizeSkillSettings } from "./skill-catalog";
 import { normalizeSkills } from "./skills";
@@ -235,6 +240,11 @@ export const storage = {
   }),
   chatTabs: createItem<ChatTab[]>(STORAGE_KEYS.chatTabs, () => []),
   holidayBurstDay: createItem<string>(STORAGE_KEYS.holidayBurstDay, () => ""),
+  pageTranslateButtonPosition: createItem<PageButtonPosition>(
+    STORAGE_KEYS.pageTranslateButtonPosition,
+    () => DEFAULT_PAGE_BUTTON_POSITION,
+    { normalize: normalizePageButtonPosition },
+  ),
   syncStatus: createItem<SyncStatus>(
     STORAGE_KEYS.syncStatus,
     () => DEFAULT_SYNC_STATUS,

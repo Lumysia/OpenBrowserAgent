@@ -47,6 +47,8 @@ export const STORAGE_KEYS = {
   syncFormat: "sync-format",
   // The local day a holiday burst last played (see holidays.ts).
   holidayBurstDay: "holiday-burst-day",
+  // Where the page translation button was dragged to (this device only).
+  pageTranslateButtonPosition: "page-translate-button-position",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
   // What models refused, learned on this device (see model-limits.ts).
   learnedModelLimits: "learned-model-limits",

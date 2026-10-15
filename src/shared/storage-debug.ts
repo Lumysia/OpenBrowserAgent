@@ -8,6 +8,7 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.preferences,
     STORAGE_KEYS.shouldShowUpdateToast,
     STORAGE_KEYS.holidayBurstDay,
+    STORAGE_KEYS.pageTranslateButtonPosition,
     STORAGE_KEYS.syncStatus,
     STORAGE_KEYS.syncBackends,
     STORAGE_KEYS.activeSyncBackendId,
