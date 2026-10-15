@@ -1,13 +1,5 @@
 import { Plus, Send, Square } from "lucide-react";
-import type { ClipboardEvent, RefObject } from "react";
-import type { Messages } from "../../src/shared/i18n";
-import type {
-  Agent,
-  AttachmentTab,
-  ModelConfig,
-  PickedSkill,
-  Preferences,
-} from "../../src/shared/types";
+import type { ClipboardEvent } from "react";
 import {
   Button,
   IconTooltip,
@@ -22,88 +14,49 @@ import {
 } from "../../src/ui/components";
 import { AddContextMenu } from "./composer-menus";
 import { ComposerSelectors } from "./composer-selectors";
-import {
-  ADD_MENU_VIEW,
-  COMPOSER_MENU,
-  type AddMenuView,
-  type ComposerMenu,
-} from "./sidepanel-menu-state";
+import { ADD_MENU_VIEW, COMPOSER_MENU } from "./sidepanel-menu-state";
+import { useChat, useComposer } from "./sidepanel-providers";
 import { SkillPickerList, useSlashSkillPicker } from "./skill-picker";
+import { useMessages } from "../../src/ui/messages";
 
 const SLASH_PICKER_ID = "slash-skill-picker";
 
 export function ComposerBox({
-  t,
-  input,
-  composerRef,
-  editingMessageId,
-  streaming,
-  openMenu,
-  addMenuView,
-  availableTabs,
-  attachedTabs,
-  activeTabAttachable,
-  skills,
-  selectedSkills,
-  preferences,
-  configuredModels,
-  agents,
-  onSetInput,
-  onPaste,
-  onCancelEditMessage,
-  onSend,
-  onStop,
-  onSetOpenMenu,
-  onSetAddMenuView,
-  onShowAllTabsPicker,
-  onToggleSkill,
-  onPickSkill,
-  onToggleAttachedTab,
-  onAttachActiveTab,
-  onAttachFiles,
-  onSelectElement,
-  onSetPreferences,
+  // Opens the file picker for attachments.
+  onPickFiles,
 }: {
-  t: Messages;
-  input: string;
-  composerRef: RefObject<HTMLTextAreaElement | null>;
-  editingMessageId?: string;
-  streaming: boolean;
-  openMenu: ComposerMenu | null;
-  addMenuView: AddMenuView;
-  availableTabs: AttachmentTab[];
-  attachedTabs: AttachmentTab[];
-  activeTabAttachable: boolean;
-  skills: PickedSkill[];
-  selectedSkills: PickedSkill[];
-  preferences?: Preferences;
-  configuredModels: ModelConfig[];
-  agents: Agent[];
-  onSetInput: (value: string) => void;
-  onPaste: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
-  onCancelEditMessage: () => void;
-  onSend: () => void;
-  onStop: () => void;
-  onSetOpenMenu: (value: ComposerMenu | null) => void;
-  onSetAddMenuView: (value: AddMenuView) => void;
-  onShowAllTabsPicker: () => void;
-  onToggleSkill: (skill: PickedSkill) => void;
-  // A skill picked from the "/" list, replacing the "/query" typed so far.
-  onPickSkill: (skill: PickedSkill) => void;
-  onToggleAttachedTab: (tab: AttachmentTab) => void;
-  onAttachActiveTab: () => Promise<void>;
-  onAttachFiles: () => void;
-  onSelectElement: () => Promise<void>;
-  onSetPreferences: (
-    value: Preferences | ((previous: Preferences) => Preferences),
-  ) => void;
+  onPickFiles: () => void;
 }) {
+  const t = useMessages();
+  const { streaming, editingMessageId, cancelEditMessage } = useChat();
+  const {
+    input,
+    setInput,
+    composerRef,
+    openMenu,
+    setOpenMenu,
+    setAddMenuView,
+    skills,
+    pickSkill,
+    attachFiles,
+    send,
+    stop,
+  } = useComposer();
+
+  function attachFromClipboard(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const files = Array.from(event.clipboardData.files).filter(
+      (file) => file.size > 0,
+    );
+    if (!files.length) return;
+    event.preventDefault();
+    attachFiles(files).catch(() => undefined);
+  }
+
   const slash = useSlashSkillPicker({
-    t,
     input,
     skills,
     onPick: (skill) => {
-      onPickSkill(skill);
+      pickSkill(skill);
       composerRef.current?.focus();
     },
   });
@@ -129,8 +82,8 @@ export function ComposerBox({
                 ? `${SLASH_PICKER_ID}-${slash.activeIndex}`
                 : undefined
             }
-            onChange={(event) => onSetInput(event.target.value)}
-            onPaste={onPaste}
+            onChange={(event) => setInput(event.target.value)}
+            onPaste={attachFromClipboard}
             onKeyDown={(event) => {
               if (slash.onKeyDown(event)) return;
               if (
@@ -139,7 +92,7 @@ export function ComposerBox({
                 !event.nativeEvent.isComposing
               ) {
                 event.preventDefault();
-                onCancelEditMessage();
+                cancelEditMessage();
                 return;
               }
               if (
@@ -150,7 +103,7 @@ export function ComposerBox({
                 !event.ctrlKey
               ) {
                 event.preventDefault();
-                onSend();
+                send();
               }
             }}
           />
@@ -160,10 +113,10 @@ export function ComposerBox({
                 open={openMenu === COMPOSER_MENU.add}
                 onOpenChange={(open) => {
                   if (open) {
-                    onSetAddMenuView(ADD_MENU_VIEW.menu);
-                    onSetOpenMenu(COMPOSER_MENU.add);
+                    setAddMenuView(ADD_MENU_VIEW.menu);
+                    setOpenMenu(COMPOSER_MENU.add);
                   } else {
-                    onSetOpenMenu(null);
+                    setOpenMenu(null);
                   }
                 }}
               >
@@ -188,44 +141,11 @@ export function ComposerBox({
                   align="start"
                   className="add-context-popover-content"
                 >
-                  <AddContextMenu
-                    t={t}
-                    view={addMenuView}
-                    tabs={availableTabs}
-                    skills={skills}
-                    selectedSkillIds={selectedSkills.map((skill) => skill.id)}
-                    selectedTabIds={attachedTabs.map((tab) => tab.id)}
-                    activeTabAttachable={activeTabAttachable}
-                    onShowTabs={onShowAllTabsPicker}
-                    onShowSkills={() => onSetAddMenuView(ADD_MENU_VIEW.skills)}
-                    onSkill={onToggleSkill}
-                    onUploadFiles={() => {
-                      onAttachFiles();
-                      onSetOpenMenu(null);
-                    }}
-                    onToggleTab={onToggleAttachedTab}
-                    onAttachTab={async () => {
-                      await onAttachActiveTab();
-                      onSetOpenMenu(null);
-                    }}
-                    onSelectElement={async () => {
-                      await onSelectElement();
-                      onSetOpenMenu(null);
-                    }}
-                  />
+                  <AddContextMenu onPickFiles={onPickFiles} />
                 </PopoverContent>
               </Popover>
             </div>
-            <ComposerSelectors
-              t={t}
-              preferences={preferences}
-              configuredModels={configuredModels}
-              agents={agents}
-              openMenu={openMenu}
-              streaming={streaming}
-              onSetOpenMenu={onSetOpenMenu}
-              onSetPreferences={onSetPreferences}
-            />
+            <ComposerSelectors />
             {streaming ? (
               <>
                 <IconTooltip label={t.sidepanel.stop}>
@@ -233,7 +153,7 @@ export function ComposerBox({
                     className="send-button stop-button"
                     variant="secondary"
                     aria-label={t.sidepanel.stop}
-                    onClick={onStop}
+                    onClick={stop}
                   >
                     <Square size={18} />
                   </Button>
@@ -242,7 +162,7 @@ export function ComposerBox({
                   <Button
                     className="send-button"
                     aria-label={t.sidepanel.queueMessage}
-                    onClick={() => onSend()}
+                    onClick={send}
                   >
                     <Send size={20} />
                   </Button>
@@ -253,7 +173,7 @@ export function ComposerBox({
                 <Button
                   className="send-button"
                   aria-label={t.sidepanel.send}
-                  onClick={() => onSend()}
+                  onClick={send}
                 >
                   <Send size={20} />
                 </Button>
@@ -275,7 +195,6 @@ export function ComposerBox({
       >
         <div className="add-context-menu">
           <SkillPickerList
-            t={t}
             id={SLASH_PICKER_ID}
             skills={slash.matches}
             activeIndex={slash.activeIndex}

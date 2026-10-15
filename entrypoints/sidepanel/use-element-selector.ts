@@ -4,8 +4,8 @@ import {
   injectElementSelector,
   isScriptableUrl,
 } from "../../src/shared/browser";
-import type { Messages } from "../../src/shared/i18n";
 import { getBrowserApi } from "../../src/shared/browser-api";
+import { useMessages } from "../../src/ui/messages";
 
 const ELEMENT_SELECTOR_MESSAGE = {
   selected: "getSelectedElement",
@@ -13,7 +13,8 @@ const ELEMENT_SELECTOR_MESSAGE = {
   cancel: "cancelElementSelector",
 } as const;
 
-export function useElementSelector(t: Messages) {
+export function useElementSelector() {
+  const t = useMessages();
   const [selectingElement, setSelectingElement] = useState(false);
 
   useEffect(() => {

@@ -21,6 +21,7 @@ import {
   type ToolStepOutcome,
 } from "./tool-detail-format";
 import { ToolReferenceButton, type ToolReference } from "./tool-references";
+import { useMessages } from "../../src/ui/messages";
 
 type Reason = keyof Messages["downloads"]["reasons"];
 
@@ -174,13 +175,8 @@ function useFilesOnDevice(records: DownloadRecord[]) {
 }
 
 // "Show in folder" for the files a step saved, in any tool's output.
-export function DownloadReferences({
-  output,
-  t,
-}: {
-  output: unknown;
-  t: Messages;
-}) {
+export function DownloadReferences({ output }: { output: unknown }) {
+  const t = useMessages();
   const action = (output as ToolRecord | undefined)?.action;
   const records = useMemo(
     () =>

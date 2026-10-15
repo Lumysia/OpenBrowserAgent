@@ -22,6 +22,7 @@ import {
   assistantMessageText,
 } from "../entrypoints/sidepanel/assistant-message-text";
 import { RunStopNotice } from "../entrypoints/sidepanel/run-stop-notice";
+import { MessagesProvider } from "../src/ui/messages";
 import {
   chatToOpenAiPayload,
   importChatFromOpenAiJson,
@@ -87,10 +88,12 @@ test("a reply that ended early renders once, with one notice under it", () => {
   assert.equal(assistantMessageContentFallback(older), older.content);
   const render = (message: ChatMessage, onContinue?: () => void) =>
     renderToStaticMarkup(
-      createElement(RunStopNotice, {
-        t,
-        cut: replyCutOff(message)!,
-        onContinue,
+      createElement(MessagesProvider, {
+        language: "en-US",
+        children: createElement(RunStopNotice, {
+          cut: replyCutOff(message)!,
+          onContinue,
+        }),
       }),
     );
   const notice = render(failed, () => {});

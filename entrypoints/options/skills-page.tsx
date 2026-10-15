@@ -8,7 +8,7 @@ import {
   Plus,
 } from "lucide-react";
 import { SKILL_LISTING_MAX_CHARS } from "../../src/shared/config";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import { type Messages } from "../../src/shared/i18n";
 import {
   customizeBuiltinSkill,
   forgetSkillSettings,
@@ -48,10 +48,9 @@ import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function SkillsPage() {
-  const language = useUiLanguage();
   const { entries, setSkills, setSettings } = useSkillCatalog();
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});
@@ -61,7 +60,7 @@ export function SkillsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!entries) return null;
-  const t = getMessages(language);
+  const t = useMessages();
   const listing = skillListingSize(listedSkills(entries));
 
   function addSkill(skill: Skill) {
@@ -186,7 +185,6 @@ export function SkillsPage() {
           return (
             <SkillItem
               key={skill.id}
-              t={t}
               entry={entry}
               draft={draftFor(skill)}
               onInvoke={(mode) =>
@@ -197,13 +195,11 @@ export function SkillsPage() {
             >
               {source === "builtin" ? (
                 <BuiltinSkillDetail
-                  t={t}
                   skill={skill}
                   onCustomize={() => customize(skill)}
                 />
               ) : (
                 <SkillEditor
-                  t={t}
                   skill={skill}
                   draft={draftFor(skill)}
                   override={source === "override"}
@@ -232,18 +228,17 @@ export function SkillsPage() {
 }
 
 function SkillItem({
-  t,
   entry,
   draft,
   onInvoke,
   children,
 }: {
-  t: Messages;
   entry: SkillEntry;
   draft: Skill;
   onInvoke: (mode: SkillInvokeMode) => void;
   children: ReactNode;
 }) {
+  const t = useMessages();
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);

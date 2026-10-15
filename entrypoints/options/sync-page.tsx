@@ -7,17 +7,15 @@ import {
   Settings,
 } from "lucide-react";
 import { useState } from "react";
-import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage-keys";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function SyncPage() {
-  const language = useUiLanguage();
   const [syncGroups] = useStoredState(storage.syncGroups);
   const [syncStatus] = useStoredState(storage.syncStatus);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
@@ -26,7 +24,7 @@ export function SyncPage() {
   );
   // Keys are being turned on: the passphrase form shows first.
   const [askingPassphrase, setAskingPassphrase] = useState(false);
-  const t = getMessages(language);
+  const t = useMessages();
 
   if (!syncGroups || !syncBackends || !activeSyncBackendId || !syncStatus)
     return null;
@@ -63,7 +61,6 @@ export function SyncPage() {
           keys={syncStatus.keys}
           asking={askingPassphrase}
           onClose={() => setAskingPassphrase(false)}
-          t={t}
         />
       ),
     },
@@ -101,9 +98,8 @@ export function SyncPage() {
         syncGroups={syncGroups}
         onActiveBackendChange={setActiveSyncBackendId}
         onBackendsChange={setSyncBackends}
-        t={t}
       />
-      <SyncStatusCard t={t} />
+      <SyncStatusCard />
     </div>
   );
 }

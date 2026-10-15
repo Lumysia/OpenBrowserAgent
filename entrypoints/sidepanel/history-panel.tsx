@@ -8,7 +8,6 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import type { Agent, Chat, ChatSummary } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import {
@@ -30,11 +29,11 @@ import {
 } from "./format";
 import type { SummariesUpdater } from "./use-chats";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 const HISTORY_REMOVE_DELAY_MS = 190;
 
 export function HistoryPanel({
-  t,
   chats,
   activeChatId,
   unreadCompletedChatIds,
@@ -46,7 +45,6 @@ export function HistoryPanel({
   onClose,
   onBack,
 }: {
-  t: Messages;
   chats: ChatSummary[];
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
@@ -58,6 +56,7 @@ export function HistoryPanel({
   onClose: (chatId: string) => void;
   onBack: () => void;
 }) {
+  const t = useMessages();
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const removeTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [editingChatId, setEditingChatId] = useState<string>();
@@ -220,7 +219,6 @@ export function HistoryPanel({
         {rootChats.map((chat) => (
           <div className="history-thread" key={chat.id}>
             <HistoryItem
-              t={t}
               chat={chat}
               activeChatId={activeChatId}
               unreadCompletedChatIds={unreadCompletedChatIds}
@@ -241,7 +239,6 @@ export function HistoryPanel({
                 {chatsByParentId.get(chat.id)?.map((child) => (
                   <HistoryItem
                     key={child.id}
-                    t={t}
                     chat={child}
                     activeChatId={activeChatId}
                     unreadCompletedChatIds={unreadCompletedChatIds}
@@ -269,7 +266,6 @@ export function HistoryPanel({
 }
 
 function HistoryItem({
-  t,
   chat,
   activeChatId,
   unreadCompletedChatIds,
@@ -286,7 +282,6 @@ function HistoryItem({
   onExport,
   onClose,
 }: {
-  t: Messages;
   chat: ChatSummary;
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
@@ -303,6 +298,7 @@ function HistoryItem({
   onExport: (chatId: string) => void;
   onClose: (chatId: string) => void;
 }) {
+  const t = useMessages();
   const title = chatDisplayTitle(chat, t);
   return (
     <div

@@ -1,26 +1,25 @@
-import type { Messages } from "../../src/shared/i18n";
 import { Button, Feedback, Skeleton } from "../../src/ui/components";
 import type { CurrentChatStatus } from "./use-current-chat";
 import { HolidayBadge } from "./holiday-touches";
+import { useMessages } from "../../src/ui/messages";
 
 // Shown in place of the messages: while the open chat's content loads, when
 // it could not be loaded, or when the chat has no messages yet.
 export function ChatContentStatus({
-  t,
   status,
   empty,
   onRetry,
 }: {
-  t: Messages;
   status: CurrentChatStatus;
   empty: boolean;
   onRetry: () => void;
 }) {
+  const t = useMessages();
   if (status === "ready")
     return empty ? (
       <div className="empty">
         <div>
-          <HolidayBadge t={t} />
+          <HolidayBadge />
           <h2>{t.sidepanel.whatDoYouWant}</h2>
           <p className="muted">{t.sidepanel.emptyDescription}</p>
         </div>

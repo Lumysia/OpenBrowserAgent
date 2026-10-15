@@ -4,7 +4,6 @@ import {
   normalizeContextMenuSettings,
   type ContextMenuSettings,
 } from "../../src/shared/context-menu";
-import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import {
   SettingSwitchCard,
@@ -13,13 +12,13 @@ import {
   SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function ContextMenuPage() {
-  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const s = getMessages(language).contextMenu;
-  const p = getMessages(language).pageTranslate;
+  const t = useMessages();
+  const s = t.contextMenu;
+  const p = t.pageTranslate;
   const itemLabels = {
     ...s.itemLabels,
     translatePage: p.menuItemLabel,

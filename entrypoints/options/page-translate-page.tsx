@@ -12,7 +12,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { PRIVACY_POLICY_TRANSLATION_URL } from "../../src/shared/config";
-import { getMessages } from "../../src/shared/i18n";
 import { clearTranslations } from "../../src/shared/page-translate/cache";
 import { PAGE_TRANSLATE_LANGUAGES } from "../../src/shared/page-translate/languages";
 import {
@@ -47,7 +46,7 @@ import {
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages, useUiLanguage } from "../../src/ui/messages";
 
 // Select value for "follow the extension's language"; stored as "".
 const FOLLOW_INTERFACE = "interface";
@@ -62,7 +61,7 @@ export function PageTranslatePage() {
     "idle",
   );
   const [cacheError, setCacheError] = useState("");
-  const t = getMessages(language);
+  const t = useMessages();
   const models = useConfiguredModels();
   const p = t.pageTranslate;
   if (!preferences) return null;

@@ -1,5 +1,4 @@
 import { Globe, Highlighter, Keyboard, ListChecks } from "lucide-react";
-import { getMessages } from "../../src/shared/i18n";
 import {
   normalizeSmartBarSettings,
   SMART_BAR_EDIT_ACTIONS,
@@ -22,12 +21,11 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { HostListEditor } from "./host-list-editor";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function SmartBarPage() {
-  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const t = getMessages(language);
+  const t = useMessages();
   const s = t.smartBar;
   if (!preferences) return null;
   const settings = normalizeSmartBarSettings(preferences.smartBar);

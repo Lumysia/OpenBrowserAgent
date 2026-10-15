@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { Copy, Download } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import { readChatAttachment } from "../../src/shared/chat-attachments";
 import { Button } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
 export function GeneratedImage({
   output,
   loading,
-  t,
 }: {
   output: Record<string, unknown>;
   loading: boolean;
-  t: Messages;
 }) {
+  const t = useMessages();
   const { image, loading: imageLoading } = useStoredToolImage(output);
   const prompt = stringValue(output.prompt);
   if (loading || imageLoading)
@@ -62,11 +61,10 @@ export function GeneratedImage({
 
 export function CapturedTabImage({
   output,
-  t,
 }: {
   output: Record<string, unknown>;
-  t: Messages;
 }) {
+  const t = useMessages();
   const { image, loading } = useStoredToolImage(output);
   const format = stringValue(output.format) || "png";
   if (loading)

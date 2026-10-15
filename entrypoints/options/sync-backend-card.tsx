@@ -1,6 +1,5 @@
 import { Check, Copy, FolderSync } from "lucide-react";
 import type { ReactNode } from "react";
-import { getMessages } from "../../src/shared/i18n";
 import { createSyncConfigCode } from "../../src/shared/sync-config-code";
 import type { SyncGroupSettings } from "../../src/shared/storage-keys";
 import {
@@ -34,8 +33,7 @@ import {
 } from "../../src/ui/sync-backend-display";
 import { useTransient } from "../../src/ui/use-transient";
 import { WebDavConnectionFields } from "../../src/ui/webdav-connection-fields";
-
-type Messages = ReturnType<typeof getMessages>;
+import { useMessages } from "../../src/ui/messages";
 
 // One group of what syncs. Without `value` it always syncs (no switch).
 export type SyncDataToggle = {
@@ -58,7 +56,6 @@ export function SyncBackendCard({
   syncGroups,
   onActiveBackendChange,
   onBackendsChange,
-  t,
 }: {
   activeBackendId: string;
   backends: SyncBackendConfig[];
@@ -66,8 +63,8 @@ export function SyncBackendCard({
   syncGroups: SyncGroupSettings;
   onActiveBackendChange: (backendId: string) => void;
   onBackendsChange: (backends: SyncBackendConfig[]) => void;
-  t: Messages;
 }) {
+  const t = useMessages();
   const [copyingBackendId, setCopyingBackendId] = useState<string>();
   const [copiedBackendId, showCopied] = useTransient<string>();
   const browserBackend = backends.find(
@@ -114,7 +111,6 @@ export function SyncBackendCard({
           copying={copyingBackendId === backend.id}
           copied={copiedBackendId === backend.id}
           onCopyConfig={() => copyBackendConfig(backend)}
-          t={t}
         />
         <Switch
           checked={backend.id === activeBackendId}
@@ -135,7 +131,6 @@ export function SyncBackendCard({
           active={browserBackend.id === activeBackendId}
           backendType={browserBackend.type}
           toggles={dataToggles}
-          t={t}
         />
       </SettingsAccordionItem>
       <SettingsAccordionItem
@@ -149,16 +144,11 @@ export function SyncBackendCard({
             onCommit={(name) => update({ name })}
           />
         </Label>
-        <WebDavConnectionFields
-          t={t}
-          backend={webDavBackend}
-          onChange={update}
-        />
+        <WebDavConnectionFields backend={webDavBackend} onChange={update} />
         <BackendDataTogglePanel
           active={webDavBackend.id === activeBackendId}
           backendType={webDavBackend.type}
           toggles={dataToggles}
-          t={t}
         />
       </SettingsAccordionItem>
     </Accordion>
@@ -169,13 +159,12 @@ function BackendDataTogglePanel({
   active,
   backendType,
   toggles,
-  t,
 }: {
   active: boolean;
   backendType: SyncBackendConfig["type"];
   toggles: SyncDataToggle[];
-  t: Messages;
 }) {
+  const t = useMessages();
   return (
     <div className="stack">
       <CardDescription>{t.options.syncBackendDescription}</CardDescription>
@@ -183,7 +172,6 @@ function BackendDataTogglePanel({
         toggles={toggles}
         disabled={!active}
         backendType={backendType}
-        t={t}
       />
     </div>
   );
@@ -193,13 +181,12 @@ function SyncDataToggleList({
   toggles,
   disabled,
   backendType,
-  t,
 }: {
   toggles: SyncDataToggle[];
   disabled?: boolean;
   backendType: SyncBackendConfig["type"];
-  t: Messages;
 }) {
+  const t = useMessages();
   return (
     <div className="settings-toggle-list">
       {toggles.map((toggle) => {
@@ -235,15 +222,14 @@ function BackendCopyConfigButton({
   copied,
   onCopyConfig,
   disabled,
-  t,
 }: {
   backend: SyncBackendConfig;
   copying: boolean;
   copied: boolean;
   onCopyConfig: () => void;
   disabled?: boolean;
-  t: Messages;
 }) {
+  const t = useMessages();
   const label = copied
     ? t.options.syncBackendCopiedConfig
     : t.options.syncBackendCopyConfig;

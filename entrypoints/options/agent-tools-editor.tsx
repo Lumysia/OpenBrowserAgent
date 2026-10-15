@@ -4,7 +4,6 @@ import {
   TOOL_GROUPS,
   type ToolGroup,
 } from "../../src/shared/agents";
-import type { Messages } from "../../src/shared/i18n";
 import { areCdpAvailable } from "../../src/shared/runtime-capabilities";
 import type { Agent } from "../../src/shared/types";
 import {
@@ -16,19 +15,19 @@ import {
   Switch,
   SettingsSummary,
 } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
 // The tool groups an agent may use, plus its private workspace.
 export function AgentToolsEditor({
-  t,
   agent,
   readOnly = false,
   onChange,
 }: {
-  t: Messages;
   agent: Agent;
   readOnly?: boolean;
   onChange: (patch: Partial<Agent>) => void;
 }) {
+  const t = useMessages();
   const groups = TOOL_GROUPS.filter(
     (group) => areCdpAvailable() || !DEBUGGER_TOOL_GROUPS.includes(group),
   );

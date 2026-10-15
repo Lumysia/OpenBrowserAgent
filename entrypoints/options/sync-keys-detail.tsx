@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { SYNC_PASSPHRASE_MIN_LENGTH } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import { setSyncPassphrase } from "../../src/shared/sync/client";
 import type { SyncStatus } from "../../src/shared/sync/state";
 import {
@@ -10,6 +9,7 @@ import {
   Input,
   Label,
 } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
 type Mode = "create" | "enter" | "change";
 
@@ -20,15 +20,14 @@ export function SyncKeysDetail({
   keys,
   asking,
   onClose,
-  t,
 }: {
   on: boolean;
   keys: SyncStatus["keys"];
   // Keys are being turned on: the passphrase comes first.
   asking: boolean;
   onClose: () => void;
-  t: Messages;
 }) {
+  const t = useMessages();
   const [changing, setChanging] = useState(false);
   // Keys are on but this device has no key: the server's passphrase is
   // entered, or (none there, the cloud was cleared) a new one is set.
@@ -49,7 +48,6 @@ export function SyncKeysDetail({
       <PassphraseForm
         key={mode}
         mode={mode}
-        t={t}
         onDone={() => {
           setChanging(false);
           onClose();
@@ -81,13 +79,12 @@ function PassphraseForm({
   mode,
   onDone,
   onCancel,
-  t,
 }: {
   mode: Mode;
   onDone: () => void;
   onCancel?: () => void;
-  t: Messages;
 }) {
+  const t = useMessages();
   const [passphrase, setPassphrase] = useState("");
   const [repeat, setRepeat] = useState("");
   const [error, setError] = useState("");

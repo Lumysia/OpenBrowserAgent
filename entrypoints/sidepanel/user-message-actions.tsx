@@ -1,7 +1,6 @@
 import { Check, Copy, Pencil, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import type { ChatMessage, UploadedAttachment } from "../../src/shared/types";
 import {
   Button,
@@ -16,9 +15,9 @@ import {
 import { FileIcon } from "./attachment-file-icon";
 import { formatBytes } from "../../src/shared/format";
 import { formatMessageTime } from "./format";
+import { useMessages } from "../../src/ui/messages";
 
 export function UserMessageActions({
-  t,
   message,
   availableAttachments,
   missingAttachments,
@@ -27,7 +26,6 @@ export function UserMessageActions({
   onResend,
   resendDisabled = false,
 }: {
-  t: Messages;
   message: ChatMessage;
   availableAttachments: UploadedAttachment[];
   missingAttachments: UploadedAttachment[];
@@ -36,6 +34,7 @@ export function UserMessageActions({
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   resendDisabled?: boolean;
 }) {
+  const t = useMessages();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const hasMissingAttachments = missingAttachments.length > 0;

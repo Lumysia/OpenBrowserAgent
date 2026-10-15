@@ -1,21 +1,21 @@
 import { Pencil, Trash2 } from "lucide-react";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount } from "../../src/shared/i18n";
 import { Button, IconTooltip, UserText } from "../../src/ui/components";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredRemove } from "./use-deferred-remove";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export function QueuedMessages({
-  t,
   messages,
   onDelete,
   onEdit,
 }: {
-  t: Messages;
   messages: QueuedMessage[];
   onDelete: (id: string) => void;
   onEdit: (message: QueuedMessage) => void;
 }) {
+  const t = useMessages();
   if (!messages.length) return null;
 
   return (
@@ -29,7 +29,6 @@ export function QueuedMessages({
       {messages.map((message) => (
         <QueuedMessageRow
           key={message.id}
-          t={t}
           message={message}
           onDelete={() => onDelete(message.id)}
           onEdit={() => onEdit(message)}
@@ -40,16 +39,15 @@ export function QueuedMessages({
 }
 
 function QueuedMessageRow({
-  t,
   message,
   onDelete,
   onEdit,
 }: {
-  t: Messages;
   message: QueuedMessage;
   onDelete: () => void;
   onEdit: () => void;
 }) {
+  const t = useMessages();
   const { removing, remove } = useDeferredRemove(onDelete);
   return (
     <div className={cn("queued-message", removing && "is-removing")}>

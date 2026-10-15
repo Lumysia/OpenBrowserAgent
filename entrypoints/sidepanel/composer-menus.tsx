@@ -1,5 +1,4 @@
 import {
-  Check,
   ExternalLink,
   FileText,
   Layers,
@@ -8,75 +7,51 @@ import {
   Plus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
-import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
-import {
-  modelIdParts,
-  parseModelDisplayName,
-} from "../../src/shared/model-display";
-import { isProviderId } from "../../src/shared/providers";
-import type {
-  AttachmentTab,
-  Agent,
-  ModelConfig,
-  PickedSkill,
-  Preferences,
-} from "../../src/shared/types";
-import {
-  Button,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  ActionListItem,
-} from "../../src/ui/components";
-import { AgentIcon } from "../../src/ui/agent-icons";
-import {
-  providerNameDisplay,
-  providerTypeLabel,
-} from "../../src/ui/provider-display";
-import {
-  agentDisplayDescription,
-  agentDisplayName,
-} from "../../src/ui/agent-display";
+import type { AttachmentTab } from "../../src/shared/types";
+import { ActionListItem, Button } from "../../src/ui/components";
 import { ContextCard } from "./context-card";
-import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { ADD_MENU_VIEW, type AddMenuView } from "./sidepanel-menu-state";
+import { useComposer } from "./sidepanel-providers";
 import { SkillPickerList } from "./skill-picker";
 import { formatMessage } from "../../src/shared/text";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export function AddContextMenu({
-  t,
-  view,
-  tabs,
-  skills,
-  selectedSkillIds,
-  selectedTabIds,
-  activeTabAttachable,
-  onShowTabs,
-  onShowSkills,
-  onSkill,
-  onUploadFiles,
-  onToggleTab,
-  onAttachTab,
-  onSelectElement,
+  onPickFiles,
 }: {
-  t: Messages;
-  view: "menu" | "tabs" | "skills";
-  tabs: AttachmentTab[];
-  skills: PickedSkill[];
-  selectedSkillIds: string[];
-  selectedTabIds: number[];
-  activeTabAttachable: boolean;
-  onShowTabs: () => void;
-  onShowSkills: () => void;
-  onSkill: (skill: PickedSkill) => void;
-  onUploadFiles: () => void;
-  onToggleTab: (tab: AttachmentTab) => void;
-  onAttachTab: () => void;
-  onSelectElement: () => void;
+  // Opens the file picker for attachments.
+  onPickFiles: () => void;
 }) {
+  const t = useMessages();
+  const composer = useComposer();
+  const {
+    addMenuView: view,
+    availableTabs: tabs,
+    skills,
+    activeTabAttachable,
+    setOpenMenu,
+  } = composer;
+  const selectedSkillIds = composer.selectedSkills.map((skill) => skill.id);
+  const selectedTabIds = composer.attachedTabs.map((tab) => tab.id);
+  const onShowTabs = composer.showAllTabsPicker;
+  const onShowSkills = () => composer.setAddMenuView(ADD_MENU_VIEW.skills);
+  const onSkill = composer.toggleSkill;
+  const onToggleTab = composer.toggleAttachedTab;
+  const onUploadFiles = () => {
+    onPickFiles();
+    setOpenMenu(null);
+  };
+  const onAttachTab = async () => {
+    await composer.attachActiveTab();
+    setOpenMenu(null);
+  };
+  const onSelectElement = async () => {
+    await composer.selectElement();
+    setOpenMenu(null);
+  };
   const [displayView, setDisplayView] = useState(view);
-  const [leavingView, setLeavingView] = useState<typeof view | null>(null);
+  const [leavingView, setLeavingView] = useState<AddMenuView | null>(null);
 
   useEffect(() => {
     if (view === displayView) return;
@@ -86,7 +61,7 @@ export function AddContextMenu({
     return () => window.clearTimeout(timeout);
   }, [displayView, view]);
 
-  function renderView(nextView: typeof view) {
+  function renderView(nextView: AddMenuView) {
     if (nextView === "menu")
       return (
         <div className="add-context-menu add-context-menu-compact">
@@ -131,7 +106,6 @@ export function AddContextMenu({
             <FileText size={17} /> {t.options.skills} ({skills.length})
           </div>
           <SkillPickerList
-            t={t}
             skills={skills}
             selectedIds={selectedSkillIds}
             onPick={onSkill}
@@ -221,14 +195,13 @@ export function AddContextMenu({
 }
 
 export function AttachedTabCard({
-  t,
   tab,
   onRemove,
 }: {
-  t: Messages;
   tab: AttachmentTab;
   onRemove: () => void;
 }) {
+  const t = useMessages();
   return (
     <ContextCard
       icon={
@@ -250,171 +223,4 @@ export function AttachedTabCard({
       onRemove={onRemove}
     />
   );
-}
-
-export function ModelMenu({
-  t,
-  models,
-  selectedModelId,
-  onSelect,
-}: {
-  t: Messages;
-  models: ModelConfig[];
-  selectedModelId?: string;
-  onSelect: (modelId: string) => void;
-}) {
-  return (
-    <div className="model-menu">
-      {!models.length && (
-        <div className="composer-menu-empty">
-          {t.sidepanel.noModelsConfigured}
-        </div>
-      )}
-      {models.map((model) => (
-        <Button
-          variant="ghost"
-          className={cn(
-            "action-list-item model-menu-item",
-            selectedModelId === model.id && "active",
-          )}
-          key={model.id}
-          onClick={() => onSelect(model.id)}
-        >
-          <span className="model-provider-mark">
-            {providerName(model, t).slice(0, 1).toUpperCase()}
-          </span>
-          <span>
-            <small>{providerName(model, t)}</small>
-            <strong title={modelLabel(model)}>{modelLabel(model)}</strong>
-          </span>
-          {selectedModelId === model.id && (
-            <Check className="menu-check" size={14} />
-          )}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-function AgentMenu({
-  t,
-  agents,
-  selectedAgentId,
-  onSelectAgent,
-}: {
-  t: Messages;
-  agents: Agent[];
-  selectedAgentId?: string;
-  onSelectAgent: (agentId: string) => void;
-}) {
-  return (
-    <div className="agent-menu">
-      {agents.map((agent) => {
-        const selected = selectedAgentId === agent.id;
-        return (
-          <Button
-            variant="ghost"
-            className={cn(
-              "action-list-item agent-menu-item",
-              selected && "active",
-            )}
-            key={agent.id}
-            onClick={() => onSelectAgent(agent.id)}
-          >
-            <AgentIcon agent={agent} />
-            <span>
-              <strong title={agentDisplayName(agent, t)}>
-                {agentDisplayName(agent, t)}
-              </strong>
-              <small title={agentDisplayDescription(agent, t)}>
-                {agentDisplayDescription(agent, t)}
-              </small>
-            </span>
-            {selected && <Check className="menu-check" size={14} />}
-          </Button>
-        );
-      })}
-    </div>
-  );
-}
-
-export function AgentSelector({
-  t,
-  agents,
-  preferences,
-  openMenu,
-  streaming,
-  onSetOpenMenu,
-  onSetPreferences,
-}: {
-  t: Messages;
-  agents: Agent[];
-  preferences?: Preferences;
-  openMenu: ComposerMenu | null;
-  streaming: boolean;
-  onSetOpenMenu: (value: ComposerMenu | null) => void;
-  onSetPreferences: (
-    value: Preferences | ((previous: Preferences) => Preferences),
-  ) => void;
-}) {
-  const selectedAgent =
-    agents.find((agent) => agent.id === preferences?.selectedAgentId) ||
-    agents.find((agent) => agent.id === DEFAULT_AGENT_ID) ||
-    agents[0];
-  return (
-    <Popover
-      open={openMenu === COMPOSER_MENU.agent}
-      onOpenChange={(open) => onSetOpenMenu(open ? COMPOSER_MENU.agent : null)}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="composer-trigger composer-agent-trigger"
-          disabled={streaming}
-          aria-label={
-            selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
-          }
-        >
-          <AgentIcon agent={selectedAgent} size={15} />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="agent-popover-content" align="end">
-        <AgentMenu
-          t={t}
-          agents={agents}
-          selectedAgentId={selectedAgent?.id}
-          onSelectAgent={(agentId) => {
-            onSetPreferences((previous) => ({
-              ...previous,
-              selectedAgentId: agentId,
-            }));
-            onSetOpenMenu(null);
-          }}
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-export function selectedModelLabel(
-  modelId: string | undefined,
-  models: ModelConfig[],
-  t: Messages,
-) {
-  const model = models.find((candidate) => candidate.id === modelId);
-  if (model) return modelLabel(model);
-  return modelId ? modelIdParts(modelId).name : t.sidepanel.selectModel;
-}
-
-function providerName(model: ModelConfig, t: Messages) {
-  const { provider } = parseModelDisplayName(model);
-  if (provider) return providerNameDisplay(provider, t);
-  const { providerKey } = modelIdParts(model.id);
-  return isProviderId(providerKey)
-    ? providerTypeLabel(providerKey, t)
-    : providerKey;
-}
-
-function modelLabel(model: ModelConfig) {
-  return parseModelDisplayName(model).label;
 }

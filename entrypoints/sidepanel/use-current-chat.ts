@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { joinChat } from "../../src/shared/chats";
 import type { Chat } from "../../src/shared/types";
-import { useChatListCleanup } from "./sidepanel-effects";
+import { usePruneEmptyChats } from "./sidepanel-effects";
 import { useChatEntry, type useChats } from "./use-chats";
 
 export type CurrentChatStatus = "ready" | "loading" | "error" | "unavailable";
@@ -12,23 +12,14 @@ export function useCurrentChat({
   chats,
   activeChatId,
   draftChat,
-  setDraftChat,
 }: {
   chats: ReturnType<typeof useChats>;
   activeChatId: string | undefined;
   draftChat: Chat | undefined;
-  setDraftChat: (chat: Chat | undefined) => void;
 }) {
   const { summaries, store } = chats;
   const storedSummary = summaries?.find((chat) => chat.id === activeChatId);
-  useChatListCleanup({
-    chats: summaries,
-    setChats: chats.setSummaries,
-    activeChatId,
-    draftChat,
-    storedCurrentChat: storedSummary,
-    setDraftChat,
-  });
+  usePruneEmptyChats(summaries, chats.setSummaries);
   const storedId = storedSummary?.id;
   const entry = useChatEntry(store, storedId);
 

@@ -1,19 +1,14 @@
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { typingPhrases } from "../../src/shared/holidays";
-import type { Messages } from "../../src/shared/i18n";
 import { useHoliday } from "./holiday-touches";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 const TYPING_PHRASE_INTERVAL_MS = 2_000;
 
-export function TypingIndicator({
-  t,
-  removing = false,
-}: {
-  t: Messages;
-  removing?: boolean;
-}) {
+export function TypingIndicator({ removing = false }: { removing?: boolean }) {
+  const t = useMessages();
   const holiday = useHoliday();
   const phrases = typingPhrases(
     t.sidepanel.typingPhrases,

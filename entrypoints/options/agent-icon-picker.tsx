@@ -3,19 +3,18 @@ import {
   DEFAULT_AGENT_ICON_ID,
   type AgentIconId,
 } from "../../src/shared/agent-icon-registry";
-import type { Messages } from "../../src/shared/i18n";
 import { Label, ToggleGroup, ToggleGroupItem } from "../../src/ui/components";
 import { AgentIcon } from "../../src/ui/agent-icons";
+import { useMessages } from "../../src/ui/messages";
 
 export function AgentIconPicker({
-  t,
   value,
   onChange,
 }: {
-  t: Messages;
   value?: AgentIconId;
   onChange: (value: AgentIconId) => void;
 }) {
+  const t = useMessages();
   return (
     <Label>
       {t.options.agentIcon}

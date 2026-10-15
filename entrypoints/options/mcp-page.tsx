@@ -49,17 +49,16 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function McpPage() {
-  const language = useUiLanguage();
   const [servers, setServers] = useStoredState(storage.mcpServers);
   const [importDraft, setImportDraft] = useState("");
   const [importMessage, setImportMessage] = useState("");
   const [importMenuOpen, setImportMenuOpen] = useState(false);
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
   const [testedServerId, showTested] = useTransient<string>();
-  const t = getMessages(language);
+  const t = useMessages();
   const items = servers || [];
   const presets = missingMcpServerPresets(items);
 
@@ -258,7 +257,6 @@ export function McpPage() {
             }
           >
             <McpServerFields
-              t={t}
               server={server}
               onUpdate={(patch) => updateServer(server.id, patch)}
               onHeadersChange={(value) => updateHeaders(server.id, value)}

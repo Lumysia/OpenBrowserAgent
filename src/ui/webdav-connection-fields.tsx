@@ -1,6 +1,6 @@
-import type { Messages } from "../shared/i18n";
 import type { WebDavSyncBackendConfig } from "../shared/types";
 import { CommitInput, Input, Label } from "./components";
+import { useMessages } from "./messages";
 
 type Field = "url" | "username" | "password";
 
@@ -10,18 +10,17 @@ const WEBDAV_URL_EXAMPLE = "https://example.com/dav/";
 // Settings saves a field when editing ends; setup (`live`) takes every
 // change at once, so its Connect button follows what is typed.
 export function WebDavConnectionFields({
-  t,
   backend,
   disabled,
   live,
   onChange,
 }: {
-  t: Messages;
   backend: WebDavSyncBackendConfig;
   disabled?: boolean;
   live?: boolean;
   onChange: (patch: Partial<Pick<WebDavSyncBackendConfig, Field>>) => void;
 }) {
+  const t = useMessages();
   const field = (
     name: Field,
     label: string,

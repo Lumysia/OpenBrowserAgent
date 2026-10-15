@@ -4,10 +4,10 @@ import {
   ATTACHMENT_KIND,
   isMetadataOnlyAttachment,
 } from "../../src/shared/attachments";
-import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
 import { formatBytes } from "../../src/shared/format";
 import { ContextCard } from "./context-card";
+import { useMessages } from "../../src/ui/messages";
 
 export function UploadFileInput({
   inputRef,
@@ -33,13 +33,12 @@ export function UploadFileInput({
 
 export function UploadedAttachmentCard({
   attachment,
-  t,
   onRemove,
 }: {
   attachment: UploadedAttachment;
-  t: Messages;
   onRemove: () => void;
 }) {
+  const t = useMessages();
   const status = isMetadataOnlyAttachment(attachment.kind)
     ? t.sidepanel.fileMetadataOnly
     : t.sidepanel.willBeSentToAi;

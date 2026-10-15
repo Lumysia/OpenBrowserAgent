@@ -1,7 +1,7 @@
 import { Bot, Languages, Settings } from "lucide-react";
+import { useMessages } from "../../src/ui/messages";
 import { useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
 import type { SyncGroupSettings } from "../../src/shared/storage-keys";
@@ -42,7 +42,8 @@ import { SyncBootstrapStep } from "./sync-bootstrap-step";
 
 type SetupStatus = "idle" | "synced" | "error";
 
-export function ProvidersEmptyState({ t }: { t: Messages }) {
+export function ProvidersEmptyState() {
+  const t = useMessages();
   const [language, setLanguage] = useStoredState(storage.language);
   const [syncBackends] = useStoredState(storage.syncBackends);
   const [syncGroups] = useStoredState(storage.syncGroups);
@@ -238,7 +239,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     active
                   >
                     <SyncBootstrapStep
-                      t={t}
                       selectedBackendId={selectedBackendId}
                       setSelectedBackendId={(backendId) => {
                         setChosenBackendId(backendId);

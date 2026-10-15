@@ -1,46 +1,28 @@
 import { FileText, MousePointerClick, TextQuote } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
-import type {
-  AttachmentTab,
-  SelectedElement,
-  SelectedText,
-  PickedSkill,
-  UploadedAttachment,
-} from "../../src/shared/types";
 import { ScrollArea } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { AttachedTabCard } from "./composer-menus";
 import { ContextCard } from "./context-card";
+import { useComposer } from "./sidepanel-providers";
 import { selectedTextExcerpt } from "./selected-text";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
+import { useMessages } from "../../src/ui/messages";
 
-export function ComposerAttachments({
-  t,
-  attachedTabs,
-  pendingAttachments,
-  selectedSkills,
-  selectedElements,
-  selectedTexts,
-  attachmentNotice,
-  onRemoveAttachedTab,
-  onRemoveSelectedText,
-  onRemoveUploadedAttachment,
-  onRemoveSkill,
-  onSetSelectedElements,
-}: {
-  t: Messages;
-  attachedTabs: AttachmentTab[];
-  pendingAttachments: UploadedAttachment[];
-  selectedSkills: PickedSkill[];
-  selectedElements: SelectedElement[];
-  selectedTexts: SelectedText[];
-  attachmentNotice: string;
-  onRemoveAttachedTab: (tabId: number) => void;
-  onRemoveSelectedText: (selection: SelectedText) => void;
-  onRemoveUploadedAttachment: (id: string) => void;
-  onRemoveSkill: (skillId: string) => void;
-  onSetSelectedElements: (value: SelectedElement[]) => void;
-}) {
+export function ComposerAttachments() {
+  const t = useMessages();
+  const {
+    attachedTabs,
+    pendingAttachments,
+    selectedSkills,
+    selectedElements,
+    selectedTexts,
+    attachmentNotice,
+    removeAttachedTab,
+    removeSelectedText,
+    removeAttachment,
+    removeSkill,
+    setSelectedElements,
+  } = useComposer();
   const hasSkillChips = selectedSkills.length > 0;
   const hasPageContextChips =
     attachedTabs.length > 0 ||
@@ -65,7 +47,7 @@ export function ComposerAttachments({
                   title={name}
                   detail={description || t.options.skills}
                   removeLabel={t.common.cancel}
-                  onRemove={() => onRemoveSkill(skill.id)}
+                  onRemove={() => removeSkill(skill.id)}
                 />
               );
             })}
@@ -82,9 +64,8 @@ export function ComposerAttachments({
             {attachedTabs.map((tab) => (
               <AttachedTabCard
                 key={tab.id}
-                t={t}
                 tab={tab}
-                onRemove={() => onRemoveAttachedTab(tab.id)}
+                onRemove={() => removeAttachedTab(tab.id)}
               />
             ))}
             {selectedElements.map((element, index) => (
@@ -95,7 +76,7 @@ export function ComposerAttachments({
                 detail={t.sidepanel.willBeSentAsPageContext}
                 removeLabel={t.common.cancel}
                 onRemove={() =>
-                  onSetSelectedElements(
+                  setSelectedElements(
                     selectedElements.filter(
                       (_, itemIndex) => itemIndex !== index,
                     ),
@@ -111,7 +92,7 @@ export function ComposerAttachments({
                 fullTitle={selection.text}
                 detail={`${t.sidepanel.selectedText} · ${t.sidepanel.willBeSentWithMessage}`}
                 removeLabel={t.sidepanel.removeSelectedText}
-                onRemove={() => onRemoveSelectedText(selection)}
+                onRemove={() => removeSelectedText(selection)}
               />
             ))}
           </div>
@@ -127,9 +108,8 @@ export function ComposerAttachments({
             {pendingAttachments.map((attachment) => (
               <UploadedAttachmentCard
                 key={attachment.id}
-                t={t}
                 attachment={attachment}
-                onRemove={() => onRemoveUploadedAttachment(attachment.id)}
+                onRemove={() => removeAttachment(attachment.id)}
               />
             ))}
           </div>

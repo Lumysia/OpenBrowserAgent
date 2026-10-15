@@ -1,7 +1,6 @@
 import React from "react";
 import { CornerDownRight } from "lucide-react";
 import { TOOL_NAME } from "../../src/shared/tool-names";
-import type { Messages } from "../../src/shared/i18n";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -32,16 +31,15 @@ import { CapturedTabImage, GeneratedImage } from "./tool-media";
 import { DownloadReferences } from "./download-tool-display";
 import { ToolReferenceButton } from "./tool-references";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export function ToolPart({
-  t,
   part,
   runEnded = false,
   onSelectChat,
   chatExists,
   onAnswerQuestion,
 }: {
-  t: Messages;
   part: ChatPart;
   runEnded?: boolean;
   onSelectChat?: (chatId: string) => void;
@@ -51,6 +49,7 @@ export function ToolPart({
     answers: QuestionToolAnswer[],
   ) => void;
 }) {
+  const t = useMessages();
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
   const { title, failed, description, references, subAgentProgress } =
@@ -103,18 +102,15 @@ export function ToolPart({
             <GeneratedImage
               output={(part.output || {}) as Record<string, unknown>}
               loading={loading}
-              t={t}
             />
           )}
           {name === TOOL_NAME.screenshot && (
             <CapturedTabImage
               output={(part.output || {}) as Record<string, unknown>}
-              t={t}
             />
           )}
           {name === TOOL_NAME.ask && (
             <QuestionToolForm
-              t={t}
               part={part}
               active={questionPending}
               onSubmit={(answers) => onAnswerQuestion?.(part.id, answers)}
@@ -150,7 +146,7 @@ export function ToolPart({
               <span>{t.sidepanel.openSubAgentChat}</span>
             </Button>
           )}
-          <DownloadReferences output={part.output} t={t} />
+          <DownloadReferences output={part.output} />
           {!!references.length && (
             <div className="tool-references">
               {references.map((reference, index) => (
@@ -169,16 +165,15 @@ export function ToolPart({
 }
 
 function QuestionToolForm({
-  t,
   part,
   active,
   onSubmit,
 }: {
-  t: Messages;
   part: ChatPart;
   active: boolean;
   onSubmit: (answers: QuestionToolAnswer[]) => void;
 }) {
+  const t = useMessages();
   const questions = questionToolQuestions(part.input);
   const submittedAnswers = questionToolSubmittedAnswers(part.output);
   const [selected, setSelected] = React.useState<Record<number, string[]>>({});

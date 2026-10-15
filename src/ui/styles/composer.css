@@ -430,6 +430,10 @@
 :is(.model-menu-item, .agent-menu-item) small {
   font-size: var(--text-xs);
 }
+/* The provider reads above the model name. */
+.model-menu-item small {
+  order: -1;
+}
 .agent-menu-item small {
   display: -webkit-box;
   overflow-wrap: anywhere;

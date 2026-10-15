@@ -24,16 +24,16 @@ import {
   TabsTrigger,
 } from "../../src/ui/components";
 import { formatCompactNumber, formatToolMessage } from "./format";
+import { useMessages } from "../../src/ui/messages";
 
 export function MessageRunInfo({
-  t,
   message,
   chatMessages,
 }: {
-  t: Messages;
   message: ChatMessage;
   chatMessages: ChatMessage[];
 }) {
+  const t = useMessages();
   const current = readRunMetrics(message);
   const chat = aggregateRunMetrics(chatMessages);
   const [view, setView] = useState<"turn" | "chat">("turn");
@@ -80,14 +80,12 @@ export function MessageRunInfo({
             <RunInfoSection
               title={t.sidepanel.runInfo.currentTurn}
               metrics={current}
-              t={t}
             />
           </TabsContent>
           <TabsContent value="chat">
             <RunInfoSection
               title={t.sidepanel.runInfo.wholeChat}
               metrics={chat}
-              t={t}
             />
           </TabsContent>
         </Tabs>
@@ -99,12 +97,11 @@ export function MessageRunInfo({
 function RunInfoSection({
   title,
   metrics,
-  t,
 }: {
   title: string;
   metrics: RunMetrics;
-  t: Messages;
 }) {
+  const t = useMessages();
   const usage = metrics.usage;
   return (
     <div className="run-info-section">
@@ -119,7 +116,7 @@ function RunInfoSection({
           value={formatTps(metrics, t)}
         />
       </div>
-      <CacheShareBar usage={usage} t={t} />
+      <CacheShareBar usage={usage} />
       <div className="run-info-token-grid">
         <MetricRow
           label={t.sidepanel.runInfo.modelCalls}
@@ -159,13 +156,8 @@ function RunInfoSection({
 }
 
 // Share of input tokens the provider served from its prompt cache.
-function CacheShareBar({
-  usage,
-  t,
-}: {
-  usage: TokenUsage | undefined;
-  t: Messages;
-}) {
+function CacheShareBar({ usage }: { usage: TokenUsage | undefined }) {
+  const t = useMessages();
   const input = usage?.inputTokens || 0;
   if (!input) return null;
   const cached = Math.min(input, usage?.cachedInputTokens || 0);

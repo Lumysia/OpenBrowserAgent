@@ -1,6 +1,5 @@
 import { Cloud } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import {
   SYNC_BACKEND_REGISTRY,
   WEBDAV_SYNC_BACKEND_ID,
@@ -25,11 +24,11 @@ import {
   Textarea,
 } from "../../src/ui/components";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 type WebDavDraft = WebDavSyncBackendConfig;
 
 export function SyncBootstrapStep({
-  t,
   selectedBackendId,
   setSelectedBackendId,
   webDavDraft,
@@ -46,7 +45,6 @@ export function SyncBootstrapStep({
   cloudActionLabel,
   handleCloudAction,
 }: {
-  t: Messages;
   selectedBackendId: string;
   setSelectedBackendId: (backendId: string) => void;
   webDavDraft: WebDavDraft;
@@ -63,6 +61,7 @@ export function SyncBootstrapStep({
   cloudActionLabel: string;
   handleCloudAction: () => void;
 }) {
+  const t = useMessages();
   return (
     <div className="bootstrap-actions">
       <Tabs
@@ -93,7 +92,6 @@ export function SyncBootstrapStep({
         </TabsContent>
         <TabsContent value="manual" className="bootstrap-sync-tab-panel">
           <ManualSyncBackendFields
-            t={t}
             selectedBackendId={selectedBackendId}
             setSelectedBackendId={setSelectedBackendId}
             webDavDraft={webDavDraft}
@@ -130,7 +128,6 @@ export function SyncBootstrapStep({
 }
 
 function ManualSyncBackendFields({
-  t,
   selectedBackendId,
   setSelectedBackendId,
   webDavDraft,
@@ -138,7 +135,6 @@ function ManualSyncBackendFields({
   syncing,
   hasActiveSyncBackend,
 }: {
-  t: Messages;
   selectedBackendId: string;
   setSelectedBackendId: (backendId: string) => void;
   webDavDraft: WebDavDraft;
@@ -146,6 +142,7 @@ function ManualSyncBackendFields({
   syncing: boolean;
   hasActiveSyncBackend: boolean;
 }) {
+  const t = useMessages();
   const disabled = syncing || hasActiveSyncBackend;
   return (
     <>
@@ -169,7 +166,6 @@ function ManualSyncBackendFields({
       {selectedBackendId === WEBDAV_SYNC_BACKEND_ID && (
         <div className="bootstrap-backend-fields">
           <WebDavConnectionFields
-            t={t}
             backend={webDavDraft}
             disabled={disabled}
             live

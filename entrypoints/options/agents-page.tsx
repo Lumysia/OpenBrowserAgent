@@ -6,7 +6,6 @@ import {
   createAgentDraft,
   isBuiltinAgentId,
 } from "../../src/shared/agents";
-import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { Agent } from "../../src/shared/types";
 import { createWorkspace } from "../../src/shared/workspace";
@@ -39,16 +38,15 @@ import { AgentWorkspaceEditor } from "./agent-workspace-editor";
 import { downloadAgentZip, importAgentZip } from "./workspace-import";
 import { importErrorText } from "./import-errors";
 import { useLatest } from "../../src/ui/use-latest";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function AgentsPage() {
-  const language = useUiLanguage();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [agents, setAgents] = useStoredState(storage.agents);
   const [workspaces] = useStoredState(storage.agentWorkspaces);
   const importAgentInputRef = useRef<HTMLInputElement | null>(null);
   const [importAgentError, setImportAgentError] = useState("");
-  const t = getMessages(language);
+  const t = useMessages();
   const models = useConfiguredModels();
   const items = agents || [];
   const selectedAgentId = preferences?.selectedAgentId || DEFAULT_AGENT_ID;
@@ -230,7 +228,6 @@ export function AgentsPage() {
                   </Label>
                   {!builtin && (
                     <AgentIconPicker
-                      t={t}
                       value={agent.icon}
                       onChange={(icon) => updateAgent(agent.id, { icon })}
                     />
@@ -264,7 +261,6 @@ export function AgentsPage() {
                     </>
                   )}
                   <AgentToolsEditor
-                    t={t}
                     agent={agent}
                     readOnly={builtin}
                     onChange={(patch) => updateAgent(agent.id, patch)}
@@ -272,7 +268,6 @@ export function AgentsPage() {
                   {!builtin && agent.workspace && (
                     <AgentWorkspaceEditor
                       workspace={workspaceForAgent(agent.id)}
-                      t={t}
                     />
                   )}
                   <div className="row">
@@ -299,7 +294,6 @@ export function AgentsPage() {
         })}
       </Accordion>
       <ResetDefaultsCard
-        t={t}
         title={t.options.resetDefaultAgents}
         description={t.options.resetDefaultAgentsDescription}
         onResetBuiltins={resetBuiltinAgents}
