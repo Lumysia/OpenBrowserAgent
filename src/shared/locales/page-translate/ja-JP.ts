@@ -97,6 +97,8 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     stop: "字幕の翻訳を非表示",
     noCaptions:
       "この動画の字幕がまだ見つかりません。プレーヤーで字幕をオンにしてください。表示されしだい翻訳します。",
+    liveOnly:
+      "画面の字幕を表示されしだい翻訳しています。先まで翻訳するには、プレーヤーの字幕をいったんオフにしてからオンにしてください。",
     noVideo: "ここには字幕を翻訳できる動画がありません。",
     videoButton: "動画の字幕ボタン",
     videoButtonDescription:

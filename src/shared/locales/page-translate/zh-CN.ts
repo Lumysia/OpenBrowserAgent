@@ -83,6 +83,8 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     stop: "隐藏字幕译文",
     noCaptions:
       "暂未找到此视频的字幕。请在播放器中打开字幕，字幕一出现就会翻译。",
+    liveOnly:
+      "正在边播边翻屏幕上的字幕。想提前翻好，请在播放器里把字幕关掉再打开。",
     noVideo: "这里没有可翻译字幕的视频。",
     videoButton: "视频上的字幕按钮",
     videoButtonDescription:

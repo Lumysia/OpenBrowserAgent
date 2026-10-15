@@ -32,6 +32,8 @@ export const VIDEO_SUBTITLES_MESSAGE = {
 export type VideoSubtitlesNotes = {
   // Nothing to translate turned up for a while after starting.
   noCaptions: string;
+  // Only captions drawn on screen were found: they can't be translated ahead.
+  liveOnly: string;
   theme: PageToastTheme;
 };
 

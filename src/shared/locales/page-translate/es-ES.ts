@@ -97,6 +97,8 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     stop: "Ocultar subtítulos traducidos",
     noCaptions:
       "Aún no se han encontrado subtítulos para este vídeo. Activa los subtítulos en el reproductor: se traducen en cuanto aparecen.",
+    liveOnly:
+      "Se traducen los subtítulos en pantalla a medida que aparecen. Para traducir por adelantado, desactiva y vuelve a activar los subtítulos del reproductor.",
     noVideo: "Aquí no hay ningún vídeo cuyos subtítulos traducir.",
     videoButton: "Botón de subtítulos en los vídeos",
     videoButtonDescription:

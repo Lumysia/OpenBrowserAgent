@@ -97,6 +97,8 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     stop: "Ocultar legendas traduzidas",
     noCaptions:
       "Ainda não foram encontradas legendas para este vídeo. Ative as legendas no player — elas são traduzidas assim que aparecem.",
+    liveOnly:
+      "As legendas na tela são traduzidas conforme aparecem. Para traduzir com antecedência, desative e ative de novo as legendas do player.",
     noVideo: "Não há nenhum vídeo para traduzir legendas aqui.",
     videoButton: "Botão de legendas nos vídeos",
     videoButtonDescription:

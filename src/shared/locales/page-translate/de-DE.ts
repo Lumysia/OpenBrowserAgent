@@ -97,6 +97,8 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     stop: "Übersetzte Untertitel ausblenden",
     noCaptions:
       "Für dieses Video wurden noch keine Untertitel gefunden. Schalten Sie die Untertitel im Player ein – sie werden übersetzt, sobald sie erscheinen.",
+    liveOnly:
+      "Die angezeigten Untertitel werden übersetzt, sobald sie erscheinen. Um vorab zu übersetzen, schalten Sie die Untertitel im Player aus und wieder ein.",
     noVideo:
       "Hier gibt es kein Video, dessen Untertitel übersetzt werden können.",
     videoButton: "Untertitel-Schaltfläche auf Videos",

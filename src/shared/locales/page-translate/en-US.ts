@@ -105,6 +105,8 @@ export const pageTranslateEnUS = {
     stop: "Hide translated subtitles",
     noCaptions:
       "No subtitles found for this video yet. Turn on its captions in the player; they are translated as soon as they show.",
+    liveOnly:
+      "Translating the captions on screen as they show. To translate ahead, turn the player's captions off and on again.",
     noVideo: "No video to translate subtitles for here.",
     videoButton: "Subtitle button on videos",
     videoButtonDescription:

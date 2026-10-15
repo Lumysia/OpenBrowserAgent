@@ -95,6 +95,8 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     stop: "자막 번역 숨기기",
     noCaptions:
       "이 동영상의 자막을 아직 찾지 못했습니다. 플레이어에서 자막을 켜세요. 자막이 표시되는 즉시 번역합니다.",
+    liveOnly:
+      "화면에 표시되는 자막을 바로 번역하고 있습니다. 미리 번역하려면 플레이어의 자막을 껐다가 다시 켜세요.",
     noVideo: "여기에는 자막을 번역할 동영상이 없습니다.",
     videoButton: "동영상 자막 버튼",
     videoButtonDescription:

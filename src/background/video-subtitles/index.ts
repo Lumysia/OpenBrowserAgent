@@ -190,6 +190,7 @@ async function pageNotes(): Promise<VideoSubtitlesNotes> {
   ]);
   return {
     noCaptions: getPageTranslateMessages(language).subtitles.noCaptions,
+    liveOnly: getPageTranslateMessages(language).subtitles.liveOnly,
     theme: pageToastTheme(preferences.colorScheme, preferences.accentColor),
   };
 }

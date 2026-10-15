@@ -181,8 +181,11 @@ export function startVideoSession(
   if (!video.paused) play();
   refreshLines();
   const noteTimer = window.setTimeout(() => {
-    if (!cueSource && !dom.found && !liveText)
-      showToast(notes.noCaptions, notes.theme);
+    if (cueSource) return;
+    showToast(
+      dom.found || liveText ? notes.liveOnly : notes.noCaptions,
+      notes.theme,
+    );
   }, NO_CAPTIONS_MS);
 
   return {
