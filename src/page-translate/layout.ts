@@ -5,8 +5,8 @@
 // form. Growing taller is fine. Only read here (styles and boxes); the
 // caller batches reads before writes.
 import type { Paragraph } from "./blocks";
-import { wordCount } from "../shared/text";
-import { ARTICLE_SELECTOR, controlOf, isOwn, isTextBlock } from "./dom-rules";
+import { ARTICLE_SELECTOR, controlOf, isTextBlock } from "./chrome";
+import { isOwn } from "./dom-rules";
 import {
   clampOf,
   copiedText,
@@ -128,8 +128,10 @@ export function choosePlacement(
   // translation never goes into it (a tooltip when menus are translated).
   if (controlOf(paragraph.parent) || isDrawnControl(paragraph, view))
     return { form: translateMenus ? "tooltip" : "skip" };
-  // A note laid over the page (cookie and newsletter prompts) is chrome.
-  if (!translateMenus && isOverlay(block, view)) return { form: "skip" };
+  // A note laid over the article (cookie and newsletter prompts) is
+  // chrome: only what reads as content in it is translated.
+  if (!translateMenus && !paragraph.content && isOverlay(block, view))
+    return { form: "skip" };
   const box = nodesBox(paragraph);
   // Visually hidden text (1px clip, off-screen skip links) stays as it is.
   if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX)
@@ -228,9 +230,10 @@ export function choosePlacement(
   return placement;
 }
 
-// A box fixed over the page, outside the article and covering part of the
-// window only: a whole-window box is the page's own frame (apps that scroll
-// their content in a fixed box).
+// A box fixed over the page, outside the article, covering part of the
+// window only (a whole-window box is the page's own frame: apps that scroll
+// their content in a fixed box) and laid over the article's box: a fixed
+// column beside the article (a table of contents) is part of the page.
 const OVERLAY_MAX_SHARE = 0.5;
 
 function isOverlay(block: Element, view: Window) {
@@ -243,13 +246,19 @@ function isOverlay(block: Element, view: Window) {
     if (element.matches(ARTICLE_SELECTOR)) return false;
     if (view.getComputedStyle(element).position !== "fixed") continue;
     const box = element.getBoundingClientRect();
-    return (
-      box.width * box.height <
+    if (
+      box.width * box.height >=
       view.innerWidth * view.innerHeight * OVERLAY_MAX_SHARE
-    );
+    )
+      return false;
+    const article = block.ownerDocument.querySelector(ARTICLE_SELECTOR);
+    return !article || overlaps(box, article.getBoundingClientRect());
   }
   return false;
 }
+
+const overlaps = (a: DOMRect, b: DOMRect) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
 // The source's link, when the translation is outside it: clicking the
 // translation follows it, without the translation being a second link.
@@ -317,18 +326,16 @@ function ownForm(host: Element, style: CSSStyleDeclaration): Form {
   return "block";
 }
 
-// Words at most in a control's label.
-const LABEL_MAX_WORDS = 6;
 // A control is at most this many lines high.
 const CONTROL_MAX_LINES = 3;
 
-// A link drawn as a button (a pill, a chip): a short label in a small box
-// with its own background or border.
+// A link drawn as a button (a pill, a chip): a label that doesn't read as
+// content (see Paragraph's content) in a box with its own background or
+// border, about the size of its text. A boxed link as wide as its row (a
+// list of headlines drawn as boxes, a card) is content.
 function isDrawnControl(paragraph: Paragraph, view: Window) {
   const link = paragraph.parent.closest("a[href]");
-  if (!link) return false;
-  const text = paragraph.source.plain;
-  if (wordCount(text) > LABEL_MAX_WORDS || /[.!?:]$/.test(text)) return false;
+  if (!link || paragraph.content) return false;
   const style = view.getComputedStyle(link);
   const painted =
     hasBackground(style) ||
@@ -336,10 +343,31 @@ function isDrawnControl(paragraph: Paragraph, view: Window) {
       style.borderTopStyle !== "none" &&
       parseFloat(style.borderBottomWidth) > 0);
   if (!painted) return false;
-  return (
-    link.getBoundingClientRect().height <=
-    lineHeightOf(style) * CONTROL_MAX_LINES
+  const box = link.getBoundingClientRect();
+  if (box.height > lineHeightOf(style) * CONTROL_MAX_LINES) return false;
+  return sizedToText(link, box, style);
+}
+
+// Whether the box is about as wide as the text in it: its padding and
+// border aside, at most a little wider.
+function sizedToText(
+  element: Element,
+  box: DOMRect,
+  style: CSSStyleDeclaration,
+) {
+  const range = element.ownerDocument.createRange();
+  range.selectNodeContents(element);
+  const text = range.getBoundingClientRect().width;
+  const inner = [
+    "padding-left",
+    "padding-right",
+    "border-left-width",
+    "border-right-width",
+  ].reduce(
+    (width, side) => width - (parseFloat(style.getPropertyValue(side)) || 0),
+    box.width,
   );
+  return inner <= text + CLOSE_SLACK_PX;
 }
 
 function areaOf(start: Element, view: Window) {

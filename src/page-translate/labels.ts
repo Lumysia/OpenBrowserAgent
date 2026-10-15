@@ -3,7 +3,8 @@
 // a picture, a row of short links). Only reads the DOM.
 import { hasTag, MEDIA_TAGS } from "../shared/dom-vocabulary";
 import { wordCount } from "../shared/text";
-import { isDecorative, isTextBlock } from "./dom-rules";
+import { isTextBlock } from "./chrome";
+import { isDecorative } from "./dom-rules";
 import { metadataOf } from "./metadata";
 import { originalContent, originalText } from "./originals";
 

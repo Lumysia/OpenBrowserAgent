@@ -214,7 +214,7 @@ test("paragraphs: an inline element laid out as a block at a run's edge is a lin
   ]);
 });
 
-test("paragraphs: the main content only, unless menus are translated too", () => {
+test("paragraphs: the page's interface only where it reads as content, unless menus are translated too", () => {
   const page = `
     <header id="site-header"><a href="/">Site name</a><p id="tagline">A tagline</p></header>
     <nav><a href="/a">First section</a></nav>
@@ -238,10 +238,15 @@ test("paragraphs: the main content only, unless menus are translated too", () =>
     paragraphsOf(page, options).found.map(
       (paragraph) => paragraph.source.plain,
     );
+  // Short labels of the page's interface stay; what reads as content in it
+  // (a dialog's sentences, a question) is translated. A button inside a
+  // sentence stays in it, kept as it is.
   assert.deepEqual(texts(), [
+    "We use cookies here.",
+    "Accept the cookies?",
+    "Wir verwenden Cookies.",
     "Article title",
-    "The article's text, with a",
-    "button.",
+    "The article's text, with a button.",
     "An aside in the article",
     "Bake the cookies.",
   ]);
@@ -257,9 +262,7 @@ test("paragraphs: the main content only, unless menus are translated too", () =>
     "Wir verwenden Cookies.",
     "Sidebar text",
     "Article title",
-    "The article's text, with a",
-    "Show more",
-    "button.",
+    "The article's text, with a button.",
     "An aside in the article",
     "Bake the cookies.",
     "Footer text",

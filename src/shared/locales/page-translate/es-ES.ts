@@ -56,7 +56,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   },
   translateMenus: "Traducir también menús y botones",
   translateMenusDescription:
-    "Si está desactivado, solo se traduce el contenido principal de la página; la navegación, los menús, los botones, las pestañas y los pies de página no cambian.",
+    "Si está desactivado, las etiquetas cortas de la navegación, los menús, los botones, las pestañas y los pies de página no cambian; los títulos, las frases y las preguntas que contienen se traducen igualmente.",
   cache: "Traducciones guardadas",
   cacheDescription:
     "Las traducciones se guardan 30 días en este dispositivo, así que las páginas traducidas vuelven al instante.",

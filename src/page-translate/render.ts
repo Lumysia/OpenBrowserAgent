@@ -7,6 +7,7 @@
 // restores the page.
 import { plainText } from "../shared/page-translate/placeholders";
 import type { Paragraph } from "./blocks";
+import { CONTROL_SELECTOR } from "./chrome";
 import { TRANSLATION_ATTRIBUTE, TRANSLATION_TAG } from "./dom-rules";
 import { buildTranslation, originalOf } from "./serialize";
 
@@ -152,7 +153,7 @@ function createElement(paragraph: Paragraph, language: string) {
   element.setAttribute("translate", "no");
   element.className = "notranslate";
   element.lang = language;
-  element.addEventListener("click", followCopiedLink);
+  element.addEventListener("click", followCopy);
   return element;
 }
 
@@ -364,15 +365,19 @@ export function removeAll(document: Document) {
 // A copied link has the original's address but not the page's click
 // handlers (single-page apps route through them): a plain click goes to the
 // original instead. Clicks with modifier keys open the address as usual.
-// A translation outside its source link has no link of its own: a plain
-// click on it goes to the source link.
-function followCopiedLink(event: MouseEvent) {
+// A copied control (a button kept in its sentence) has no handlers at all:
+// a click on it is a click on the original. A translation outside its
+// source link has no link of its own: a plain click on it goes to the
+// source link.
+function followCopy(event: MouseEvent) {
   if (event.defaultPrevented || event.button !== 0) return;
-  if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
   const target = event.target as Element | null;
-  const link = target?.closest?.("a");
+  const copy = target?.closest?.(`a, ${CONTROL_SELECTOR}`);
+  const modified =
+    event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
+  if (modified && (!copy || copy.localName === "a")) return;
   const original =
-    (link && originalOf(link)) || links.get(event.currentTarget as Element);
+    (copy && originalOf(copy)) || links.get(event.currentTarget as Element);
   if (!original?.isConnected) return;
   event.preventDefault();
   (original as HTMLElement).click();
