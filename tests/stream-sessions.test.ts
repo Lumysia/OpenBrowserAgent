@@ -29,7 +29,10 @@ test("chat close acknowledges cancellation of detached and attached sessions onl
     assert.deepEqual(response, { ok: true });
     for (const session of [detached, attached]) {
       assert.equal(session.abortController.signal.aborted, true);
-      assert.equal(sessions.getStreamSession(session.chatId), undefined);
+      // Gone: a panel reattaching to it is told it is not running.
+      const probe = port();
+      sessions.attachStream(probe.port, session.chatId, undefined);
+      assert.deepEqual(probe.events, [{ type: "notRunning" }]);
     }
     assert.equal(unrelated.abortController.signal.aborted, false);
   };
