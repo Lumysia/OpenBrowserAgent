@@ -23,7 +23,17 @@ export const SMART_BAR_COMMAND = "smart-bar";
 
 export type SmartBarMessages = LocaleMessages["smartBar"];
 
-export type SmartBarShowReason = "selection" | "shortcut";
+// `menu`: the right-click menu's item for the selection ("Translate '…'"),
+// which runs its action at once, also where the bar is off.
+export type SmartBarShowReason = "selection" | "shortcut" | "menu";
+
+// Background -> page script: show the bar for the frame's selection (the
+// shortcut), or run `action` on it (the right-click menu; sent to the
+// frame the menu was opened in).
+export type SmartBarShowForSelectionMessage = {
+  type: typeof SMART_BAR_MESSAGE.showForSelection;
+  action?: SmartBarGenerateAction;
+};
 
 export type SmartBarPrepareRequest = {
   type: typeof SMART_BAR_MESSAGE.prepare;

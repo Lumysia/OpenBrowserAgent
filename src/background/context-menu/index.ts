@@ -17,6 +17,7 @@ import { togglePageTranslation } from "../page-translate";
 import { activeTab, changePageTool, tabPageTools } from "../page-tools";
 import { onPageToolsChanged } from "../page-tools-events";
 import { handOffToSidePanel } from "../side-panel-handoff";
+import { translateSelection } from "../smart-bar";
 import { toggleVideoSubtitles } from "../video-subtitles";
 import { copyPageMarkdown } from "./copy-markdown";
 
@@ -208,10 +209,13 @@ function handleClick(
     if (tool) return changePageTool(tab, tool);
     switch (info.menuItemId) {
       case CONTEXT_MENU_ID.ask:
+      case CONTEXT_MENU_ID.askSelection:
         return handOffToSidePanel(tab, {
           task: SIDE_PANEL_TASK.ask,
           text: info.selectionText || "",
         });
+      case CONTEXT_MENU_ID.translateSelection:
+        return translateSelection(tab, info.frameId ?? 0);
       case CONTEXT_MENU_ID.summarizePage:
         return handOffToSidePanel(tab, { task: SIDE_PANEL_TASK.summarizePage });
       case CONTEXT_MENU_ID.translatePage:

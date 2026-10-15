@@ -13,6 +13,7 @@ import {
   isSmartBarAllowedOnHost,
   normalizeSmartBarSettings,
   SMART_BAR_TRIGGER,
+  SMART_BAR_ACTION,
   smartBarActions,
   smartBarHideSite,
   smartBarTextTooLong,
@@ -29,6 +30,7 @@ import {
   type SmartBarPrepareResult,
   type SmartBarRunRequest,
   type SmartBarSettingsChangedMessage,
+  type SmartBarShowForSelectionMessage,
   type SmartBarSidePanelRequest,
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
@@ -36,6 +38,7 @@ import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { storage } from "../../shared/storage";
 import type { Preferences } from "../../shared/types";
 import { getBrowserApi } from "../../shared/browser-api";
+import { PAGE_SCRIPT } from "../../shared/page-scripts";
 import {
   normalizeColorScheme,
   normalizeTheme,
@@ -170,7 +173,11 @@ async function prepare(
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const host = siteHost(sender);
   const tabId = sender.tab?.id;
-  const actions = smartBarActions(settings, request.editable);
+  // The right-click menu asked for this selection: the user's explicit
+  // request, also where the bar is off; its toolbar then offers Translate.
+  const menu = request.reason === "menu";
+  const shown = smartBarActions(settings, request.editable);
+  const actions = menu && !shown.length ? [SMART_BAR_ACTION.translate] : shown;
   const allowed =
     settings.enabled &&
     !!host &&
@@ -182,7 +189,7 @@ async function prepare(
     allowed && settings.trigger === SMART_BAR_TRIGGER.selection;
   if (
     !host ||
-    !allowed ||
+    (!allowed && !menu) ||
     !actions.length ||
     tabId === undefined ||
     (request.reason === "selection" && !onSelection)
@@ -215,6 +222,40 @@ function promptLanguages(
       language,
     ),
   };
+}
+
+// "Translate '…'" in the right-click menu: the smart bar's Translate on the
+// selection in the frame the menu was opened in. Pages opened before the
+// bar's script was registered (or with the bar off) get it first.
+export async function translateSelection(
+  tab: chrome.tabs.Tab | undefined,
+  frameId: number,
+) {
+  if (tab?.id === undefined) return;
+  const tabId = tab.id;
+  const message: SmartBarShowForSelectionMessage = {
+    type: SMART_BAR_MESSAGE.showForSelection,
+    action: SMART_BAR_ACTION.translate,
+  };
+  const api = getBrowserApi();
+  // Only the smart bar's script answers; other scripts of ours in the
+  // frame leave the reply empty.
+  const send = () =>
+    api.tabs.sendMessage(tabId, message, { frameId }).then(
+      (reply: unknown) => reply !== undefined,
+      () => false,
+    );
+  if (await send()) return;
+  const injected = await api.scripting
+    .executeScript({
+      target: { tabId, frameIds: [frameId] },
+      files: [PAGE_SCRIPT.smartBar],
+    })
+    .then(
+      () => true,
+      () => false,
+    );
+  if (injected) await send();
 }
 
 async function showForSelection(tabId: number) {

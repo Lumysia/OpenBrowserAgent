@@ -36,9 +36,9 @@ export default defineContentScript({
     createRoot(container).render(<SmartBarApp store={store} />);
     setSmartBarUi({
       ...store.ui,
-      show(snapshot, config, reason) {
+      show(snapshot, config, reason, action) {
         placeHost(host, snapshot);
-        store.ui.show(snapshot, config, reason);
+        store.ui.show(snapshot, config, reason, action);
       },
     } satisfies SmartBarUi);
   },

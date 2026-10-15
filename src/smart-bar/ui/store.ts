@@ -182,7 +182,7 @@ export function createSmartBarStore(host: HTMLElement) {
 
   const ui: SmartBarUi = {
     host,
-    show(snapshot, config, reason) {
+    show(snapshot, config, reason, action) {
       stop();
       set({
         id: state.id + 1,
@@ -192,6 +192,7 @@ export function createSmartBarStore(host: HTMLElement) {
         result: undefined,
         popoverOpen: false,
       });
+      if (action) run(action);
     },
     hide,
     dismiss() {

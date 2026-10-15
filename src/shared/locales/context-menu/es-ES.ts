@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuEsES: ContextMenuLocaleMessages = {
   items: {
-    ask: "Preguntar o actuar sobre esta página",
+    ask: "Preguntar sobre esta página",
+    askSelection: "Preguntar sobre «%s»",
     summarizePage: "Resumir esta página",
     searchPage: "Buscar en la web sobre esta página",
     searchSelection: "Buscar «%s» en la web",
+    translateSelection: "Traducir «%s»",
     summarizeLink: "Resumir la página enlazada",
     copyMarkdown: "Copiar como Markdown",
   },
@@ -25,7 +27,9 @@ export const contextMenuEsES: ContextMenuLocaleMessages = {
   itemsDescription:
     "Las acciones que abren el panel lateral pasan la página a tu agente. Copiar como Markdown no usa IA.",
   itemLabels: {
-    ask: "Preguntar o actuar sobre esta página",
+    ask: "Preguntar sobre esta página o el texto seleccionado",
+    translateSelection:
+      "Traducir el texto seleccionado (con «Traducir» de la barra inteligente)",
     summarizePage: "Resumir esta página",
     searchWeb: "Buscar en la web sobre esta página o el texto seleccionado",
     summarizeLink: "Resumir la página enlazada (en enlaces)",

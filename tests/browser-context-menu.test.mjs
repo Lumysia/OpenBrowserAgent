@@ -9,6 +9,7 @@ import {
   barState,
   clickInBar,
   inSmartBar,
+  resultText,
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
@@ -27,6 +28,17 @@ const PAGE = `<!doctype html><html lang="en"><title>Menu page</title>
 </main>`;
 
 const MENU = CONTEXT_MENU_ID;
+// Where the page-wide items show: everywhere but on a selection.
+const NOT_SELECTION = [
+  "page",
+  "frame",
+  "link",
+  "image",
+  "video",
+  "audio",
+  "editable",
+  "tab",
+];
 
 test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const prompts = [];
@@ -98,9 +110,9 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
 
     await t.test("items, titles and contexts", async () => {
       await setMenu({ enabled: true, disabledItems: ["copyMarkdown"] });
-      await poll(async () => (await menuItems()).length === 8);
+      await poll(async () => (await menuItems()).length === 10);
       await setMenu({ enabled: true, disabledItems: [] });
-      await poll(async () => (await menuItems()).length === 9);
+      await poll(async () => (await menuItems()).length === 11);
       const items = await menuItems();
       assert.deepEqual(
         items.map(({ id, parentId, title, contexts, error }) => ({
@@ -112,26 +124,16 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         })),
         [
           [MENU.parent, undefined, "OpenBrowserAgent", ["all", "tab"]],
-          [MENU.ask, "Ask or act on this page", ["all", "tab"]],
-          [MENU.summarizePage, "Summarize this page", ["all", "tab"]],
+          [MENU.ask, "Ask about this page", NOT_SELECTION],
+          [MENU.askSelection, 'Ask about "%s"', ["selection"]],
+          [MENU.summarizePage, "Summarize this page", NOT_SELECTION],
+          [MENU.translateSelection, 'Translate "%s"', ["selection"]],
           [MENU.translatePage, "Translate this page", ["all", "tab"]],
           [MENU.translateSubtitles, "Translate subtitles", ["video"]],
-          [
-            MENU.searchPage,
-            "Search the web about this page",
-            [
-              "page",
-              "frame",
-              "link",
-              "image",
-              "video",
-              "audio",
-              "editable",
-            ].concat("tab"),
-          ],
+          [MENU.searchPage, "Search the web about this page", NOT_SELECTION],
           [MENU.searchSelection, 'Search the web for "%s"', ["selection"]],
           [MENU.summarizeLink, "Summarize linked page", ["link"]],
-          [MENU.copyMarkdown, "Copy as Markdown", ["all", "tab"]],
+          [MENU.copyMarkdown, "Copy as Markdown", NOT_SELECTION],
         ].map((entry) =>
           entry.length === 4
             ? {
@@ -169,7 +171,7 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       await setMenu({ enabled: false, disabledItems: [] });
       await poll(async () => (await menuItems()).length === 0);
       await setMenu({ enabled: true, disabledItems: [] });
-      await poll(async () => (await menuItems()).length === 9);
+      await poll(async () => (await menuItems()).length === 11);
     });
 
     let panel;
@@ -399,6 +401,24 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       );
       other.close();
     });
+
+    await t.test(
+      "Translate on a selection runs the smart bar's Translate, also with the bar off",
+      async () => {
+        await setPreferences({ smartBar: { enabled: false } });
+        await page.send("Page.bringToFront");
+        await selectText(page, "#text");
+        await click({
+          menuItemId: MENU.translateSelection,
+          parentMenuItemId: MENU.parent,
+          selectionText: "The quick brown fox jumps over the lazy dog.",
+        });
+        await poll(
+          async () => (await resultText(page)) === "Answer from the fixture.",
+        );
+        assert.match(prompts.at(-1), /Translate the text below/);
+      },
+    );
   } finally {
     await session.close();
   }
