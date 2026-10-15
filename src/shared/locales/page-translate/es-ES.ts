@@ -97,7 +97,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     hideEverywhere: "Ocultar en todas partes",
     setting: "Botón de traducir en las páginas",
     settingDescription:
-      "Un pequeño botón en el borde de las páginas web traduce la página o muestra el original. Arrástralo para moverlo; se queda en el borde más cercano de la ventana.",
+      "Un pequeño botón en el borde de las páginas web traduce la página o muestra el original. Arrástralo para moverlo; se queda en el borde más cercano de la ventana. Solo aparece en páginas que no están ya en el idioma de «Traducir a».",
     move: "Las flechas lo mueven a lo largo del borde; E lo lleva al borde siguiente.",
     hiddenSites: "Oculto en estos sitios",
     hiddenSitesDescription:

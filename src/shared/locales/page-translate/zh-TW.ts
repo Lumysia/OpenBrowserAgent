@@ -84,7 +84,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     hideEverywhere: "在所有網站上隱藏",
     setting: "網頁上的翻譯按鈕",
     settingDescription:
-      "在網頁邊緣顯示一個小按鈕，用來翻譯此頁面或顯示原文。拖曳即可移動，放開後會停靠在視窗最近的邊緣。",
+      "在網頁邊緣顯示一個小按鈕，用來翻譯此頁面或顯示原文。拖曳即可移動，放開後會停靠在視窗最近的邊緣。已是「翻譯為」所選語言的頁面不會顯示它。",
     move: "方向鍵沿邊緣移動，E 鍵將它移到下一個邊緣。",
     hiddenSites: "在這些網站上隱藏",
     hiddenSitesDescription: "按鈕不會在這些網站上顯示。網站包含其子網域。",

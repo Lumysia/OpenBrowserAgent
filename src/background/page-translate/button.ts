@@ -11,6 +11,7 @@ import {
   isPageButtonShownOn,
   normalizePageTranslateSettings,
   pageButtonMatchPatterns,
+  translateIntoLanguage,
   type PageTranslateSettings,
 } from "../../shared/page-translate/settings";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
@@ -89,6 +90,7 @@ async function buttonConfig(host: string): Promise<PageButtonConfig> {
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
   return {
     enabled: isPageButtonShownOn(settings, host),
+    targetLanguage: translateIntoLanguage(settings, language),
     position,
     labels: {
       translate: messages.menu.translatePage,

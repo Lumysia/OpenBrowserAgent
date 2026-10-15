@@ -94,8 +94,11 @@ test(
       pages: {
         "/article": articlePage({ paragraphs: 5 }),
         "/other": articlePage({ paragraphs: 3 }),
+        "/unmarked": articlePage({ paragraphs: 3 }).replace(' lang="en"', ""),
       },
       answer: fixtureTranslator(),
+      // The English pages are in another language than the target.
+      preferences: { pageTranslate: { targetLanguage: "fr" } },
     });
     const { browser, url, options, clickMenu, worker } = session;
     const shortcut = (pageUrl) =>
@@ -206,6 +209,29 @@ test(
         assert.equal(await unchangedFor(() => translationCount(page)), 0);
         await session.setPreferences({ shortcut: true });
       });
+
+      await t.test(
+        "it stays away from pages in the target language",
+        async () => {
+          await session.setPreferences({ targetLanguage: "en" });
+          await poll(async () => (await pageButton(page)) === null);
+          // The shortcut still translates; the button comes back to show
+          // the original, and goes with it.
+          await shortcut(url("/article"));
+          await poll(() => translationIn(page, "#intro"));
+          await isLabel(page, "Show original");
+          await shortcut(url("/article"));
+          await poll(async () => (await translationCount(page)) === 0);
+          await poll(async () => (await pageButton(page)) === null);
+          // A page that doesn't say its language gets it (the test browser
+          // has no on-device detector ready to read the text).
+          const unmarked = await browser.open(url("/unmarked"));
+          await poll(() => pageButton(unmarked));
+          await unmarked.send("Page.close");
+          await session.setPreferences({ targetLanguage: "fr" });
+          await poll(() => pageButton(page));
+        },
+      );
 
       await t.test("hide on this site hides it there only", async () => {
         const button = await pointAt(page);

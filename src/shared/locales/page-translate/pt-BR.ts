@@ -97,7 +97,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     hideEverywhere: "Ocultar em todos os sites",
     setting: "Botão de tradução nas páginas",
     settingDescription:
-      "Um pequeno botão na borda das páginas da web traduz a página ou mostra o original. Arraste-o para movê-lo; ele fica na borda mais próxima da janela.",
+      "Um pequeno botão na borda das páginas da web traduz a página ou mostra o original. Arraste-o para movê-lo; ele fica na borda mais próxima da janela. Ele só aparece em páginas que ainda não estão no idioma de “Traduzir para”.",
     move: "As setas o movem ao longo da borda; E o leva para a próxima borda.",
     hiddenSites: "Oculto nestes sites",
     hiddenSitesDescription:

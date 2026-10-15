@@ -97,7 +97,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     hideEverywhere: "すべてのサイトで非表示",
     setting: "ページ上の翻訳ボタン",
     settingDescription:
-      "ウェブページの端に小さなボタンを表示し、ページを翻訳したり原文を表示したりします。ドラッグして移動でき、ウィンドウのいちばん近い端に留まります。",
+      "ウェブページの端に小さなボタンを表示し、ページを翻訳したり原文を表示したりします。ドラッグして移動でき、ウィンドウのいちばん近い端に留まります。「翻訳先の言語」と同じ言語のページには表示されません。",
     move: "矢印キーで端に沿って移動し、E キーで次の端に移動します。",
     hiddenSites: "非表示にしたサイト",
     hiddenSitesDescription:

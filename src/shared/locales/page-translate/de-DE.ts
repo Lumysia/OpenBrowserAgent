@@ -97,7 +97,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     hideEverywhere: "Überall ausblenden",
     setting: "Übersetzen-Schaltfläche auf Seiten",
     settingDescription:
-      "Eine kleine Schaltfläche am Rand von Webseiten übersetzt die Seite oder zeigt das Original. Ziehen Sie sie, um sie zu verschieben; sie bleibt am nächsten Fensterrand.",
+      "Eine kleine Schaltfläche am Rand von Webseiten übersetzt die Seite oder zeigt das Original. Ziehen Sie sie, um sie zu verschieben; sie bleibt am nächsten Fensterrand. Sie erscheint nur auf Seiten, die nicht schon in der Sprache unter „Übersetzen in“ sind.",
     move: "Pfeiltasten verschieben sie am Rand entlang; E setzt sie an den nächsten Rand.",
     hiddenSites: "Auf diesen Websites ausgeblendet",
     hiddenSitesDescription:

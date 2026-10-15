@@ -104,7 +104,7 @@ export const pageTranslateEnUS = {
     // Settings.
     setting: "Translate button on pages",
     settingDescription:
-      "A small button on the edge of web pages translates the page or shows the original. Drag it to move it; it stays on the nearest edge of the window.",
+      'A small button on the edge of web pages translates the page or shows the original. Drag it to move it; it stays on the nearest edge of the window. It shows only on pages that aren\'t already in your "Translate into" language.',
     // Its accessible description, for the keyboard.
     move: "Arrow keys move it along the edge; E moves it to the next edge.",
     hiddenSites: "Hidden on these sites",
