@@ -1,6 +1,11 @@
 import type { LocalExecutionBridgeConfig } from "./types";
 
 export const LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS = 120_000;
+// The native messaging host the bridge installer registers.
+export const LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME =
+  "openbrowseragent.local_execution_bridge";
+// The shell config ID the installer uses when none is given.
+export const LOCAL_EXECUTION_BRIDGE_DEFAULT_KEY = "default";
 export const LOCAL_EXECUTION_BRIDGE_MAX_TIMEOUT_MS = 30 * 60_000;
 
 // Stored for a bridge saved without a name; the settings show it in the UI
@@ -24,7 +29,7 @@ export function createLocalExecutionBridgeDraft(
   return {
     id: crypto.randomUUID(),
     name,
-    hostName: "openbrowseragent.local_execution_bridge",
+    hostName: LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
     hostAddress: "",
     secret: generateLocalExecutionBridgeSecret(),
     bridgeKey: "",

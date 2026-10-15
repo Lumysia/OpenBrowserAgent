@@ -1,4 +1,5 @@
 import {
+  LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
   generateLocalExecutionBridgeSecret,
   normalizeLocalExecutionBridges,
 } from "../shared/local-execution-bridges";
@@ -65,7 +66,7 @@ async function addBridge(input: Record<string, unknown>) {
       name: text(input.name) || "Execution Bridge",
       description: text(input.description),
       hostName:
-        text(input.hostName) || "openbrowseragent.local_execution_bridge",
+        text(input.hostName) || LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
       hostAddress: text(input.hostAddress),
       secret: secret || generateLocalExecutionBridgeSecret(),
       bridgeKey: text(input.bridgeKey),

@@ -369,6 +369,7 @@ export const deDE: LocaleMessages = {
     agentWorkspaceDescription:
       "Private Dateien dieses Agenten. MEMORY.md und USER.md sieht er immer, andere liest er bei Bedarf.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
+    agentWorkspaceSaveError: "Arbeitsbereich konnte nicht gespeichert werden",
     agentWorkspaceErrors: {
       pathRequired: "Geben Sie einen Dateipfad ein.",
       pathTooLong: "Ein Dateipfad darf höchstens {limit} Zeichen lang sein.",

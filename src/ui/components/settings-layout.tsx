@@ -68,3 +68,23 @@ export function SettingsSection({
     </Card>
   );
 }
+
+// A heading inside a section, such as one column of a form.
+export function SettingsSubheading({
+  icon,
+  title,
+  description,
+}: {
+  icon: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+}) {
+  return (
+    <div>
+      <span className="settings-section-title">
+        {icon} {title}
+      </span>
+      {description && <p className="muted">{description}</p>}
+    </div>
+  );
+}

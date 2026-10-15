@@ -373,6 +373,7 @@ export const ptBR: LocaleMessages = {
     agentWorkspaceDescription:
       "Arquivos privados deste agente. Ele sempre vê MEMORY.md e USER.md e lê os outros quando necessário.",
     agentWorkspaceNewFile: "Novo arquivo do espaço de trabalho",
+    agentWorkspaceSaveError: "Não foi possível salvar o espaço de trabalho",
     agentWorkspaceErrors: {
       pathRequired: "Informe um caminho de arquivo.",
       pathTooLong:

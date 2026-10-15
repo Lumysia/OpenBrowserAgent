@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { formatCount, type Messages } from "../../src/shared/i18n";
 import { stringifyHeaders } from "../../src/shared/mcp";
 import { mcpOriginRulesSupported } from "../../src/shared/mcp-origin-rules";
@@ -8,14 +7,12 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTriggerButton,
-  CardDescription,
   CardTitle,
+  CommitInput,
+  CommitTextarea,
   InfoTip,
-  Input,
   Label,
   SettingSwitch,
-  Switch,
-  Textarea,
 } from "../../src/ui/components";
 
 // The editable fields of one MCP server and its discovered tools.
@@ -34,28 +31,24 @@ export function McpServerFields({
     <>
       <Label>
         {t.options.mcpServerName}
-        <Input
+        <CommitInput
           value={server.name}
-          onChange={(event) => onUpdate({ name: event.currentTarget.value })}
+          onCommit={(name) => onUpdate({ name })}
         />
       </Label>
       <Label>
         {t.options.mcpServerDescription}
-        <Textarea
+        <CommitTextarea
           value={server.description || ""}
-          onChange={(event) =>
-            onUpdate({ description: event.currentTarget.value })
-          }
+          onCommit={(description) => onUpdate({ description })}
         />
       </Label>
       <Label>
         {t.options.mcpServerUrl}
-        <Input
+        <CommitInput
           value={server.url}
           placeholder={t.options.mcpServerUrlPlaceholder}
-          onChange={(event) =>
-            onUpdate({ url: event.currentTarget.value, ...untestedPatch() })
-          }
+          onCommit={(url) => onUpdate({ url: url.trim(), ...untestedPatch() })}
         />
       </Label>
       <McpHeadersField
@@ -112,26 +105,20 @@ function McpToolList({
         </AccordionTriggerButton>
         <AccordionContent className="stack">
           {tools.map((tool) => (
-            <div className="setting-switch-row compact" key={tool.name}>
-              <div>
-                <CardTitle className="settings-section-title">
-                  {tool.name}
-                </CardTitle>
-                {tool.description && (
-                  <CardDescription>{tool.description}</CardDescription>
-                )}
-              </div>
-              <Switch
-                checked={tool.enabled}
-                onCheckedChange={(enabled) =>
-                  onChange(
-                    tools.map((item) =>
-                      item.name === tool.name ? { ...item, enabled } : item,
-                    ),
-                  )
-                }
-              />
-            </div>
+            <SettingSwitch
+              key={tool.name}
+              variant="field"
+              title={tool.name}
+              description={tool.description}
+              checked={tool.enabled}
+              onChange={(enabled) =>
+                onChange(
+                  tools.map((item) =>
+                    item.name === tool.name ? { ...item, enabled } : item,
+                  ),
+                )
+              }
+            />
           ))}
         </AccordionContent>
       </AccordionItem>
@@ -158,21 +145,13 @@ function McpHeadersField({
   value: Record<string, string> | undefined;
   onChange: (value: string) => void;
 }) {
-  const [draft, setDraft] = useState(() => stringifyHeaders(value));
-
-  useEffect(() => setDraft(stringifyHeaders(value)), [value]);
-
   return (
     <Label>
       {label}
-      <Textarea
-        value={draft}
-        placeholder={'{\n  "Authorization": "Bearer ..."\n}'}
-        onChange={(event) => {
-          const next = event.currentTarget.value;
-          setDraft(next);
-          onChange(next);
-        }}
+      <CommitTextarea
+        value={stringifyHeaders(value)}
+        placeholder={'{\n  "Authorization": "Bearer …"\n}'}
+        onCommit={onChange}
       />
     </Label>
   );

@@ -240,6 +240,11 @@
   color: var(--muted-foreground);
   font-size: var(--text-sm);
 }
+.skill-checks > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
 .skill-checks .warn {
   color: var(--destructive);
 }

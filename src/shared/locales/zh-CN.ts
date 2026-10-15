@@ -297,6 +297,7 @@ export const zhCN: LocaleMessages = {
     agentWorkspaceDescription:
       "此智能体的私有文件。智能体始终能看到 MEMORY.md 和 USER.md，其他文件按需读取。",
     agentWorkspaceNewFile: "新建工作区文件",
+    agentWorkspaceSaveError: "无法保存工作区",
     agentWorkspaceErrors: {
       pathRequired: "请输入文件路径。",
       pathTooLong: "文件路径最多 {limit} 个字符。",

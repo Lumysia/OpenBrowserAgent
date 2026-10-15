@@ -1,14 +1,9 @@
 import { useState } from "react";
+import { Plus, RefreshCw, TerminalSquare, Trash2 } from "lucide-react";
 import {
-  Check,
-  FlaskConical,
-  Loader2,
-  Plus,
-  RefreshCw,
-  TerminalSquare,
-  Trash2,
-} from "lucide-react";
-import {
+  LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
+  LOCAL_EXECUTION_BRIDGE_DEFAULT_KEY,
+  LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
   createLocalExecutionBridgeDraft,
   generateLocalExecutionBridgeSecret,
   normalizeLocalExecutionBridges,
@@ -20,24 +15,25 @@ import { storage } from "../../src/shared/storage";
 import type { LocalExecutionBridgeConfig } from "../../src/shared/types";
 import {
   Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTriggerButton,
   Badge,
   Button,
   CardDescription,
   EmptyState,
   Feedback,
-  Input,
   Label,
-  Textarea,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   SettingsSummary,
   SettingsPageHeader,
+  CommitInput,
+  CommitTextarea,
+  ConfirmButton,
+  SettingsAccordionItem,
+  TestButton,
 } from "../../src/ui/components";
+import { useTransient } from "../../src/ui/use-transient";
+import { errorMessage } from "../../src/shared/error-message";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
 
@@ -45,7 +41,7 @@ export function LocalExecutionBridgesPage() {
   const [language] = useStoredState(storage.language);
   const [bridges, setBridges] = useStoredState(storage.localExecutionBridges);
   const [testingBridgeId, setTestingBridgeId] = useState("");
-  const [recentlyTestedBridgeId, setRecentlyTestedBridgeId] = useState("");
+  const [testedBridgeId, showTested] = useTransient<string>();
   const t = getMessages(language);
   const items = normalizeLocalExecutionBridges(bridges);
 
@@ -90,21 +86,13 @@ export function LocalExecutionBridgesPage() {
         bridgeId,
       });
       updateBridge(bridgeId, { lastTestedAt: Date.now(), lastTestError: "" });
-      setRecentlyTestedBridgeId(bridgeId);
-      window.setTimeout(() => {
-        setRecentlyTestedBridgeId((current) =>
-          current === bridgeId ? "" : current,
-        );
-      }, 2500);
+      showTested(bridgeId);
       return true;
     } catch (error) {
+      // Stored as the error's own text and localized when shown.
       updateBridge(bridgeId, {
         lastTestedAt: undefined,
-        lastTestError: errorWithDetail(
-          t.options.localExecutionBridgeTestError,
-          error,
-          t,
-        ),
+        lastTestError: errorMessage(error),
       });
       return false;
     } finally {
@@ -141,207 +129,164 @@ export function LocalExecutionBridgesPage() {
       ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((bridge) => (
-          <AccordionItem key={bridge.id} value={bridge.id}>
-            <AccordionHeader className="ui-accordion-header-with-actions">
-              <AccordionTriggerButton hideChevron>
-                <SettingsSummary
-                  icon={<TerminalSquare size={18} />}
-                  title={bridgeName(bridge, t)}
-                  badges={
-                    <>
-                      <Badge title={bridge.id}>{bridge.id.slice(0, 8)}</Badge>
-                      {bridge.lastTestError ? (
-                        <Badge className="status-error-badge">
-                          {t.options.localExecutionBridgeTestError}
-                        </Badge>
-                      ) : null}
-                    </>
-                  }
-                  description={bridge.description || bridge.hostName}
+          <SettingsAccordionItem
+            key={bridge.id}
+            value={bridge.id}
+            chevronLabel={bridgeName(bridge, t)}
+            contentClassName="stack"
+            summary={
+              <SettingsSummary
+                icon={<TerminalSquare size={18} />}
+                title={bridgeName(bridge, t)}
+                badges={
+                  <>
+                    <Badge title={bridge.id}>{bridge.id.slice(0, 8)}</Badge>
+                    {bridge.lastTestError ? (
+                      <Badge className="status-error-badge">
+                        {t.options.localExecutionBridgeTestError}
+                      </Badge>
+                    ) : null}
+                  </>
+                }
+                description={bridge.description || bridge.hostName}
+              />
+            }
+            actions={
+              <TestButton
+                state={
+                  testingBridgeId === bridge.id
+                    ? "testing"
+                    : testedBridgeId === bridge.id
+                      ? "done"
+                      : "idle"
+                }
+                label={t.options.localExecutionBridgeTest}
+                testingLabel={t.options.localExecutionBridgeTesting}
+                disabled={!bridge.hostName}
+                onClick={() => testBridge(bridge.id)}
+              />
+            }
+          >
+            <Label>
+              {t.options.localExecutionBridgeName}
+              <CommitInput
+                value={bridge.name}
+                onCommit={(name) => updateBridge(bridge.id, { name })}
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeDescription}
+              <CommitTextarea
+                value={bridge.description || ""}
+                onCommit={(description) =>
+                  updateBridge(bridge.id, { description })
+                }
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeHostName}
+              <CommitInput
+                value={bridge.hostName}
+                placeholder={LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME}
+                onCommit={(hostName) => updateBridge(bridge.id, { hostName })}
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeHostAddress}
+              <CommitInput
+                value={bridge.hostAddress || ""}
+                placeholder={
+                  t.options.localExecutionBridgeHostAddressPlaceholder
+                }
+                onCommit={(hostAddress) =>
+                  updateBridge(bridge.id, { hostAddress })
+                }
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeSecret}
+              <div className="row">
+                <CommitInput
+                  value={bridge.secret || ""}
+                  onCommit={(secret) => updateBridge(bridge.id, { secret })}
                 />
-              </AccordionTriggerButton>
-              <span
-                className="accordion-trigger-actions"
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="tooltip-button-wrapper">
-                      <Button
-                        size="icon"
-                        aria-label={
-                          testingBridgeId === bridge.id
-                            ? t.options.localExecutionBridgeTesting
-                            : t.options.localExecutionBridgeTest
-                        }
-                        disabled={
-                          testingBridgeId === bridge.id || !bridge.hostName
-                        }
-                        onClick={() => testBridge(bridge.id)}
-                      >
-                        {testingBridgeId === bridge.id ? (
-                          <Loader2 size={14} className="spin" />
-                        ) : recentlyTestedBridgeId === bridge.id ? (
-                          <Check size={14} />
-                        ) : (
-                          <FlaskConical size={14} />
-                        )}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {testingBridgeId === bridge.id
-                      ? t.options.localExecutionBridgeTesting
-                      : t.options.localExecutionBridgeTest}
-                  </TooltipContent>
-                </Tooltip>
-              </span>
-              <AccordionTriggerButton
-                className="accordion-chevron-trigger"
-                aria-label={bridgeName(bridge, t)}
-              />
-            </AccordionHeader>
-            <AccordionContent>
-              <div className="stack">
-                <Label>
-                  {t.options.localExecutionBridgeName}
-                  <Input
-                    value={bridge.name}
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        name: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeDescription}
-                  <Textarea
-                    value={bridge.description || ""}
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        description: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeHostName}
-                  <Input
-                    value={bridge.hostName}
-                    placeholder="openbrowseragent.local_execution_bridge"
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        hostName: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeHostAddress}
-                  <Input
-                    value={bridge.hostAddress || ""}
-                    placeholder={
-                      t.options.localExecutionBridgeHostAddressPlaceholder
-                    }
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        hostAddress: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeSecret}
-                  <div className="row">
-                    <Input
-                      value={bridge.secret || ""}
-                      onChange={(event) =>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label={
+                        t.options.localExecutionBridgeRegenerateSecret
+                      }
+                      onClick={() =>
                         updateBridge(bridge.id, {
-                          secret: event.currentTarget.value,
+                          secret: generateLocalExecutionBridgeSecret(),
                         })
                       }
-                    />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label={
-                            t.options.localExecutionBridgeRegenerateSecret
-                          }
-                          onClick={() =>
-                            updateBridge(bridge.id, {
-                              secret: generateLocalExecutionBridgeSecret(),
-                            })
-                          }
-                        >
-                          <RefreshCw size={14} />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t.options.localExecutionBridgeRegenerateSecret}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeKey}
-                  <Input
-                    value={bridge.bridgeKey || ""}
-                    placeholder="default"
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        bridgeKey: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeDefaultCwd}
-                  <Input
-                    value={bridge.defaultCwd || ""}
-                    placeholder="~/Desktop"
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        defaultCwd: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.localExecutionBridgeTimeoutMs}
-                  <Input
-                    type="number"
-                    min={1000}
-                    value={bridge.timeoutMs || 120000}
-                    onChange={(event) =>
-                      updateBridge(bridge.id, {
-                        timeoutMs: Number(event.currentTarget.value),
-                      })
-                    }
-                  />
-                </Label>
-                {bridge.lastTestError ? (
-                  <Feedback error>{bridge.lastTestError}</Feedback>
-                ) : null}
-                {isLocalExecutionBridgeTested(bridge) ? (
-                  <CardDescription>
-                    {t.options.localExecutionBridgeTestSuccess}
-                  </CardDescription>
-                ) : null}
-                <div className="row">
-                  <Button
-                    variant="destructiveOutline"
-                    onClick={() => deleteBridge(bridge.id)}
-                  >
-                    <Trash2 size={15} /> {t.options.deleteLocalExecutionBridge}
-                  </Button>
-                </div>
+                    >
+                      <RefreshCw size={14} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t.options.localExecutionBridgeRegenerateSecret}
+                  </TooltipContent>
+                </Tooltip>
               </div>
-            </AccordionContent>
-          </AccordionItem>
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeKey}
+              <CommitInput
+                value={bridge.bridgeKey || ""}
+                placeholder={LOCAL_EXECUTION_BRIDGE_DEFAULT_KEY}
+                onCommit={(bridgeKey) => updateBridge(bridge.id, { bridgeKey })}
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeDefaultCwd}
+              <CommitInput
+                value={bridge.defaultCwd || ""}
+                onCommit={(defaultCwd) =>
+                  updateBridge(bridge.id, { defaultCwd })
+                }
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeTimeoutMs}
+              <CommitInput
+                type="number"
+                min={1000}
+                value={String(
+                  bridge.timeoutMs || LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
+                )}
+                onCommit={(timeoutMs) =>
+                  updateBridge(bridge.id, { timeoutMs: Number(timeoutMs) })
+                }
+              />
+            </Label>
+            {bridge.lastTestError ? (
+              <Feedback error>
+                {errorWithDetail(
+                  t.options.localExecutionBridgeTestError,
+                  bridge.lastTestError,
+                  t,
+                )}
+              </Feedback>
+            ) : null}
+            {isLocalExecutionBridgeTested(bridge) ? (
+              <CardDescription>
+                {t.options.localExecutionBridgeTestSuccess}
+              </CardDescription>
+            ) : null}
+            <div className="row">
+              <ConfirmButton
+                confirmLabel={t.common.confirm}
+                cancelLabel={t.common.cancel}
+                onConfirm={() => deleteBridge(bridge.id)}
+              >
+                <Trash2 size={15} /> {t.options.deleteLocalExecutionBridge}
+              </ConfirmButton>
+            </div>
+          </SettingsAccordionItem>
         ))}
       </Accordion>
     </div>

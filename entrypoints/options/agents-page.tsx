@@ -19,11 +19,11 @@ import {
   AccordionItem,
   AccordionTrigger,
   Badge,
-  Input,
   Label,
-  Textarea,
   SettingsSummary,
   SettingsPageHeader,
+  CommitInput,
+  CommitTextarea,
 } from "../../src/ui/components";
 import { AgentToolsEditor } from "./agent-tools-editor";
 import { ResetDefaultsCard } from "./reset-defaults-card";
@@ -37,8 +37,8 @@ import {
 } from "../../src/ui/agent-display";
 import { AgentWorkspaceEditor } from "./agent-workspace-editor";
 import { downloadAgentZip, importAgentZip } from "./workspace-import";
-import { workspaceErrorText } from "./workspace-error-text";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { importErrorText } from "./import-errors";
+import { useLatest } from "../../src/ui/use-latest";
 
 export function AgentsPage() {
   const [language] = useStoredState(storage.language);
@@ -52,10 +52,13 @@ export function AgentsPage() {
   const items = agents || [];
   const selectedAgentId = preferences?.selectedAgentId || DEFAULT_AGENT_ID;
 
+  // Agents added here or synced from another device get a stored workspace
+  // (the editor writes into it). Only a new or removed agent needs a check.
+  const agentIds = items.map((agent) => agent.id).join("\n");
+  const agentsRef = useLatest(items);
   useEffect(() => {
-    if (!agents) return;
-    storeAgentWorkspaces(agents).catch(console.warn);
-  }, [agents, workspaces]);
+    if (agentIds) storeAgentWorkspaces(agentsRef.current).catch(console.warn);
+  }, [agentIds, agentsRef]);
 
   function updateAgent(agentId: string, patch: Partial<Agent>) {
     setAgents((current) =>
@@ -137,11 +140,7 @@ export function AgentsPage() {
   async function importAgentPackage(file: File | undefined) {
     if (!file) return;
     try {
-      const imported = await importAgentZip(file, {
-        missingManifest: t.options.importAgentPackageMissingManifest,
-        invalidManifest: t.options.importAgentPackageInvalidManifest,
-        workspaceTooLarge: workspaceErrorText("workspaceTooLarge", t),
-      });
+      const imported = await importAgentZip(file);
       setAgents((current) => [...current, imported.agent]);
       await storage.agentWorkspaces.update((current) => [
         ...current,
@@ -154,7 +153,7 @@ export function AgentsPage() {
       setImportAgentError("");
     } catch (error) {
       setImportAgentError(
-        errorWithDetail(t.options.importAgentError, error, t),
+        importErrorText(t.options.importAgentError, error, t),
       );
     } finally {
       if (importAgentInputRef.current) importAgentInputRef.current.value = "";
@@ -211,26 +210,20 @@ export function AgentsPage() {
                 <div className="stack">
                   <Label>
                     {t.options.agentName}
-                    <Input
+                    <CommitInput
                       value={builtin ? agentDisplayName(agent, t) : agent.name}
                       disabled={builtin}
-                      onChange={(event) =>
-                        updateAgent(agent.id, {
-                          name: event.currentTarget.value,
-                        })
-                      }
+                      onCommit={(name) => updateAgent(agent.id, { name })}
                     />
                   </Label>
                   <Label>
                     {t.options.agentDescription}
-                    <Input
+                    <CommitInput
                       value={builtin ? description : agent.description || ""}
                       disabled={builtin}
                       placeholder={t.options.defaultAgentSummary}
-                      onChange={(event) =>
-                        updateAgent(agent.id, {
-                          description: event.currentTarget.value,
-                        })
+                      onCommit={(description) =>
+                        updateAgent(agent.id, { description })
                       }
                     />
                   </Label>
@@ -245,14 +238,12 @@ export function AgentsPage() {
                     <>
                       <Label>
                         {t.options.agentPrompt}
-                        <Textarea
+                        <CommitTextarea
                           value={agent.prompt}
                           rows={5}
                           placeholder={t.options.agentPromptPlaceholder}
-                          onChange={(event) =>
-                            updateAgent(agent.id, {
-                              prompt: event.currentTarget.value,
-                            })
+                          onCommit={(prompt) =>
+                            updateAgent(agent.id, { prompt })
                           }
                         />
                       </Label>

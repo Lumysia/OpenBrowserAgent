@@ -342,6 +342,7 @@ export const enUS = {
     agentWorkspaceDescription:
       "Private files for this agent. It always sees MEMORY.md and USER.md and reads others when needed.",
     agentWorkspaceNewFile: "New workspace file",
+    agentWorkspaceSaveError: "Couldn’t save the workspace",
     // Why a workspace file could not be saved; {limit} is a number.
     agentWorkspaceErrors: {
       pathRequired: "Enter a file path.",

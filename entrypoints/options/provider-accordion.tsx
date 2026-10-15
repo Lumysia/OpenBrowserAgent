@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
-import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
-import { formatCount, getMessages } from "../../src/shared/i18n";
+import { formatCount, getMessages, type Messages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
 import {
   providerHasConsent,
@@ -34,6 +33,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSubheading,
 } from "../../src/ui/components";
 import {
   providerNameDisplay,
@@ -47,6 +47,7 @@ import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "./test-provider-model";
 import { errorWithDetail } from "../../src/ui/error-text";
+import { useTransient } from "../../src/ui/use-transient";
 
 const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
   glm: ["https://api.z.ai/api/paas/v4", "https://open.bigmodel.cn/api/paas/v4"],
@@ -74,7 +75,7 @@ export function ProviderAccordion({
   const [selectedFetchedModelId, setSelectedFetchedModelId] = useState("");
   const [customModelOpen, setCustomModelOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, showSaved] = useTransient<true>();
   const [testingModelId, setTestingModelId] = useState("");
   const [testResult, setTestResult] = useState<{
     modelId: string;
@@ -98,7 +99,6 @@ export function ProviderAccordion({
 
   useEffect(() => {
     setDraft(value);
-    setSaved(false);
   }, [providerId, value]);
 
   function addModel() {
@@ -158,8 +158,7 @@ export function ProviderAccordion({
           !value.models?.some((candidate) => candidate.id === model.id),
       )
       .forEach(onModelAdded);
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), QUICK_FEEDBACK_MS);
+    showSaved(true);
   }
 
   async function testModel(model: ModelConfig) {
@@ -205,12 +204,11 @@ export function ProviderAccordion({
       <AccordionContent>
         <div className="provider-editor-grid">
           <div className="provider-credentials-panel">
-            <div>
-              <span className="settings-section-title">
-                <Server size={18} /> {t.options.providerConnection}
-              </span>
-              <p className="muted">{t.options.providerConnectionHint}</p>
-            </div>
+            <SettingsSubheading
+              icon={<Server />}
+              title={t.options.providerConnection}
+              description={t.options.providerConnectionHint}
+            />
             <Label>
               {t.options.providerName}
               <Input
@@ -234,6 +232,7 @@ export function ProviderAccordion({
               </Label>
             )}
             <ProviderBaseUrl
+              t={t}
               provider={provider}
               value={draft}
               onChange={setDraft}
@@ -254,12 +253,11 @@ export function ProviderAccordion({
             />
           </div>
           <div className="provider-models-panel">
-            <div>
-              <span className="settings-section-title">
-                <Cpu size={18} /> {t.options.models}
-              </span>
-              <p className="muted">{t.options.modelHint}</p>
-            </div>
+            <SettingsSubheading
+              icon={<Cpu />}
+              title={t.options.models}
+              description={t.options.modelHint}
+            />
             <div className="provider-model-actions provider-fetched-model-actions">
               <Button
                 variant="secondary"
@@ -361,16 +359,16 @@ export function ProviderAccordion({
 }
 
 function ProviderBaseUrl({
+  t,
   provider,
   value,
   onChange,
 }: {
+  t: Messages;
   provider: ProviderId;
   value: ProviderConfig;
   onChange: (value: ProviderConfig) => void;
 }) {
-  const [language] = useStoredState(storage.language);
-  const t = getMessages(language);
   if (baseUrlOptions[provider]) {
     return (
       <Label>

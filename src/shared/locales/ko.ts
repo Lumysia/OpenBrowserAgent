@@ -317,6 +317,7 @@ export const ko: LocaleMessages = {
     agentWorkspaceDescription:
       "이 에이전트 전용 파일입니다. MEMORY.md와 USER.md는 항상 제공되고, 다른 파일은 필요할 때 읽습니다.",
     agentWorkspaceNewFile: "새 워크스페이스 파일",
+    agentWorkspaceSaveError: "워크스페이스를 저장할 수 없습니다",
     agentWorkspaceErrors: {
       pathRequired: "파일 경로를 입력하세요.",
       pathTooLong: "파일 경로는 최대 {limit}자까지 쓸 수 있습니다.",

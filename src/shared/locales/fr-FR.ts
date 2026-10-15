@@ -370,6 +370,7 @@ export const frFR: LocaleMessages = {
     agentWorkspaceDescription:
       "Fichiers privés de cet agent. Il voit toujours MEMORY.md et USER.md et lit les autres au besoin.",
     agentWorkspaceNewFile: "Nouveau fichier d’espace de travail",
+    agentWorkspaceSaveError: "Impossible d’enregistrer l’espace de travail",
     agentWorkspaceErrors: {
       pathRequired: "Saisissez un chemin de fichier.",
       pathTooLong:

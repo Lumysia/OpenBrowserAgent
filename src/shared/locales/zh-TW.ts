@@ -297,6 +297,7 @@ export const zhTW: LocaleMessages = {
     agentWorkspaceDescription:
       "此智慧體的私人檔案。智慧體一律看得到 MEMORY.md 與 USER.md，其他檔案依需要讀取。",
     agentWorkspaceNewFile: "新增工作區檔案",
+    agentWorkspaceSaveError: "無法儲存工作區",
     agentWorkspaceErrors: {
       pathRequired: "請輸入檔案路徑。",
       pathTooLong: "檔案路徑最多 {limit} 個字元。",

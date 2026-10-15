@@ -349,6 +349,7 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceDescription:
       "このエージェント専用のファイル。MEMORY.md と USER.md は常に渡され、ほかのファイルは必要なときに読み込まれます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
+    agentWorkspaceSaveError: "ワークスペースを保存できませんでした",
     agentWorkspaceErrors: {
       pathRequired: "ファイルパスを入力してください。",
       pathTooLong: "ファイルパスは{limit}文字以内にしてください。",
