@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadContent, resetSync } from "../src/background/sync/service";
+import {
+  createSyncRunner,
+  loadContent,
+  resetSync,
+} from "../src/background/sync/service";
 import { storageLockName } from "../src/shared/locks";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { decodeRoot } from "../src/shared/sync/root";
@@ -219,4 +223,37 @@ test("collecting garbage never deletes a blob the current root refers to", async
   assert.ok(server.blobs.has(root.records["chats/X"].blob!));
   await a.sync();
   assert.deepEqual(messageIds(a, "X"), ["m1"]);
+});
+
+test("a round asked for while one runs answers after a round that started after it", async () => {
+  const { a } = setup();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  const rounds: string[] = [];
+  const runner = createSyncRunner(
+    a.env,
+    () => undefined,
+    async () => {
+      const round = rounds.length ? "follow-up" : "first";
+      rounds.push(`${round} started`);
+      await (round === "first" ? gate : sleep(5));
+      rounds.push(`${round} done`);
+      return undefined;
+    },
+  );
+  const first = runner.request({ reason: "edit" });
+  await sleep(0);
+  // "Sync now" right after turning sync on: the round running started
+  // before it, so it waits for the next one.
+  const manual = runner.request({ reason: "manual" });
+  const again = runner.request({ reason: "manual" });
+  release();
+  await first;
+  await Promise.all([manual, again]);
+  assert.deepEqual(rounds, [
+    "first started",
+    "first done",
+    "follow-up started",
+    "follow-up done",
+  ]);
 });

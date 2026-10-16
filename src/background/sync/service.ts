@@ -191,6 +191,7 @@ export function createSyncRunner(
 ) {
   let running: Promise<void> | undefined;
   let queued: RoundRequest | undefined;
+  let followUp: Promise<void> | undefined;
 
   async function round({ reason, ...options }: RoundRequest) {
     const status = await loadSyncStatus(env.local);
@@ -270,7 +271,9 @@ export function createSyncRunner(
     });
   }
 
-  // Requests during a round are merged into one follow-up round.
+  // Requests during a round are merged into one follow-up round, and wait
+  // for it: the round running started before them, so it may not see what
+  // they asked for (a backend or sync group just turned on).
   function request(next: RoundRequest): Promise<void> {
     if (running) {
       queued = {
@@ -278,10 +281,12 @@ export function createSyncRunner(
           queued?.reason === "edit" || !queued ? next.reason : queued.reason,
         massDelete: next.massDelete ?? queued?.massDelete,
       };
-      return running;
+      followUp ??= running.catch(() => undefined).then(() => running);
+      return followUp;
     }
     running = round(next).finally(() => {
       running = undefined;
+      followUp = undefined;
       const follow = queued;
       queued = undefined;
       if (follow) void request(follow);
