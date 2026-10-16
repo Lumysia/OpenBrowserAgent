@@ -17,7 +17,7 @@ export const PAGE_SCRIPT = {
   pageTranslateButton: "content-scripts/page-translate-button.js",
   // Subtitle translation, and the observer that passes it the caption files
   // the page loads (in the page's own world): registered on every page while
-  // "Translate video subtitles" is on, else injected when the user starts
+  // "Translate video subtitles automatically" is on, else injected when the user starts
   // them.
   videoSubtitles: "content-scripts/video-subtitles.js",
   captionObserver: "content-scripts/caption-observer.js",

@@ -12,7 +12,7 @@ import {
   type ContentScript,
 } from "../content-script-registration";
 
-// While "Translate video subtitles" is on, every frame of every page gets
+// While "Translate video subtitles automatically" is on, every frame of every page gets
 // the subtitle script and the caption observer before the page's own
 // scripts, so the first caption file a player loads is seen (videos are
 // often embedded, also from other sites, so all frames, and frames without

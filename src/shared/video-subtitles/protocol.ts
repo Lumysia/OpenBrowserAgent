@@ -57,7 +57,7 @@ export type VideoSubtitlesStopAllMessage = {
 };
 
 export type VideoSubtitlesConfig = {
-  // "Translate video subtitles" is on.
+  // "Translate video subtitles automatically" is on.
   always: boolean;
 };
 

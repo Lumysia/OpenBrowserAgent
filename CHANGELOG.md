@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Settings: the video subtitles switch is now called "Translate video subtitles automatically", since you can still translate any video from its right-click menu while it is off.
 - Chat history fills the side panel again instead of a narrow centred column.
 
 ## 0.2.0-beta.16 - 2026-10-16
