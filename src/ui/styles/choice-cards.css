@@ -1,0 +1,61 @@
+/* Large choices, one card each (ChoiceCards / ChoiceCard). */
+.ui-choice-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-3);
+}
+.ui-choice-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--accent-softer) 10%, var(--card));
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+  box-shadow: var(--elevation-2);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  animation: enter var(--duration-base) var(--ease-standard) backwards;
+}
+.ui-choice-card:hover {
+  border-color: color-mix(in oklab, var(--accent-soft) 58%, var(--border));
+}
+.ui-choice-card:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.ui-choice-card[data-state="selected"] {
+  border-color: var(--accent-strong);
+  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
+}
+.ui-choice-card-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.ui-choice-card-text {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.ui-choice-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.ui-choice-card small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}

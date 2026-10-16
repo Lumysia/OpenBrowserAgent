@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupZhTW: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupZhTW: SetupMessages = {
   progressStep: "第 {current} 步，共 {total} 步：{step}",
   steps: {
     language: "語言",
+    path: "開始方式",
     provider: "AI 提供者",
     pages: "網頁功能",
+    sync: "同步",
+    passphrase: "同步密語",
+    download: "下載",
     done: "完成",
   },
   back: "上一步",
@@ -17,6 +22,41 @@ export const setupZhTW: SetupMessages = {
   languageTitle: "選擇語言",
   languageDescription:
     "擴充功能的介面語言，以及網頁翻譯成的語言。大多數人保留預設即可。",
+  pathTitle: "以前用過 OpenBrowserAgent 嗎？",
+  pathDescription:
+    "如果你在另一台裝置上使用它，同步會把你的 AI 提供者、智慧體和對話帶到這裡。",
+  pathNew: "第一次使用",
+  pathNewDescription:
+    "連線 AI 提供者，並選擇 OpenBrowserAgent 在網頁上加入的功能。",
+  pathReturning: "我在另一台裝置上使用",
+  pathReturningDescription: "從另一台裝置同步你的設定、AI 提供者和對話。",
+  syncTitle: "選擇同步方式",
+  syncDescription: "使用與另一台裝置相同的方式連線。",
+  recommended: "推薦",
+  methodCode: "貼上同步碼",
+  methodCodeDescription: "一組同步碼包含同步伺服器和要同步的內容。",
+  methodBrowser: "瀏覽器帳號同步",
+  browserConnect: "開啟瀏覽器帳號同步",
+  tryAgain: "再試一次",
+  asNewUser: "以新使用者身分設定",
+  passphraseTitle: "輸入同步密語",
+  passphraseDescription:
+    "你的 API Key 已加密同步。請輸入你在另一台裝置上設定的同步密語。",
+  keysUnlocked: "你的 API Key 已解鎖。",
+  downloadTitle: "連線並下載",
+  downloadDescription: "OpenBrowserAgent 會下載另一台裝置同步的內容。",
+  downloading: "正在下載…",
+  downloadFailed: "無法從同步伺服器下載。",
+  arrived: "來自另一台裝置：",
+  noSyncedProvider:
+    "另一台裝置沒有同步來任何 AI 提供者。對話需要一個 AI 提供者。",
+  arrivedCount: {
+    providers: plural({ other: "{count} 個 AI 提供者" }),
+    agents: plural({ other: "{count} 個智慧體" }),
+    skills: plural({ other: "{count} 個技能" }),
+    mcpServers: plural({ other: "{count} 個 MCP 伺服器" }),
+    chats: plural({ other: "{count} 個對話" }),
+  },
   providerTitle: "連線 AI 提供者",
   providerDescription:
     "對話和智慧體需要一個 AI 提供者。選擇一項服務，或填寫任何 OpenAI 或 Anthropic 相容伺服器的 Base URL。",
@@ -48,12 +88,9 @@ export const setupZhTW: SetupMessages = {
   openPanelDescription:
     "在瀏覽器的擴充功能選單中釘選 OpenBrowserAgent，然後點選它的圖示開啟側邊欄。",
   openPanel: "開啟側邊欄",
-  joinLink: "已在另一台裝置上使用 OpenBrowserAgent？貼上同步碼",
-  codeTab: "貼上同步碼",
-  manualTab: "手動設定",
   code: "同步碼",
   codeDescription:
-    "在另一台裝置的「設定 → 同步」中複製。同步碼中的同步選項會取代本裝置的選項。",
+    "在另一台裝置上開啟「{settings} → {sync}」，然後點選「{button}」。同步碼中的同步選項會取代本裝置的選項。",
   codeInvalid: "這不是有效的同步碼。請重新複製並貼上完整的同步碼。",
   connect: "連線並同步",
   testing: "正在連線…",

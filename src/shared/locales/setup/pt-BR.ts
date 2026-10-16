@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupPtBR: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupPtBR: SetupMessages = {
   progressStep: "Etapa {current} de {total}: {step}",
   steps: {
     language: "Idioma",
+    path: "Primeiro uso",
     provider: "Provedor de IA",
     pages: "Nas páginas",
+    sync: "Sincronização",
+    passphrase: "Frase secreta",
+    download: "Download",
     done: "Pronto",
   },
   back: "Voltar",
@@ -17,6 +22,50 @@ export const setupPtBR: SetupMessages = {
   languageTitle: "Escolha seus idiomas",
   languageDescription:
     "O idioma da extensão e o idioma para o qual as páginas são traduzidas. A maioria das pessoas deixa os dois como estão.",
+  pathTitle: "Você já usou o OpenBrowserAgent?",
+  pathDescription:
+    "Se você o usa em outro dispositivo, a sincronização traz para cá seus provedores de IA, agentes e conversas.",
+  pathNew: "É a primeira vez",
+  pathNewDescription:
+    "Conecte um provedor de IA e escolha o que o OpenBrowserAgent adiciona às páginas da web.",
+  pathReturning: "Uso em outro dispositivo",
+  pathReturningDescription:
+    "Sincronize suas configurações, provedores de IA e conversas do seu outro dispositivo.",
+  syncTitle: "Escolha como sincronizar",
+  syncDescription: "Conecte do mesmo jeito que no seu outro dispositivo.",
+  recommended: "Recomendado",
+  methodCode: "Colar um código de sincronização",
+  methodCodeDescription:
+    "Um só código contém o servidor de sincronização e o que é sincronizado.",
+  methodBrowser: "Sincronização pela conta do navegador",
+  browserConnect: "Ativar a sincronização pela conta do navegador",
+  tryAgain: "Tentar novamente",
+  asNewUser: "Configurar como novo usuário",
+  passphraseTitle: "Digite sua frase secreta de sincronização",
+  passphraseDescription:
+    "Suas chaves de API são sincronizadas criptografadas. Digite a frase secreta de sincronização definida no seu outro dispositivo.",
+  keysUnlocked: "Suas chaves de API estão desbloqueadas.",
+  downloadTitle: "Conectar e baixar",
+  downloadDescription:
+    "O OpenBrowserAgent baixa o que seu outro dispositivo sincronizou.",
+  downloading: "Baixando…",
+  downloadFailed: "Não foi possível baixar do servidor de sincronização.",
+  arrived: "Do seu outro dispositivo:",
+  noSyncedProvider:
+    "Nenhum provedor de IA veio do seu outro dispositivo. A conversa precisa de um.",
+  arrivedCount: {
+    providers: plural({
+      one: "{count} provedor de IA",
+      other: "{count} provedores de IA",
+    }),
+    agents: plural({ one: "{count} agente", other: "{count} agentes" }),
+    skills: plural({ one: "{count} habilidade", other: "{count} habilidades" }),
+    mcpServers: plural({
+      one: "{count} servidor MCP",
+      other: "{count} servidores MCP",
+    }),
+    chats: plural({ one: "{count} conversa", other: "{count} conversas" }),
+  },
   providerTitle: "Conecte um provedor de IA",
   providerDescription:
     "A conversa e o agente precisam de um provedor de IA. Escolha um serviço ou qualquer servidor compatível com OpenAI ou Anthropic com sua Base URL.",
@@ -52,13 +101,9 @@ export const setupPtBR: SetupMessages = {
   openPanelDescription:
     "Fixe o OpenBrowserAgent no menu Extensões do navegador e clique no ícone dele para abrir o painel lateral.",
   openPanel: "Abrir painel lateral",
-  joinLink:
-    "Já usa o OpenBrowserAgent em outro dispositivo? Cole um código de sincronização",
-  codeTab: "Colar código",
-  manualTab: "Configuração manual",
   code: "Código de sincronização",
   codeDescription:
-    "Copie-o no outro dispositivo em Configurações → Sincronização. As escolhas de sincronização do código substituem as deste dispositivo.",
+    "No seu outro dispositivo, abra {settings} → {sync} e clique em “{button}”. As escolhas de sincronização do código substituem as deste dispositivo.",
   codeInvalid:
     "Este não é um código de sincronização válido. Copie-o de novo e cole o código inteiro.",
   connect: "Conectar e sincronizar",

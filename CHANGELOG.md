@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Setup for returning users**: after the language, setup asks whether you've used OpenBrowserAgent before. "I use it on another device" connects sync (paste a sync code, browser account sync, or WebDAV), asks for your sync passphrase if your API keys are encrypted, shows what arrived (AI providers, agents, chats and more) and skips the AI provider and web page steps. If sync can't connect or brings no AI provider, you can try again or set up as a new user. The small sync code link on the AI provider step is gone.
 - "Open side panel" at the end of setup now closes the setup tab, and a setup started with "Run setup again" goes back to your Settings tab.
 
 ## 0.2.0-beta.13 - 2026-10-15

@@ -209,23 +209,29 @@ Before content the user shares in chats (messages, page text, screenshots, files
 
 ## Guided setup
 
-Installing the extension opens the **setup**: one step per page (Language, AI provider, On web pages, Done) with "Back" and "Next", and "Skip" while a step isn't done. Step names reuse the settings' own words (the "On web pages" step is named like the settings page "On pages" in each language). A side panel that opened before setup was finished says "Continue setup", and General has "Run setup again". "Test connection" checks that the AI provider answers; its failures name the part that failed ("Couldn’t connect to the AI provider: …", "Connected, but {model} didn’t answer: …").
+Installing the extension opens the **setup**: one step per page with "Back" and "Next", and "Skip" while a step isn't done. After Language it asks "Have you used OpenBrowserAgent before?": "First time here" goes on to AI provider, On web pages and Done; "I use it on another device" goes to "Choose how to sync" (paste a sync code, browser account sync or WebDAV), the sync passphrase when the synced keys have one, "Connect and download" (what arrived, counted by kind) and the same Done. When sync can't connect or brings no AI provider, setup offers "Try again" or "Set up as a new user" (on to the AI provider step). Instructions name the real labels, such as the Sync page's "Copy sync code for another device". Step names reuse the settings' own words (the "On web pages" step is named like the settings page "On pages" in each language). A side panel that opened before setup was finished says "Continue setup", and General has "Run setup again". "Test connection" checks that the AI provider answers; its failures name the part that failed ("Couldn’t connect to the AI provider: …", "Connected, but {model} didn’t answer: …").
 
-| English         | 简体中文         | 繁體中文         | 日本語                     | 한국어         |
-| --------------- | ---------------- | ---------------- | -------------------------- | -------------- |
-| setup           | 设置向导         | 設定精靈         | セットアップ               | 설정           |
-| Continue setup  | 继续设置         | 繼續設定         | セットアップを続ける       | 설정 계속하기  |
-| Run setup again | 重新运行设置向导 | 重新執行設定精靈 | セットアップをもう一度実行 | 설정 다시 실행 |
-| Skip (a step)   | 跳过             | 略過             | スキップ                   | 건너뛰기       |
-| Test connection | 测试连接         | 測試連線         | 接続をテスト               | 연결 테스트    |
+| English                    | 简体中文             | 繁體中文             | 日本語                     | 한국어                      |
+| -------------------------- | -------------------- | -------------------- | -------------------------- | --------------------------- |
+| setup                      | 设置向导             | 設定精靈             | セットアップ               | 설정                        |
+| Continue setup             | 继续设置             | 繼續設定             | セットアップを続ける       | 설정 계속하기               |
+| Run setup again            | 重新运行设置向导     | 重新執行設定精靈     | セットアップをもう一度実行 | 설정 다시 실행              |
+| Skip (a step)              | 跳过                 | 略過                 | スキップ                   | 건너뛰기                    |
+| Test connection            | 测试连接             | 測試連線             | 接続をテスト               | 연결 테스트                 |
+| First time here            | 第一次使用           | 第一次使用           | 初めて使う                 | 처음 사용합니다             |
+| I use it on another device | 我在另一台设备上使用 | 我在另一台裝置上使用 | 別のデバイスで使っている   | 다른 기기에서 사용 중입니다 |
+| Set up as a new user       | 作为新用户设置       | 以新使用者身分設定   | 新しいユーザーとして設定   | 새 사용자로 설정            |
 
-| English         | Français                   | Deutsch                    | Español                            | Português (Brasil)              |
-| --------------- | -------------------------- | -------------------------- | ---------------------------------- | ------------------------------- |
-| setup           | configuration              | Einrichtung                | configuración                      | configuração                    |
-| Continue setup  | Continuer la configuration | Einrichtung fortsetzen     | Continuar la configuración         | Continuar a configuração        |
-| Run setup again | Relancer la configuration  | Einrichtung erneut starten | Volver a ejecutar la configuración | Executar a configuração de novo |
-| Skip (a step)   | Passer                     | Überspringen               | Omitir                             | Pular                           |
-| Test connection | Tester la connexion        | Verbindung testen          | Probar conexión                    | Testar conexão                  |
+| English                    | Français                            | Deutsch                              | Español                            | Português (Brasil)              |
+| -------------------------- | ----------------------------------- | ------------------------------------ | ---------------------------------- | ------------------------------- |
+| setup                      | configuration                       | Einrichtung                          | configuración                      | configuração                    |
+| Continue setup             | Continuer la configuration          | Einrichtung fortsetzen               | Continuar la configuración         | Continuar a configuração        |
+| Run setup again            | Relancer la configuration           | Einrichtung erneut starten           | Volver a ejecutar la configuración | Executar a configuração de novo |
+| Skip (a step)              | Passer                              | Überspringen                         | Omitir                             | Pular                           |
+| Test connection            | Tester la connexion                 | Verbindung testen                    | Probar conexión                    | Testar conexão                  |
+| First time here            | C’est ma première fois              | Zum ersten Mal hier                  | Es la primera vez                  | É a primeira vez                |
+| I use it on another device | Je l’utilise sur un autre appareil  | Ich nutze es auf einem anderen Gerät | Lo uso en otro dispositivo         | Uso em outro dispositivo        |
+| Set up as a new user       | Configurer comme nouvel utilisateur | Als neuer Nutzer einrichten          | Configurar como usuario nuevo      | Configurar como novo usuário    |
 
 ## Built-in skills and tool steps
 

@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupEsES: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupEsES: SetupMessages = {
   progressStep: "Paso {current} de {total}: {step}",
   steps: {
     language: "Idioma",
+    path: "Nuevo o habitual",
     provider: "Proveedor de IA",
     pages: "En las páginas",
+    sync: "Sincronización",
+    passphrase: "Frase de contraseña",
+    download: "Descarga",
     done: "Listo",
   },
   back: "Atrás",
@@ -17,6 +22,50 @@ export const setupEsES: SetupMessages = {
   languageTitle: "Elige tus idiomas",
   languageDescription:
     "El idioma de la extensión y el idioma al que se traducen las páginas. La mayoría deja ambos como están.",
+  pathTitle: "¿Has usado OpenBrowserAgent antes?",
+  pathDescription:
+    "Si lo usas en otro dispositivo, la sincronización trae aquí tus proveedores de IA, agentes y chats.",
+  pathNew: "Es la primera vez",
+  pathNewDescription:
+    "Conecta un proveedor de IA y elige lo que OpenBrowserAgent añade a las páginas web.",
+  pathReturning: "Lo uso en otro dispositivo",
+  pathReturningDescription:
+    "Sincroniza tu configuración, proveedores de IA y chats desde tu otro dispositivo.",
+  syncTitle: "Elige cómo sincronizar",
+  syncDescription: "Conéctate de la misma forma que en tu otro dispositivo.",
+  recommended: "Recomendado",
+  methodCode: "Pegar un código de sincronización",
+  methodCodeDescription:
+    "Un solo código contiene el servidor de sincronización y lo que se sincroniza.",
+  methodBrowser: "Sincronización con la cuenta del navegador",
+  browserConnect: "Activar la sincronización con la cuenta del navegador",
+  tryAgain: "Reintentar",
+  asNewUser: "Configurar como usuario nuevo",
+  passphraseTitle: "Introduce tu frase de contraseña de sincronización",
+  passphraseDescription:
+    "Tus claves API se sincronizan cifradas. Introduce la frase de contraseña de sincronización que configuraste en tu otro dispositivo.",
+  keysUnlocked: "Tus claves API están desbloqueadas.",
+  downloadTitle: "Conectar y descargar",
+  downloadDescription:
+    "OpenBrowserAgent descarga lo que tu otro dispositivo sincronizó.",
+  downloading: "Descargando…",
+  downloadFailed: "No se ha podido descargar del servidor de sincronización.",
+  arrived: "De tu otro dispositivo:",
+  noSyncedProvider:
+    "No ha llegado ningún proveedor de IA de tu otro dispositivo. El chat necesita uno.",
+  arrivedCount: {
+    providers: plural({
+      one: "{count} proveedor de IA",
+      other: "{count} proveedores de IA",
+    }),
+    agents: plural({ one: "{count} agente", other: "{count} agentes" }),
+    skills: plural({ one: "{count} habilidad", other: "{count} habilidades" }),
+    mcpServers: plural({
+      one: "{count} servidor MCP",
+      other: "{count} servidores MCP",
+    }),
+    chats: plural({ one: "{count} chat", other: "{count} chats" }),
+  },
   providerTitle: "Conecta un proveedor de IA",
   providerDescription:
     "El chat y el agente necesitan un proveedor de IA. Elige un servicio o cualquier servidor compatible con OpenAI o Anthropic con su Base URL.",
@@ -52,13 +101,9 @@ export const setupEsES: SetupMessages = {
   openPanelDescription:
     "Fija OpenBrowserAgent desde el menú Extensiones del navegador y haz clic en su icono para abrir el panel lateral.",
   openPanel: "Abrir panel lateral",
-  joinLink:
-    "¿Ya usas OpenBrowserAgent en otro dispositivo? Pega un código de sincronización",
-  codeTab: "Pegar código",
-  manualTab: "Configuración manual",
   code: "Código de sincronización",
   codeDescription:
-    "Cópialo en tu otro dispositivo en Configuración → Sincronización. Las opciones de sincronización del código sustituyen a las de este dispositivo.",
+    "En tu otro dispositivo, abre {settings} → {sync} y pulsa «{button}». Las opciones de sincronización del código sustituyen a las de este dispositivo.",
   codeInvalid:
     "No es un código de sincronización válido. Cópialo de nuevo y pega el código completo.",
   connect: "Conectar y sincronizar",

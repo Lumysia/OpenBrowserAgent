@@ -22,7 +22,6 @@ import {
   providerNameDisplay,
   providerTypeLabel,
 } from "../../src/ui/provider-display";
-import { SyncJoinDisclosure } from "../../src/ui/sync-join-form";
 import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { ProviderConnectionFields } from "./provider-connection-fields";
 import { modelWithProviderLabel } from "./provider-drafts";
@@ -32,9 +31,8 @@ import { useProviderDraft } from "./use-provider-draft";
 import { useProviders } from "./use-providers";
 
 // Setup's AI provider step: pick a kind of provider, fill in how to reach
-// it, test the connection and pick a model; or join sync from another
-// device. `providerId`: the provider this setup added, edited again when it
-// comes back here.
+// it, test the connection and pick a model. `providerId`: the provider this
+// setup added, edited again when it comes back here.
 export function SetupProviderStep({
   providerId,
   onProviderId,
@@ -90,7 +88,6 @@ export function SetupProviderStep({
           )}
         </CardContent>
       </Card>
-      <SyncJoinDisclosure />
     </div>
   );
 }
