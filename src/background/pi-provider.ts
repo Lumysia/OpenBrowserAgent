@@ -40,7 +40,11 @@ import {
 import { CONTEXT_POLICY } from "./context/policy";
 import { catalogModel, knownOutputLimit } from "./model-catalog";
 import { knownRefusals, rememberRefusal } from "./model-limits";
-import { quickThinking, thinkingFieldNames } from "./quick-reasoning";
+import {
+  requestThinking,
+  thinkingFieldNames,
+  withVisibleThinking,
+} from "./request-thinking";
 import {
   FIELD_REJECTION_STATUSES,
   rejectsField,
@@ -184,16 +188,22 @@ export function createProviderStream(
       };
       if (refuses.has(MODEL_REFUSAL.inlineTools))
         model = { ...model, compat: undefined };
+      // What a model refuses of the thinking fields: the quick level's, or
+      // those of the user's effort and of showing its thinking.
+      const thinkingRefusal = quick
+        ? MODEL_REFUSAL.quickThinking
+        : MODEL_REFUSAL.thinking;
       const run = async (
         messages: Message[],
         canRetry: boolean,
       ): Promise<void> => {
-        const quickRequest =
-          quick && !refuses.has(MODEL_REFUSAL.quickThinking)
-            ? quickThinking(configuration, model)
-            : undefined;
-        // The thinking fields Pi wrote for the quick level.
-        let quickFields: string[] = [];
+        const plain = refuses.has(thinkingRefusal);
+        const thinking = plain
+          ? undefined
+          : requestThinking(configuration, model, reasoning);
+        // The thinking fields this request sends, which the plain request
+        // leaves out.
+        let thinkingFields: string[] = [];
         const responses = statusRecorder(
           model.api === "anthropic-messages"
             ? anthropicFetch(configuration)
@@ -212,31 +222,34 @@ export function createProviderStream(
           fetch:
             model.api === "google-generative-ai" ? undefined : responses.fetch,
           onPayload: (payload: unknown) => {
-            if (!quickRequest)
-              return withEffort(
-                payload,
-                model.api,
-                configuration.provider,
-                reasoning,
-              );
-            quickFields = thinkingFieldNames(model.api, payload);
-            return payload;
+            if (plain) return payload;
+            const sent = thinking
+              ? withVisibleThinking(payload, thinking.visible)
+              : withEffort(payload, configuration.provider, reasoning);
+            thinkingFields = thinkingFieldNames(model.api, sent);
+            return sent;
           },
         };
         let started = false;
         let pendingStart:
           Extract<AssistantMessageEvent, { type: "start" }> | undefined;
-        const events = quickRequest
-          ? apiOf(model).streamSimple(
-              quickRequest.model as never,
-              normalizeContext({ messages }),
-              { ...providerOptions, reasoning: quickRequest.level },
-            )
-          : apiOf(model).stream(
+        const events = !thinking
+          ? apiOf(model).stream(
               model as never,
               normalizeContext({ messages }),
               providerOptions,
-            );
+            )
+          : thinking.visible
+            ? apiOf(model).stream(
+                thinking.model as never,
+                normalizeContext({ messages }),
+                { ...providerOptions, ...thinking.visible.options },
+              )
+            : apiOf(model).streamSimple(
+                thinking.model as never,
+                normalizeContext({ messages }),
+                { ...providerOptions, reasoning: thinking.level },
+              );
         for await (const event of events) {
           if (event.type === "start") {
             pendingStart = event;
@@ -268,14 +281,13 @@ export function createProviderStream(
             model = { ...model, compat: undefined };
             return run(messages, canRetry);
           }
-          // Only a refusal that names a field the quick level added: the
-          // same request is then sent without them.
+          // Only a refusal that names a thinking field this request added:
+          // the same request is then sent without them.
           if (
             rejection &&
-            quickRequest &&
-            rejectsField(rejection, quickFields, FIELD_REJECTION_STATUSES)
+            rejectsField(rejection, thinkingFields, FIELD_REJECTION_STATUSES)
           ) {
-            await learn(MODEL_REFUSAL.quickThinking);
+            await learn(thinkingRefusal);
             return run(messages, canRetry);
           }
 
@@ -313,10 +325,10 @@ export function createProviderStream(
   };
 }
 
-// The user's reasoning effort, where the endpoint takes one.
+// The user's reasoning effort in a Chat Completions request, in the field
+// the provider type takes (see request-thinking.ts for the other APIs).
 function withEffort(
   payload: unknown,
-  api: Api,
   provider: ProviderId,
   reasoning: RequestReasoning | undefined,
 ) {
@@ -324,15 +336,9 @@ function withEffort(
     provider,
     reasoning === QUICK_TASK_REASONING ? undefined : reasoning,
   );
-  return {
-    ...(payload as object),
-    ...(api === "openai-responses" && params.reasoning_effort
-      ? {
-          reasoning: { effort: params.reasoning_effort, summary: "auto" },
-          include: ["reasoning.encrypted_content"],
-        }
-      : params),
-  };
+  return Object.keys(params).length
+    ? { ...(payload as object), ...params }
+    : payload;
 }
 
 function hasImages(messages: Message[]) {

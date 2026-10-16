@@ -4,7 +4,7 @@ import { providerType, type ProviderId } from "./providers";
 // How a quick task (smart bar, page translation) tells a chat completions
 // endpoint to think as little as it can. "auto" uses the model's entry in
 // the model catalog, else what the provider type defines (see
-// background/quick-reasoning.ts). The others are for servers whose model
+// background/request-thinking.ts). The others are for servers whose model
 // or template the catalog does not know.
 export const THINKING_SWITCH = {
   auto: "auto",
