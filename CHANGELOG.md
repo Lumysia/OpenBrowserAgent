@@ -9,6 +9,7 @@ What changed in each release. The release workflow publishes the section for the
 - Ctrl+Shift+Y (Command+Shift+Y on Mac) still opens the side panel directly; it is now its own shortcut, "Open the side panel". The toolbar button's shortcut opens the menu and has no key by default. If you had changed the toolbar button's key, that key now opens the menu, and Ctrl+Shift+Y is set for the side panel only if it is still free.
 - The toolbar button's right-click menu no longer has the page items (translate, Translate into, translate button and smart bar on this site, subtitles); they are in the toolbar menu now. The translate button for a site is turned on or off in Settings.
 - The side panel shows more of the model's thinking, also between tool calls: Claude models that think by default show a summary of it instead of an empty block, Gemini shows its thoughts, and OpenAI Responses models show reasoning summaries at the default effort. The Reasoning effort setting now also applies to Anthropic and Gemini models.
+- On tasks with several steps, the assistant now says in a short sentence what it is about to do or what it found between stages, before giving the full answer.
 
 ## 0.2.0-beta.15 - 2026-10-15
 
