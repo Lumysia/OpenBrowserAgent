@@ -63,11 +63,14 @@ function formatHistoryDate(language: string, value: number) {
   });
 }
 
-export function formatCompactNumber(language: string, value: number) {
+// Token counts in K and M in every language, as models and providers state
+// them ("128K context"); the locale's own compact forms (万, Mio.) would not
+// match the numbers people compare them with.
+export function formatTokenNumber(value: number) {
   return Math.abs(value) >= 10_000
-    ? formatNumber(language, value, {
+    ? formatNumber("en-US", value, {
         notation: "compact",
         maximumSignificantDigits: 3,
       })
-    : formatNumber(language, value);
+    : formatNumber("en-US", value);
 }
