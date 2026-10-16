@@ -261,6 +261,10 @@
 .ui-card-header {
   padding: 17px 17px 0;
 }
+/* A card with only a header (no content below) pads its bottom too. */
+.ui-card-header:last-child {
+  padding-bottom: 17px;
+}
 .ui-card-title {
   margin: 0;
   font-size: var(--text-lg);
