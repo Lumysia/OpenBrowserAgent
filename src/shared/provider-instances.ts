@@ -1,4 +1,5 @@
 import { isProviderId, providerType, type ProviderId } from "./providers";
+import { sameJson } from "./sync/codec";
 import type { ProviderConfig, ProviderState } from "./types";
 
 export function normalizeProviderState(state: ProviderState = {}) {
@@ -26,8 +27,33 @@ export function createProviderConfig(
   type: ProviderId,
   existing: ProviderState,
 ) {
-  const id = uniqueProviderId(type, existing);
+  return newProviderConfig(uniqueProviderId(type, existing), type);
+}
+
+function newProviderConfig(id: string, type: ProviderId) {
   return normalizeProviderConfig(id, { id, type, models: [], imageModels: [] });
+}
+
+// Whether a provider is still as createProviderConfig made it: no key,
+// model, permission or other setting, its label and base URL the type's.
+// Blank text and empty lists count as unset.
+export function providerUntouched(id: string, provider: ProviderConfig) {
+  const config = normalizeProviderConfig(id, provider);
+  return sameJson(
+    setFields(config),
+    setFields(newProviderConfig(id, config.type)),
+  );
+}
+
+function setFields(config: ProviderConfig) {
+  return Object.fromEntries(
+    Object.entries(config).filter(
+      ([, value]) =>
+        value !== undefined &&
+        !(typeof value === "string" && !value.trim()) &&
+        !(Array.isArray(value) && !value.length),
+    ),
+  );
 }
 
 export function providerTypeFromId(id: string, type?: ProviderId) {
