@@ -1,4 +1,4 @@
-import { describe } from "./actions";
+import { describe } from "./step-result";
 import { CONTROL_CANDIDATES, isHidden, isInteractive } from "./dom";
 import { renderLines, snapshotLines } from "./snapshot";
 import { beginTexts, textChanges, type PageTexts } from "./text-changes";

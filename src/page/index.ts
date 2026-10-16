@@ -3,11 +3,11 @@ import { beginChanges, collectChanges, hasBaseline } from "./changes";
 import {
   editableText,
   hasText,
-  inputPoint,
   prepareTrustedInput,
   runStep,
   type ActStep,
 } from "./actions";
+import { inputPoint } from "./pointer-actions";
 import { runEdits, type EditOp } from "./edits";
 import { mainMarkdown } from "./html-markdown";
 import { pageMarkdown } from "./markdown";
@@ -96,7 +96,12 @@ const methods: Record<string, (args: Args) => unknown> = {
   prepareTrusted: (args) =>
     prepareTrustedInput(String(args.ref || ""), args.clear !== false),
   editableText: (args) => editableText(String(args.ref || "")),
-  inputPoint: (args) => inputPoint(String(args.ref || ""), args.focus === true),
+  inputPoint: (args) =>
+    inputPoint(String(args.ref || ""), {
+      focus: args.focus === true,
+      pointer: args.pointer === true,
+      force: args.force === true,
+    }),
   searchResults: (args) => searchResults(requiredNumber(args, "limit")),
 };
 

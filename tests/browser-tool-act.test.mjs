@@ -18,6 +18,23 @@ document.getElementById("start").onclick = () => {
 };
 document.getElementById("point").onclick = () => { document.getElementById("score").textContent = "Score: " + ++points; };
 </script>`,
+  "/covered": `<title>Covered</title>
+<style>button{width:200px;height:40px;display:block;margin:8px}</style>
+<button id="under" style="position:absolute;left:0;top:0">Under</button>
+<div id="notice" style="position:fixed;left:0;top:0;width:300px;height:60px;background:#eee"><p style="margin:0">Cookie notice</p><button id="accept" style="width:80px;height:20px;margin:0;position:absolute;right:0;top:0" onclick="this.parentNode.remove()">Accept</button></div>
+<button id="partly" style="position:absolute;left:0;top:100px">Partly</button>
+<div style="position:absolute;left:0;top:100px;width:120px;height:40px;background:#ccc"></div>
+<span style="position:absolute;left:0;top:160px;width:120px;height:30px"><input type="checkbox" id="agree" style="margin:0;width:120px;height:30px"><label for="agree" style="position:absolute;inset:0">Agree</label></span>
+<button id="icon" aria-label="Star" style="position:absolute;left:0;top:200px"><span style="display:block;width:100%;height:100%">*</span></button>
+<button id="ghost" style="position:absolute;left:0;top:260px">Ghost</button>
+<div style="position:absolute;left:0;top:260px;width:300px;height:60px;pointer-events:none;opacity:0"></div>
+<script>
+window.clicks = [];
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button,input");
+  if (button && button.id !== "accept") window.clicks.push(button.id + (button.id === "partly" && event.clientX > 120 ? ":uncovered" : ""));
+});
+</script>`,
 };
 
 test(
@@ -31,7 +48,7 @@ test(
         .end(PAGES[request.url]);
       return true;
     });
-    const { open } = fixture;
+    const { open, evaluate } = fixture;
     try {
       await t.test(
         "new and changed text; ticking text is not a change",
@@ -69,6 +86,48 @@ test(
             idle,
             /No visible change in the viewport\.[^]*\nTicking: timer: Time left \d+$/,
           );
+        },
+      );
+
+      await t.test(
+        "covered elements fail unless forced; labels and icons do not cover",
+        async () => {
+          const tabId = await open("/covered");
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const step = (label, extra = {}) => ({
+            action: "click",
+            ref: ref(snapshot, label),
+            ...extra,
+          });
+          const act = (...steps) => ({ name: "act", args: { tabId, steps } });
+          const [covered, others, forced] = await fixture.run([
+            act(step('button "Under"')),
+            act(
+              step('button "Partly"'),
+              step("checkbox"),
+              step('button "Star"'),
+              step('button "Ghost"'),
+            ),
+            act(step('button "Under"', { force: true })),
+          ]);
+          assert.match(
+            covered,
+            /Step 1 \(click e\d+\) failed: button "Under" \[e\d+\] is covered by div "Cookie notice Accept" \[e\d+\]\. Close or scroll the cover away/,
+          );
+          assert.doesNotMatch(others, /failed/);
+          assert.match(
+            forced,
+            /covered by div "Cookie notice Accept"; acted on it anyway/,
+          );
+          assert.deepEqual(await evaluate(tabId, "window.clicks"), [
+            "partly:uncovered",
+            "agree",
+            "icon",
+            "ghost",
+            "under",
+          ]);
         },
       );
     } finally {

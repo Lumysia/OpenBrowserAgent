@@ -156,14 +156,15 @@ async function trustedPointer(tabId: number, step: Step, signal?: AbortSignal) {
   if (!areCdpAvailable()) return NO_DEBUGGER;
   const point = step.ref
     ? (
-        await callPage<{ x: number; y: number }>(
+        await callPage<{ x: number; y: number; error?: string }>(
           tabId,
           "inputPoint",
-          { ref: step.ref },
+          { ref: step.ref, pointer: true, force: step.force === true },
           signal,
         )
       ).value
     : { x: Number(step.x), y: Number(step.y) };
+  if ("error" in point && point.error) return point.error;
   if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
     return "Give a ref, or x and y in viewport pixels (from a screenshot).";
   await withInput(
