@@ -21,6 +21,7 @@ import {
 import { findLines } from "./search";
 import { searchResults } from "./search-results";
 import { renderLines, snapshotLines } from "./snapshot";
+import { reveal } from "./step-result";
 
 // The in-page side of the page tools, installed once per document in the
 // extension's isolated world. Every method takes plain JSON and returns
@@ -95,6 +96,17 @@ function requiredNumber(args: Args, name: string) {
   return value;
 }
 
+// The viewport's size and, for a ref, the element's box in it after
+// scrolling it into view: what a screenshot crops to.
+function box(args: Args) {
+  const viewport = { width: innerWidth, height: innerHeight };
+  if (!args.ref) return { viewport };
+  const element = resolveRef(args.ref);
+  reveal(element);
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { viewport, rect: { x: left, y: top, width, height } };
+}
+
 function optionalNumber(args: Args, name: string) {
   const value = Number(args[name]);
   return args[name] !== undefined && Number.isFinite(value) ? value : undefined;
@@ -133,6 +145,7 @@ const methods: Record<string, (args: Args) => unknown> = {
       force: args.force === true,
     }),
   searchResults: (args) => searchResults(requiredNumber(args, "limit")),
+  box,
 };
 
 export type PageAgentReply =

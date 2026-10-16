@@ -11,6 +11,7 @@ What changed in each release. The release workflow publishes the section for the
 - When a page redraws a button the agent was about to click (for example a calendar after "Next month"), the agent now uses the identical button that replaced it instead of stopping, and says so.
 - The agent now sees which form fields are read-only, required or marked invalid, and the kind of field (such as a date), so it picks the right way to fill them in.
 - The agent can look at the visible part of the page right after clicking or typing, in the same step, which saves time on timed tasks.
+- The agent can take a screenshot of a single element or part of the page, enlarged up to 4 times, to look at small details such as a chart or a small icon.
 
 ## 0.2.0-beta.17 - 2026-10-16
 
