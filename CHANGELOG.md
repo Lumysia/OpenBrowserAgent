@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.14 - 2026-10-15
+
 - Tooltips close when the pointer moves quickly from the side panel or settings into the web page.
 
 - Image generation: the AI picks the image size for each request; the Image size setting is gone.
