@@ -6,9 +6,7 @@ import {
   checkSandboxWorker,
   quickjsWasmUrl,
 } from "./scripts/quickjs-wasm-plugin";
-import { SMART_BAR_COMMAND } from "./src/shared/smart-bar-protocol";
-import { PAGE_TRANSLATE_COMMAND } from "./src/shared/page-translate/protocol";
-import { SIDE_PANEL_SHORTCUT } from "./src/shared/config";
+import { MANIFEST_COMMANDS } from "./src/shared/commands";
 import {
   CODE_SANDBOX_CSP,
   CODE_SANDBOX_PATH,
@@ -130,23 +128,7 @@ export default defineConfig({
     action: {
       default_title: "OpenBrowserAgent",
     },
-    commands: {
-      _execute_action: {
-        suggested_key: { ...SIDE_PANEL_SHORTCUT },
-        description: "OpenBrowserAgent",
-      },
-      // No default key: the user picks one in the browser's shortcut settings.
-      [SMART_BAR_COMMAND]: {
-        description: "__MSG_smartBarCommand__",
-      },
-      // Alt+A is free in Chrome, Edge and Firefox. On macOS Option+A types
-      // "å" (a command takes its keys from every text field), so Control+
-      // Shift+A there.
-      [PAGE_TRANSLATE_COMMAND]: {
-        suggested_key: { default: "Alt+A", mac: "MacCtrl+Shift+A" },
-        description: "__MSG_translatePageCommand__",
-      },
-    },
+    commands: MANIFEST_COMMANDS,
     options_ui: {
       open_in_tab: true,
       page: "options.html",

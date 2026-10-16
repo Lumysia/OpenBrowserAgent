@@ -252,6 +252,28 @@ test(
           row.startsWith(t.settings.openSidePanelCommand),
         ),
       );
+      // Every command is named in the UI language, whatever the browser's.
+      const zh = getMessages("zh-CN");
+      await setup.call(
+        (key) => chrome.storage.local.set({ [key]: "zh-CN" }),
+        STORAGE_KEYS.language,
+      );
+      const commandTitles = (messages) =>
+        ["openSidePanelCommand", "smartBarCommand", "translatePageCommand"].map(
+          (key) => messages.settings[key],
+        );
+      await poll(async () => {
+        const titles = await texts(
+          setup,
+          ".settings-toggle-row .settings-section-title",
+        );
+        return commandTitles(zh).every((title) => titles.includes(title));
+      });
+      await setup.call(
+        (key) => chrome.storage.local.set({ [key]: "en-US" }),
+        STORAGE_KEYS.language,
+      );
+      await atStep(setup, t.setup.doneTitle);
       assert.equal(await forward(setup), "");
       // The side panel opens and the setup tab closes.
       await clickElement(setup, "button", { text: t.setup.openPanel });

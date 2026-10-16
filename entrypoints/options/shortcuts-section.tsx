@@ -1,5 +1,10 @@
 import { ExternalLink, Keyboard } from "lucide-react";
 import { getBrowserApi } from "../../src/shared/browser-api";
+import {
+  ACTION_COMMANDS,
+  commandTitle,
+  suggestedSidePanelKeys,
+} from "../../src/shared/commands";
 import { BROWSER_SHORTCUTS_URL } from "../../src/shared/config";
 import { normalizePageTranslateSettings } from "../../src/shared/page-translate/settings";
 import { PAGE_TRANSLATE_COMMAND } from "../../src/shared/page-translate/protocol";
@@ -16,9 +21,6 @@ import {
 import { useCommands } from "../../src/ui/use-commands";
 import { useMessages } from "../../src/ui/messages";
 import { useStoredState } from "../../src/ui/useStoredState";
-
-// The toolbar button's command (Manifest V3 and V2).
-const ACTION_COMMANDS = ["_execute_action", "_execute_browser_action"];
 
 // Firefox (moz-extension pages) has no page to open for its shortcut
 // settings.
@@ -72,10 +74,16 @@ export function ShortcutsSection() {
           return (
             <SettingToggleRow
               key={command.name}
-              title={
-                ACTION_COMMANDS.includes(command.name)
-                  ? t.settings.openSidePanelCommand
-                  : command.description || command.name
+              title={commandTitle(command, t)}
+              // The side panel without keys: Chrome sets the suggested ones
+              // only on a fresh install, and not when they are taken.
+              description={
+                ACTION_COMMANDS.includes(command.name) && !command.shortcut
+                  ? t.settings.sidePanelShortcutHint.replace(
+                      "{keys}",
+                      suggestedSidePanelKeys(navigator.platform),
+                    )
+                  : undefined
               }
               aside={toggle ? undefined : keys}
               value={toggle?.get(preferences)}

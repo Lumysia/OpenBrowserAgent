@@ -16,6 +16,10 @@ export const settingsKo: SettingsMessages = {
   shortcutsFirefoxHint:
     '변경하려면 about:addons를 열고 톱니바퀴 버튼을 클릭한 뒤 "확장 기능 단축키 관리"를 선택하세요.',
   openSidePanelCommand: "사이드 패널 열기",
+  smartBarCommand: "선택한 텍스트에 스마트 바 표시",
+  translatePageCommand: "이 페이지 번역 또는 원문 보기",
+  sidePanelShortcutHint:
+    "브라우저의 단축키 설정에서 키를 고르세요(예: {keys}).",
   // One command's keys, with a button to change them.
   commandShortcut: {
     // {shortcut}: the keys, as the browser shows them.
