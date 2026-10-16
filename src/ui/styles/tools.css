@@ -310,11 +310,18 @@
   gap: 10px;
   margin-top: 10px;
 }
+/* The card holds the only line; options are fills well inside its padding
+   (the custom answer field keeps its own edge), with radii concentric to
+   the card's. */
 .tool-question-card {
+  --question-inset: var(--space-3);
+  --question-item-radius: var(--radius-sm);
   min-width: 0;
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 16%, var(--border));
-  border-radius: var(--radius);
+  border-radius: calc(
+    var(--question-item-radius) + var(--question-inset) + 1px
+  );
   background: color-mix(in oklab, var(--card) 74%, var(--accent-softer));
   box-shadow: none;
 }
@@ -322,64 +329,55 @@
   border-color: color-mix(in oklab, var(--accent-strong) 22%, var(--border));
 }
 .tool-question-title {
+  padding-inline: var(--space-3);
   color: var(--foreground);
   font-size: var(--text-md);
   line-height: 1.35;
 }
 .tool-question-card-content {
   display: grid;
-  gap: 9px;
-  padding: 11px;
-}
-.tool-question-card .ui-toggle-group {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
   gap: var(--space-2);
+  padding: var(--question-inset);
+}
+.tool-question-card .ui-toggle-group-grid {
+  --toggle-group-item-min: 120px;
+  --toggle-group-inset: var(--space-2);
   overflow: visible;
+  padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 .tool-question-card :is(.ui-input, .ui-textarea) {
+  border-radius: var(--question-item-radius);
   font-size: var(--text-base);
   line-height: 1.35;
 }
-/* Each option is a card of its own: it keeps the start line a toggle group
-   hides beside the selected item, and the selected one is marked by its
-   border. */
-.tool-question-option {
-  --question-option-edge: color-mix(
-    in oklab,
-    var(--accent-strong) 12%,
-    var(--border)
-  );
+.tool-question-card .tool-question-option {
   height: auto;
   min-height: 56px;
-  flex: none;
-  display: grid;
-  justify-items: start;
-  align-content: center;
-  gap: var(--space-1);
-  padding: 10px 12px;
-  border: 1px solid var(--question-option-edge);
-  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 10px var(--space-3);
+  border-radius: var(--question-item-radius);
+  background: var(--secondary);
   text-align: start;
   white-space: normal;
 }
-.tool-question-option:first-child,
-.tool-question-option[data-state="on"],
-.tool-question-option[data-state="on"] + .tool-question-option {
-  border-inline-start-color: var(--question-option-edge);
+.tool-question-card .tool-question-option:hover {
+  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
 }
-.tool-question-option[data-state="on"] {
-  --question-option-edge: color-mix(
-    in oklab,
-    var(--accent-strong) 40%,
-    var(--border)
-  );
+.tool-question-card .tool-question-option[data-state="on"] {
+  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
 }
-.tool-question-option span {
+.tool-question-option-text {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.tool-question-option-label {
   font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.25;
@@ -389,6 +387,20 @@
   font-size: var(--text-sm);
   font-weight: 500;
   line-height: 1.35;
+}
+/* The selected option's check, beside its label and description. */
+.tool-question-option-check {
+  flex: none;
+  color: var(--accent-strong);
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    scale var(--duration-fast) var(--ease-standard);
+}
+.tool-question-option[data-state="on"] .tool-question-option-check {
+  opacity: 1;
+  scale: 1;
 }
 
 /* Generated images. */
