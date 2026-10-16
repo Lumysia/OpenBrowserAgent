@@ -107,6 +107,31 @@
   justify-content: space-between;
   gap: var(--space-2);
 }
+/* A select inside a line of text: the value and its chevron, no field. */
+.ui-select-trigger.ui-select-trigger-inline {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  height: 24px;
+  gap: 2px;
+  padding: 0 var(--space-1);
+  border-color: transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+}
+.ui-select-trigger-inline > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-select-trigger-inline > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--muted-control);
+}
 .ui-textarea {
   min-height: 100px;
   padding: 10px 11px;
@@ -116,6 +141,13 @@
   outline: none;
   border-color: var(--accent-strong);
   box-shadow: 0 0 0 3px var(--ring);
+}
+.ui-select-trigger-inline:hover {
+  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+}
+.ui-select-trigger-inline:focus {
+  border-color: transparent;
+  box-shadow: none;
 }
 :is(.ui-input, .ui-textarea)::placeholder {
   color: var(--muted-foreground);
@@ -461,94 +493,4 @@
 .ui-step-dot[data-state="current"] {
   width: 22px;
   background: var(--accent-strong);
-}
-
-/* A select inside a line of text: the value and its chevron, no field. */
-.ui-select-trigger.ui-select-trigger-inline {
-  display: inline-flex;
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  min-height: 24px;
-  gap: 2px;
-  padding: 0 var(--space-1);
-  border-color: transparent;
-  border-radius: var(--radius-xs);
-  background: transparent;
-  box-shadow: none;
-  color: var(--foreground);
-  font-weight: 600;
-  vertical-align: middle;
-}
-.ui-select-trigger-inline > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ui-select-trigger-inline > svg {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  color: var(--muted-control);
-}
-.ui-select-trigger-inline:hover {
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
-}
-.ui-select-trigger-inline:focus {
-  border-color: transparent;
-  box-shadow: none;
-}
-
-/* A square on/off tile: icon over a short label. On is filled with the
-   accent; --accent-strong keeps 4.5:1 against --card in both schemes. */
-.ui-toggle-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0;
-  min-height: 64px;
-  padding: var(--space-2) var(--space-1);
-  border: 1px solid var(--border-control);
-  border-radius: var(--radius-md);
-  background: var(--card);
-  color: var(--foreground);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.2;
-  transition: var(--transition-interactive);
-}
-.ui-toggle-tile-icon {
-  display: inline-flex;
-}
-.ui-toggle-tile-label {
-  max-width: 100%;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-.ui-toggle-tile:hover:not([aria-disabled="true"]) {
-  border-color: color-mix(in oklab, var(--accent-strong) 30%, var(--border));
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
-}
-.ui-toggle-tile:active:not([aria-disabled="true"]) {
-  scale: 0.97;
-}
-.ui-toggle-tile[data-state="on"] {
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
-  color: var(--card);
-  box-shadow: var(--glow);
-}
-.ui-toggle-tile[data-state="on"]:hover:not([aria-disabled="true"]) {
-  border-color: var(--accent-strong);
-  background: color-mix(in oklab, var(--accent-strong) 90%, var(--foreground));
-}
-.ui-toggle-tile[aria-disabled="true"] {
-  border-style: dashed;
-  border-color: var(--border);
-  background: transparent;
-  color: var(--muted-foreground);
-  box-shadow: none;
-  cursor: not-allowed;
 }
