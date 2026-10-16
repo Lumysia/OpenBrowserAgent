@@ -10,6 +10,7 @@ What changed in each release. The release workflow publishes the section for the
 - The agent no longer clicks buttons hidden under a banner or overlay, which a person couldn't click either. It is told what covers the button so it can close the banner first, and it clicks the visible part of a partly covered button.
 - When a page redraws a button the agent was about to click (for example a calendar after "Next month"), the agent now uses the identical button that replaced it instead of stopping, and says so.
 - The agent now sees which form fields are read-only, required or marked invalid, and the kind of field (such as a date), so it picks the right way to fill them in.
+- The agent can look at the visible part of the page right after clicking or typing, in the same step, which saves time on timed tasks.
 
 ## 0.2.0-beta.17 - 2026-10-16
 

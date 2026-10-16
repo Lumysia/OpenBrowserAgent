@@ -10,6 +10,10 @@ export const CONTEXT_POLICY = {
   // Any single tool output above this goes to the artifact store; the model
   // gets a head preview of this size plus a handle.
   toolOutputCapTokens: 5_000,
+  // The viewport snapshot act appends when asked, and the items it shows
+  // of each long list or table.
+  actSnapshotTokens: 1_500,
+  actSnapshotItems: 15,
   // `read` returns slices of at most this size.
   readMaxTokens: 5_000,
   // A skill is an instruction set to follow whole, so `read` returns a

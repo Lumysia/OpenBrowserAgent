@@ -47,6 +47,10 @@ const picks = () => { document.getElementById("picks").innerHTML = "<button>Pick
 document.getElementById("refresh").onclick = picks;
 render(); picks();
 </script>`,
+  "/dense": `<title>Dense</title><button>Go</button><div style="font-size:2px;line-height:2px">${Array.from(
+    { length: 300 },
+    (_, index) => `<p style="margin:0">Line ${index} of the dense page</p>`,
+  ).join("")}</div>`,
 };
 
 test(
@@ -176,6 +180,38 @@ test(
               `Step 2 \\(click ${pick}\\) failed: Ref ${pick} is stale: the page re-rendered it, and 2 elements match it now: button "Pick" \\[e\\d+\\], button "Pick" \\[e\\d+\\]\\. Use the right one's ref\\.`,
             ),
           );
+        },
+      );
+
+      await t.test(
+        "snapshot: true appends a short viewport snapshot",
+        async () => {
+          const tabId = await open("/quiz");
+          const dense = await open("/dense");
+          const [quiz, denseSnapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+            { name: "snapshot", args: { tabId: dense, scope: "viewport" } },
+          ]);
+          const go = (id, target, snapshot) => ({
+            name: "act",
+            args: {
+              tabId: id,
+              ...(snapshot ? { snapshot: true } : {}),
+              steps: [{ action: "click", ref: target }],
+            },
+          });
+          const [started, plain, capped] = await fixture.run([
+            go(tabId, ref(quiz, 'button "Start"'), true),
+            go(tabId, ref(quiz, 'button "Nothing"'), false),
+            go(dense, ref(denseSnapshot, 'button "Go"'), true),
+          ]);
+          assert.match(
+            started,
+            /\nSnapshot:\n\[Viewport y=0-\d+ of \d+px[^\n]*\]\n[^]*heading \[e\d+\] h2: Question 1 of 3/,
+          );
+          assert.doesNotMatch(plain, /Snapshot:/);
+          assert.match(capped, /\[Snapshot cut at \d+ characters/);
+          assert.ok(capped.length < 9_000, `${capped.length} chars`);
         },
       );
     } finally {

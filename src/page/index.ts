@@ -49,7 +49,14 @@ function snapshot(args: Args) {
     );
   if (args.ref) return { scope: "ref", text: page(resolveRef(args.ref)) };
   const body = document.body || document.documentElement;
-  if (scope === "viewport") return { scope, text: viewport(body, urls) };
+  if (scope === "viewport")
+    return {
+      scope,
+      text: viewport(body, urls, {
+        maxChars: optionalNumber(args, "maxChars"),
+        itemCap: optionalNumber(args, "itemCap"),
+      }),
+    };
   // The whole page when it fits; otherwise `page` caps long lists and
   // tables, and auto shows the viewport plus the whole page for read and find.
   const full = page(body);
@@ -57,7 +64,7 @@ function snapshot(args: Args) {
     return { scope, text: scrollNote() + page(body, PAGE_ITEM_CAP) };
   if (full.length <= capChars)
     return { scope: "page", text: `${scrollNote()}${full}` };
-  return { scope: "viewport", text: viewport(body, urls), full };
+  return { scope: "viewport", text: viewport(body, urls, {}), full };
 }
 
 // Where the page is scrolled, when it can scroll: content that loads on
@@ -69,11 +76,15 @@ function scrollNote() {
   return `[Scrolled to y=${top}-${top + innerHeight} of ${height}px.]\n`;
 }
 
-function viewport(body: Element, urls: boolean) {
+function viewport(
+  body: Element,
+  urls: boolean,
+  caps: { maxChars?: number; itemCap?: number },
+) {
   const height = document.documentElement.scrollHeight;
   const top = Math.round(scrollY);
   const header = `[Viewport y=${top}-${top + innerHeight} of ${height}px; content outside it is not shown. Scroll with act, or use find.]`;
-  return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls }))}`;
+  return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls, ...caps }))}`;
 }
 
 // Limits come from the caller (the background's tool policy), never a
@@ -82,6 +93,11 @@ function requiredNumber(args: Args, name: string) {
   const value = Number(args[name]);
   if (!Number.isFinite(value)) throw new Error(`Missing ${name}`);
   return value;
+}
+
+function optionalNumber(args: Args, name: string) {
+  const value = Number(args[name]);
+  return args[name] !== undefined && Number.isFinite(value) ? value : undefined;
 }
 
 const methods: Record<string, (args: Args) => unknown> = {

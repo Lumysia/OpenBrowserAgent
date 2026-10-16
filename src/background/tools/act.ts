@@ -19,6 +19,7 @@ import {
   type Step,
   type StepOutcome,
 } from "./act-steps";
+import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
 import { errorMessage } from "../../shared/error-message";
@@ -51,6 +52,11 @@ export const actTool: ToolDefinition = {
   parameters: schema(
     {
       tabId: RUN_TAB_ID_PARAM,
+      snapshot: {
+        type: "boolean",
+        description:
+          "Also return a short snapshot of the viewport after the steps, instead of a separate snapshot call.",
+      },
       steps: {
         type: "array",
         minItems: 1,
@@ -234,6 +240,8 @@ export const actTool: ToolDefinition = {
         "No visible change in the viewport. Check with snapshot or find if you expected one.",
       );
     lines.push(...notes);
+    if (input.snapshot === true)
+      lines.push(await viewportSnapshot(tab.id, signal));
     return {
       text: lines.join("\n"),
       details: {
@@ -247,3 +255,25 @@ export const actTool: ToolDefinition = {
     };
   },
 };
+
+// The viewport after the steps, capped small: act results stay short.
+async function viewportSnapshot(tabId: number, signal?: AbortSignal) {
+  const maxChars = tokenChars(CONTEXT_POLICY.actSnapshotTokens);
+  try {
+    const { value } = await callPage<{ text: string }>(
+      tabId,
+      TOOL_NAME.snapshot,
+      {
+        scope: "viewport",
+        capChars: maxChars,
+        maxChars,
+        itemCap: CONTEXT_POLICY.actSnapshotItems,
+      },
+      signal,
+    );
+    return `Snapshot:\n${value.text}`;
+  } catch (error) {
+    signal?.throwIfAborted();
+    return `(Could not take a snapshot: ${errorMessage(error)})`;
+  }
+}
