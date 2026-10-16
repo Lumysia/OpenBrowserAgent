@@ -52,6 +52,9 @@
   border-radius: var(--radius);
 }
 .ui-select-viewport {
+  /* A long list scrolls instead of running off the window; minus the
+     content's 1px borders. */
+  max-height: calc(var(--radix-select-content-available-height) - 2px);
   padding: 5px;
 }
 
