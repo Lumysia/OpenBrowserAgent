@@ -1,4 +1,5 @@
 import { orderRows, todoItems } from "./fixture-pages-apps.mjs";
+import { QUIZ_QUESTIONS, QUIZ_SECONDS } from "./fixture-pages-tools.mjs";
 import { SKILL_TASKS } from "./tasks-skills.mjs";
 
 // Each task opens `tabs` (fixture paths or live URLs; the first is active),
@@ -251,6 +252,38 @@ export const TASKS = [
           !retracted,
         { delivered, refs, recalledRefs, quotedResult, retracted },
       );
+    },
+  },
+  {
+    // The questions show as text only after Start, with a countdown.
+    id: "timed-quiz",
+    tabs: ["/quiz"],
+    prompt:
+      "Start the quiz on this page and answer all its questions correctly before the time runs out. Then tell me the code it shows.",
+    check({ answer, posts }) {
+      const data = lastPost(posts, "/api/quiz");
+      const expected = QUIZ_QUESTIONS.map((question) => question.answer);
+      const correct =
+        !!data &&
+        data.data.answers?.join("|") === expected.join("|") &&
+        data.data.ms < QUIZ_SECONDS * 1000;
+      return result(correct && answer.includes(data.code), {
+        answers: data?.data.answers,
+        ms: data?.data.ms,
+      });
+    },
+  },
+  {
+    // A consent banner covers the button; it only works after consent.
+    id: "covered-button",
+    tabs: ["/covered"],
+    prompt:
+      "Download the report from this page and tell me the receipt number it shows.",
+    check({ answer, posts }) {
+      const data = lastPost(posts, "/api/report");
+      return result(!!data && answer.includes(data.code), {
+        posted: !!data,
+      });
     },
   },
   {
