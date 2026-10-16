@@ -72,6 +72,8 @@
   /* An item fading or collapsing before it leaves the page; timers that
      unmount it read this (src/ui/motion.ts). */
   --duration-remove: 190ms;
+  /* A focus glow and border fading in and out around a field. */
+  --duration-focus: 280ms;
   --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
@@ -87,6 +89,10 @@
     rotate var(--duration-fast) var(--ease-out),
     filter var(--duration-fast) var(--ease-standard),
     opacity var(--duration-fast) var(--ease-standard);
+  /* After --transition-colors, so the focus timing wins for these two. */
+  --transition-focus:
+    border-color var(--duration-focus) var(--ease-standard),
+    box-shadow var(--duration-focus) var(--ease-standard);
 
   --z-raised: 1;
   --z-sticky: 3;

@@ -13,8 +13,12 @@
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
   border-radius: var(--radius);
   background: var(--field);
-  box-shadow: var(--elevation-2);
-  transition: var(--transition-colors);
+  /* The glow is in the list, transparent, also at rest: box-shadow lists
+     only animate when both have the same shadows in the same order. */
+  box-shadow:
+    0 0 0 3px transparent,
+    var(--elevation-2);
+  transition: var(--transition-colors), var(--transition-focus);
 }
 .composer-box:focus-within {
   border-color: var(--ring);
