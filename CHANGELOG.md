@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.16 - 2026-10-16
+
 - Token counts show in K and M (128K, 1.2M) in every language.
 - **Toolbar menu**: once setup is finished, clicking OpenBrowserAgent's toolbar button opens a small menu instead of the side panel. It shows the current site with tiles to translate the page (click again for the original), turn the smart bar on or off for the site, and translate the subtitles of the page's video (greyed out with the reason where it can't work), your "Translate into" language, and a large "Open side panel" button. The gear opens Settings.
 - Ctrl+Shift+Y (Command+Shift+Y on Mac) still opens the side panel directly; it is now its own shortcut, "Open the side panel". The toolbar button's shortcut opens the menu and has no key by default. If you had changed the toolbar button's key, that key now opens the menu, and Ctrl+Shift+Y is set for the side panel only if it is still free.
