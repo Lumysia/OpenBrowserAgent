@@ -200,16 +200,14 @@ test(
         },
       );
 
-      await t.test("the shortcut toggles, unless it is off", async () => {
+      await t.test("the shortcut toggles", async () => {
+        // A switch stored by an earlier release no longer turns it off.
+        await session.setPreferences({ shortcut: false });
         await shortcut(url("/article"));
         await poll(() => translationIn(page, "#intro"));
         await isLabel(page, "Show original");
         await shortcut(url("/article"));
         await poll(async () => (await translationCount(page)) === 0);
-        await session.setPreferences({ shortcut: false });
-        await shortcut(url("/article"));
-        assert.equal(await unchangedFor(() => translationCount(page)), 0);
-        await session.setPreferences({ shortcut: true });
       });
 
       await t.test(

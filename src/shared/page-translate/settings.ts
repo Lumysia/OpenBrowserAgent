@@ -71,8 +71,6 @@ export type PageTranslateSettings = {
   // original, except on the sites listed (each with its subdomains).
   pageButton: boolean;
   pageButtonHiddenHosts: string[];
-  // The keyboard shortcut (a browser command) for the same.
-  shortcut: boolean;
 };
 
 // The browser's translator by default: where the browser has none, pages
@@ -86,7 +84,6 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   videoSubtitles: false,
   pageButton: true,
   pageButtonHiddenHosts: [],
-  shortcut: true,
 };
 
 export function normalizePageTranslateSettings(
@@ -102,9 +99,7 @@ export function normalizePageTranslateSettings(
     value?.display,
     DEFAULT_PAGE_TRANSLATE_SETTINGS.display,
   );
-  const flag = (
-    key: "translateMenus" | "videoSubtitles" | "pageButton" | "shortcut",
-  ) =>
+  const flag = (key: "translateMenus" | "videoSubtitles" | "pageButton") =>
     typeof value?.[key] === "boolean"
       ? value[key]
       : DEFAULT_PAGE_TRANSLATE_SETTINGS[key];
@@ -120,7 +115,8 @@ export function normalizePageTranslateSettings(
     videoSubtitles: flag("videoSubtitles"),
     pageButton: flag("pageButton"),
     pageButtonHiddenHosts: normalizeHostList(value?.pageButtonHiddenHosts),
-    shortcut: flag("shortcut"),
+    // An older release's `shortcut` switch is left out: the browser's
+    // shortcut settings turn the key off.
   };
 }
 

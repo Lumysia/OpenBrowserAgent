@@ -6,11 +6,7 @@ import {
   suggestedSidePanelKeys,
 } from "../../src/shared/commands";
 import { BROWSER_SHORTCUTS_URL } from "../../src/shared/config";
-import { normalizePageTranslateSettings } from "../../src/shared/page-translate/settings";
-import { PAGE_TRANSLATE_COMMAND } from "../../src/shared/page-translate/protocol";
-import { storage } from "../../src/shared/storage";
 import { openOrFocusUrl } from "../../src/shared/tab-navigation";
-import type { Preferences } from "../../src/shared/types";
 import {
   Badge,
   Button,
@@ -20,7 +16,6 @@ import {
 } from "../../src/ui/components";
 import { useCommands } from "../../src/ui/use-commands";
 import { useMessages } from "../../src/ui/messages";
-import { useStoredState } from "../../src/ui/useStoredState";
 
 // Firefox (moz-extension pages) has no page to open for its shortcut
 // settings.
@@ -30,34 +25,12 @@ const SHORTCUTS_PAGE = getBrowserApi()
   ? undefined
   : BROWSER_SHORTCUTS_URL;
 
-// Commands that also have an on/off preference, kept with their shortcut.
-const COMMAND_SWITCHES: Record<
-  string,
-  {
-    get: (preferences: Preferences) => boolean;
-    set: (preferences: Preferences, on: boolean) => Preferences;
-  }
-> = {
-  [PAGE_TRANSLATE_COMMAND]: {
-    get: (preferences) =>
-      normalizePageTranslateSettings(preferences.pageTranslate).shortcut,
-    set: (preferences, shortcut) => ({
-      ...preferences,
-      pageTranslate: {
-        ...normalizePageTranslateSettings(preferences.pageTranslate),
-        shortcut,
-      },
-    }),
-  },
-};
-
 // Every command with its keys, and one way to change them: the browser's
 // shortcut settings.
 export function ShortcutsSection() {
   const t = useMessages();
   const commands = useCommands();
-  const [preferences, setPreferences] = useStoredState(storage.preferences);
-  if (!commands?.length || !preferences) return null;
+  if (!commands?.length) return null;
   return (
     <SettingsSection
       icon={<Keyboard />}
@@ -66,36 +39,23 @@ export function ShortcutsSection() {
       contentClassName="stack"
     >
       <div className="settings-toggle-list">
-        {commands.map((command) => {
-          const toggle = COMMAND_SWITCHES[command.name];
-          const keys = (
-            <Badge>{command.shortcut || t.settings.shortcutNone}</Badge>
-          );
-          return (
-            <SettingToggleRow
-              key={command.name}
-              title={commandTitle(command, t)}
-              // The side panel without keys: Chrome sets the suggested ones
-              // only on a fresh install, and not when they are taken.
-              description={
-                ACTION_COMMANDS.includes(command.name) && !command.shortcut
-                  ? t.settings.sidePanelShortcutHint.replace(
-                      "{keys}",
-                      suggestedSidePanelKeys(navigator.platform),
-                    )
-                  : undefined
-              }
-              aside={toggle ? undefined : keys}
-              value={toggle?.get(preferences)}
-              onChange={
-                toggle &&
-                ((on) => setPreferences((previous) => toggle.set(previous, on)))
-              }
-            >
-              {toggle && keys}
-            </SettingToggleRow>
-          );
-        })}
+        {commands.map((command) => (
+          <SettingToggleRow
+            key={command.name}
+            title={commandTitle(command, t)}
+            // The side panel without keys: Chrome sets the suggested ones
+            // only on a fresh install, and not when they are taken.
+            description={
+              ACTION_COMMANDS.includes(command.name) && !command.shortcut
+                ? t.settings.sidePanelShortcutHint.replace(
+                    "{keys}",
+                    suggestedSidePanelKeys(navigator.platform),
+                  )
+                : undefined
+            }
+            aside={<Badge>{command.shortcut || t.settings.shortcutNone}</Badge>}
+          />
+        ))}
       </div>
       {SHORTCUTS_PAGE ? (
         <div className="row">

@@ -106,11 +106,8 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
   if (!noted) await flashBadge(tabId, messages.unavailablePage);
 }
 
-// The shortcut does nothing while it is turned off in Settings.
+// The shortcut translates the tab it was pressed in.
 async function toggleWithShortcut(tab: chrome.tabs.Tab | undefined) {
-  const preferences = await storage.preferences.get();
-  if (!normalizePageTranslateSettings(preferences.pageTranslate).shortcut)
-    return;
   const [active] = tab
     ? [tab]
     : await getBrowserApi().tabs.query({
