@@ -94,14 +94,20 @@
 .setup-wizard-scroll {
   min-height: 0;
 }
+/* The step sits in the middle of the free height; a step taller than the
+   window starts at the top and scrolls (auto margins resolve to 0). */
+.setup-wizard-scroll > .ui-scroll-area-viewport {
+  display: grid;
+}
 .setup-wizard-brand {
   color: var(--accent-text);
   font-size: var(--text-sm);
   font-weight: 600;
 }
 .setup-step {
+  width: 100%;
   max-width: 720px;
-  margin-inline: auto;
+  margin: auto;
   display: grid;
   align-content: start;
   gap: var(--space-5);
