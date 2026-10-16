@@ -470,27 +470,3 @@
     width var(--duration-base) var(--ease-out),
     background-color var(--duration-fast) var(--ease-standard);
 }
-/* Where a multi-step flow stands (StepDots). */
-.ui-step-dots {
-  display: flex;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ui-step-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--border);
-  transition:
-    width var(--duration-base) var(--ease-out),
-    background-color var(--duration-fast) var(--ease-standard);
-}
-.ui-step-dot[data-state="complete"] {
-  background: color-mix(in oklab, var(--accent-strong) 55%, var(--border));
-}
-.ui-step-dot[data-state="current"] {
-  width: 22px;
-  background: var(--accent-strong);
-}
