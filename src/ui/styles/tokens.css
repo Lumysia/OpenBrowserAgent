@@ -49,6 +49,15 @@
   --elevation-4:
     0 3px 8px var(--shadow-contact), 0 22px 52px -12px var(--shadow-ambient),
     0 8px 20px -6px var(--shadow-ambient), inset 0 0 0 1px var(--edge);
+  /* Edges and quiet text of controls that must read as controls (outline
+     buttons, badges, chevrons): a step closer to the text color than
+     --border and --muted-foreground, in either scheme. */
+  --border-control: color-mix(in oklab, var(--foreground) 26%, var(--border));
+  --muted-control: color-mix(
+    in oklab,
+    var(--foreground) 40%,
+    var(--muted-foreground)
+  );
   /* Accent-colored lift for primary actions and the user's bubble. */
   --glow: 0 8px 18px -4px var(--accent-shadow);
   --glow-strong: 0 10px 24px -4px var(--accent-shadow);

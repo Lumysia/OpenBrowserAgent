@@ -154,6 +154,20 @@ export function DebugPage() {
         contentClassName="stack"
       >
         <Label>
+          {t.options.debugResetTargets}
+          <ToggleGroup
+            type="multiple"
+            value={targets}
+            onValueChange={updateTargets}
+          >
+            {APP_STORAGE_CLEAR_TARGETS.map((value) => (
+              <ToggleGroupItem key={value} value={value}>
+                {TARGET_LABEL[value](t)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </Label>
+        <Label>
           {t.options.debugResetScope}
           <ToggleGroup
             type="single"
@@ -165,20 +179,6 @@ export function DebugPage() {
             {APP_STORAGE_CLEAR_SCOPES.map((value) => (
               <ToggleGroupItem key={value} value={value}>
                 {SCOPE_LABEL[value](t)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </Label>
-        <Label>
-          {t.options.debugResetTargets}
-          <ToggleGroup
-            type="multiple"
-            value={targets}
-            onValueChange={updateTargets}
-          >
-            {APP_STORAGE_CLEAR_TARGETS.map((value) => (
-              <ToggleGroupItem key={value} value={value}>
-                {TARGET_LABEL[value](t)}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>

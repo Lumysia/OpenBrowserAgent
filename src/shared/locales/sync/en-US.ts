@@ -92,6 +92,7 @@ export const syncEnUS = {
   whatSyncs: "What syncs",
   copyCode: "Copy sync code for another device",
   codeCopied: "Sync code copied",
+  codeTitle: "Sync code",
   pasteCode: "Paste a sync code from another device",
 };
 export type SyncMessages = typeof syncEnUS;

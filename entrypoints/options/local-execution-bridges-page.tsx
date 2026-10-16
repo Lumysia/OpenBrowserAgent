@@ -152,18 +152,6 @@ export function LocalExecutionBridgesPage() {
           ) : undefined
         }
       />
-      <LocalExecutionBridgeSetup onAdd={addFromInstaller} />
-      {!items.length ? (
-        <EmptyState
-          icon={<TerminalSquare size={28} />}
-          title={t.options.localExecutionBridgesEmpty}
-          action={
-            <Button onClick={addBridge}>
-              <Plus size={15} /> {t.options.newLocalExecutionBridge}
-            </Button>
-          }
-        />
-      ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((bridge) => (
           <SettingsAccordionItem
@@ -209,6 +197,30 @@ export function LocalExecutionBridgesPage() {
               <CommitInput
                 value={bridge.name}
                 onCommit={(name) => updateBridge(bridge.id, { name })}
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeDefaultCwd}
+              <CommitInput
+                value={bridge.defaultCwd || ""}
+                onCommit={(defaultCwd) =>
+                  updateBridge(bridge.id, { defaultCwd })
+                }
+              />
+            </Label>
+            <Label>
+              {t.options.localExecutionBridgeTimeoutMs}
+              <CommitInput
+                type="number"
+                min={LOCAL_EXECUTION_BRIDGE_LIMITS.minTimeoutMs}
+                max={LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs}
+                value={String(
+                  bridge.timeoutMs ||
+                    LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs,
+                )}
+                onCommit={(timeoutMs) =>
+                  updateBridge(bridge.id, { timeoutMs: Number(timeoutMs) })
+                }
               />
             </Label>
             <Label>
@@ -278,30 +290,6 @@ export function LocalExecutionBridgesPage() {
                 onCommit={(bridgeKey) => updateBridge(bridge.id, { bridgeKey })}
               />
             </Label>
-            <Label>
-              {t.options.localExecutionBridgeDefaultCwd}
-              <CommitInput
-                value={bridge.defaultCwd || ""}
-                onCommit={(defaultCwd) =>
-                  updateBridge(bridge.id, { defaultCwd })
-                }
-              />
-            </Label>
-            <Label>
-              {t.options.localExecutionBridgeTimeoutMs}
-              <CommitInput
-                type="number"
-                min={LOCAL_EXECUTION_BRIDGE_LIMITS.minTimeoutMs}
-                max={LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs}
-                value={String(
-                  bridge.timeoutMs ||
-                    LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs,
-                )}
-                onCommit={(timeoutMs) =>
-                  updateBridge(bridge.id, { timeoutMs: Number(timeoutMs) })
-                }
-              />
-            </Label>
             {bridge.lastTestError ? (
               <Feedback error>
                 {errorWithDetail(
@@ -332,6 +320,18 @@ export function LocalExecutionBridgesPage() {
           </SettingsAccordionItem>
         ))}
       </Accordion>
+      <LocalExecutionBridgeSetup onAdd={addFromInstaller} />
+      {!items.length ? (
+        <EmptyState
+          icon={<TerminalSquare size={28} />}
+          title={t.options.localExecutionBridgesEmpty}
+          action={
+            <Button onClick={addBridge}>
+              <Plus size={15} /> {t.options.newLocalExecutionBridge}
+            </Button>
+          }
+        />
+      ) : null}
     </div>
   );
 }

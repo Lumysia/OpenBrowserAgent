@@ -99,5 +99,6 @@ export const syncDeDE: SyncMessages = {
   whatSyncs: "Was synchronisiert wird",
   copyCode: "Sync-Code für ein anderes Gerät kopieren",
   codeCopied: "Sync-Code kopiert",
+  codeTitle: "Sync-Code",
   pasteCode: "Sync-Code eines anderen Geräts einfügen",
 };

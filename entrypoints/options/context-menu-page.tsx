@@ -17,7 +17,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { useMessages } from "../../src/ui/messages";
 
 // Items shown with the feature they belong to (On pages → Translate); the
-// Right-click menu tab lists the others.
+// Right-click menu page lists the others.
 export const TRANSLATE_MENU_ITEMS: ContextMenuItem[] = [
   CONTEXT_MENU_ITEM.translatePage,
   CONTEXT_MENU_ITEM.translateSubtitles,

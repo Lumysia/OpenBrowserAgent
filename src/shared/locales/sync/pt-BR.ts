@@ -99,5 +99,6 @@ export const syncPtBR: SyncMessages = {
   whatSyncs: "O que é sincronizado",
   copyCode: "Copiar código de sincronização para outro dispositivo",
   codeCopied: "Código de sincronização copiado",
+  codeTitle: "Código de sincronização",
   pasteCode: "Colar o código de sincronização de outro dispositivo",
 };

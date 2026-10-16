@@ -22,25 +22,33 @@ import { ProvidersPage } from "./providers-page";
 import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
 import { SyncPage } from "./sync-page";
-import { tabbedPage } from "./tabbed-page";
 import { SetupWizard } from "./setup-wizard";
 
 type OptionsPageId = keyof typeof OPTIONS_PAGE_ROUTE;
 
+// One page of settings, with its own heading.
+export type OptionsSubPage = {
+  route: string;
+  title: (t: Messages) => string;
+  Page: ComponentType;
+};
+
+// A sidebar entry: a page, or a group of sub-pages listed under it (the
+// first one is the group's own route's page).
 type OptionsPage = {
   id: OptionsPageId;
   route: string;
   icon: LucideIcon;
   title: (t: Messages) => string;
-  Page: ComponentType<{ route: string }>;
+  subPages: OptionsSubPage[];
   // A page of its own, without the sidebar, reached by link only.
   standalone?: boolean;
 };
 
-const PAGES: Record<
-  OptionsPageId,
-  Pick<OptionsPage, "icon" | "title" | "Page" | "standalone">
-> = {
+type PageEntry = Pick<OptionsPage, "icon" | "title" | "standalone"> &
+  ({ Page: ComponentType } | { subPages: OptionsSubPage[] });
+
+const PAGES: Record<OptionsPageId, PageEntry> = {
   general: {
     icon: SlidersHorizontal,
     title: (t) => t.options.general,
@@ -54,7 +62,7 @@ const PAGES: Record<
   agents: {
     icon: Bot,
     title: (t) => t.settings.agentsSkills,
-    Page: tabbedPage([
+    subPages: [
       {
         route: OPTIONS_ROUTE.agents,
         title: (t) => t.options.agents,
@@ -65,12 +73,12 @@ const PAGES: Record<
         title: (t) => t.options.skills,
         Page: SkillsPage,
       },
-    ]),
+    ],
   },
   onPages: {
     icon: MousePointerClick,
     title: (t) => t.settings.onPages,
-    Page: tabbedPage([
+    subPages: [
       {
         route: OPTIONS_ROUTE.pageTranslate,
         title: (t) => t.settings.translate,
@@ -86,13 +94,13 @@ const PAGES: Record<
         title: (t) => t.settings.rightClick,
         Page: ContextMenuPage,
       },
-    ]),
+    ],
   },
   sync: { icon: Cloud, title: (t) => t.options.sync, Page: SyncPage },
   advanced: {
     icon: Wrench,
     title: (t) => t.settings.advanced,
-    Page: tabbedPage([
+    subPages: [
       {
         route: OPTIONS_ROUTE.mcp,
         title: (t) => t.options.mcpServers,
@@ -108,7 +116,7 @@ const PAGES: Record<
         title: (t) => t.settings.troubleshooting,
         Page: DebugPage,
       },
-    ]),
+    ],
   },
   welcome: {
     icon: Sparkles,
@@ -119,14 +127,38 @@ const PAGES: Record<
 };
 
 // The settings pages, in OPTIONS_PAGE_ROUTE's order (the sidebar's). The
-// first one is shown for an unknown route.
+// first one is shown for an unknown route. A page without sub-pages is its
+// own single sub-page.
 export const OPTIONS_PAGES: OptionsPage[] = (
   Object.keys(OPTIONS_PAGE_ROUTE) as OptionsPageId[]
-).map((id) => ({ id, route: OPTIONS_PAGE_ROUTE[id], ...PAGES[id] }));
+).map((id) => {
+  const { icon, title, standalone, ...entry } = PAGES[id];
+  const route = OPTIONS_PAGE_ROUTE[id];
+  return {
+    id,
+    route,
+    icon,
+    title,
+    standalone,
+    subPages:
+      "subPages" in entry
+        ? entry.subPages
+        : [{ route, title, Page: entry.Page }],
+  };
+});
 
-// The page a route is on: its own, or the page of a tab inside it
-// ("/advanced/mcp" is on "/advanced").
-export function optionsPageFor(route: string) {
-  const page = `/${route.split("/")[1] ?? ""}`;
-  return OPTIONS_PAGES.find((item) => item.route === page) ?? OPTIONS_PAGES[0];
+// Whether a page lists its sub-pages under it in the sidebar.
+export function hasSubPages(page: OptionsPage) {
+  return page.subPages.length > 1;
+}
+
+// Where a route is: its page, and the sub-page shown ("/advanced/mcp" is
+// MCP on Advanced; "/advanced" alone is its first sub-page).
+export function optionsPlaceFor(route: string) {
+  const prefix = `/${route.split("/")[1] ?? ""}`;
+  const page =
+    OPTIONS_PAGES.find((item) => item.route === prefix) ?? OPTIONS_PAGES[0];
+  const subPage =
+    page.subPages.find((item) => item.route === route) ?? page.subPages[0];
+  return { page, subPage };
 }

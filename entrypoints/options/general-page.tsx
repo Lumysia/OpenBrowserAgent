@@ -57,19 +57,6 @@ export function GeneralPage() {
       <TranslateIntoSection />
       <UiLanguageSection />
       <SettingsSection
-        icon={<Palette />}
-        title={t.options.colorScheme}
-        description={t.options.colorSchemeDescription}
-      >
-        <ThemePicker
-          value={preferences.accentColor}
-          colorScheme={preferences.colorScheme}
-          onChange={(accentColor) =>
-            setPreferences((previous) => ({ ...previous, accentColor }))
-          }
-        />
-      </SettingsSection>
-      <SettingsSection
         icon={<MonitorCog />}
         title={t.options.appearance}
         description={t.options.appearanceDescription}
@@ -94,6 +81,19 @@ export function GeneralPage() {
           </ToggleGroupItem>
           <ToggleGroupItem value="dark">{t.options.darkTheme}</ToggleGroupItem>
         </ToggleGroup>
+      </SettingsSection>
+      <SettingsSection
+        icon={<Palette />}
+        title={t.options.colorScheme}
+        description={t.options.colorSchemeDescription}
+      >
+        <ThemePicker
+          value={preferences.accentColor}
+          colorScheme={preferences.colorScheme}
+          onChange={(accentColor) =>
+            setPreferences((previous) => ({ ...previous, accentColor }))
+          }
+        />
       </SettingsSection>
       <ShortcutsSection />
       <Accordion type="single" collapsible>
