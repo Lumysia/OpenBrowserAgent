@@ -235,6 +235,10 @@ test(
       await t_.test("Open side panel opens the panel", async () => {
         const panelUrl = extensionUrl("sidepanel.html");
         assert.equal(await isOpen(panelUrl), false);
+        // The language list has closed (it holds the pointer while open).
+        await poll(() =>
+          menu.call(() => !document.querySelector(".ui-select-content")),
+        );
         await clickElement(menu, ".toolbar-menu-open-panel");
         await poll(() => isOpen(panelUrl));
       });
