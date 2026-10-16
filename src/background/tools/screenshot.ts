@@ -4,7 +4,17 @@ import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { getBrowserApi } from "../../shared/browser-api";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { withCdp, type CdpSend } from "../cdp";
+import { callPage } from "../page-agent";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
+import {
+  cropCapture,
+  cropZoom,
+  elementBox,
+  imageWidth,
+  MAX_ZOOM,
+  visibleBox,
+  type Box,
+} from "./screenshot-crop";
 import { fail, schema, type ToolDefinition, type ToolResult } from "./types";
 
 // Screenshots never take the user's tab or window: the debugger and
@@ -38,9 +48,31 @@ export const screenshotTool: ToolDefinition = {
   parameters: schema({
     tabId: RUN_TAB_ID_PARAM,
     fullPage: { type: "boolean" },
+    ref: {
+      type: "string",
+      description:
+        "Only this element (scrolled into view), with a small margin.",
+    },
+    region: {
+      type: "object",
+      description: "Only this part of the viewport, in CSS pixels.",
+      properties: {
+        x: { type: "number" },
+        y: { type: "number" },
+        width: { type: "number" },
+        height: { type: "number" },
+      },
+      required: ["x", "y", "width", "height"],
+    },
+    zoom: {
+      type: "number",
+      description: `Enlarges a ref or region crop, 1 to ${MAX_ZOOM} (default 1), to see small details.`,
+    },
   }),
   async execute(input, { run, signal }) {
     const tab = await run.tab.target(input.tabId);
+    if (input.ref !== undefined || input.region !== undefined)
+      return croppedShot(tab, input, signal);
     if (input.fullPage === true) return fullPageShot(tab, signal);
     const { image, note } = await visibleShot(tab, signal);
     return {
@@ -91,7 +123,10 @@ async function backgroundShot(tab: Tab, signal?: AbortSignal) {
 // for the capture, and it may answer only a repeated request: the request
 // is repeated until one is answered (or the caller's time runs out, which
 // rejects the pending ones).
-function captureViewport(send: CdpSend) {
+function captureViewport(
+  send: CdpSend,
+  params: Record<string, unknown> = JPEG,
+) {
   return new Promise<string>((resolve, reject) => {
     let settled = false;
     let attempts = 0;
@@ -103,7 +138,7 @@ function captureViewport(send: CdpSend) {
     };
     const attempt = () => {
       if (++attempts >= CAPTURE_ATTEMPTS) clearInterval(timer);
-      send("Page.captureScreenshot", JPEG).then(
+      send("Page.captureScreenshot", params).then(
         ({ data }) => settle(() => resolve(`data:image/jpeg;base64,${data}`)),
         (error) => settle(() => reject(error)),
       );
@@ -183,4 +218,106 @@ async function fullPageShot(
     },
     image: { dataUrl: image, type: "image/jpeg" },
   };
+}
+
+type Viewport = { width: number; height: number };
+
+// One element or region of the viewport. The debugger captures just that
+// part at the zoom asked; without it, the visible capture is cropped.
+async function croppedShot(
+  tab: Tab,
+  input: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<ToolResult> {
+  const ref = typeof input.ref === "string" ? input.ref.trim() : "";
+  const { value } = await callPage<{ viewport: Viewport; rect?: Box }>(
+    tab.id,
+    "box",
+    ref ? { ref } : {},
+    signal,
+  );
+  const region = input.region as Partial<Box> | undefined;
+  const asked = ref
+    ? value.rect
+    : region &&
+        [region.x, region.y, region.width, region.height].every(
+          (part) => typeof part === "number" && Number.isFinite(part),
+        )
+      ? (region as Box)
+      : undefined;
+  if (!asked)
+    return fail(
+      "region needs x, y, width and height in CSS pixels of the viewport.",
+    );
+  const box = ref
+    ? elementBox(asked, value.viewport)
+    : visibleBox(asked, value.viewport);
+  if (!box)
+    return fail(
+      `${ref ? `${ref} has no visible box` : "That region is outside the viewport"} (viewport ${value.viewport.width}x${value.viewport.height} CSS px). Take a snapshot or a plain screenshot.`,
+    );
+  const zoom = cropZoom(input.zoom, box);
+  let image = await debuggerCrop(tab, box, zoom, signal);
+  if (!image) {
+    if (typeof OffscreenCanvas === "undefined")
+      return fail(
+        "This browser can't crop screenshots. Take a plain screenshot of the visible part.",
+      );
+    image = await cropCapture(
+      (await visibleShot(tab, signal)).image,
+      box,
+      value.viewport.width,
+      zoom,
+    );
+  }
+  // What one CSS pixel became, read from the image itself.
+  const scale = Math.round(((await imageWidth(image)) / box.width) * 100) / 100;
+  const per = scale === 1 ? "" : `/${scale}`;
+  return {
+    text: `Screenshot of ${ref || "a region"} in tab ${tab.id} (${tab.title || tab.url}) attached: viewport x=${box.x} y=${box.y}, ${box.width}x${box.height} CSS px, at ${scale}x. Image point (a, b) is viewport point (${box.x} + a${per}, ${box.y} + b${per}), for act click x,y.`,
+    details: {
+      tabId: tab.id,
+      title: tab.title,
+      url: tab.url,
+      image,
+      format: "jpeg",
+      box,
+      scale,
+    },
+    image: { dataUrl: image, type: "image/jpeg" },
+  };
+}
+
+// The region through the debugger, in page coordinates; undefined where
+// the debugger can't capture.
+async function debuggerCrop(
+  tab: Tab,
+  box: Box,
+  zoom: number,
+  signal?: AbortSignal,
+) {
+  if (!areCdpAvailable()) return undefined;
+  try {
+    return await withCancellationTimeout(
+      (bounded) =>
+        withCdp(
+          { tabId: tab.id },
+          async (send) => {
+            const metrics = await send("Page.getLayoutMetrics");
+            const { pageX = 0, pageY = 0 } = metrics.cssVisualViewport || {};
+            return captureViewport(send, {
+              ...JPEG,
+              clip: { ...box, x: box.x + pageX, y: box.y + pageY, scale: zoom },
+            });
+          },
+          bounded,
+        ),
+      BACKGROUND_CAPTURE_TIMEOUT_MS,
+      "The background capture timed out.",
+      signal,
+    );
+  } catch {
+    signal?.throwIfAborted();
+    return undefined;
+  }
 }

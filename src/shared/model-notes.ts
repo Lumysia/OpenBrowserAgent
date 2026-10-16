@@ -28,6 +28,13 @@ export const TEXT_ONLY_INSTRUCTION =
 export const TOOL_LIMIT_NOTICE =
   "Not executed: the tool step limit for this run is reached. Do not call more tools. Answer now with what you know, say what remains uncertain, and suggest the best next step.";
 
+// Tool steps a run has left, after the tool results of the step that
+// brings them low, and after the last one.
+export const toolStepsLeftNote = (left: number) =>
+  left > 0
+    ? `[${left} tool step${left === 1 ? "" : "s"} left: leave room to check the result and answer.]`
+    : "[That was the last tool step: answer now with what you know.]";
+
 // After a reply that ended before it was finished, when the chat goes on,
 // so the model does not take it as a finished answer.
 export const MODEL_STOP_NOTE: Record<CutReason, string> = {

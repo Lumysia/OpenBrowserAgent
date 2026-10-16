@@ -28,6 +28,7 @@ import {
 import { CONTEXT_POLICY, tokenChars } from "./context/policy";
 import { createToolSet } from "./tools/registry";
 import { runTool } from "./tools/run-tool";
+import { toolBudget } from "./tool-budget";
 import type { RunContext } from "./tools/types";
 import { postToSession, type StreamSession } from "./stream-sessions";
 
@@ -152,6 +153,7 @@ export async function runPiAgent(options: {
   // calls never assign the same source id twice.
   const sources = { current: getMessageSources(messages) };
   let steps = 0;
+  const budget = toolBudget(maxToolSteps);
   const tools = (): AgentTool[] =>
     maxToolSteps <= 0
       ? []
@@ -196,7 +198,7 @@ export async function runPiAgent(options: {
               sources,
             );
             toolSignal?.throwIfAborted();
-            const { text, artifact } = await context.acceptToolOutput({
+            const accepted = await context.acceptToolOutput({
               toolCallId,
               toolName: tool.name,
               input,
@@ -208,6 +210,10 @@ export async function runPiAgent(options: {
                 !outcome.isError &&
                 tool.name !== TOOL_NAME.read,
             });
+            const { artifact } = accepted;
+            // What is left of the run's tool steps, when it gets low.
+            const left = budget.note(steps);
+            const text = left ? `${accepted.text}\n\n${left}` : accepted.text;
             const image = outcome.image;
             postPart(
               outcome.isError

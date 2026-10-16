@@ -6,6 +6,13 @@ What changed in each release. The release workflow publishes the section for the
 
 - Buttons, cards, menus, fields and switches now clearly react when you point at them, in the guided setup and everywhere else, in light and dark mode. Choice cards in setup light up and lift slightly, the chosen one included, and the chosen card stays clearly marked while you point at another; with "Reduce motion" on they don't move.
 - Guided setup no longer leaves an empty AI provider behind: if you pick a provider type and then go back, skip the step, or set up through sync instead, the empty provider is removed. A provider you filled in stays. Empty providers left by earlier versions can be deleted in Settings → AI providers & models.
+- After clicking or typing on a page, the agent now also sees text that appeared or changed in view, such as a quiz question, a score or a countdown, instead of being told nothing changed. Clocks and timers that tick on their own are shown once and no longer count as a change.
+- The agent no longer clicks buttons hidden under a banner or overlay, which a person couldn't click either. It is told what covers the button so it can close the banner first, and it clicks the visible part of a partly covered button.
+- When a page redraws a button the agent was about to click (for example a calendar after "Next month"), the agent now uses the identical button that replaced it instead of stopping, and says so.
+- The agent now sees which form fields are read-only, required or marked invalid, and the kind of field (such as a date), so it picks the right way to fill them in.
+- The agent can look at the visible part of the page right after clicking or typing, in the same step, which saves time on timed tasks.
+- The agent can take a screenshot of a single element or part of the page, enlarged up to 4 times, to look at small details such as a chart or a small icon.
+- The agent knows how many tool steps it may use and is reminded when few are left, so it keeps room to check its work and answer instead of being cut off.
 
 ## 0.2.0-beta.17 - 2026-10-16
 

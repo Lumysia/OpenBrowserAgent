@@ -26,6 +26,7 @@ import {
   researchHubPage,
   researchSourcePage,
 } from "./fixture-pages-skills.mjs";
+import { coveredPage, quizPage } from "./fixture-pages-tools.mjs";
 
 const PAGES = {
   "/article": articlePage,
@@ -47,6 +48,8 @@ const PAGES = {
   "/factcheck": factCheckPage,
   "/catalog": catalogPage,
   "/catalog-more": loadMorePage,
+  "/quiz": quizPage,
+  "/covered": coveredPage,
 };
 
 // One local server for fixture pages, their form endpoints, and a recording

@@ -19,6 +19,7 @@ import {
   type Step,
   type StepOutcome,
 } from "./act-steps";
+import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
 import { errorMessage } from "../../shared/error-message";
@@ -47,10 +48,15 @@ export const actTool: ToolDefinition = {
   timeoutMs: 120_000,
   summary: "Click, type, select, press keys, scroll on a page",
   description:
-    "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
+    "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Click, hover and drag on an element another one covers (a banner, an overlay) fail and name the cover: close it, or act on it; force: true acts on the covered element anyway, only for a cover you know is decorative. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs, new or changed text), not a full snapshot.",
   parameters: schema(
     {
       tabId: RUN_TAB_ID_PARAM,
+      snapshot: {
+        type: "boolean",
+        description:
+          "Also return a short snapshot of the viewport after the steps, instead of a separate snapshot call.",
+      },
       steps: {
         type: "array",
         minItems: 1,
@@ -71,6 +77,7 @@ export const actTool: ToolDefinition = {
             submit: { type: "boolean" },
             double: { type: "boolean" },
             trusted: { type: "boolean" },
+            force: { type: "boolean" },
             x: { type: "number" },
             y: { type: "number" },
           },
@@ -179,16 +186,19 @@ export const actTool: ToolDefinition = {
     lines.push(...dialogs);
     const after = await api.tabs.get(tab.id);
     let changes: string[] = [];
+    // The focused control and text that changes on its own (a clock):
+    // shown, never a change.
+    let notes: string[] = [];
     let fresh = navigated;
     if (!navigated) {
       try {
-        const { value } = await callPage<{ lines: string[]; fresh?: boolean }>(
-          tab.id,
-          "changes",
-          {},
-          signal,
-        );
+        const { value } = await callPage<{
+          lines: string[];
+          notes?: string[];
+          fresh?: boolean;
+        }>(tab.id, "changes", {}, signal);
         changes = value.lines;
+        notes = value.notes || [];
         fresh = !!value.fresh;
       } catch (error) {
         signal?.throwIfAborted();
@@ -229,6 +239,9 @@ export const actTool: ToolDefinition = {
       lines.push(
         "No visible change in the viewport. Check with snapshot or find if you expected one.",
       );
+    lines.push(...notes);
+    if (input.snapshot === true)
+      lines.push(await viewportSnapshot(tab.id, signal));
     return {
       text: lines.join("\n"),
       details: {
@@ -242,3 +255,25 @@ export const actTool: ToolDefinition = {
     };
   },
 };
+
+// The viewport after the steps, capped small: act results stay short.
+async function viewportSnapshot(tabId: number, signal?: AbortSignal) {
+  const maxChars = tokenChars(CONTEXT_POLICY.actSnapshotTokens);
+  try {
+    const { value } = await callPage<{ text: string }>(
+      tabId,
+      TOOL_NAME.snapshot,
+      {
+        scope: "viewport",
+        capChars: maxChars,
+        maxChars,
+        itemCap: CONTEXT_POLICY.actSnapshotItems,
+      },
+      signal,
+    );
+    return `Snapshot:\n${value.text}`;
+  } catch (error) {
+    signal?.throwIfAborted();
+    return `(Could not take a snapshot: ${errorMessage(error)})`;
+  }
+}

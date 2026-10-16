@@ -96,6 +96,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     isLocalExecutionBridgeTested,
   ).length;
+  const maxToolSteps = clampMaxToolSteps(preferences.maxToolSteps);
   return {
     agent,
     setup,
@@ -104,8 +105,9 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
       skills: listed,
       workspace,
       bridges: tested,
+      maxToolSteps,
     }),
-    maxToolSteps: clampMaxToolSteps(preferences.maxToolSteps),
+    maxToolSteps,
   };
 }
 

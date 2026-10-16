@@ -1,8 +1,17 @@
 import { errorMessage } from "../shared/error-message";
 import { editingHost } from "../shared/dom-vocabulary";
 import { compact } from "../shared/text";
-import { centerOf, clip, nameOf, roleOf } from "./dom";
+import { clip } from "./dom";
+import { click, drag, hover } from "./pointer-actions";
 import { RefError, resolveRef } from "./refs";
+import {
+  describe,
+  failed,
+  ok,
+  QUOTE_MAX_CHARS,
+  reveal,
+  type StepResult,
+} from "./step-result";
 
 // One `act` step, run in the page. The background drives the batch: it
 // stops at the first failure, waits between steps, and handles navigation.
@@ -18,32 +27,21 @@ export type ActStep = {
   clear?: boolean;
   submit?: boolean;
   double?: boolean;
+  // Act on a covered element anyway.
+  force?: boolean;
 };
 
-type StepResult = {
-  ok: boolean;
-  error?: string;
-  note?: string;
-  // Typing that the page rejected; the background retries with trusted input.
-  trusted?: boolean;
-};
-
-const ok = (note?: string): StepResult => ({
-  ok: true,
-  ...(note ? { note } : {}),
-});
-const failed = (error: string): StepResult => ({ ok: false, error });
-
-// Characters of an element's name or a field's value quoted in a result.
-const QUOTE_MAX_CHARS = 60;
-// A scroll by page moves this share of the window's height.
 const SCROLL_PAGE_SHARE = 0.8;
 
 export function runStep(step: ActStep): StepResult | Promise<StepResult> {
   try {
     switch (step.action) {
       case "click":
-        return click(resolveRef(step.ref), step.double === true);
+        return click(
+          resolveRef(step.ref),
+          step.double === true,
+          step.force === true,
+        );
       case "type":
         return type(
           resolveRef(step.ref),
@@ -59,14 +57,18 @@ export function runStep(step: ActStep): StepResult | Promise<StepResult> {
       case "select":
         return select(resolveRef(step.ref), step.value ?? step.text ?? "");
       case "hover":
-        return hover(resolveRef(step.ref));
+        return hover(resolveRef(step.ref), step.force === true);
       case "scroll":
         return scroll(
           step.ref ? resolveRef(step.ref) : undefined,
           step.direction,
         );
       case "drag":
-        return drag(resolveRef(step.ref), resolveRef(step.to));
+        return drag(
+          resolveRef(step.ref),
+          resolveRef(step.to),
+          step.force === true,
+        );
       default:
         return failed(
           `Unknown action "${step.action}". Use click, type, press, select, hover, scroll, drag or wait.`,
@@ -81,86 +83,6 @@ export function runStep(step: ActStep): StepResult | Promise<StepResult> {
 function focused() {
   const active = document.activeElement;
   return active instanceof HTMLElement ? active : document.body;
-}
-
-export function describe(element: Element) {
-  const role = roleOf(element) || element.localName;
-  const name = clip(nameOf(element, role), QUOTE_MAX_CHARS);
-  return `${role}${name ? ` "${name}"` : ""}`;
-}
-
-function reveal(element: Element) {
-  element.scrollIntoView({
-    block: "center",
-    inline: "center",
-    behavior: "instant",
-  });
-}
-
-function mouseInit(element: Element) {
-  const { x, y } = centerOf(element);
-  return {
-    bubbles: true,
-    cancelable: true,
-    composed: true,
-    view: window,
-    clientX: x,
-    clientY: y,
-    button: 0,
-  };
-}
-
-function pointer(element: Element, type: string, init: MouseEventInit) {
-  element.dispatchEvent(
-    new PointerEvent(type, {
-      ...init,
-      pointerId: 1,
-      pointerType: "mouse",
-      isPrimary: true,
-    }),
-  );
-}
-
-function click(element: Element, double: boolean): StepResult {
-  if ((element as HTMLButtonElement).disabled)
-    return failed(
-      `${describe(element)} is disabled. Complete the required fields first, or snapshot to see why.`,
-    );
-  reveal(element);
-  const init = mouseInit(element);
-  const hit = document.elementFromPoint(init.clientX, init.clientY);
-  const covered =
-    hit && hit !== element && !element.contains(hit) && !hit.contains(element)
-      ? `covered by ${describe(hit)}; clicked it anyway`
-      : undefined;
-  if (element instanceof HTMLElement) element.focus({ preventScroll: true });
-  pointer(element, "pointerover", init);
-  for (let detail = 1; detail <= (double ? 2 : 1); detail++) {
-    const press = { ...init, detail };
-    pointer(element, "pointerdown", { ...press, buttons: 1 });
-    element.dispatchEvent(
-      new MouseEvent("mousedown", { ...press, buttons: 1 }),
-    );
-    pointer(element, "pointerup", press);
-    element.dispatchEvent(new MouseEvent("mouseup", press));
-    element.dispatchEvent(new MouseEvent("click", press));
-  }
-  if (double)
-    element.dispatchEvent(new MouseEvent("dblclick", { ...init, detail: 2 }));
-  return ok(covered);
-}
-
-function hover(element: Element): StepResult {
-  reveal(element);
-  const init = mouseInit(element);
-  pointer(element, "pointerover", init);
-  pointer(element, "pointerenter", { ...init, bubbles: false });
-  element.dispatchEvent(new MouseEvent("mouseover", init));
-  element.dispatchEvent(
-    new MouseEvent("mouseenter", { ...init, bubbles: false }),
-  );
-  element.dispatchEvent(new MouseEvent("mousemove", init));
-  return ok();
 }
 
 function setNativeValue(
@@ -289,16 +211,6 @@ export function prepareTrustedInput(ref: string, clear: boolean) {
   selectContents(host, clear);
 }
 
-// Where trusted (debugger) input should land for an element, in viewport
-// coordinates, after scrolling it into view and optionally focusing it.
-export function inputPoint(ref: string, focus: boolean) {
-  const element = resolveRef(ref);
-  reveal(element);
-  if (focus && element instanceof HTMLElement)
-    element.focus({ preventScroll: true });
-  return centerOf(element);
-}
-
 export function editableText(ref: string) {
   const element = resolveRef(ref);
   const host = editingHost(element) || element;
@@ -423,31 +335,6 @@ function scroll(element: Element | undefined, requested?: string): StepResult {
   return ok(
     `scrollY=${Math.round(scrollY)} of ${document.documentElement.scrollHeight}`,
   );
-}
-
-function drag(source: Element, target: Element): StepResult {
-  reveal(source);
-  const from = mouseInit(source);
-  const to = mouseInit(target);
-  const data = new DataTransfer();
-  pointer(source, "pointerdown", { ...from, buttons: 1 });
-  source.dispatchEvent(new MouseEvent("mousedown", { ...from, buttons: 1 }));
-  source.dispatchEvent(
-    new DragEvent("dragstart", { ...from, dataTransfer: data }),
-  );
-  target.dispatchEvent(
-    new DragEvent("dragenter", { ...to, dataTransfer: data }),
-  );
-  target.dispatchEvent(
-    new DragEvent("dragover", { ...to, dataTransfer: data }),
-  );
-  pointer(target, "pointermove", { ...to, buttons: 1 });
-  target.dispatchEvent(new MouseEvent("mousemove", { ...to, buttons: 1 }));
-  target.dispatchEvent(new DragEvent("drop", { ...to, dataTransfer: data }));
-  source.dispatchEvent(new DragEvent("dragend", { ...to, dataTransfer: data }));
-  pointer(target, "pointerup", to);
-  target.dispatchEvent(new MouseEvent("mouseup", to));
-  return ok();
 }
 
 export function hasText(text: string) {

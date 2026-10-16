@@ -3,18 +3,25 @@ import { beginChanges, collectChanges, hasBaseline } from "./changes";
 import {
   editableText,
   hasText,
-  inputPoint,
   prepareTrustedInput,
   runStep,
   type ActStep,
 } from "./actions";
+import { inputPoint } from "./pointer-actions";
 import { runEdits, type EditOp } from "./edits";
 import { mainMarkdown } from "./html-markdown";
 import { pageMarkdown } from "./markdown";
-import { raiseFloor, refCounter, resolveRef, RefError } from "./refs";
+import {
+  raiseFloor,
+  refCounter,
+  resolveRef,
+  RefError,
+  takeRefNotes,
+} from "./refs";
 import { findLines } from "./search";
 import { searchResults } from "./search-results";
 import { renderLines, snapshotLines } from "./snapshot";
+import { reveal } from "./step-result";
 
 // The in-page side of the page tools, installed once per document in the
 // extension's isolated world. Every method takes plain JSON and returns
@@ -43,7 +50,14 @@ function snapshot(args: Args) {
     );
   if (args.ref) return { scope: "ref", text: page(resolveRef(args.ref)) };
   const body = document.body || document.documentElement;
-  if (scope === "viewport") return { scope, text: viewport(body, urls) };
+  if (scope === "viewport")
+    return {
+      scope,
+      text: viewport(body, urls, {
+        maxChars: optionalNumber(args, "maxChars"),
+        itemCap: optionalNumber(args, "itemCap"),
+      }),
+    };
   // The whole page when it fits; otherwise `page` caps long lists and
   // tables, and auto shows the viewport plus the whole page for read and find.
   const full = page(body);
@@ -51,7 +65,7 @@ function snapshot(args: Args) {
     return { scope, text: scrollNote() + page(body, PAGE_ITEM_CAP) };
   if (full.length <= capChars)
     return { scope: "page", text: `${scrollNote()}${full}` };
-  return { scope: "viewport", text: viewport(body, urls), full };
+  return { scope: "viewport", text: viewport(body, urls, {}), full };
 }
 
 // Where the page is scrolled, when it can scroll: content that loads on
@@ -63,11 +77,15 @@ function scrollNote() {
   return `[Scrolled to y=${top}-${top + innerHeight} of ${height}px.]\n`;
 }
 
-function viewport(body: Element, urls: boolean) {
+function viewport(
+  body: Element,
+  urls: boolean,
+  caps: { maxChars?: number; itemCap?: number },
+) {
   const height = document.documentElement.scrollHeight;
   const top = Math.round(scrollY);
   const header = `[Viewport y=${top}-${top + innerHeight} of ${height}px; content outside it is not shown. Scroll with act, or use find.]`;
-  return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls }))}`;
+  return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls, ...caps }))}`;
 }
 
 // Limits come from the caller (the background's tool policy), never a
@@ -76,6 +94,22 @@ function requiredNumber(args: Args, name: string) {
   const value = Number(args[name]);
   if (!Number.isFinite(value)) throw new Error(`Missing ${name}`);
   return value;
+}
+
+// The viewport's size and, for a ref, the element's box in it after
+// scrolling it into view: what a screenshot crops to.
+function box(args: Args) {
+  const viewport = { width: innerWidth, height: innerHeight };
+  if (!args.ref) return { viewport };
+  const element = resolveRef(args.ref);
+  reveal(element);
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { viewport, rect: { x: left, y: top, width, height } };
+}
+
+function optionalNumber(args: Args, name: string) {
+  const value = Number(args[name]);
+  return args[name] !== undefined && Number.isFinite(value) ? value : undefined;
 }
 
 const methods: Record<string, (args: Args) => unknown> = {
@@ -87,7 +121,15 @@ const methods: Record<string, (args: Args) => unknown> = {
   }),
   // The page's main content with whole links, for copying.
   mainMarkdown: () => ({ text: mainMarkdown(document, "") }),
-  step: (args) => runStep(args.step as ActStep),
+  step: async (args) => {
+    const result = await runStep(args.step as ActStep);
+    const notes = takeRefNotes();
+    if (!notes.length) return result;
+    return {
+      ...result,
+      note: [...notes, result.note].filter(Boolean).join("; "),
+    };
+  },
   begin: () => beginChanges(),
   sameDocument: () => hasBaseline(),
   changes: () => collectChanges(),
@@ -96,8 +138,14 @@ const methods: Record<string, (args: Args) => unknown> = {
   prepareTrusted: (args) =>
     prepareTrustedInput(String(args.ref || ""), args.clear !== false),
   editableText: (args) => editableText(String(args.ref || "")),
-  inputPoint: (args) => inputPoint(String(args.ref || ""), args.focus === true),
+  inputPoint: (args) =>
+    inputPoint(String(args.ref || ""), {
+      focus: args.focus === true,
+      pointer: args.pointer === true,
+      force: args.force === true,
+    }),
   searchResults: (args) => searchResults(requiredNumber(args, "limit")),
+  box,
 };
 
 export type PageAgentReply =
@@ -113,6 +161,7 @@ export function installPageAgent() {
   // executeScript passes the promise's value back.
   scope.__obaPageAgent = async (method, args) => {
     raiseFloor(args?.refFloor);
+    takeRefNotes();
     try {
       const run = methods[method];
       if (!run) throw new Error(`Unknown page method ${method}`);
