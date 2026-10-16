@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.15 - 2026-10-15
+
 - The side panel no longer has the "This page" row; its switches move to the toolbar button's menu.
 - Settings: the image generation card no longer sits tight against its bottom edge.
 - Guided setup: each step is centred vertically in the window.
