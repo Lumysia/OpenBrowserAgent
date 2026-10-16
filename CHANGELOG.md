@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Settings → General starts with Language, followed by Translate into.
 - Settings: the "Enable image generation" switch is gone. Choose a model in the Images row of the Models table to let the agent create images, or "Off" to turn it off. Your current setting carries over: if image generation was on without a model, your chat model is now chosen there.
 - Settings: the video subtitles switch is now called "Translate video subtitles automatically", since you can still translate any video from its right-click menu while it is off.
 - Chat history fills the side panel again instead of a narrow centred column.

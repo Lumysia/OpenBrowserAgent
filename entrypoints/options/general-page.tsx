@@ -56,8 +56,8 @@ export function GeneralPage() {
           </Button>
         }
       />
-      <TranslateIntoSection />
       <UiLanguageSection />
+      <TranslateIntoSection />
       <SettingsSection
         icon={<MonitorCog />}
         title={t.options.appearance}
