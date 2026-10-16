@@ -208,6 +208,15 @@ test(
         panel,
         `button[aria-label="${t.sidepanel.chatHistory}"]`,
       );
+      // The history page fills the panel's width.
+      assert.equal(
+        await panel.call(
+          () =>
+            document.querySelector(".history-page").getBoundingClientRect()
+              .width === document.documentElement.clientWidth,
+        ),
+        true,
+      );
       await clickElement(panel, ".history-select");
       await pending();
       await answer("Later");

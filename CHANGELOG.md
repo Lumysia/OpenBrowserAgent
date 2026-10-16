@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Chat history fills the side panel again instead of a narrow centred column.
+
 ## 0.2.0-beta.16 - 2026-10-16
 
 - Token counts show in K and M (128K, 1.2M) in every language.
