@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Image generation: the AI picks the image size for each request; the Image size setting is gone.
+
 ## 0.2.0-beta.13 - 2026-10-15
 
 - **Guided setup**: installing OpenBrowserAgent opens a setup with one thing per step and Back / Next: your languages (the extension's and "Translate into"), an AI provider (with "Test connection" and a model to pick, or a sync code from another device), what to add to web pages (translate button, smart bar on selected text, video subtitles), and a last page with your keyboard shortcuts and "Open side panel". Every step can be skipped.

@@ -1,15 +1,10 @@
 import { Cpu, Image, Plus, Server } from "lucide-react";
-import { DEFAULT_PREFERENCES } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
 import { MODEL_ROLES, type ModelRole } from "../../src/shared/model-roles";
 import { storage } from "../../src/shared/storage";
 import {
   Card,
-  CardContent,
   CardHeader,
-  Disclosure,
-  Input,
-  Label,
   SettingSwitch,
   SettingToggleRow,
   SettingsPageHeader,
@@ -115,27 +110,6 @@ export function ProvidersPage() {
             }
           />
         </CardHeader>
-        <CardContent>
-          <Disclosure label={t.settings.advanced}>
-            <Label>
-              {t.options.imageGenerationSize}
-              <Input
-                value={
-                  preferences.imageGenerationSize ||
-                  DEFAULT_PREFERENCES.imageGenerationSize
-                }
-                placeholder={DEFAULT_PREFERENCES.imageGenerationSize}
-                disabled={!preferences.imageGenerationEnabled}
-                onChange={(event) =>
-                  setPreferences((previous) => ({
-                    ...previous,
-                    imageGenerationSize: event.target.value,
-                  }))
-                }
-              />
-            </Label>
-          </Disclosure>
-        </CardContent>
       </Card>
     </div>
   );

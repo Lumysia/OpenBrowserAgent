@@ -20,12 +20,13 @@ export const generateImageTool: ToolDefinition = {
       referenceAttachmentIds: { type: "array", items: { type: "string" } },
       size: {
         type: "string",
-        description: "Like 1024x1024; adjusted to what the model supports.",
+        description:
+          "WIDTHxHEIGHT in pixels, chosen for the request: 1024x1024 square, 1536x1024 landscape, 1024x1536 portrait, wider for banners. Adjusted to what the model supports.",
       },
       quality: { type: "string" },
       count: { type: "number" },
     },
-    ["prompt"],
+    ["prompt", "size"],
   ),
   async execute(input, { run, toolCallId, messageId, signal }) {
     if (!trimmedString(input.prompt)) return fail("prompt is required.");
