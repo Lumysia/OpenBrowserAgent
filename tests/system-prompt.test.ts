@@ -25,6 +25,21 @@ test("the system prompt asks with choices when a missing detail changes the resu
   );
 });
 
+test("the system prompt asks for short progress notes between stages of a task", () => {
+  const system = createSystemPrompt({
+    agent: DEFAULT_AGENT,
+    skills: [],
+    bridges: 0,
+  });
+  const rules = system.slice(
+    system.indexOf("<rules>"),
+    system.indexOf("</rules>"),
+  );
+  assert.match(rules, /several steps, say in one short sentence/);
+  assert.match(rules, /not before every tool call/);
+  assert.match(rules, /full answer at the end/);
+});
+
 test("the system prompt says to extract a few facts before reading a long page", () => {
   const system = createSystemPrompt({
     agent: DEFAULT_AGENT,

@@ -11,7 +11,7 @@ import {
 
 // Quick tasks are short requests a person waits for: smart bar actions and
 // page translation batches. They ask for the least thinking (see
-// quick-reasoning.ts) and share one queue per endpoint, where a smart bar
+// request-thinking.ts) and share one queue per endpoint, where a smart bar
 // request goes before the page translation batches still waiting.
 
 export const QUICK_TASK_PRIORITY = {

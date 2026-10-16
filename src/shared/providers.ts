@@ -44,8 +44,9 @@ type ProviderType = {
   // The path under the stored base URL that serves the API, for types whose
   // base URL is the server's root (Ollama serves OpenAI's API under /v1).
   apiPath?: string;
-  // The request field for the user's reasoning effort, where the service
-  // takes one: OpenAI's `reasoning_effort`, or `reasoning: { effort }`.
+  // The request field for the user's reasoning effort, for a Chat
+  // Completions service that takes one: OpenAI's `reasoning_effort`, or
+  // `reasoning: { effort }`. Pi writes it for the other APIs.
   reasoningParam?: "reasoning_effort" | "reasoning.effort";
   // How the service takes a thinking level for quick tasks, when Pi's
   // catalog does not say (default "openai").
@@ -93,7 +94,6 @@ export const PROVIDERS = {
     legacyLabel: "OpenAI Responses",
     api: "openai-responses",
     defaultBaseUrl: "https://api.openai.com/v1",
-    reasoningParam: "reasoning_effort",
     apiStyleOf: "openai",
     manualModels: true,
   },

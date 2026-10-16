@@ -182,7 +182,12 @@ test("default reasoning leaves provider defaults intact, and explicit effort rem
         )
       ).result();
       const body = fixture.requests.at(-1)!.body;
-      assert.equal(body.reasoning, undefined, provider);
+      // Responses only asks to see the reasoning; the effort stays the
+      // endpoint's.
+      if (provider === "openai-responses") {
+        assert.deepEqual(body.reasoning, { summary: "auto" });
+        assert.deepEqual(body.include, ["reasoning.encrypted_content"]);
+      } else assert.equal(body.reasoning, undefined, provider);
       assert.equal(body.thinking, undefined, provider);
       assert.equal(body.reasoning_effort, undefined, provider);
     }

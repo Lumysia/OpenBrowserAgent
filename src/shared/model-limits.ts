@@ -4,11 +4,13 @@ import { isRecord, knownValues } from "./values";
 
 // What a model's endpoint refused once, so later requests leave it out from
 // the start instead of failing the same way first: image content,
-// mid-conversation tool declarations, the quick-task thinking fields.
+// mid-conversation tool declarations, the quick-task thinking fields, the
+// thinking fields of other requests (the user's effort, showing thinking).
 export const MODEL_REFUSAL = {
   images: "images",
   inlineTools: "inlineTools",
   quickThinking: "quickThinking",
+  thinking: "thinking",
 } as const;
 
 export type ModelRefusal = (typeof MODEL_REFUSAL)[keyof typeof MODEL_REFUSAL];
