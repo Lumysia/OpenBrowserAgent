@@ -88,3 +88,19 @@ test("the system prompt cites only ids given after Cite as", () => {
     "- Never invent URLs or facts. Cite facts from sources as [[cite:source_id]], using only ids a tool result gave after \"Cite as:\" (or listed in <sources>); never make up an id. Workspace files, skills and the user's own messages are not sources: don't cite them.",
   );
 });
+
+test("the system prompt states the run's tool step limit when there is one", () => {
+  const prompt = (maxToolSteps?: number) =>
+    createSystemPrompt({
+      agent: DEFAULT_AGENT,
+      skills: [],
+      bridges: 0,
+      maxToolSteps,
+    });
+  assert.match(
+    prompt(30),
+    /\n- This run may take 30 tool steps \(calls made together count as one\)\. Plan to finish within them, leaving room to check the result and answer\.\n/,
+  );
+  assert.doesNotMatch(prompt(0), /tool steps/);
+  assert.doesNotMatch(prompt(), /tool steps/);
+});

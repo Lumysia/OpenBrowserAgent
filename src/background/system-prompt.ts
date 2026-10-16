@@ -18,6 +18,8 @@ export function createSystemPrompt(options: {
   workspace?: AgentWorkspace;
   // Local execution bridges that are configured and tested.
   bridges: number;
+  // Tool steps a run may take; 0 for none.
+  maxToolSteps?: number;
   now?: Date;
   timeZone?: string;
 }) {
@@ -40,7 +42,7 @@ export function createSystemPrompt(options: {
 - Never invent URLs or facts. Cite facts from sources as [[cite:source_id]], using only ids a tool result gave after "Cite as:" (or listed in <sources>); never make up an id. Workspace files, skills and the user's own messages are not sources: don't cite them.
 - If a missing detail would change what you do or recommend, and one reply can't cheaply cover the likely answers, call ${TOOL_NAME.ask} with choices before doing the work. Otherwise pick a sensible default and say which one you picked. Don't ask about minor preferences, and don't end a reply with a question ${TOOL_NAME.ask} could have offered as choices.
 - Make independent tool calls in the same turn (for example reading several tabs).
-- Use fenced mermaid code blocks for diagrams.${pages ? PAGE_RULES : ""}${browser ? BROWSER_RULES : ""}
+- Use fenced mermaid code blocks for diagrams.${options.maxToolSteps ? `\n- This run may take ${options.maxToolSteps} tool steps (calls made together count as one). Plan to finish within them, leaving room to check the result and answer.` : ""}${pages ? PAGE_RULES : ""}${browser ? BROWSER_RULES : ""}
 </rules>`,
     skillIndex(skills),
     workspaceContext(workspace),

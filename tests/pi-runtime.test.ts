@@ -58,6 +58,15 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
       JSON.stringify(toolResults(fixture.requests[1])),
       /Fixture tab/,
     );
+    // The model is told what is left of its tool steps.
+    assert.match(
+      JSON.stringify(toolResults(fixture.requests[1])),
+      /1 tool step left: leave room to check the result and answer/,
+    );
+    assert.match(
+      JSON.stringify(toolResults(fixture.requests[2])),
+      /That was the last tool step/,
+    );
     const metrics = run.session.events.flatMap((event) =>
       event.type === "metrics" ? [event.metrics] : [],
     );

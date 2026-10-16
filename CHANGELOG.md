@@ -12,6 +12,7 @@ What changed in each release. The release workflow publishes the section for the
 - The agent now sees which form fields are read-only, required or marked invalid, and the kind of field (such as a date), so it picks the right way to fill them in.
 - The agent can look at the visible part of the page right after clicking or typing, in the same step, which saves time on timed tasks.
 - The agent can take a screenshot of a single element or part of the page, enlarged up to 4 times, to look at small details such as a chart or a small icon.
+- The agent knows how many tool steps it may use and is reminded when few are left, so it keeps room to check its work and answer instead of being cut off.
 
 ## 0.2.0-beta.17 - 2026-10-16
 
