@@ -31,6 +31,9 @@
 .sidepanel.history-mode,
 .sidepanel.no-model-mode {
   grid-template-rows: minmax(0, 1fr);
+}
+/* Only the no-model message is centred; the history page fills the panel. */
+.sidepanel.no-model-mode {
   place-items: center;
   padding: var(--space-4);
 }
