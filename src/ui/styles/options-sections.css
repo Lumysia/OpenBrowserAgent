@@ -136,8 +136,6 @@
 }
 .model-row-content.ui-accordion-content-inner {
   padding: 12px 18px 14px;
-  border-top: 1px solid
-    color-mix(in oklab, var(--accent-soft) 24%, var(--border));
 }
 .model-display-input {
   height: 38px;
