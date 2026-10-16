@@ -151,8 +151,8 @@ export const OPTIONS_PAGE_ROUTE = {
   welcome: "/welcome",
 } as const;
 
-// Every place in settings: the pages, and the tabs inside them
-// ("<page>/<tab>").
+// Every place in settings: the pages, and the sub-pages inside them
+// ("<page>/<sub-page>").
 export const OPTIONS_ROUTE = {
   ...OPTIONS_PAGE_ROUTE,
   skills: `${OPTIONS_PAGE_ROUTE.agents}/skills`,

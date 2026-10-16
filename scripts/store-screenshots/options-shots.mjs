@@ -36,7 +36,7 @@ export const OPTIONS_SHOTS = [
   },
 ];
 
-// Scrolls as far as the page heading (or the tabs above it) allows for the `fit` content to end
+// Scrolls as far as the page heading allows for the `fit` content to end
 // above the bottom edge, then reports what the frame still cuts.
 function fitFrame(page, fit) {
   return page.call(
@@ -60,7 +60,7 @@ function fitFrame(page, fit) {
           : [...scroller.querySelectorAll(".ui-card, .ui-accordion-item")]
               .filter(visible)
               .at(-1);
-      const heading = scroller.querySelector("[role=tablist], h1, h2");
+      const heading = scroller.querySelector("h1, h2");
       const bottom = target.getBoundingClientRect().bottom + margin;
       const limit = heading
         ? Math.max(0, heading.getBoundingClientRect().top - margin / 2)
@@ -83,7 +83,7 @@ function fitFrame(page, fit) {
       };
       return [
         ...scroller.querySelectorAll(
-          ".ui-card, .ui-accordion-item, [role=tablist], h1, h2, h3, p, label, button, input, textarea",
+          ".ui-card, .ui-accordion-item, h1, h2, h3, p, label, button, input, textarea",
         ),
       ]
         .filter(cut)

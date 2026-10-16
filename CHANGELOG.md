@@ -5,6 +5,7 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - Image generation: the AI picks the image size for each request; the Image size setting is gone.
+- Settings: the sidebar lists every page, with Agents, Skills, Translate, Smart bar, Right-click menu, MCP servers, Local execution bridges and Troubleshooting shown under their group instead of in tabs at the top of the page.
 
 ## 0.2.0-beta.13 - 2026-10-15
 

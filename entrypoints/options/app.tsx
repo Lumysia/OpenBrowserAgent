@@ -1,21 +1,19 @@
-import { CircleHelp } from "lucide-react";
-import { REPO_URL, TOOLTIP_DELAY_MS } from "../../src/shared/config";
+import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
 import { useTheme } from "../../src/ui/theme";
 import { useDocumentLanguage } from "../../src/ui/use-document-language";
-import { cn } from "../../src/ui/utils";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { MessagesProvider } from "../../src/ui/messages";
-import { OPTIONS_PAGES, optionsPageFor } from "./pages";
+import { optionsPlaceFor } from "./pages";
 import { useHashRoute } from "./route";
+import { SettingsNav } from "./settings-nav";
 
 export function OptionsApp() {
   const route = useHashRoute();
-  const page = optionsPageFor(route);
+  const { page, subPage } = optionsPlaceFor(route);
   const [language, , languageLoading] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
   const version = chrome.runtime.getManifest().version;
@@ -31,7 +29,7 @@ export function OptionsApp() {
       <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
         {page.standalone ? (
           <div className="standalone-shell">
-            <page.Page route={route} />
+            <subPage.Page />
           </div>
         ) : (
           <div className="app-shell">
@@ -42,36 +40,12 @@ export function OptionsApp() {
                   {t.app.brandLine.replace("{tagline}", t.app.tagline)}
                 </p>
               </div>
-              <nav className="stack">
-                {OPTIONS_PAGES.filter(({ standalone }) => !standalone).map(
-                  ({ id, route: pageRoute, icon: Icon, title }) => (
-                    <a
-                      key={id}
-                      className={cn("nav-link", id === page.id && "active")}
-                      href={`#${pageRoute}`}
-                    >
-                      <Icon size={16} />
-                      {title(t)}
-                    </a>
-                  ),
-                )}
-                <a
-                  className="nav-link"
-                  href={REPO_URL}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    openOrFocusUrl(REPO_URL).catch(console.warn);
-                  }}
-                >
-                  <CircleHelp size={16} />
-                  {t.common.help}
-                </a>
-              </nav>
+              <SettingsNav route={route} />
               <div className="settings-sidebar-version">v{version}</div>
             </aside>
             <ScrollArea className="settings-main">
               <div className="settings-content">
-                <page.Page route={route} />
+                <subPage.Page />
               </div>
             </ScrollArea>
           </div>
