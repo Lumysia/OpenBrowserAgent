@@ -7,6 +7,7 @@ What changed in each release. The release workflow publishes the section for the
 - The side panel's message box is now frosted glass: the panel's colours show through it softly. With "Reduce transparency" turned on in your system, it stays solid.
 - The glow around the side panel's message box now fades in and out when you click into it or leave it, instead of switching on and off at once.
 - The selected option in button groups (such as Auto, Manual and Off) no longer looks like it has a double border, including in right-to-left languages.
+- No more doubled lines: the agent's question options are soft tiles inside the question card, with a check on the ones you picked; the agent icon picker is a grid of icons without lines between them; an opened model row has a single line under its header; and in dark mode, cards, button groups and settings rows have a single edge.
 - Settings → General starts with Language, followed by Translate into.
 - Settings: the "Enable image generation" switch is gone. Choose a model in the Images row of the Models table to let the agent create images, or "Off" to turn it off. Your current setting carries over: if image generation was on without a model, your chat model is now chosen there.
 - Settings: the video subtitles switch is now called "Translate video subtitles automatically", since you can still translate any video from its right-click menu while it is off.
