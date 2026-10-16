@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../src/ui/components";
-import { formatCompactNumber, formatToolMessage } from "./format";
+import { formatTokenNumber, formatToolMessage } from "./format";
 import { useMessages } from "../../src/ui/messages";
 
 export function MessageRunInfo({
@@ -315,5 +315,5 @@ function formatMs(value: number | undefined, t: Messages) {
 
 function formatTokenCount(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return `${formatCompactNumber(languageOf(t), value)} ${t.sidepanel.runInfo.tokenUnit}`;
+  return `${formatTokenNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }

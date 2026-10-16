@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Token counts show in K and M (128K, 1.2M) in every language.
+
 ## 0.2.0-beta.15 - 2026-10-15
 
 - The side panel no longer has the "This page" row; its switches move to the toolbar button's menu.
