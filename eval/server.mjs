@@ -155,12 +155,21 @@ async function proxy({ request, response, body, url, upstream, state }) {
   response.writeHead(upstreamResponse.status, responseHeaders);
   let pending = "";
   const decoder = new TextDecoder();
-  for await (const chunk of upstreamResponse.body) {
-    response.write(chunk);
-    pending += decoder.decode(chunk, { stream: true });
-    const lines = pending.split("\n");
-    pending = lines.pop();
-    for (const line of lines) readUsage(line, call);
+  try {
+    for await (const chunk of upstreamResponse.body) {
+      response.write(chunk);
+      pending += decoder.decode(chunk, { stream: true });
+      const lines = pending.split("\n");
+      pending = lines.pop();
+      for (const line of lines) readUsage(line, call);
+    }
+  } catch (error) {
+    // An upstream stream that breaks off reaches the extension as the same
+    // dropped connection, and the run goes on.
+    call.error = error.cause?.code || error.message;
+    call.endedAt = Date.now();
+    response.destroy();
+    return;
   }
   readUsage(pending, call);
   call.endedAt = Date.now();
