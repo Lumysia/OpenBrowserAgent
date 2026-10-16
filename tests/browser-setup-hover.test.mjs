@@ -9,7 +9,8 @@ import { launchExtension, poll, settled } from "./chromium.mjs";
 
 // The guided setup's controls answer the pointer: hovering a choice card or
 // the primary button changes its edge and fill enough to see, in light and
-// dark, the chosen card's fill included.
+// dark, the chosen card's fill included, and a hovered card still looks
+// less chosen than the chosen one.
 
 const t = getMessages("en-US");
 
@@ -71,9 +72,28 @@ async function hoverChange(page, selector, text) {
   await settled(page);
   const hovered = await edgeAndFill(page, selector, text);
   return {
+    hovered,
     border: await contrast(page, rest.border, hovered.border),
     background: await contrast(page, rest.background, hovered.background),
   };
+}
+
+// A hovered card stays short of the chosen one: its edge and fill are
+// nearer the page's background.
+async function assertShortOfChosen(page, hovered, chosen, name) {
+  const backdrop = await page.call(
+    () => getComputedStyle(document.body).backgroundColor,
+  );
+  for (const part of ["border", "background"]) {
+    const [near, far] = [
+      await contrast(page, backdrop, hovered[part]),
+      await contrast(page, backdrop, chosen[part]),
+    ];
+    assert.ok(
+      near < far,
+      `${name}: hovered ${part} ${near.toFixed(3)}:1, chosen ${far.toFixed(3)}:1`,
+    );
+  }
 }
 
 // An edge that moves this far reads as a change at a glance; a fill a
@@ -149,6 +169,17 @@ test(
           await hoverChange(setup, ".ui-choice-card", t.setup.pathNew),
           `${scheme} chosen choice card`,
           { edge: false },
+        );
+        const other = await hoverChange(
+          setup,
+          ".ui-choice-card",
+          t.setup.pathReturning,
+        );
+        await assertShortOfChosen(
+          setup,
+          other.hovered,
+          await edgeAndFill(setup, ".ui-choice-card", t.setup.pathNew),
+          `${scheme} hovered vs chosen card`,
         );
         await clickElement(setup, "button", { text: t.setup.back });
       }

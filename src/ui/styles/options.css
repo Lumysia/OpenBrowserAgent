@@ -277,7 +277,7 @@
 }
 .action-list-item.active {
   border-color: color-mix(in oklab, var(--accent-strong) 22%, var(--border));
-  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
+  background: var(--selected-surface);
   color: var(--accent-text);
 }
 .action-list-item.active:hover {

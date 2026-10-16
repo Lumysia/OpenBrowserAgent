@@ -70,6 +70,9 @@
   );
   --hover-surface: color-mix(in oklab, var(--accent-soft) 40%, var(--card));
   --hover-lift: 0 -1px;
+  /* A chosen option's fill: a step past --hover-surface, so a hovered
+     option never looks more chosen than the chosen one. */
+  --selected-surface: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
   /* Frosted glass: a field that lets what scrolls behind it show through,
      blurred past reading. */
   --glass-field: color-mix(in oklab, var(--field) 72%, transparent);

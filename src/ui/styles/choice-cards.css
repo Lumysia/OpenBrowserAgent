@@ -24,10 +24,11 @@
 }
 .ui-choice-card[data-state="selected"] {
   border-color: var(--accent-strong);
-  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
+  background: var(--selected-surface);
 }
 /* After the chosen state, so the chosen card answers the pointer too; its
-   accent edge stays. */
+   accent edge stays. A hovered card stays short of the chosen one: a
+   lighter edge and fill. */
 .ui-choice-card:hover {
   border-color: var(--hover-border);
   background: var(--hover-surface);
@@ -36,7 +37,7 @@
 }
 .ui-choice-card[data-state="selected"]:hover {
   border-color: var(--accent-strong);
-  background: color-mix(in oklab, var(--accent-soft) 60%, var(--card));
+  background: var(--accent-soft);
 }
 .ui-choice-card:active {
   scale: 0.99;
