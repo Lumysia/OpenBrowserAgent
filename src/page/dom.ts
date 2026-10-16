@@ -111,6 +111,10 @@ export const CONTAINER_ROLES = new Set([
   "radiogroup",
 ]);
 
+// Elements that may be controls; roleOf and isInteractive decide.
+export const CONTROL_CANDIDATES =
+  "a[href],button,input,select,textarea,summary,[role],[contenteditable],[tabindex],[onclick]";
+
 export function clip(value: string, max: number) {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }

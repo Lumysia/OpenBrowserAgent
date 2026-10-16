@@ -6,6 +6,7 @@ What changed in each release. The release workflow publishes the section for the
 
 - Buttons, cards, menus, fields and switches now clearly react when you point at them, in the guided setup and everywhere else, in light and dark mode. Choice cards in setup light up and lift slightly, the chosen one included, and the chosen card stays clearly marked while you point at another; with "Reduce motion" on they don't move.
 - Guided setup no longer leaves an empty AI provider behind: if you pick a provider type and then go back, skip the step, or set up through sync instead, the empty provider is removed. A provider you filled in stays. Empty providers left by earlier versions can be deleted in Settings → AI providers & models.
+- After clicking or typing on a page, the agent now also sees text that appeared or changed in view, such as a quiz question, a score or a countdown, instead of being told nothing changed. Clocks and timers that tick on their own are shown once and no longer count as a change.
 
 ## 0.2.0-beta.17 - 2026-10-16
 

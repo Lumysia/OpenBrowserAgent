@@ -1,14 +1,20 @@
 import { describe } from "./actions";
-import { isHidden, isInteractive } from "./dom";
+import { CONTROL_CANDIDATES, isHidden, isInteractive } from "./dom";
 import { renderLines, snapshotLines } from "./snapshot";
+import { beginTexts, textChanges, type PageTexts } from "./text-changes";
 
 // What changed on the page during a batch: interactive elements that
-// appeared or went away in the viewport, dialogs, and the focused control.
+// appeared or went away in the viewport, dialogs, text, and the focused
+// control.
 let baseline:
-  { controls: Set<Element>; dialogs: Set<Element>; height: number } | undefined;
+  | {
+      controls: Set<Element>;
+      dialogs: Set<Element>;
+      height: number;
+      texts: PageTexts;
+    }
+  | undefined;
 
-const CANDIDATES =
-  "a[href],button,input,select,textarea,summary,[role],[contenteditable],[tabindex],[onclick]";
 const DIALOGS =
   "dialog[open],[role=dialog],[role=alertdialog],[aria-modal=true]";
 // A dialog that opened is shown as a short snapshot.
@@ -23,11 +29,13 @@ const NEW_LISTED = 15;
 
 function visibleControls() {
   return new Set(
-    Array.from(document.querySelectorAll(CANDIDATES)).filter((element) => {
-      if (!isInteractive(element) || isHidden(element)) return false;
-      const rect = element.getBoundingClientRect();
-      return rect.bottom >= 0 && rect.top <= innerHeight;
-    }),
+    Array.from(document.querySelectorAll(CONTROL_CANDIDATES)).filter(
+      (element) => {
+        if (!isInteractive(element) || isHidden(element)) return false;
+        const rect = element.getBoundingClientRect();
+        return rect.bottom >= 0 && rect.top <= innerHeight;
+      },
+    ),
   );
 }
 
@@ -49,22 +57,26 @@ export function beginChanges() {
     controls: visibleControls(),
     dialogs: openDialogs(),
     height: document.documentElement.scrollHeight,
+    texts: beginTexts(),
   };
 }
 
 export function collectChanges() {
   // No baseline: the document was replaced since the batch began.
-  if (!baseline) return { lines: [] as string[], fresh: true };
+  if (!baseline)
+    return { lines: [] as string[], notes: [] as string[], fresh: true };
   const before = baseline;
   baseline = undefined;
   const lines: string[] = [];
-  for (const dialog of openDialogs())
-    if (!before.dialogs.has(dialog)) {
-      lines.push(
-        "Dialog opened:",
-        renderLines(snapshotLines(dialog, DIALOG_SNAPSHOT)),
-      );
-    }
+  const opened = [...openDialogs()].filter(
+    (dialog) => !before.dialogs.has(dialog),
+  );
+  for (const dialog of opened) {
+    lines.push(
+      "Dialog opened:",
+      renderLines(snapshotLines(dialog, DIALOG_SNAPSHOT)),
+    );
+  }
   const height = document.documentElement.scrollHeight;
   if (Math.abs(height - before.height) > HEIGHT_CHANGE_PX)
     lines.push(
@@ -91,10 +103,16 @@ export function collectChanges() {
     lines.push(
       `Gone (${removed.length}): ${removed.slice(0, GONE_NAMED).map(describe).join(", ")}${removed.length > GONE_NAMED ? ", …" : ""}`,
     );
+  // An opened dialog is shown whole above.
+  const text = textChanges(before.texts, opened);
+  lines.push(...text.lines);
+  // Notes say where things are, not that the page changed.
+  const notes: string[] = [];
   const active = document.activeElement;
   if (active && active !== document.body && isInteractive(active))
-    lines.push(
+    notes.push(
       `Focused: ${snapshotLines(active, { mode: "page", maxChars: LINE_MAX_CHARS }).lines[0]?.text.slice(2) || describe(active)}`,
     );
-  return { lines, fresh: false };
+  notes.push(...text.ticking);
+  return { lines, notes, fresh: false };
 }

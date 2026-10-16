@@ -47,7 +47,7 @@ export const actTool: ToolDefinition = {
   timeoutMs: 120_000,
   summary: "Click, type, select, press keys, scroll on a page",
   description:
-    "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
+    "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs, new or changed text), not a full snapshot.",
   parameters: schema(
     {
       tabId: RUN_TAB_ID_PARAM,
@@ -179,16 +179,19 @@ export const actTool: ToolDefinition = {
     lines.push(...dialogs);
     const after = await api.tabs.get(tab.id);
     let changes: string[] = [];
+    // The focused control and text that changes on its own (a clock):
+    // shown, never a change.
+    let notes: string[] = [];
     let fresh = navigated;
     if (!navigated) {
       try {
-        const { value } = await callPage<{ lines: string[]; fresh?: boolean }>(
-          tab.id,
-          "changes",
-          {},
-          signal,
-        );
+        const { value } = await callPage<{
+          lines: string[];
+          notes?: string[];
+          fresh?: boolean;
+        }>(tab.id, "changes", {}, signal);
         changes = value.lines;
+        notes = value.notes || [];
         fresh = !!value.fresh;
       } catch (error) {
         signal?.throwIfAborted();
@@ -229,6 +232,7 @@ export const actTool: ToolDefinition = {
       lines.push(
         "No visible change in the viewport. Check with snapshot or find if you expected one.",
       );
+    lines.push(...notes);
     return {
       text: lines.join("\n"),
       details: {
