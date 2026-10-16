@@ -1,4 +1,5 @@
 import { PAGE_TRANSLATE_ENGINE } from "../../src/shared/page-translate/settings.ts";
+import { TOOLBAR_MENU_PAGE } from "../../src/shared/side-panel.ts";
 import { movePointer } from "../../tests/cdp-input.mjs";
 import { providerFixture, reply } from "../../tests/provider-fixtures.ts";
 import { hasClass, inShadowRoot } from "../../tests/shadow-roots.mjs";
@@ -7,9 +8,9 @@ import {
   capture,
   click,
   delay,
+  extensionUrl,
   launch,
   openDemo,
-  openPanel,
   poll,
   size,
 } from "./browser.mjs";
@@ -134,7 +135,7 @@ const userText = (body) =>
 
 // The demo article in another language, translated with the original kept
 // above each translation, and the translate button on the page's edge. The
-// translation is started from the side panel's "This page" strip.
+// translation is started from the toolbar menu's Translate tile.
 export async function translateShot(demo) {
   const source = await loadDemo(sourceLocale(demo.locale));
   const translate = demoTranslator(source, demo);
@@ -163,9 +164,21 @@ export async function translateShot(demo) {
       await renderPage("article", source),
     );
     await size(tab, FRAME);
-    const panel = await openPanel(chromium, demo.locale);
-    await click(panel, ".page-tools-switches .ui-toggle-group-item");
-    // Capturing the panel renders it as the visible tab; the page only
+    // The menu in a background tab reads the active tab: the article.
+    const menu = await chromium.open(
+      extensionUrl(chromium, TOOLBAR_MENU_PAGE.slice(1)),
+      { background: true },
+    );
+    const host = new URL(DEMO_URLS.article).hostname;
+    await poll(() =>
+      menu.call(
+        (host) =>
+          document.querySelector(".toolbar-menu-site")?.textContent === host,
+        host,
+      ),
+    );
+    await click(menu, ".toolbar-menu-tiles .ui-toggle-tile");
+    // Capturing the menu renders it as the visible tab; the page only
     // translates what it sees once it is in front again.
     await tab.send("Page.bringToFront");
     // Done once every block of the article that shows has its translation.
