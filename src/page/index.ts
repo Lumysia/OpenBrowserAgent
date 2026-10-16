@@ -11,7 +11,13 @@ import { inputPoint } from "./pointer-actions";
 import { runEdits, type EditOp } from "./edits";
 import { mainMarkdown } from "./html-markdown";
 import { pageMarkdown } from "./markdown";
-import { raiseFloor, refCounter, resolveRef, RefError } from "./refs";
+import {
+  raiseFloor,
+  refCounter,
+  resolveRef,
+  RefError,
+  takeRefNotes,
+} from "./refs";
 import { findLines } from "./search";
 import { searchResults } from "./search-results";
 import { renderLines, snapshotLines } from "./snapshot";
@@ -87,7 +93,15 @@ const methods: Record<string, (args: Args) => unknown> = {
   }),
   // The page's main content with whole links, for copying.
   mainMarkdown: () => ({ text: mainMarkdown(document, "") }),
-  step: (args) => runStep(args.step as ActStep),
+  step: async (args) => {
+    const result = await runStep(args.step as ActStep);
+    const notes = takeRefNotes();
+    if (!notes.length) return result;
+    return {
+      ...result,
+      note: [...notes, result.note].filter(Boolean).join("; "),
+    };
+  },
   begin: () => beginChanges(),
   sameDocument: () => hasBaseline(),
   changes: () => collectChanges(),
@@ -118,6 +132,7 @@ export function installPageAgent() {
   // executeScript passes the promise's value back.
   scope.__obaPageAgent = async (method, args) => {
     raiseFloor(args?.refFloor);
+    takeRefNotes();
     try {
       const run = methods[method];
       if (!run) throw new Error(`Unknown page method ${method}`);

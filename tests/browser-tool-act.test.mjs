@@ -35,6 +35,18 @@ document.addEventListener("click", (event) => {
   if (button && button.id !== "accept") window.clicks.push(button.id + (button.id === "partly" && event.clientX > 120 ? ":uncovered" : ""));
 });
 </script>`,
+  "/calendar": `<title>Calendar</title>
+<div id="calendar" role="group" aria-label="Calendar"></div>
+<div id="picks"></div><button id="refresh">Refresh</button>
+<script>
+let month = 1;
+const calendar = document.getElementById("calendar");
+const render = () => { calendar.innerHTML = "<h2>Month " + month + "</h2><button>Prev</button> <button>Next</button>"; };
+calendar.onclick = (event) => { if (event.target.localName !== "button") return; month += event.target.textContent === "Next" ? 1 : -1; render(); };
+const picks = () => { document.getElementById("picks").innerHTML = "<button>Pick</button> <button>Pick</button>"; };
+document.getElementById("refresh").onclick = picks;
+render(); picks();
+</script>`,
 };
 
 test(
@@ -128,6 +140,42 @@ test(
             "ghost",
             "under",
           ]);
+        },
+      );
+
+      await t.test(
+        "a re-rendered ref finds the one element that replaced it",
+        async () => {
+          const tabId = await open("/calendar");
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const next = ref(snapshot, 'button "Next"');
+          const pick = ref(snapshot, 'button "Pick"');
+          const click = (target) => ({ action: "click", ref: target });
+          const [twice, ambiguous] = await fixture.run([
+            { name: "act", args: { tabId, steps: [click(next), click(next)] } },
+            {
+              name: "act",
+              args: {
+                tabId,
+                steps: [click(ref(snapshot, 'button "Refresh"')), click(pick)],
+              },
+            },
+          ]);
+          assert.match(
+            twice,
+            new RegExp(
+              `Done: 1\\. click ${next}; 2\\. click ${next} \\(ref ${next} was re-rendered; used the matching button "Next" \\[e\\d+\\]\\)`,
+            ),
+          );
+          assert.match(twice, /heading: Month 3/);
+          assert.match(
+            ambiguous,
+            new RegExp(
+              `Step 2 \\(click ${pick}\\) failed: Ref ${pick} is stale: the page re-rendered it, and 2 elements match it now: button "Pick" \\[e\\d+\\], button "Pick" \\[e\\d+\\]\\. Use the right one's ref\\.`,
+            ),
+          );
         },
       );
     } finally {

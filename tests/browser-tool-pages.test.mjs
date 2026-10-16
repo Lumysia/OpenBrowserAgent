@@ -125,7 +125,7 @@ test(
           assert.match(acted, /Gone \(1\): button "Click once"/);
           assert.match(
             stale,
-            /is stale: that element is no longer on the page\. Take a new snapshot/,
+            /is stale: that element is no longer on the page, and no button "Click once" replaced it\. Take a new snapshot/,
           );
           assert.equal(
             await evaluate(tabId, "document.body.dataset.once"),
