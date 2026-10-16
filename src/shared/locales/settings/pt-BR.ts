@@ -15,6 +15,7 @@ export const settingsPtBR: SettingsMessages = {
   changeShortcuts: "Alterar atalhos",
   shortcutsFirefoxHint:
     'Para alterá-los, abra about:addons, clique no botão de engrenagem e escolha "Gerenciar atalhos de extensões".',
+  openMenuCommand: "Abrir o menu",
   openSidePanelCommand: "Abrir o painel lateral",
   smartBarCommand: "Mostrar a barra inteligente para o texto selecionado",
   translatePageCommand: "Traduzir esta página ou mostrar o original",

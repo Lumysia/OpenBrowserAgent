@@ -5,6 +5,9 @@
   "extDescription": {
     "message": "OpenBrowserAgent bringt KI-Agenten in Ihren Browser und hilft Ihnen, Aufgaben intelligent zu automatisieren."
   },
+  "openSidePanelCommand": {
+    "message": "Seitenleiste öffnen"
+  },
   "smartBarCommand": {
     "message": "Smart Bar für den markierten Text anzeigen"
   },

@@ -99,7 +99,7 @@ export const setupPtBR: SetupMessages = {
     "A conversa precisa de um provedor de IA. A tradução de páginas com o tradutor integrado funciona sem ele.",
   welcomeTitle: "Boas-vindas ao OpenBrowserAgent",
   openPanelDescription:
-    "Fixe o OpenBrowserAgent no menu Extensões do navegador e clique no ícone dele para abrir o painel lateral.",
+    "Fixe o OpenBrowserAgent no menu Extensões do navegador, clique no ícone dele e escolha “Abrir painel lateral”.",
   openPanel: "Abrir painel lateral",
   code: "Código de sincronização",
   codeDescription:

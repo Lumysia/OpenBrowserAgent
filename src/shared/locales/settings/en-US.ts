@@ -19,6 +19,7 @@ export const settingsEnUS = {
     'To change them, open about:addons, click the gear button and choose "Manage Extension Shortcuts".',
   // Command titles, in the extension's language (the browser gives them in
   // its own).
+  openMenuCommand: "Open the menu",
   openSidePanelCommand: "Open the side panel",
   smartBarCommand: "Show the smart bar for the selected text",
   translatePageCommand: "Translate this page or show the original",

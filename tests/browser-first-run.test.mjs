@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { OPTIONS_HASH } from "../src/shared/config.ts";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { getMessages } from "../src/shared/i18n.ts";
+import { TOOLBAR_MENU_PAGE } from "../src/shared/side-panel.ts";
 import { SETUP_PATH_STEPS } from "../src/shared/setup-steps.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
@@ -306,13 +307,20 @@ test(
         (url) => url === extensionUrl("background.js"),
         "service_worker",
       );
+      // The toolbar button's popup: the menu once setup is finished, none
+      // before (its click comes to the extension). The panel never opens
+      // by itself from the button.
+      const menuIsPopup = () =>
+        worker.call(
+          async (menu) => (await chrome.action.getPopup({})).endsWith(menu),
+          TOOLBAR_MENU_PAGE,
+        );
       const panelOpensItself = () =>
         worker.call(
           async () =>
             (await chrome.sidePanel.getPanelBehavior()).openPanelOnActionClick,
         );
-      // Until setup is finished the toolbar button doesn't open the panel
-      // by itself: its click comes to the extension.
+      assert.equal(await menuIsPopup(), false);
       assert.equal(await panelOpensItself(), false);
       await clickForward(setup);
       await atStep(setup, t.setup.pathTitle);
@@ -377,9 +385,10 @@ test(
       assert.deepEqual(await texts(setup, ".setup-note p"), [
         t.setup.noProviderNote,
       ]);
-      // Done: the toolbar button opens the panel from now on, and the panel
+      // Done: the toolbar button opens the menu from now on, and the panel
       // without a model is one line to add an AI provider.
-      await poll(panelOpensItself);
+      await poll(menuIsPopup);
+      assert.equal(await panelOpensItself(), false);
       const panel = await browser.open(panelUrl);
       await poll(async () =>
         (await texts(panel, ".no-model-mode button")).includes(

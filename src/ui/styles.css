@@ -3,11 +3,13 @@
 @import "./styles/base.css";
 @import "./styles/components.css";
 @import "./styles/choice-cards.css";
+@import "./styles/toggle-tiles.css";
 @import "./styles/overlays.css";
 @import "./styles/options.css";
 @import "./styles/options-sections.css";
 @import "./styles/theme-picker.css";
 @import "./styles/sidepanel.css";
+@import "./styles/toolbar-menu.css";
 @import "./styles/messages.css";
 @import "./styles/composer.css";
 @import "./styles/setup.css";

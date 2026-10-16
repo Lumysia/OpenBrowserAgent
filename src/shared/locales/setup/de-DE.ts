@@ -100,7 +100,7 @@ export const setupDeDE: SetupMessages = {
     "Für den Chat brauchen Sie einen KI-Anbieter. Die Seitenübersetzung mit dem integrierten Übersetzer funktioniert auch ohne.",
   welcomeTitle: "Willkommen bei OpenBrowserAgent",
   openPanelDescription:
-    "Heften Sie OpenBrowserAgent im Erweiterungsmenü des Browsers an und klicken Sie auf das Symbol, um die Seitenleiste zu öffnen.",
+    "Heften Sie OpenBrowserAgent im Erweiterungsmenü des Browsers an, klicken Sie auf das Symbol und wählen Sie „Seitenleiste öffnen“.",
   openPanel: "Seitenleiste öffnen",
   code: "Sync-Code",
   codeDescription:

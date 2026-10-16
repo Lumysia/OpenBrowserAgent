@@ -187,6 +187,24 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 | Copy as Markdown      | Copier en Markdown    | Als Markdown kopieren | Copiar como Markdown | Copiar como Markdown |
 | selected text         | texte sélectionné     | ausgewählter Text     | texto seleccionado   | texto selecionado    |
 
+## Toolbar menu
+
+The toolbar button opens a small menu with the active page's tools, "Translate into" and "Open side panel"; its keyboard command is "Open the menu". The tiles carry one or two words (Translate, Smart bar, Subtitles) and their tooltips the full action, using the same words as the right-click menu and Settings. Where the page isn't a web page (browser pages, the new tab page) the heading says so.
+
+| English                     | 简体中文 | 繁體中文 | 日本語                     | 한국어               |
+| --------------------------- | -------- | -------- | -------------------------- | -------------------- |
+| menu (the toolbar button's) | 菜单     | 選單     | メニュー                   | 메뉴                 |
+| Translate (tile)            | 翻译     | 翻譯     | 翻訳                       | 번역                 |
+| Subtitles (tile)            | 字幕     | 字幕     | 字幕                       | 자막                 |
+| Not a web page              | 不是网页 | 不是網頁 | ウェブページではありません | 웹 페이지가 아닙니다 |
+
+| English                     | Français         | Deutsch        | Español              | Português (Brasil)      |
+| --------------------------- | ---------------- | -------------- | -------------------- | ----------------------- |
+| menu (the toolbar button's) | menu             | Menü           | menú                 | menu                    |
+| Translate (tile)            | Traduire         | Übersetzen     | Traducir             | Traduzir                |
+| Subtitles (tile)            | Sous-titres      | Untertitel     | Subtítulos           | Legendas                |
+| Not a web page              | Pas une page web | Keine Webseite | No es una página web | Não é uma página da web |
+
 ## Provider permission
 
 Before content the user shares in chats (messages, page text, screenshots, files) goes to an AI provider's endpoint, the user agrees once for that endpoint's host (`providerConsent`). The agreement sentence is written in the first person ("I agree that…") because it is the label of a checkbox the user ticks; the same sentence shows in the prompt before the first message, so both read the same. `{host}` is a host name such as api.openai.com and stays as is. "Permission" is the user's consent, never a browser permission. Endpoints on the device or the local network are "local endpoints" and need none.

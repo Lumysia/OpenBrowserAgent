@@ -107,6 +107,31 @@
   justify-content: space-between;
   gap: var(--space-2);
 }
+/* A select inside a line of text: the value and its chevron, no field. */
+.ui-select-trigger.ui-select-trigger-inline {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  height: 24px;
+  gap: 2px;
+  padding: 0 var(--space-1);
+  border-color: transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+}
+.ui-select-trigger-inline > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-select-trigger-inline > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--muted-control);
+}
 .ui-textarea {
   min-height: 100px;
   padding: 10px 11px;
@@ -116,6 +141,13 @@
   outline: none;
   border-color: var(--accent-strong);
   box-shadow: 0 0 0 3px var(--ring);
+}
+.ui-select-trigger-inline:hover {
+  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+}
+.ui-select-trigger-inline:focus {
+  border-color: transparent;
+  box-shadow: none;
 }
 :is(.ui-input, .ui-textarea)::placeholder {
   color: var(--muted-foreground);

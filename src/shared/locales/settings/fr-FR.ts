@@ -15,6 +15,7 @@ export const settingsFrFR: SettingsMessages = {
   changeShortcuts: "Modifier les raccourcis",
   shortcutsFirefoxHint:
     "Pour les modifier, ouvrez about:addons, cliquez sur la roue dentée et choisissez « Gérer les raccourcis d’extension ».",
+  openMenuCommand: "Ouvrir le menu",
   openSidePanelCommand: "Ouvrir le panneau latéral",
   smartBarCommand: "Afficher la barre intelligente pour le texte sélectionné",
   translatePageCommand: "Traduire cette page ou afficher l’original",

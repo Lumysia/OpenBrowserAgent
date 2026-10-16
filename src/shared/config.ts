@@ -205,8 +205,8 @@ export function clampMaxToolSteps(value: number | undefined) {
 // shortcuts. Firefox has no URL for it (see settings.shortcutsFirefoxHint).
 export const BROWSER_SHORTCUTS_URL = "chrome://extensions/shortcuts";
 
-// The suggested keys for the toolbar button (manifest `_execute_action`,
-// which opens the side panel). Chrome sets no key at all when the suggestion
+// The suggested keys for opening the side panel (the manifest's
+// SIDE_PANEL_COMMAND, src/shared/commands.ts). Chrome sets no key at all when the suggestion
 // is one it uses itself (Ctrl+J opens Downloads); Ctrl+Shift+Y is free in
 // Chrome on Windows, Linux and macOS.
 export const SIDE_PANEL_SHORTCUT = {

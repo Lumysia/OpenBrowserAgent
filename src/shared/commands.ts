@@ -3,17 +3,24 @@ import type { Messages } from "./i18n";
 import { PAGE_TRANSLATE_COMMAND } from "./page-translate/protocol";
 import { SMART_BAR_COMMAND } from "./smart-bar-protocol";
 
-// The toolbar button's command (Manifest V3; WXT names it
-// `_execute_browser_action` in a Manifest V2 build).
+// The toolbar button's command: it opens the toolbar menu (Manifest V3; WXT
+// names it `_execute_browser_action` in a Manifest V2 build).
 export const ACTION_COMMAND = "_execute_action";
 export const ACTION_COMMANDS = [ACTION_COMMAND, "_execute_browser_action"];
+
+// Opens the side panel itself (src/background/action-surface.ts).
+export const SIDE_PANEL_COMMAND = "open-side-panel";
 
 // The manifest's commands. Their descriptions are what the browser's own
 // shortcut settings show, in the browser's language.
 export const MANIFEST_COMMANDS = {
+  // No default key: the side panel's command has the one people know.
   [ACTION_COMMAND]: {
-    suggested_key: { ...SIDE_PANEL_SHORTCUT },
     description: "OpenBrowserAgent",
+  },
+  [SIDE_PANEL_COMMAND]: {
+    suggested_key: { ...SIDE_PANEL_SHORTCUT },
+    description: "__MSG_openSidePanelCommand__",
   },
   // No default key: the user picks one in the browser's shortcut settings.
   [SMART_BAR_COMMAND]: {
@@ -37,8 +44,9 @@ type SettingsText = {
 // Each command's title in the extension's own UI language (the browser
 // would give its description in the browser's language).
 export const COMMAND_TITLES: Record<string, SettingsText> = {
-  [ACTION_COMMAND]: "openSidePanelCommand",
-  _execute_browser_action: "openSidePanelCommand",
+  [ACTION_COMMAND]: "openMenuCommand",
+  _execute_browser_action: "openMenuCommand",
+  [SIDE_PANEL_COMMAND]: "openSidePanelCommand",
   [SMART_BAR_COMMAND]: "smartBarCommand",
   [PAGE_TRANSLATE_COMMAND]: "translatePageCommand",
 };

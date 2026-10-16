@@ -99,7 +99,7 @@ export const setupEsES: SetupMessages = {
     "El chat necesita un proveedor de IA. La traducción de páginas con el traductor integrado funciona sin él.",
   welcomeTitle: "Te damos la bienvenida a OpenBrowserAgent",
   openPanelDescription:
-    "Fija OpenBrowserAgent desde el menú Extensiones del navegador y haz clic en su icono para abrir el panel lateral.",
+    "Fija OpenBrowserAgent desde el menú Extensiones del navegador, haz clic en su icono y elige «Abrir panel lateral».",
   openPanel: "Abrir panel lateral",
   code: "Código de sincronización",
   codeDescription:

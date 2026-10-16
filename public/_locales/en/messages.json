@@ -5,6 +5,9 @@
   "extDescription": {
     "message": "OpenBrowserAgent brings AI agents into your browser, helping you automate tasks smartly."
   },
+  "openSidePanelCommand": {
+    "message": "Open the side panel"
+  },
   "smartBarCommand": {
     "message": "Show the smart bar for the selected text"
   },

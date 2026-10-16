@@ -8,7 +8,10 @@ import { setupSync } from "../src/background/sync/scheduler";
 import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
 import { handleChatStreamControlMessage } from "../src/background/stream-sessions";
 import { connectStreamPort } from "../src/background/chat-stream-port";
-import { openActionSurface } from "../src/background/action-surface";
+import {
+  handleSidePanelCommand,
+  openActionSurface,
+} from "../src/background/action-surface";
 import { setupSetupGate } from "../src/background/setup-gate";
 import { setupContextMenu } from "../src/background/context-menu";
 import {
@@ -39,6 +42,7 @@ export default defineBackground(() => {
   actionApi?.onClicked.addListener((tab) => {
     openActionSurface(tab).catch(console.warn);
   });
+  chrome.commands?.onCommand.addListener(handleSidePanelCommand);
 
   setupSmartBar();
   setupPageTools();

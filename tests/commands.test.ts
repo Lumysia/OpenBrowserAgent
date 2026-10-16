@@ -5,6 +5,7 @@ import {
   COMMAND_TITLES,
   commandTitle,
   MANIFEST_COMMANDS,
+  SIDE_PANEL_COMMAND,
   suggestedSidePanelKeys,
 } from "../src/shared/commands";
 import { SIDE_PANEL_SHORTCUT } from "../src/shared/config";
@@ -32,6 +33,18 @@ test("command titles follow the UI language, not the browser's description", () 
     "Other",
   );
   assert.equal(commandTitle({ name: "other", description: "" }, zh), "other");
+});
+
+test("the side panel's command has the side panel's keys; the toolbar button none", () => {
+  assert.deepEqual(MANIFEST_COMMANDS[SIDE_PANEL_COMMAND].suggested_key, {
+    ...SIDE_PANEL_SHORTCUT,
+  });
+  for (const name of ACTION_COMMANDS)
+    assert.equal(
+      (MANIFEST_COMMANDS as Record<string, { suggested_key?: unknown }>)[name]
+        ?.suggested_key,
+      undefined,
+    );
 });
 
 test("the side panel's hint suggests the keys of the platform", () => {

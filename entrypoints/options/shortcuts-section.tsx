@@ -1,8 +1,8 @@
 import { ExternalLink, Keyboard } from "lucide-react";
 import { getBrowserApi } from "../../src/shared/browser-api";
 import {
-  ACTION_COMMANDS,
   commandTitle,
+  SIDE_PANEL_COMMAND,
   suggestedSidePanelKeys,
 } from "../../src/shared/commands";
 import { BROWSER_SHORTCUTS_URL } from "../../src/shared/config";
@@ -46,7 +46,7 @@ export function ShortcutsSection() {
             // The side panel without keys: Chrome sets the suggested ones
             // only on a fresh install, and not when they are taken.
             description={
-              ACTION_COMMANDS.includes(command.name) && !command.shortcut
+              command.name === SIDE_PANEL_COMMAND && !command.shortcut
                 ? t.settings.sidePanelShortcutHint.replace(
                     "{keys}",
                     suggestedSidePanelKeys(navigator.platform),
