@@ -22,7 +22,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   holidayTouches: true,
   autoRetry: true,
   imageGenerationEnabled: false,
-  imageGenerationSize: "1024x1024",
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
   reasoningEffort: REASONING_EFFORT.default,
   // Empty: auxiliary requests use the chat's own model.

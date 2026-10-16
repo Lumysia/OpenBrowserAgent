@@ -432,7 +432,6 @@ export const enUS = {
     enableImageGeneration: "Enable image generation",
     enableImageGenerationDescription:
       "Make the image generation tool available to agents.",
-    imageGenerationSize: "Image size",
     providerConnection: "Connection",
     providerConnectionHint: "Set the name and API key.",
     providerName: "Name",

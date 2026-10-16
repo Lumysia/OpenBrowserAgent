@@ -1,7 +1,6 @@
 import { storedToolImage } from "../shared/tool-results";
 import { errorMessage } from "../shared/error-message";
 import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
-import { storage } from "../shared/storage";
 import { writeChatAttachments } from "../shared/chat-attachments";
 import type { UploadedAttachment } from "../shared/types";
 import { providerApiUrl } from "../shared/provider-urls";
@@ -30,10 +29,8 @@ export async function generateImage(
   const prompt = String(input.prompt || "").trim();
   if (!prompt) return { success: false, error: "Missing image prompt" };
   const jobId = context.toolCallId || crypto.randomUUID();
-  const preferences = await storage.preferences.get();
   const model = await resolveImageModel(trimmedString(input.modelId));
-  const requestedSize =
-    trimmedString(input.size) || preferences.imageGenerationSize;
+  const requestedSize = trimmedString(input.size);
   const size = normalizeImageSize(requestedSize);
   const references = referenceAttachments(
     attachments,

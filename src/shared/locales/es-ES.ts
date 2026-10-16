@@ -468,7 +468,6 @@ export const esES: LocaleMessages = {
     enableImageGeneration: "Activar generación de imágenes",
     enableImageGenerationDescription:
       "Pone la herramienta de generación de imágenes a disposición de los agentes.",
-    imageGenerationSize: "Tamaño de imagen",
     providerConnection: "Conexión",
     providerConnectionHint: "Define el nombre y la clave API.",
     providerName: "Nombre",
