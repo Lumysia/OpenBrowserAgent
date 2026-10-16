@@ -458,9 +458,9 @@ export const ptBR: LocaleMessages = {
     selectModel: "Selecionar modelo",
     selectModelDescription:
       "Escolha o modelo principal das conversas. Os agentes funcionam melhor com modelos compatíveis com chamadas de ferramentas.",
-    enableImageGeneration: "Ativar geração de imagens",
-    enableImageGenerationDescription:
-      "Disponibiliza a ferramenta de geração de imagens para os agentes.",
+    imageModelDescription:
+      "Escolha um modelo para que o agente possa criar e editar imagens.",
+    imageModelOff: "Desativada",
     providerConnection: "Conexão",
     providerConnectionHint: "Defina o nome e a chave de API.",
     providerName: "Nome",

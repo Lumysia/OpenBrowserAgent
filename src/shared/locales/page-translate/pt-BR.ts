@@ -111,8 +111,8 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
       "As legendas na tela são traduzidas conforme aparecem. Para traduzir com antecedência, desative e ative de novo as legendas do player.",
     noVideo: "Não há nenhum vídeo para traduzir legendas aqui.",
     // Settings: subtitles start by themselves on every video.
-    setting: "Traduzir legendas de vídeos",
+    setting: "Traduzir legendas de vídeos automaticamente",
     settingDescription:
-      "Vídeos com legendas mostram sozinhos cada linha com a tradução embaixo, em todos os sites. “Traduzir legendas” no menu de contexto de um vídeo as desativa ou ativa para esse vídeo. Com esta opção desativada, o menu e “Traduzir esta página” continuam traduzindo as legendas.",
+      "Vídeos com legendas mostram cada linha com a tradução embaixo, em todos os sites. “Traduzir legendas” no menu de contexto de um vídeo as desativa ou ativa para esse vídeo. Com esta opção desativada, o menu e “Traduzir esta página” continuam traduzindo as legendas.",
   },
 };

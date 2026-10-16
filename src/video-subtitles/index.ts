@@ -1,5 +1,5 @@
 // Translated subtitles for the videos in this frame. Registered before the
-// page's scripts on every page while "Translate video subtitles" is on: then
+// page's scripts on every page while "Translate video subtitles automatically" is on: then
 // every video that shows at a usable size gets them by itself, and shows
 // nothing until the page gives it captions (its text tracks or a caption
 // file). Else injected by the background when the user starts them (the

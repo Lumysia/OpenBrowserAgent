@@ -112,8 +112,8 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     noVideo:
       "Hier gibt es kein Video, dessen Untertitel übersetzt werden können.",
     // Settings: subtitles start by themselves on every video.
-    setting: "Video-Untertitel übersetzen",
+    setting: "Video-Untertitel automatisch übersetzen",
     settingDescription:
-      "Videos mit Untertiteln zeigen von selbst jede Zeile mit ihrer Übersetzung darunter, auf allen Websites. „Untertitel übersetzen“ im Kontextmenü eines Videos schaltet sie für dieses Video aus oder ein. Ist diese Option aus, übersetzen das Menü und „Diese Seite übersetzen“ sie weiterhin.",
+      "Videos mit Untertiteln zeigen jede Zeile mit ihrer Übersetzung darunter, auf allen Websites. „Untertitel übersetzen“ im Kontextmenü eines Videos schaltet sie für dieses Video aus oder ein. Ist diese Option aus, übersetzen das Menü und „Diese Seite übersetzen“ sie weiterhin.",
   },
 };

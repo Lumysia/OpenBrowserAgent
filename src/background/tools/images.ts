@@ -1,3 +1,4 @@
+import { chooseImageModel } from "../../shared/model-choice";
 import { trimmedString } from "../../shared/values";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { generateImage } from "../image-generation";
@@ -7,7 +8,8 @@ export const generateImageTool: ToolDefinition = {
   name: TOOL_NAME.generateImage,
   group: "images",
   onDemand: true,
-  available: (run) => !!run.preferences.imageGenerationEnabled,
+  // On once an image model is chosen in Settings.
+  available: (run) => !!chooseImageModel(run.providers, run.preferences),
   summary: "Create or edit an image",
   description:
     "Create an image from a prompt, or edit one: pass uploaded image attachment ids as references (text attachments are added to the prompt). The image is shown to the user, not to you.",

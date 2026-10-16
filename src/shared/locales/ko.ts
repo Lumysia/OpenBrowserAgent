@@ -394,9 +394,9 @@ export const ko: LocaleMessages = {
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
-    enableImageGeneration: "이미지 생성 활성화",
-    enableImageGenerationDescription:
-      "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
+    imageModelDescription:
+      "모델을 선택하면 에이전트가 이미지를 만들고 편집할 수 있습니다.",
+    imageModelOff: "끔",
     providerConnection: "연결 정보",
     providerConnectionHint: "이름과 API 키를 설정하세요.",
     providerName: "이름",

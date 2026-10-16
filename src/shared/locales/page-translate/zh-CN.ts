@@ -97,8 +97,8 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
       "正在边播边翻屏幕上的字幕。想提前翻好，请在播放器里把字幕关掉再打开。",
     noVideo: "这里没有可翻译字幕的视频。",
     // Settings: subtitles start by themselves on every video.
-    setting: "翻译视频字幕",
+    setting: "自动翻译视频字幕",
     settingDescription:
-      "有字幕的视频会自动在每行字幕下显示译文，适用于所有网站。在视频的右键菜单中选择“翻译字幕”可为该视频关闭或重新打开。此项关闭时，仍可通过菜单和“翻译此页面”翻译字幕。",
+      "有字幕的视频会在每行字幕下显示译文，适用于所有网站。在视频的右键菜单中选择“翻译字幕”可为该视频关闭或重新打开。此项关闭时，仍可通过菜单和“翻译此页面”翻译字幕。",
   },
 };

@@ -375,8 +375,8 @@ export const zhCN: LocaleMessages = {
     selectModel: "选择模型",
     selectModelDescription:
       "选择主对话模型。智能体最好使用支持工具调用的模型。",
-    enableImageGeneration: "启用图片生成",
-    enableImageGenerationDescription: "向智能体开放图片生成工具。",
+    imageModelDescription: "选择模型后，智能体即可生成和编辑图片。",
+    imageModelOff: "关闭",
     providerConnection: "连接信息",
     providerConnectionHint: "设置名称和 API Key。",
     providerName: "名称",

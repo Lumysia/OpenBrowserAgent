@@ -111,8 +111,8 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
       "Les sous-titres affichés sont traduits au fur et à mesure. Pour les traduire à l’avance, désactivez puis réactivez les sous-titres du lecteur.",
     noVideo: "Aucune vidéo dont traduire les sous-titres ici.",
     // Settings: subtitles start by themselves on every video.
-    setting: "Traduire les sous-titres des vidéos",
+    setting: "Traduire automatiquement les sous-titres des vidéos",
     settingDescription:
-      "Les vidéos avec sous-titres affichent d’elles-mêmes chaque ligne avec sa traduction en dessous, sur tous les sites. « Traduire les sous-titres » dans le menu contextuel d’une vidéo les désactive ou les réactive pour cette vidéo. Quand cette option est désactivée, le menu et « Traduire cette page » les traduisent toujours.",
+      "Les vidéos avec sous-titres affichent chaque ligne avec sa traduction en dessous, sur tous les sites. « Traduire les sous-titres » dans le menu contextuel d’une vidéo les désactive ou les réactive pour cette vidéo. Quand cette option est désactivée, le menu et « Traduire cette page » les traduisent toujours.",
   },
 };

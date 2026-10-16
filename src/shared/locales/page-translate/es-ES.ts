@@ -111,8 +111,8 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
       "Se traducen los subtítulos en pantalla a medida que aparecen. Para traducir por adelantado, desactiva y vuelve a activar los subtítulos del reproductor.",
     noVideo: "Aquí no hay ningún vídeo cuyos subtítulos traducir.",
     // Settings: subtitles start by themselves on every video.
-    setting: "Traducir subtítulos de vídeos",
+    setting: "Traducir automáticamente los subtítulos de vídeos",
     settingDescription:
-      "Los vídeos con subtítulos muestran por sí solos cada línea con su traducción debajo, en todos los sitios. «Traducir subtítulos» en el menú contextual de un vídeo los desactiva o activa para ese vídeo. Si esta opción está desactivada, el menú y «Traducir esta página» siguen traduciéndolos.",
+      "Los vídeos con subtítulos muestran cada línea con su traducción debajo, en todos los sitios. «Traducir subtítulos» en el menú contextual de un vídeo los desactiva o activa para ese vídeo. Si esta opción está desactivada, el menú y «Traducir esta página» siguen traduciéndolos.",
   },
 };

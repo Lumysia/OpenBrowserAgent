@@ -141,7 +141,8 @@ test(
         (await texts(page, "h1")).includes(t.settings.troubleshooting),
       );
 
-      // General: the translation language first, then the shortcuts.
+      // General: the extension's language first, then the translation
+      // language, then the shortcuts.
       await page.call((hash) => (location.hash = hash), OPTIONS_HASH.general);
       await poll(async () =>
         (await texts(page, ".settings-section-title")).includes(
@@ -149,7 +150,10 @@ test(
         ),
       );
       const sections = await texts(page, ".ui-card-title");
-      assert.equal(sections[0], t.pageTranslate.targetLanguage);
+      assert.deepEqual(sections.slice(0, 2), [
+        t.common.language,
+        t.pageTranslate.targetLanguage,
+      ]);
       assert.ok(
         (await texts(page, "button")).includes(t.settings.changeShortcuts),
       );

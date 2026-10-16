@@ -44,15 +44,23 @@ type RunRequest = {
 // panel only names the agent, so chats and background sub-agents are set up
 // the same way. A description (`store: false`) writes nothing.
 async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
-  const [agents, preferences, userSkills, skillSettings, mcpServers, bridges] =
-    await Promise.all([
-      storage.agents.get(),
-      storage.preferences.get(),
-      storage.skills.get(),
-      storage.skillSettings.get(),
-      storage.mcpServers.get(),
-      storage.localExecutionBridges.get(),
-    ]);
+  const [
+    agents,
+    preferences,
+    providers,
+    userSkills,
+    skillSettings,
+    mcpServers,
+    bridges,
+  ] = await Promise.all([
+    storage.agents.get(),
+    storage.preferences.get(),
+    storage.provider.get(),
+    storage.skills.get(),
+    storage.skillSettings.get(),
+    storage.mcpServers.get(),
+    storage.localExecutionBridges.get(),
+  ]);
   const depth = request.depth || 0;
   const resolved = resolveAgent(agents, request.agentId);
   const agent: Agent =
@@ -80,6 +88,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     attachments: request.attachments || [],
     mcpServers: hasToolGroup(agent, "mcp") ? mcpServers : [],
     preferences,
+    providers,
     depth,
     parentChatId: request.parentChatId,
     tab,

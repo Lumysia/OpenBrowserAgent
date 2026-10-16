@@ -51,7 +51,8 @@ test("every feature's model is the chat's until one is picked", () => {
     MODEL_ROLES.map((role) => role.id),
     ["chat", "helper", "smartBar", "translation", "images"],
   );
-  // A choice is stored, and clearing it goes back to the chat's model.
+  // A choice is stored, and clearing it goes back to the chat's model
+  // (for images: off).
   for (const role of MODEL_ROLES) {
     const picked = role.set(DEFAULT_PREFERENCES, "m2");
     assert.equal(role.get(picked), "m2", role.id);
@@ -68,7 +69,8 @@ test("every feature's model is the chat's until one is picked", () => {
   };
   const preferences = { ...DEFAULT_PREFERENCES, selectedModelId: "m2" };
   assert.equal(chooseChatModel(providers, preferences)?.model.id, "m2");
-  assert.equal(chooseImageModel(providers, preferences)?.model.id, "m2");
+  // No image model chosen: image generation is off.
+  assert.equal(chooseImageModel(providers, preferences), undefined);
   assert.equal(
     chooseImageModel(providers, { ...preferences, selectedImageModelId: "m1" })
       ?.model.id,

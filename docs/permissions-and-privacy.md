@@ -109,7 +109,7 @@ The translate button's script (`content-scripts/page-translate-button.js`) is re
 
 ### Video subtitles
 
-Settings → On pages → Translate → "Translate video subtitles" (off by default) translates the subtitles of every video that has them, on every site, with the same engine and cache as page translation. While it is off, nothing starts on its own: "Translate subtitles" in a video's right-click menu starts or stops one video's subtitles, and "Translate this page" also starts them for the page's videos; the subtitle script (`content-scripts/video-subtitles.js`) is injected into the video's frame only then.
+Settings → On pages → Translate → "Translate video subtitles automatically" (off by default) translates the subtitles of every video that has them, on every site, with the same engine and cache as page translation. While it is off, nothing starts on its own: "Translate subtitles" in a video's right-click menu starts or stops one video's subtitles, and "Translate this page" also starts them for the page's videos; the subtitle script (`content-scripts/video-subtitles.js`) is injected into the video's frame only then.
 
 While the switch is on, two scripts are registered on http(s) pages, in every frame (including frames from other sites, and frames without their own origin such as `about:blank`, where the browser supports it), to run before the page's own scripts (`document_start`), so the first caption file a player loads is seen:
 

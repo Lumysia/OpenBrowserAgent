@@ -456,9 +456,9 @@ export const frFR: LocaleMessages = {
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
-    enableImageGeneration: "Activer la génération d’images",
-    enableImageGenerationDescription:
-      "Met l’outil de génération d’images à la disposition des agents.",
+    imageModelDescription:
+      "Choisissez un modèle pour que l’agent puisse créer et modifier des images.",
+    imageModelOff: "Désactivée",
     providerConnection: "Connexion",
     providerConnectionHint: "Définissez le nom et la clé API.",
     providerName: "Nom",

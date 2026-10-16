@@ -455,9 +455,9 @@ export const deDE: LocaleMessages = {
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
-    enableImageGeneration: "Bildgenerierung aktivieren",
-    enableImageGenerationDescription:
-      "Stellt Agenten das Tool zur Bildgenerierung bereit.",
+    imageModelDescription:
+      "Wählen Sie ein Modell, damit der Agent Bilder erstellen und bearbeiten kann.",
+    imageModelOff: "Aus",
     providerConnection: "Verbindung",
     providerConnectionHint: "Legen Sie Namen und API-Schlüssel fest.",
     providerName: "Name",

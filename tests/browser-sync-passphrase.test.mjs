@@ -256,7 +256,12 @@ test(
         await clickElement(setup, "button", { text: t.setup.unlock });
         await atStep(setup, t.setup.downloadTitle, 30000);
         await arrived(setup);
-        assert.deepEqual(await primaryButtons(setup), [t.setup.next]);
+        // Next is enabled once the download has finished, which can be
+        // just after the list of what arrived shows.
+        await poll(
+          async () => (await primaryButtons(setup)).join("|") === t.setup.next,
+          30000,
+        );
         await poll(async () => (await storedKey(setup)) === API_KEY, 30000);
         // Back shows the passphrase step as done, without connecting again.
         await clickElement(setup, "button", { text: t.setup.back });

@@ -124,9 +124,9 @@ export const pageTranslateEnUS = {
       "Translating the captions on screen as they show. To translate ahead, turn the player's captions off and on again.",
     noVideo: "No video to translate subtitles for here.",
     // Settings: subtitles start by themselves on every video.
-    setting: "Translate video subtitles",
+    setting: "Translate video subtitles automatically",
     settingDescription:
-      'Videos with subtitles show each line with its translation under it by themselves, on every site. "Translate subtitles" in a video\'s right-click menu turns them off or on for that video. When this is off, the menu and "Translate this page" still translate them.',
+      'Videos with subtitles show each line with its translation under it, on every site. "Translate subtitles" in a video\'s right-click menu turns them off or on for that video. When this is off, the menu and "Translate this page" still translate them.',
   },
 };
 

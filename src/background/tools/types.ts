@@ -5,6 +5,7 @@ import type {
   ChatSource,
   McpServerConfig,
   Preferences,
+  ProviderState,
   Skill,
   UploadedAttachment,
 } from "../../shared/types";
@@ -35,6 +36,7 @@ export type RunContext = {
   attachments: UploadedAttachment[];
   mcpServers: McpServerConfig[];
   preferences: Preferences;
+  providers: ProviderState;
   session: StreamSession;
   // Sub-agent depth: a sub-agent cannot start another one.
   depth: number;
@@ -62,7 +64,7 @@ export type RunContext = {
 // listed without a running chat.
 export type ToolSetup = Pick<
   RunContext,
-  "agent" | "mcpServers" | "preferences" | "depth" | "workspace"
+  "agent" | "mcpServers" | "preferences" | "providers" | "depth" | "workspace"
 >;
 
 // The chat a run's tabs and downloads belong to: a sub-agent's are its

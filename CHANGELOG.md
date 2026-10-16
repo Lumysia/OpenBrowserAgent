@@ -4,6 +4,12 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The side panel's message box is now frosted glass: the panel's colours show through it softly. With "Reduce transparency" turned on in your system, it stays solid.
+- The glow around the side panel's message box now fades in and out when you click into it or leave it, instead of switching on and off at once.
+- The selected option in button groups (such as Auto, Manual and Off) no longer looks like it has a double border, including in right-to-left languages.
+- Settings → General starts with Language, followed by Translate into.
+- Settings: the "Enable image generation" switch is gone. Choose a model in the Images row of the Models table to let the agent create images, or "Off" to turn it off. Your current setting carries over: if image generation was on without a model, your chat model is now chosen there.
+- Settings: the video subtitles switch is now called "Translate video subtitles automatically", since you can still translate any video from its right-click menu while it is off.
 - Chat history fills the side panel again instead of a narrow centred column.
 
 ## 0.2.0-beta.16 - 2026-10-16
