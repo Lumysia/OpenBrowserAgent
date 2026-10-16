@@ -98,5 +98,6 @@ export const syncEsES: SyncMessages = {
   whatSyncs: "Qué se sincroniza",
   copyCode: "Copiar código de sincronización para otro dispositivo",
   codeCopied: "Código de sincronización copiado",
+  codeTitle: "Código de sincronización",
   pasteCode: "Pegar el código de sincronización de otro dispositivo",
 };

@@ -83,5 +83,6 @@ export const syncZhTW: SyncMessages = {
   whatSyncs: "同步的內容",
   copyCode: "複製同步碼以用於另一台裝置",
   codeCopied: "已複製同步碼",
+  codeTitle: "同步碼",
   pasteCode: "貼上另一台裝置的同步碼",
 };

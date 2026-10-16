@@ -1,12 +1,6 @@
+import { SettingsPageHeader, SettingsSection } from "../../src/ui/components";
 import {
-  Button,
-  SettingsPageHeader,
-  SettingsSection,
-} from "../../src/ui/components";
-import {
-  Check,
   Cloud,
-  Copy,
   FileText,
   KeyRound,
   MessagesSquare,
@@ -14,17 +8,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { storage } from "../../src/shared/storage";
-import {
-  SYNC_GROUPS,
-  type SyncGroup,
-  type SyncGroupSettings,
-} from "../../src/shared/storage-keys";
-import { SYNC_BACKEND_TYPES } from "../../src/shared/sync-backends";
-import { createSyncConfigCode } from "../../src/shared/sync-config-code";
-import type { SyncBackendConfig } from "../../src/shared/types";
+import { SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage-keys";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { useTransient } from "../../src/ui/use-transient";
 import { SyncBackendChoice } from "./sync-backend-choice";
+import { SyncCodeSection } from "./sync-code-section";
 import { SyncDataList, type SyncDataToggle } from "./sync-data-list";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
@@ -65,6 +52,24 @@ export function SyncPage() {
       icon: <Settings size={18} />,
     },
     {
+      key: SYNC_GROUPS.chats,
+      title: t.sync.groupChats,
+      description: t.sync.groupChatsDescription,
+      icon: <MessagesSquare size={18} />,
+      value: syncGroups[SYNC_GROUPS.chats],
+      needsLargeContent: true,
+      onChange: (value) => updateGroup(SYNC_GROUPS.chats, value),
+    },
+    {
+      key: SYNC_GROUPS.files,
+      title: t.sync.groupFiles,
+      description: t.sync.groupFilesDescription,
+      icon: <FileText size={18} />,
+      value: syncGroups[SYNC_GROUPS.files],
+      needsLargeContent: true,
+      onChange: (value) => updateGroup(SYNC_GROUPS.files, value),
+    },
+    {
       key: SYNC_GROUPS.keys,
       title: t.sync.groupKeys,
       description: t.sync.groupKeysDescription,
@@ -85,24 +90,6 @@ export function SyncPage() {
         />
       ),
     },
-    {
-      key: SYNC_GROUPS.chats,
-      title: t.sync.groupChats,
-      description: t.sync.groupChatsDescription,
-      icon: <MessagesSquare size={18} />,
-      value: syncGroups[SYNC_GROUPS.chats],
-      needsLargeContent: true,
-      onChange: (value) => updateGroup(SYNC_GROUPS.chats, value),
-    },
-    {
-      key: SYNC_GROUPS.files,
-      title: t.sync.groupFiles,
-      description: t.sync.groupFilesDescription,
-      icon: <FileText size={18} />,
-      value: syncGroups[SYNC_GROUPS.files],
-      needsLargeContent: true,
-      onChange: (value) => updateGroup(SYNC_GROUPS.files, value),
-    },
   ];
 
   return (
@@ -111,15 +98,6 @@ export function SyncPage() {
         icon={<Cloud />}
         title={t.options.sync}
         description={t.options.syncSettingsDescription}
-        actions={
-          // Another device joins browser account sync by choosing it there.
-          activeBackend?.type === SYNC_BACKEND_TYPES.webDav && (
-            <CopySyncCodeButton
-              backend={activeBackend}
-              syncGroups={syncGroups}
-            />
-          )
-        }
       />
       {keysLocked && <SyncUnlockCard />}
       <SyncBackendChoice
@@ -128,37 +106,12 @@ export function SyncPage() {
         onActiveBackendChange={setActiveSyncBackendId}
         onBackendsChange={setSyncBackends}
       />
+      <SyncStatusCard />
       {activeBackend && (
         <SyncDataList backendType={activeBackend.type} toggles={dataToggles} />
       )}
-      <SyncStatusCard />
+      <SyncCodeSection activeBackend={activeBackend} syncGroups={syncGroups} />
     </div>
-  );
-}
-
-// The active backend and what syncs, as a code another device pastes.
-function CopySyncCodeButton({
-  backend,
-  syncGroups,
-}: {
-  backend: SyncBackendConfig;
-  syncGroups: SyncGroupSettings;
-}) {
-  const t = useMessages();
-  const [copied, showCopied] = useTransient<true>();
-  return (
-    <Button
-      variant="outline"
-      onClick={() =>
-        navigator.clipboard
-          .writeText(createSyncConfigCode({ backend, syncGroups }))
-          .then(() => showCopied(true))
-          .catch(console.warn)
-      }
-    >
-      {copied ? <Check size={15} /> : <Copy size={15} />}
-      {copied ? t.sync.codeCopied : t.sync.copyCode}
-    </Button>
   );
 }
 
