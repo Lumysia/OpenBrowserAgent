@@ -88,3 +88,47 @@ test(
     }
   },
 );
+
+test(
+  "the composer is frosted glass, solid with reduced transparency",
+  { timeout: BROWSER_TEST_TIMEOUT },
+  async () => {
+    const session = await composerFixture();
+    try {
+      await session.configure();
+      const { page } = session;
+      await poll(() =>
+        page.call(() => !!document.querySelector(".composer-box textarea")),
+      );
+      const look = () =>
+        page.call(() => {
+          const style = getComputedStyle(
+            document.querySelector(".composer-box"),
+          );
+          const probe = document.createElement("i");
+          probe.style.color = "var(--field)";
+          document.body.append(probe);
+          const field = getComputedStyle(probe).color;
+          probe.remove();
+          return {
+            backdrop: style.backdropFilter,
+            solid: style.backgroundColor === field,
+          };
+        });
+      const glass = await look();
+      assert.match(glass.backdrop, /blur\(/);
+      assert.equal(glass.solid, false);
+      await page.send("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-reduced-transparency", value: "reduce" }],
+      });
+      // The background fades to the solid field like any colour change.
+      const reduced = await poll(async () => {
+        const value = await look();
+        return value.solid && value;
+      });
+      assert.equal(reduced.backdrop, "none");
+    } finally {
+      await session.close();
+    }
+  },
+);

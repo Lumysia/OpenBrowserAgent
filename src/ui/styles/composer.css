@@ -12,7 +12,8 @@
   display: grid;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
   border-radius: var(--radius);
-  background: var(--field);
+  background: var(--glass-field);
+  backdrop-filter: var(--glass-backdrop);
   /* The glow is in the list, transparent, also at rest: box-shadow lists
      only animate when both have the same shadows in the same order. */
   box-shadow:
@@ -25,6 +26,19 @@
   box-shadow:
     0 0 0 3px var(--accent-shadow),
     var(--elevation-2);
+}
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .composer-box {
+    background: var(--field);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .composer-box {
+    background: var(--field);
+    backdrop-filter: none;
+  }
 }
 .composer textarea {
   min-height: 104px;

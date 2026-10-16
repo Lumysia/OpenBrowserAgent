@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The side panel's message box is now frosted glass: the panel's colours show through it softly. With "Reduce transparency" turned on in your system, it stays solid.
 - The glow around the side panel's message box now fades in and out when you click into it or leave it, instead of switching on and off at once.
 - The selected option in button groups (such as Auto, Manual and Off) no longer looks like it has a double border, including in right-to-left languages.
 - Settings → General starts with Language, followed by Translate into.

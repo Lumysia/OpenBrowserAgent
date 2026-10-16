@@ -62,6 +62,10 @@
   --glow: 0 8px 18px -4px var(--accent-shadow);
   --glow-strong: 0 10px 24px -4px var(--accent-shadow);
   --inner-highlight: inset 0 1px 0 var(--highlight);
+  /* Frosted glass: a field that lets what scrolls behind it show through,
+     blurred past reading. */
+  --glass-field: color-mix(in oklab, var(--field) 72%, transparent);
+  --glass-backdrop: blur(16px) saturate(1.4);
 
   --duration-instant: 120ms;
   --duration-fast: 160ms;
