@@ -1,31 +1,31 @@
 import { getBrowserApi } from "../shared/browser-api";
 import { SIDE_PANEL_COMMAND } from "../shared/commands";
 import { openSetup } from "../shared/setup-progress";
-import { openOrFocusUrl } from "../shared/tab-navigation";
+import { openSidePanelIn } from "../shared/side-panel";
 import { knownSetupFinished, setupFinished } from "./setup-gate";
 
-const SIDE_PANEL_PAGE = "/sidepanel.html";
-
-type BrowserWithSidebar = typeof chrome & {
-  sidebarAction?: {
-    open?: () => Promise<void>;
-    toggle?: () => Promise<void>;
-  };
+type ActionWithPopup = {
+  openPopup?: (options?: { windowId?: number }) => Promise<void>;
 };
 
 // Every way into the side panel goes through here: until setup is finished
 // (setup-gate.ts) they open the guided setup instead.
 
-// The toolbar button and its shortcut. Chromium opens the side panel itself
-// once setup is finished (openPanelOnActionClick), so a click comes here
-// before that; Firefox toggles its sidebar; elsewhere the panel page opens
-// as a tab.
+// A toolbar button click (or its shortcut) that came to the extension. Once
+// setup is finished the button opens the toolbar menu by itself (its popup,
+// set in setup-gate.ts), so a click comes here before that, or in a worker
+// that just started and hasn't set the popup yet.
 export async function openActionSurface(tab?: chrome.tabs.Tab) {
-  const api = getBrowserApi() as BrowserWithSidebar;
-  // Known finished: open in the click's gesture, before any await.
-  if (knownSetupFinished()) return openPanel(api, tab?.windowId, true);
+  // Known finished, yet no popup: the panel, in the click's gesture.
+  if (knownSetupFinished())
+    return openSidePanelIn(tab?.windowId, { toggle: true });
   if (!(await setupFinished())) return openSetup();
-  return openPanel(api, tab?.windowId, true);
+  // The popup is set now; Chromium opens it without the gesture.
+  const api = getBrowserApi();
+  const action = (api.action ?? api.browserAction) as
+    ActionWithPopup | undefined;
+  if (action?.openPopup) return action.openPopup({ windowId: tab?.windowId });
+  return openSidePanelIn(tab?.windowId, { toggle: true });
 }
 
 // Opens the side panel for page UI, or setup while it is known to be
@@ -38,8 +38,8 @@ export function openSidePanel(windowId: number | undefined) {
     openSetup().catch(console.warn);
     return false;
   }
-  openPanel(getBrowserApi() as BrowserWithSidebar, windowId, false)?.catch(
-    (error: unknown) => console.warn("Failed to open the side panel", error),
+  openSidePanelIn(windowId).catch((error: unknown) =>
+    console.warn("Failed to open the side panel", error),
   );
   return true;
 }
@@ -48,21 +48,4 @@ export function openSidePanel(windowId: number | undefined) {
 // press allows opening the panel only until the first await.
 export function handleSidePanelCommand(command: string, tab?: chrome.tabs.Tab) {
   if (command === SIDE_PANEL_COMMAND) openSidePanel(tab?.windowId);
-}
-
-// `toggle`: the toolbar button closes Firefox's sidebar again.
-function openPanel(
-  api: BrowserWithSidebar,
-  windowId: number | undefined,
-  toggle: boolean,
-) {
-  if (api.sidePanel?.open && windowId !== undefined)
-    return api.sidePanel.open({ windowId });
-  if (toggle && api.sidebarAction?.toggle) return api.sidebarAction.toggle();
-  if (api.sidebarAction?.open) return api.sidebarAction.open();
-  return focusSidePanelTab();
-}
-
-function focusSidePanelTab() {
-  return openOrFocusUrl(getBrowserApi().runtime.getURL(SIDE_PANEL_PAGE));
 }
