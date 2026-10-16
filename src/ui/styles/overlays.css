@@ -381,6 +381,22 @@
   flex-shrink: 0;
   transition: rotate var(--duration-base) var(--ease-out);
 }
+/* A chevron alone in its own button reads as one: ringed like an outline
+   button. */
+.accordion-chevron-trigger .ui-accordion-chevron {
+  box-sizing: content-box;
+  padding: 5px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  transition:
+    rotate var(--duration-base) var(--ease-out),
+    var(--transition-colors);
+}
+.accordion-chevron-trigger:hover .ui-accordion-chevron {
+  border-color: color-mix(in oklab, var(--accent-strong) 40%, var(--border));
+  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+}
 .ui-accordion-trigger[data-state="open"] .ui-accordion-chevron {
   rotate: 180deg;
 }

@@ -38,7 +38,7 @@
 }
 .ui-button-secondary,
 .ui-button-outline {
-  border-color: var(--border);
+  border-color: var(--border-control);
   background: var(--card);
   color: var(--foreground);
 }
@@ -298,10 +298,10 @@
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--secondary);
-  color: var(--muted-foreground);
+  color: var(--muted-control);
   font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1;
@@ -309,7 +309,7 @@
   transition: var(--transition-interactive);
 }
 .ui-badge:hover {
-  border-color: color-mix(in oklab, var(--accent-strong) 12%, transparent);
+  border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));
   background: color-mix(in oklab, var(--secondary) 78%, var(--accent-softer));
 }
 .ui-badge.status-error-badge {
