@@ -4,6 +4,9 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Buttons, cards, menus, fields and switches now clearly react when you point at them, in the guided setup and everywhere else, in light and dark mode. Choice cards in setup light up and lift slightly, the chosen one included, and the chosen card stays clearly marked while you point at another; with "Reduce motion" on they don't move.
+- Guided setup no longer leaves an empty AI provider behind: if you pick a provider type and then go back, skip the step, or set up through sync instead, the empty provider is removed. A provider you filled in stays. Empty providers left by earlier versions can be deleted in Settings → AI providers & models.
+
 ## 0.2.0-beta.17 - 2026-10-16
 
 - The side panel's message box is now frosted glass: the panel's colours show through it softly. With "Reduce transparency" turned on in your system, it stays solid.

@@ -46,7 +46,8 @@ export function isSetupPath(value: unknown): value is SetupPath {
 }
 
 // Where setup stands: its step, the path chosen, the AI provider it added
-// (edited again when setup comes back to that step), and the settings tab
+// (edited again when setup comes back to that step, while it holds it: see
+// setupHoldsProvider), and the settings tab
 // that ran it again, with the settings page it showed, where setup goes
 // back when it is done.
 export type SetupProgress = {
@@ -179,6 +180,18 @@ export function chooseSetupPath(
 // user, at the AI provider step. Whatever sync connected stays.
 export function setupAsNewUser(): Pick<SetupProgress, "step" | "path"> {
   return { path: "new", step: NEW_USER_SETUP_STEP };
+}
+
+// Whether setup still holds the AI provider it added: at that step, or past
+// it on the new user's path (Back comes to it again). Anywhere else (Back
+// to the question, the returning path, setup run again) it lets go.
+export function setupHoldsProvider({
+  step,
+  path,
+}: Pick<SetupProgress, "step" | "path">) {
+  const steps = pathSteps(path);
+  const provider = steps.indexOf("provider");
+  return provider >= 0 && steps.indexOf(step) >= provider;
 }
 
 // The last step says chat needs an AI provider while there is no model.

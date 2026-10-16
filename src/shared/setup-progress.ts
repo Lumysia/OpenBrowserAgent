@@ -1,11 +1,13 @@
 import { getBrowserApi } from "./browser-api";
 import { OPTIONS_HASH } from "./config";
+import { providerUntouched } from "./provider-instances";
 import { sessionRecord } from "./session-record";
 import {
   FIRST_SETUP_STEP,
   type SetupProgress,
   type SetupReturn,
 } from "./setup-steps";
+import { storage } from "./storage";
 import { STORAGE_KEYS } from "./storage-keys";
 import { focusTab, openOrFocusOptions } from "./tab-navigation";
 
@@ -15,6 +17,19 @@ export const setupProgress = sessionRecord<SetupProgress | undefined>(
   STORAGE_KEYS.setupProgress,
   () => undefined,
 );
+
+// Setup moved on without the AI provider it added: deleted if the user
+// filled in nothing, as stored then (a form saving its last edit as it
+// closes goes first). Resolves whether it is gone.
+export async function releaseSetupProvider(providerId: string) {
+  const next = await storage.provider.update((providers) => {
+    const provider = providers[providerId];
+    if (!provider || !providerUntouched(providerId, provider)) return providers;
+    const { [providerId]: _removed, ...rest } = providers;
+    return rest;
+  });
+  return !next[providerId];
+}
 
 // Opens setup where it was left; a setup page already open goes on as it is.
 export function openSetup() {

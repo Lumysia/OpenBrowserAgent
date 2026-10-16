@@ -370,7 +370,7 @@
   background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
 }
 .tool-question-card .tool-question-option[data-state="on"] {
-  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
+  background: var(--selected-surface);
 }
 .tool-question-option-text {
   min-width: 0;

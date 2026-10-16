@@ -40,7 +40,7 @@
 }
 .ui-toggle-group-item[data-state="on"] {
   z-index: var(--z-raised);
-  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
+  background: var(--selected-surface);
   color: var(--accent-text);
 }
 .ui-toggle-group-sm {

@@ -342,8 +342,8 @@
     var(--transition-colors);
 }
 .accordion-chevron-trigger:hover .ui-accordion-chevron {
-  border-color: color-mix(in oklab, var(--accent-strong) 40%, var(--border));
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
 }
 .ui-accordion-trigger[data-state="open"] .ui-accordion-chevron {
   rotate: 180deg;

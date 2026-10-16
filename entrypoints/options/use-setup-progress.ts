@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { setupProgress } from "../../src/shared/setup-progress";
+import {
+  releaseSetupProvider,
+  setupProgress,
+} from "../../src/shared/setup-progress";
 import {
   resumeSetupProgress,
+  setupHoldsProvider,
   type SetupProgress,
   type SetupStep,
 } from "../../src/shared/setup-steps";
@@ -36,6 +40,25 @@ export function useSetupProgress() {
     setProgress(next);
     setupProgress.set(next).catch(console.warn);
   }
+
+  // Off the AI provider step, the provider setup added there goes if the
+  // user filled in nothing, and setup forgets it once it no longer holds
+  // it (see setupHoldsProvider).
+  const step = progress?.step;
+  const path = progress?.path;
+  const providerId = progress?.providerId;
+  useEffect(() => {
+    if (!step || !providerId || step === "provider") return;
+    void releaseSetupProvider(providerId)
+      .then((gone) => {
+        // As setup stands once the provider is checked.
+        const now = latest.current;
+        if (now?.providerId !== providerId) return;
+        if (gone || (now.step !== "provider" && !setupHoldsProvider(now)))
+          save({ providerId: undefined });
+      })
+      .catch(console.warn);
+  }, [step, path, providerId]);
 
   return {
     progress,
