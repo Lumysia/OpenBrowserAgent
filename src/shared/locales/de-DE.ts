@@ -458,7 +458,6 @@ export const deDE: LocaleMessages = {
     enableImageGeneration: "Bildgenerierung aktivieren",
     enableImageGenerationDescription:
       "Stellt Agenten das Tool zur Bildgenerierung bereit.",
-    imageGenerationSize: "Bildgröße",
     providerConnection: "Verbindung",
     providerConnectionHint: "Legen Sie Namen und API-Schlüssel fest.",
     providerName: "Name",

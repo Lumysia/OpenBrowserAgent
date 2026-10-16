@@ -34,7 +34,7 @@ test("old settings routes lead to where their page is now", () => {
   assert.equal(resolveOptionsRoute(OPTIONS_HASH.mcp), OPTIONS_ROUTE.mcp);
 });
 
-test("six settings pages, and every tab inside one of them", () => {
+test("six settings pages, and every sub-page inside one of them", () => {
   const pages = Object.entries(OPTIONS_PAGE_ROUTE).filter(
     ([id]) => id !== "welcome",
   );

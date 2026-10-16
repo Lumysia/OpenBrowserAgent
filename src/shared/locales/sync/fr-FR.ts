@@ -99,5 +99,6 @@ export const syncFrFR: SyncMessages = {
   whatSyncs: "Ce qui est synchronisé",
   copyCode: "Copier le code de synchronisation pour un autre appareil",
   codeCopied: "Code de synchronisation copié",
+  codeTitle: "Code de synchronisation",
   pasteCode: "Coller le code de synchronisation d’un autre appareil",
 };

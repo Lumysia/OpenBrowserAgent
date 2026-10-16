@@ -397,7 +397,6 @@ export const ko: LocaleMessages = {
     enableImageGeneration: "이미지 생성 활성화",
     enableImageGenerationDescription:
       "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
-    imageGenerationSize: "이미지 크기",
     providerConnection: "연결 정보",
     providerConnectionHint: "이름과 API 키를 설정하세요.",
     providerName: "이름",

@@ -4,6 +4,10 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Tooltips close when the pointer moves quickly from the side panel or settings into the web page.
+
+- Image generation: the AI picks the image size for each request; the Image size setting is gone.
+- Settings: the sidebar lists every page, with Agents, Skills, Translate, Smart bar, Right-click menu, MCP servers, Local execution bridges and Troubleshooting shown under their group instead of in tabs at the top of the page. Each page now starts with what you change most often and ends with what you set once: Translate starts with the translation engine and display, Smart bar's site lists and Sync's copy/paste code (now under "Sync code") come last. Outline buttons, badges and expand arrows are easier to see.
 - After pasting a sync code on the Sync page, the form now just says it connected instead of showing a "Connect and sync" button that did nothing more.
 - The keyboard shortcuts list no longer has an on/off switch for "Translate this page or show the original". To turn that shortcut off or change it, use the browser's shortcut settings ("Change shortcuts"), as for the other shortcuts. If you had turned it off with the switch, the shortcut works again until you remove its key there.
 - The keyboard shortcuts list (setup's last page and Settings → General) names every shortcut in the extension's language, not the browser's. When opening the side panel has no shortcut, the list says how to pick one (for example Ctrl+Shift+Y).

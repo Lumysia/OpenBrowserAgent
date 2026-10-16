@@ -94,5 +94,6 @@ export const syncJaJP: SyncMessages = {
   whatSyncs: "同期する内容",
   copyCode: "別のデバイス用に同期コードをコピー",
   codeCopied: "同期コードをコピーしました",
+  codeTitle: "同期コード",
   pasteCode: "別のデバイスの同期コードを貼り付け",
 };

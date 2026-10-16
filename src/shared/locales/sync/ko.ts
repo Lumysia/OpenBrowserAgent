@@ -93,5 +93,6 @@ export const syncKo: SyncMessages = {
   whatSyncs: "동기화할 항목",
   copyCode: "다른 기기용 동기화 코드 복사",
   codeCopied: "동기화 코드를 복사했습니다",
+  codeTitle: "동기화 코드",
   pasteCode: "다른 기기의 동기화 코드 붙여넣기",
 };

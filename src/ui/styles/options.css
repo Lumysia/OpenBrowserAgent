@@ -104,6 +104,31 @@
   color: var(--accent-text);
   translate: 0 0;
 }
+/* A group whose sub-page is open: marked, lighter than the open page. */
+.nav-link.contains-active {
+  color: var(--accent-text);
+}
+.settings-nav {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A group's sub-pages, indented under its label behind a guide line. */
+.settings-nav-sub {
+  margin: var(--space-1) 0 var(--space-1) 19px;
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--border);
+}
+.settings-nav-sub .nav-link {
+  padding: 6px 10px;
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+.settings-nav-sub .nav-link.active {
+  font-weight: 600;
+}
 .settings-page-header {
   min-width: 0;
   display: grid;

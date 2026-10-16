@@ -37,13 +37,6 @@ export function McpServerFields({
         />
       </Label>
       <Label>
-        {t.options.mcpServerDescription}
-        <CommitTextarea
-          value={server.description || ""}
-          onCommit={(description) => onUpdate({ description })}
-        />
-      </Label>
-      <Label>
         {t.options.mcpServerUrl}
         <CommitInput
           value={server.url}
@@ -56,6 +49,19 @@ export function McpServerFields({
         value={server.headers}
         onChange={onHeadersChange}
       />
+      {!!server.tools?.length && (
+        <McpToolList
+          tools={server.tools}
+          onChange={(tools) => onUpdate({ tools })}
+        />
+      )}
+      <Label>
+        {t.options.mcpServerDescription}
+        <CommitTextarea
+          value={server.description || ""}
+          onCommit={(description) => onUpdate({ description })}
+        />
+      </Label>
       <SettingSwitch
         variant="field"
         title={t.options.mcpOmitOrigin}
@@ -72,12 +78,6 @@ export function McpServerFields({
         checked={server.omitOrigin}
         onChange={(omitOrigin) => onUpdate({ omitOrigin })}
       />
-      {!!server.tools?.length && (
-        <McpToolList
-          tools={server.tools}
-          onChange={(tools) => onUpdate({ tools })}
-        />
-      )}
     </>
   );
 }

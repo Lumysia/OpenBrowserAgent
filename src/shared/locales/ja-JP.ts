@@ -432,7 +432,6 @@ export const jaJP: LocaleMessages = {
     enableImageGeneration: "画像生成を有効化",
     enableImageGenerationDescription:
       "エージェントが画像生成ツールを使えるようにします。",
-    imageGenerationSize: "画像サイズ",
     providerConnection: "接続情報",
     providerConnectionHint: "名前と API キーを設定します。",
     providerName: "名前",

@@ -24,7 +24,6 @@ import { useMessages } from "../../src/ui/messages";
 import { syncBackendHint } from "../../src/ui/sync-backend-display";
 import {
   SyncJoinButton,
-  SyncJoinDisclosure,
   SyncJoinFeedback,
   useWebDavEdits,
 } from "../../src/ui/sync-join-form";
@@ -51,7 +50,8 @@ const asChoice = (id: string): Choice =>
 
 // Where this device syncs: off, the browser account, or a WebDAV server.
 // Browser account sync starts at once; WebDAV starts once its server is
-// filled in and answers. A sync code from another device sets both.
+// filled in and answers. (A sync code from another device sets both; it is
+// pasted under Sync code, further down.)
 export function SyncBackendChoice({
   activeBackendId,
   backends,
@@ -114,7 +114,6 @@ export function SyncBackendChoice({
         ) : (
           <WebDavConnect backend={webDav} />
         ))}
-      <SyncJoinDisclosure />
     </SettingsSection>
   );
 }

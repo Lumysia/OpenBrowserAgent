@@ -7,11 +7,14 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { clickElement } from "./cdp-input.mjs";
 import { launchExtension, poll } from "./chromium.mjs";
 
-// Settings in six pages: older pages' links land on their tab, tabs change
-// the address, and General starts with the translation language and lists
-// the keyboard shortcuts.
+// Settings in six pages, with each group's sub-pages listed under it in the
+// sidebar: older pages' links land on their sub-page, the sidebar opens
+// sub-pages and groups, and General lists the keyboard shortcuts.
 
 const t = enUS;
+
+const GROUPS = ".settings-nav:not(.settings-nav-sub) > li > .nav-link";
+const SUB_PAGES = ".settings-nav-sub .nav-link";
 
 const texts = (page, selector) =>
   page.call(
@@ -23,7 +26,7 @@ const texts = (page, selector) =>
   );
 
 test(
-  "settings navigation: six pages, tabs and redirects",
+  "settings navigation: six pages, sub-pages in the sidebar and redirects",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const browser = await launchExtension();
@@ -41,7 +44,7 @@ test(
         async () => (await texts(page, ".nav-link")).length > 0,
         20000,
       );
-      assert.deepEqual(await texts(page, ".nav-link"), [
+      assert.deepEqual(await texts(page, GROUPS), [
         t.options.general,
         t.settings.providersModels,
         t.settings.agentsSkills,
@@ -50,14 +53,30 @@ test(
         t.settings.advanced,
         t.common.help,
       ]);
-      // The old Smart bar page is a tab of On pages now.
-      assert.equal(await page.call(() => location.hash), OPTIONS_HASH.smartBar);
-      assert.deepEqual(await texts(page, ".nav-link.active"), [
-        t.settings.onPages,
+      // Every group's sub-pages are always listed.
+      assert.deepEqual(await texts(page, SUB_PAGES), [
+        t.options.agents,
+        t.options.skills,
+        t.settings.translate,
+        t.smartBar.settingsTitle,
+        t.settings.rightClick,
+        t.options.mcpServers,
+        t.options.localExecutionBridges,
+        t.settings.troubleshooting,
       ]);
-      assert.deepEqual(await texts(page, '[role="tab"][data-state="active"]'), [
+      // The old Smart bar page is a sub-page of On pages now: it is the
+      // current page, and its group is marked as holding it.
+      assert.equal(await page.call(() => location.hash), OPTIONS_HASH.smartBar);
+      assert.deepEqual(await texts(page, '.nav-link[aria-current="page"]'), [
         t.smartBar.settingsTitle,
       ]);
+      assert.deepEqual(await texts(page, ".nav-link.contains-active"), [
+        t.settings.onPages,
+      ]);
+      assert.equal(
+        await page.call(() => !!document.querySelector('[role="tablist"]')),
+        false,
+      );
       // Only the site list the smart bar's mode uses.
       const siteLists = () =>
         page.call(
@@ -82,7 +101,7 @@ test(
         (await siteLists()).includes(t.smartBar.blockedSites),
         false,
       );
-      await clickElement(page, '[role="tab"]', { text: t.settings.rightClick });
+      await clickElement(page, SUB_PAGES, { text: t.settings.rightClick });
       await poll(
         async () =>
           (await page.call(() => location.hash)) === OPTIONS_HASH.contextMenu,
@@ -90,6 +109,27 @@ test(
       await poll(async () =>
         (await texts(page, "h1")).includes(t.contextMenu.settingsTitle),
       );
+
+      // Skills, from the sidebar.
+      await clickElement(page, SUB_PAGES, { text: t.options.skills });
+      await poll(
+        async () =>
+          (await page.call(() => location.hash)) === OPTIONS_HASH.skills,
+      );
+      await poll(async () =>
+        (await texts(page, "h1")).includes(t.options.skills),
+      );
+      // A group's label opens its first sub-page.
+      await clickElement(page, GROUPS, { text: t.settings.advanced });
+      await poll(
+        async () => (await page.call(() => location.hash)) === OPTIONS_HASH.mcp,
+      );
+      await poll(async () =>
+        (await texts(page, "h1")).includes(t.options.mcpServers),
+      );
+      assert.deepEqual(await texts(page, '.nav-link[aria-current="page"]'), [
+        t.options.mcpServers,
+      ]);
 
       // Debug is Troubleshooting under Advanced.
       await page.call((hash) => (location.hash = hash), "#/debug");

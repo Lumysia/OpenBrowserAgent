@@ -4,7 +4,16 @@ import { Info } from "lucide-react";
 import { cn } from "../utils";
 import { usePortalContainer } from "./portal-container";
 
-const TooltipProvider = TooltipPrimitive.Provider;
+// Tooltips hold text only, so they close as soon as the pointer leaves the
+// trigger. Radix's default keeps them open while the pointer crosses to the
+// tooltip and closes them on the next pointer move in this document; a pointer
+// that leaves the side panel quickly for the web page sends no more moves
+// here, and the tooltip stayed open.
+function TooltipProvider(
+  props: React.ComponentProps<typeof TooltipPrimitive.Provider>,
+) {
+  return <TooltipPrimitive.Provider disableHoverableContent {...props} />;
+}
 const Tooltip = TooltipPrimitive.Root;
 const TooltipTrigger = TooltipPrimitive.Trigger;
 

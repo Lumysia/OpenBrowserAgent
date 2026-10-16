@@ -106,6 +106,28 @@ export function SmartBarPage() {
         )}
       </SettingsSection>
       <SettingsSection
+        icon={<ListChecks />}
+        title={s.pageActions}
+        description={s.pageActionsDescription}
+      >
+        {actionToggles(
+          SMART_BAR_PAGE_ACTIONS,
+          settings.disabledPageActions,
+          "disabledPageActions",
+        )}
+      </SettingsSection>
+      <SettingsSection
+        icon={<ListChecks />}
+        title={s.editActions}
+        description={s.editActionsDescription}
+      >
+        {actionToggles(
+          SMART_BAR_EDIT_ACTIONS,
+          settings.disabledEditActions,
+          "disabledEditActions",
+        )}
+      </SettingsSection>
+      <SettingsSection
         icon={<Globe />}
         title={s.sites}
         description={s.sitesDescription}
@@ -141,28 +163,6 @@ export function SmartBarPage() {
             labels={hostLabels}
             onChange={(blockedHosts) => update({ blockedHosts })}
           />
-        )}
-      </SettingsSection>
-      <SettingsSection
-        icon={<ListChecks />}
-        title={s.pageActions}
-        description={s.pageActionsDescription}
-      >
-        {actionToggles(
-          SMART_BAR_PAGE_ACTIONS,
-          settings.disabledPageActions,
-          "disabledPageActions",
-        )}
-      </SettingsSection>
-      <SettingsSection
-        icon={<ListChecks />}
-        title={s.editActions}
-        description={s.editActionsDescription}
-      >
-        {actionToggles(
-          SMART_BAR_EDIT_ACTIONS,
-          settings.disabledEditActions,
-          "disabledEditActions",
         )}
       </SettingsSection>
     </div>

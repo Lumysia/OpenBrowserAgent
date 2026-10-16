@@ -94,7 +94,6 @@ export function PageTranslatePage() {
         title={p.settingsTitle}
         description={p.settingsDescription}
       />
-      <PageTranslateAccess settings={settings} update={update} />
       <SettingsSection
         icon={<Cpu />}
         title={p.engine}
@@ -159,17 +158,18 @@ export function PageTranslatePage() {
           ))}
         </ToggleGroup>
       </SettingsSection>
+      <PageTranslateAccess settings={settings} update={update} />
+      <ContextMenuItemsSection
+        items={TRANSLATE_MENU_ITEMS}
+        title={t.settings.translateMenuItems}
+        description={t.settings.translateMenuItemsDescription}
+      />
       <SettingSwitchCard
         icon={<Captions size={18} />}
         title={p.subtitles.setting}
         description={p.subtitles.settingDescription}
         checked={settings.videoSubtitles}
         onChange={(videoSubtitles) => update({ videoSubtitles })}
-      />
-      <ContextMenuItemsSection
-        items={TRANSLATE_MENU_ITEMS}
-        title={t.settings.translateMenuItems}
-        description={t.settings.translateMenuItemsDescription}
       />
       <Disclosure label={t.settings.advanced}>
         <SettingSwitchCard

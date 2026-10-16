@@ -243,12 +243,6 @@ export function AgentsPage() {
                     />
                   </Label>
                   {!builtin && (
-                    <AgentIconPicker
-                      value={agent.icon}
-                      onChange={(icon) => updateAgent(agent.id, { icon })}
-                    />
-                  )}
-                  {!builtin && (
                     <>
                       <Label>
                         {t.options.agentPrompt}
@@ -274,6 +268,10 @@ export function AgentsPage() {
                           }
                         />
                       </Label>
+                      <AgentIconPicker
+                        value={agent.icon}
+                        onChange={(icon) => updateAgent(agent.id, { icon })}
+                      />
                     </>
                   )}
                   <AgentToolsEditor

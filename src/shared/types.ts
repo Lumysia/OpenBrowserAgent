@@ -45,7 +45,6 @@ export type Preferences = {
   selectedAgentId?: string;
   selectedImageModelId?: string;
   imageGenerationEnabled?: boolean;
-  imageGenerationSize?: string;
   colorScheme?: ColorScheme;
   // A theme id (see theme/themes.ts); unknown values show the default.
   accentColor?: ThemeId;
