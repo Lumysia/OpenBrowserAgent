@@ -9,7 +9,7 @@ import {
   Sparkles,
   Wrench,
 } from "lucide-react";
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
+import { DEFAULT_MAX_TOOL_STEPS, OPTIONS_HASH } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { restartSetup } from "../../src/shared/setup-progress";
 import { storage } from "../../src/shared/storage";
@@ -48,7 +48,9 @@ export function GeneralPage() {
         actions={
           <Button
             variant="outline"
-            onClick={() => restartSetup().catch(console.warn)}
+            onClick={() =>
+              restartSetup(OPTIONS_HASH.general).catch(console.warn)
+            }
           >
             <Sparkles size={16} /> {t.setup.runAgain}
           </Button>

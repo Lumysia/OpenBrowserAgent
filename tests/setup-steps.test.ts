@@ -61,6 +61,16 @@ test("setup resumes where this session left it, and starts over from anything el
     step: "language",
   });
   assert.deepEqual(resumeSetupProgress("pages"), { step: "language" });
+  // Run again from a settings tab: setup goes back there when done.
+  const returnTo = { tabId: 4, hash: "#/" };
+  assert.deepEqual(resumeSetupProgress({ step: "done", returnTo }), {
+    step: "done",
+    returnTo,
+  });
+  assert.deepEqual(
+    resumeSetupProgress({ step: "done", returnTo: { tabId: "4", hash: "/" } }),
+    { step: "done" },
+  );
 });
 
 test("setup's smart bar switch: on opens it on a selection, off turns it off", () => {

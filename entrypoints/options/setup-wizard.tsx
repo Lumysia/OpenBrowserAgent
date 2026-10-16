@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
+import { leaveSetup } from "../../src/shared/setup-progress";
 import { storage } from "../../src/shared/storage";
 import {
   nextSetupStep,
@@ -196,7 +197,13 @@ export function SetupWizard() {
             </Button>
           )}
           {step === "done" && openSidePanel && (
-            <Button onClick={openSidePanel}>
+            <Button
+              onClick={() =>
+                openSidePanel()
+                  .then(() => leaveSetup(progress.returnTo))
+                  .catch(console.warn)
+              }
+            >
               <PanelRight size={16} /> {s.openPanel}
             </Button>
           )}

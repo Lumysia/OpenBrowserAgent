@@ -11,17 +11,41 @@ export function isSetupStep(value: unknown): value is SetupStep {
   return SETUP_STEPS.includes(value as SetupStep);
 }
 
-// Where setup stands: its step, and the AI provider it added (edited again
-// when setup comes back to that step).
-export type SetupProgress = { step: SetupStep; providerId?: string };
+// Where setup stands: its step, the AI provider it added (edited again
+// when setup comes back to that step), and the settings tab that ran it
+// again, with the settings page it showed, where setup goes back when it
+// is done.
+export type SetupProgress = {
+  step: SetupStep;
+  providerId?: string;
+  returnTo?: SetupReturn;
+};
+
+export type SetupReturn = { tabId: number; hash: string };
+
+function setupReturn(value: unknown): SetupReturn | undefined {
+  const { tabId, hash } = (value ?? {}) as Partial<SetupReturn>;
+  return Number.isInteger(tabId) &&
+    typeof hash === "string" &&
+    hash.startsWith("#")
+    ? { tabId: tabId!, hash }
+    : undefined;
+}
 
 // Where setup opens: as stored for this session, else at the first step.
 export function resumeSetupProgress(stored: unknown): SetupProgress {
   const value = (stored ?? {}) as Partial<SetupProgress>;
   const step = isSetupStep(value.step) ? value.step : FIRST_SETUP_STEP;
-  return typeof value.providerId === "string" && value.providerId
-    ? { step, providerId: value.providerId }
-    : { step };
+  const providerId =
+    typeof value.providerId === "string" && value.providerId
+      ? value.providerId
+      : undefined;
+  const returnTo = setupReturn(value.returnTo);
+  return {
+    step,
+    ...(providerId && { providerId }),
+    ...(returnTo && { returnTo }),
+  };
 }
 
 export function setupStepIndex(step: SetupStep) {

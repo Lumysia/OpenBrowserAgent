@@ -241,12 +241,15 @@ test(
         ),
       );
       assert.equal(await forward(setup), "");
+      // The side panel opens and the setup tab closes.
       await clickElement(setup, "button", { text: t.setup.openPanel });
-      await poll(async () =>
-        (await browser.targets()).some(
-          (target) => target.url === extensionUrl("sidepanel.html"),
-        ),
-      );
+      await poll(async () => {
+        const urls = (await browser.targets()).map((target) => target.url);
+        return (
+          urls.includes(extensionUrl("sidepanel.html")) &&
+          !urls.includes(extensionUrl(`options.html${OPTIONS_HASH.welcome}`))
+        );
+      });
     } finally {
       await session.close();
     }
@@ -291,15 +294,16 @@ test(
       // Closed, setup opens again where it was from the toolbar button and
       // from "Ask" in the right-click menu, and the side panel doesn't.
       const page = await browser.open("about:blank");
-      const closeSetup = async () => {
+      const closeTab = async (url) => {
         const target = (await browser.targets()).find(
-          (item) => item.url === setupUrl,
+          (item) => item.url === url,
         );
         await browser.browser.send("Target.closeTarget", {
           targetId: target.id,
         });
-        await poll(async () => !(await isOpen(setupUrl)));
+        await poll(async () => !(await isOpen(url)));
       };
+      const closeSetup = () => closeTab(setupUrl);
       const tab = () =>
         worker.call(async () => (await chrome.tabs.query({ active: true }))[0]);
       await closeSetup();
@@ -368,6 +372,27 @@ test(
           .length,
         1,
       );
+
+      // Done from there: the side panel opens, the setup tab closes and
+      // the settings tab that ran it is in front again.
+      await closeTab(panelUrl);
+      for (const title of [t.setup.providerTitle, t.setup.pagesTitle]) {
+        await clickForward(setup);
+        await atStep(setup, title);
+      }
+      await clickForward(setup);
+      await atStep(setup, t.setup.doneTitle);
+      await clickElement(setup, "button", { text: t.setup.openPanel });
+      await poll(
+        async () => (await isOpen(panelUrl)) && !(await isOpen(setupUrl)),
+      );
+      const front = await worker.call(
+        async () =>
+          (
+            await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+          )[0]?.url,
+      );
+      assert.equal(front, extensionUrl("options.html"));
     } finally {
       await session.close();
     }
