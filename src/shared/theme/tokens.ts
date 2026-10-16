@@ -50,7 +50,6 @@ export const TOKEN_NAMES = [
   "warning",
   "shadow-contact",
   "shadow-ambient",
-  "edge",
   "code-keyword",
   "code-string",
   "code-number",
@@ -252,7 +251,6 @@ export function themeTokens(
     "shadow-ambient": dark
       ? "rgb(0 0 0 / 42%)"
       : alpha(mix(strong, "#161512", 0.12), 0.1),
-    edge: dark ? "rgb(255 255 255 / 7%)" : "rgb(255 255 255 / 0%)",
     "code-keyword": ensureAll(dark ? "#c7a8ff" : "#8b5fbf", pageBackgrounds),
     "code-string": ensureAll(dark ? "#e5c07b" : "#80601a", pageBackgrounds),
     "code-number": ensureAll(dark ? "#ef9f76" : "#9a5a36", pageBackgrounds),

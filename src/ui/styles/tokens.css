@@ -34,21 +34,19 @@
   --radius-xl: 18px;
   --radius-pill: 999px;
 
-  /* Elevation: a contact shadow, an ambient shadow, and in dark a faint
-     light inner ring (--edge) so edges read on dark pages. */
+  /* Elevation: a contact shadow and an ambient shadow. Elevated surfaces
+     draw their own border; a ring inside it would read as a second line. */
   --elevation-1:
     0 1px 2px var(--shadow-contact),
-    0 2px 8px -2px color-mix(in oklab, var(--shadow-ambient) 70%, transparent),
-    inset 0 0 0 1px var(--edge);
+    0 2px 8px -2px color-mix(in oklab, var(--shadow-ambient) 70%, transparent);
   --elevation-2:
-    0 1px 2px var(--shadow-contact), 0 8px 24px -6px var(--shadow-ambient),
-    inset 0 0 0 1px var(--edge);
+    0 1px 2px var(--shadow-contact), 0 8px 24px -6px var(--shadow-ambient);
   --elevation-3:
     0 2px 4px var(--shadow-contact), 0 14px 34px -8px var(--shadow-ambient),
-    0 4px 12px -4px var(--shadow-ambient), inset 0 0 0 1px var(--edge);
+    0 4px 12px -4px var(--shadow-ambient);
   --elevation-4:
     0 3px 8px var(--shadow-contact), 0 22px 52px -12px var(--shadow-ambient),
-    0 8px 20px -6px var(--shadow-ambient), inset 0 0 0 1px var(--edge);
+    0 8px 20px -6px var(--shadow-ambient);
   /* Edges and quiet text of controls that must read as controls (outline
      buttons, badges, chevrons): a step closer to the text color than
      --border and --muted-foreground, in either scheme. */

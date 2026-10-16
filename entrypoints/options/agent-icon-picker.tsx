@@ -20,6 +20,7 @@ export function AgentIconPicker({
       {t.options.agentIcon}
       <ToggleGroup
         type="single"
+        layout="grid"
         className="agent-icon-picker"
         value={value || DEFAULT_AGENT_ICON_ID}
         onValueChange={(nextValue) =>

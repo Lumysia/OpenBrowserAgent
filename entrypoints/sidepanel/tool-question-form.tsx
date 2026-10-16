@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import React from "react";
 import type {
   ChatPart,
@@ -104,6 +105,7 @@ export function QuestionToolForm({
               {question.multiple ? (
                 <ToggleGroup
                   type="multiple"
+                  layout="grid"
                   value={selectedValues}
                   onValueChange={(value) =>
                     setSelected((items) => ({ ...items, [index]: value }))
@@ -116,6 +118,7 @@ export function QuestionToolForm({
               ) : (
                 <ToggleGroup
                   type="single"
+                  layout="grid"
                   value={selectedValues[0] || ""}
                   onValueChange={(value) =>
                     setSelected((items) => ({
@@ -182,8 +185,11 @@ function QuestionOptionItem({
 }) {
   return (
     <ToggleGroupItem value={option.label} className="tool-question-option">
-      <span>{option.label}</span>
-      {option.description && <small>{option.description}</small>}
+      <span className="tool-question-option-text">
+        <span className="tool-question-option-label">{option.label}</span>
+        {option.description && <small>{option.description}</small>}
+      </span>
+      <Check className="tool-question-option-check" size={16} aria-hidden />
     </ToggleGroupItem>
   );
 }
