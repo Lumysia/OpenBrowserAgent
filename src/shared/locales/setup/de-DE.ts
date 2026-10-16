@@ -116,5 +116,6 @@ export const setupDeDE: SetupMessages = {
   keysLocked:
     "Ihre API-Schlüssel sind synchronisiert, aber gesperrt. Geben Sie Ihre Sync-Passphrase ein.",
   unlock: "Entsperren",
+  unlocking: "Wird entsperrt…",
   skip: "Später",
 };

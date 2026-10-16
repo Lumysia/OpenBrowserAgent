@@ -6,6 +6,7 @@ import type { WebDavSyncBackendConfig } from "../shared/types";
 import {
   Button,
   CardDescription,
+  type ButtonProps,
   Disclosure,
   Feedback,
   Label,
@@ -66,11 +67,13 @@ export function SyncJoinButton({
   join,
   ready,
   onClick,
+  variant,
   children,
 }: {
   join: SyncJoin;
   ready: boolean;
   onClick: () => void;
+  variant?: ButtonProps["variant"];
   children?: ReactNode;
 }) {
   const t = useMessages();
@@ -82,6 +85,7 @@ export function SyncJoinButton({
     <div className="row">
       <Button
         className="setup-loading-action"
+        variant={variant}
         data-state={stateWhen(join.busy, UI_STATE.loading)}
         onClick={onClick}
         disabled={!ready || join.busy}
@@ -155,6 +159,14 @@ export function SyncJoinForm() {
           onDone={() => setPassphraseDone(true)}
           onSkip={() => setPassphraseDone(true)}
         />
+      </div>
+    );
+
+  // Connected: what happened, and nothing left to press here.
+  if (join.phase === "connected")
+    return (
+      <div className="sync-join-form">
+        <SyncJoinFeedback phase={join.phase} />
       </div>
     );
 

@@ -108,5 +108,6 @@ export const setupJaJP: SetupMessages = {
   keysLocked:
     "API キーは同期されていますが、ロックされています。同期パスフレーズを入力してください。",
   unlock: "ロック解除",
+  unlocking: "ロックを解除しています…",
   skip: "今はスキップ",
 };

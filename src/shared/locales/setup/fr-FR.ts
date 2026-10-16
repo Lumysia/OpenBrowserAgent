@@ -117,5 +117,6 @@ export const setupFrFR: SetupMessages = {
   keysLocked:
     "Vos clés API sont synchronisées mais verrouillées. Saisissez votre phrase secrète de synchronisation.",
   unlock: "Déverrouiller",
+  unlocking: "Déverrouillage…",
   skip: "Plus tard",
 };

@@ -99,5 +99,6 @@ export const setupZhTW: SetupMessages = {
   connected: "已連線，設定正在同步。",
   keysLocked: "你的 API Key 已同步但處於鎖定狀態。請輸入同步密語。",
   unlock: "解鎖",
+  unlocking: "正在解鎖…",
   skip: "暫時略過",
 };

@@ -148,6 +148,25 @@ test(
         false,
       );
 
+      // Back on the sync step, connected: Next goes on, and connecting
+      // again (with other details) is no longer the primary action.
+      await clickElement(setup, "button", { text: t.setup.back });
+      await atStep(setup, t.setup.syncTitle);
+      await poll(() => hasText(setup, t.setup.connected));
+      assert.deepEqual(
+        await setup.call(() =>
+          [
+            ...document.querySelectorAll(
+              "button.ui-button-default:not(:disabled)",
+            ),
+          ].map((button) => button.textContent.trim()),
+        ),
+        [t.setup.next],
+      );
+      await clickElement(setup, ".setup-forward", { text: t.setup.next });
+      await atStep(setup, t.setup.downloadTitle);
+      await offersFallback(setup, t.setup.noSyncedProvider);
+
       // As a new user: the AI provider step, with sync kept.
       await clickElement(setup, "button", { text: t.setup.asNewUser });
       await atStep(setup, t.setup.providerTitle);

@@ -115,5 +115,6 @@ export const setupPtBR: SetupMessages = {
   keysLocked:
     "Suas chaves de API estão sincronizadas, mas bloqueadas. Digite sua frase secreta de sincronização.",
   unlock: "Desbloquear",
+  unlocking: "Desbloqueando…",
   skip: "Agora não",
 };

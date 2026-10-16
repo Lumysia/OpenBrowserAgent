@@ -21,6 +21,7 @@ import { useMessages } from "../../src/ui/messages";
 import { UI_STATE } from "../../src/ui/ui-state";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SetupSyncFallback } from "./setup-sync-step";
+import { useSetupBusy, type SetupBusyReport } from "./use-setup-busy";
 
 const KIND_ICON: Record<SyncedDataKind, LucideIcon> = {
   providers: Server,
@@ -36,7 +37,13 @@ type Phase = "downloading" | "failed" | "done";
 // API keys once the passphrase is in), then what is here now, by kind.
 // A failed round, or no AI provider, offers trying again or going on as a
 // first-time user.
-export function SetupDownloadStep({ onNewUser }: { onNewUser: () => void }) {
+export function SetupDownloadStep({
+  onBusy,
+  onNewUser,
+}: {
+  onBusy: SetupBusyReport;
+  onNewUser: () => void;
+}) {
   const t = useMessages();
   const s = t.setup;
   const [phase, setPhase] = useState<Phase>("downloading");
@@ -66,8 +73,11 @@ export function SetupDownloadStep({ onNewUser }: { onNewUser: () => void }) {
 
   const retry = () => setRound((current) => current + 1);
   const data = { providers, agents, skills, mcpServers, chats };
+  const loading =
+    phase === "downloading" || Object.values(data).includes(undefined);
+  useSetupBusy(onBusy, loading ? s.downloading : undefined);
 
-  if (phase === "downloading" || Object.values(data).includes(undefined))
+  if (loading)
     return (
       <Feedback className="setup-feedback setup-downloading">
         <Loader2 size={15} className="spin" /> {s.downloading}

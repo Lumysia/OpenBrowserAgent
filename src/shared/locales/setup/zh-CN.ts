@@ -98,5 +98,6 @@ export const setupZhCN: SetupMessages = {
   connected: "已连接，设置正在同步。",
   keysLocked: "你的 API Key 已同步但处于锁定状态。请输入同步口令。",
   unlock: "解锁",
+  unlocking: "正在解锁…",
   skip: "暂时跳过",
 };

@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, PanelRight } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Loader2, PanelRight } from "lucide-react";
 import { leaveSetup } from "../../src/shared/setup-progress";
 import {
   chooseSetupPath,
@@ -29,6 +29,7 @@ import { SetupSyncStep } from "./setup-sync-step";
 import { TranslateIntoSection } from "./translate-into";
 import { UiLanguageSection } from "./ui-language-section";
 import { useOpenSidePanel } from "./use-open-side-panel";
+import type { SetupBusyReport } from "./use-setup-busy";
 import { useSetupProgress } from "./use-setup-progress";
 
 // Where Enter belongs to the control (a button, a field, a list) instead
@@ -54,7 +55,18 @@ export function SetupWizard() {
     keys: syncStatus?.keys,
   };
   const step = progress?.step;
-  const forward = progress && setupForwardAction(progress, facts);
+  // What the step is doing meanwhile, if anything: the forward button says
+  // it and waits.
+  const [busy, setBusy] = useState<{ step: SetupStep; reason: string }>();
+  const busyReason = busy && busy.step === step ? busy.reason : undefined;
+  const reportBusy: SetupBusyReport = (reason) => {
+    if (!step) return;
+    setBusy((current) =>
+      reason ? { step, reason } : current?.step === step ? undefined : current,
+    );
+  };
+  const forward =
+    progress && !busyReason ? setupForwardAction(progress, facts) : undefined;
   const goForward = () => {
     const next = progress && nextSetupStep(progress, facts);
     if (next) goTo(next);
@@ -124,6 +136,8 @@ export function SetupWizard() {
     pages: <SetupPagesStep />,
     sync: (
       <SetupSyncStep
+        connected={facts.syncOn}
+        onBusy={reportBusy}
         onConnected={() => void synced().catch(console.warn)}
         onNewUser={asNewUser}
       />
@@ -131,10 +145,11 @@ export function SetupWizard() {
     passphrase: (
       <SetupPassphraseStep
         unlocked={!!facts.keys?.unlocked}
+        onBusy={reportBusy}
         onUnlocked={goForward}
       />
     ),
-    download: <SetupDownloadStep onNewUser={asNewUser} />,
+    download: <SetupDownloadStep onBusy={reportBusy} onNewUser={asNewUser} />,
     done: (
       <SetupDoneStep
         hasChatModel={hasChatModel}
@@ -182,6 +197,16 @@ export function SetupWizard() {
           }
         />
         <div className="setup-wizard-action setup-forward-slot">
+          {busyReason && (
+            <Button
+              className="setup-forward setup-loading-action"
+              data-state="loading"
+              disabled
+            >
+              <Loader2 size={16} className="spin" />
+              {busyReason}
+            </Button>
+          )}
           {forward && (
             <Button
               className="setup-forward"

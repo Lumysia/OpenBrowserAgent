@@ -115,5 +115,6 @@ export const setupEsES: SetupMessages = {
   keysLocked:
     "Tus claves API están sincronizadas pero bloqueadas. Introduce tu frase de contraseña de sincronización.",
   unlock: "Desbloquear",
+  unlocking: "Desbloqueando…",
   skip: "Ahora no",
 };

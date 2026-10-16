@@ -12,6 +12,7 @@ import {
   CardContent,
   ChoiceCard,
   ChoiceCards,
+  Feedback,
 } from "../../src/ui/components";
 import { useLatest } from "../../src/ui/use-latest";
 import { useMessages } from "../../src/ui/messages";
@@ -24,6 +25,7 @@ import {
 } from "../../src/ui/sync-join-form";
 import { useSyncJoin } from "../../src/ui/use-sync-join";
 import { WebDavConnectionFields } from "../../src/ui/webdav-connection-fields";
+import { useSetupBusy, type SetupBusyReport } from "./use-setup-busy";
 
 const METHODS = ["code", "browser", "webDav"] as const;
 type Method = (typeof METHODS)[number];
@@ -63,9 +65,15 @@ export function SetupSyncFallback({
 // does, with its sync code (recommended), the browser account, or a WebDAV
 // server. Connecting tests the backend, makes it active and syncs once.
 export function SetupSyncStep({
+  connected: syncOn,
+  onBusy,
   onConnected,
   onNewUser,
 }: {
+  // Sync is on already (setup came back here): connecting again is for
+  // other details, and Next goes on.
+  connected: boolean;
+  onBusy: SetupBusyReport;
   onConnected: () => void;
   onNewUser: () => void;
 }) {
@@ -76,6 +84,12 @@ export function SetupSyncStep({
   const [code, setCode] = useState("");
   const webDav = useWebDavEdits(webDavBackendOf(DEFAULT_SYNC_BACKENDS));
   const connected = join.phase === "connected";
+  useSetupBusy(
+    onBusy,
+    join.phase === "testing" || join.phase === "pulling"
+      ? s[join.phase]
+      : undefined,
+  );
 
   const latestConnected = useLatest(onConnected);
   useEffect(() => {
@@ -162,6 +176,9 @@ export function SetupSyncStep({
       <Card key={method}>
         <CardContent className="sync-join-form">
           {chosen.fields}
+          {syncOn && join.phase === "idle" && (
+            <Feedback className="setup-feedback">{s.connected}</Feedback>
+          )}
           <SyncJoinFeedback
             phase={join.phase}
             failed={
@@ -176,6 +193,7 @@ export function SetupSyncStep({
               join={join}
               ready={chosen.ready}
               onClick={chosen.connect}
+              variant={syncOn ? "outline" : "default"}
             >
               {chosen.action}
             </SyncJoinButton>

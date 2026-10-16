@@ -31,6 +31,21 @@ const send = (page, message) =>
 const hasText = (page, text) =>
   page.call((text) => document.body.innerText.includes(text), text);
 
+// The synced provider's API key as stored on the device.
+const storedKey = (page) =>
+  page.call(
+    async (key) => (await chrome.storage.local.get(key))[key]?.fixture?.apiKey,
+    STORAGE_KEYS.provider,
+  );
+
+// The primary buttons that can be pressed.
+const primaryButtons = (page) =>
+  page.call(() =>
+    [
+      ...document.querySelectorAll("button.ui-button-default:not(:disabled)"),
+    ].map((button) => button.textContent.trim()),
+  );
+
 const heading = (page) =>
   page.call(() => document.querySelector(".setup-step h1")?.textContent);
 
@@ -50,7 +65,7 @@ const stepDots = (page) =>
   );
 
 test(
-  "returning path with a sync code: the passphrase is asked for at once, then what arrived",
+  "returning path with a sync code: the passphrase is asked for at once, then what arrived, with no dead ends",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const dav = await webDavServer();
@@ -110,13 +125,11 @@ test(
         await deviceA.close();
       }
 
-      // Device B: setup's returning path, a sync code, then the
-      // passphrase.
-      const deviceB = await launchExtension({ keepWelcome: true });
-      try {
-        const setupUrl = `chrome-extension://${deviceB.id}/options.html${OPTIONS_HASH.welcome}`;
-        const panelUrl = `chrome-extension://${deviceB.id}/sidepanel.html`;
-        const setup = await deviceB.attach((url) => url === setupUrl);
+      // Setup's returning path on a new device, a sync code, and the
+      // passphrase step that follows by itself.
+      async function toPassphrase(device) {
+        const setupUrl = `chrome-extension://${device.id}/options.html${OPTIONS_HASH.welcome}`;
+        const setup = await device.attach((url) => url === setupUrl);
         await setup.send("Page.bringToFront");
         await setup.call(
           (key) => chrome.storage.local.set({ [key]: "en-US" }),
@@ -154,29 +167,10 @@ test(
           "upcoming",
           "upcoming",
         ]);
-        const field = '.sync-unlock-form input[type="password"]';
-        await typeText(setup, "not the passphrase", field);
-        await clickElement(setup, "button", { text: t.setup.unlock });
-        await poll(() => hasText(setup, t.sync.passphraseWrong));
-        // The synced provider came without its key.
-        const storedKey = (page = setup) =>
-          page.call(
-            async (key) =>
-              (await chrome.storage.local.get(key))[key]?.fixture?.apiKey,
-            STORAGE_KEYS.provider,
-          );
-        assert.equal(await storedKey(), undefined);
-        assert.equal(
-          await setup.call(() =>
-            document.querySelector(".setup-forward")?.textContent.trim(),
-          ),
-          t.setup.skipStep,
-        );
-        await clickElement(setup, ".setup-forward");
-
-        // What arrived, by kind.
-        await atStep(setup, t.setup.downloadTitle);
-        await poll(async () => {
+        return { setup, setupUrl };
+      }
+      const arrived = (setup) =>
+        poll(async () => {
           const rows = await setup.call(() =>
             [...document.querySelectorAll(".setup-arrived li")].map((row) =>
               row.textContent.trim(),
@@ -190,6 +184,29 @@ test(
             ].join("|")
           );
         }, 30000);
+
+      // Device B: a wrong passphrase, then Skip.
+      const deviceB = await launchExtension({ keepWelcome: true });
+      try {
+        const panelUrl = `chrome-extension://${deviceB.id}/sidepanel.html`;
+        const { setup, setupUrl } = await toPassphrase(deviceB);
+        const field = '.sync-unlock-form input[type="password"]';
+        await typeText(setup, "not the passphrase", field);
+        await clickElement(setup, "button", { text: t.setup.unlock });
+        await poll(() => hasText(setup, t.sync.passphraseWrong));
+        // The synced provider came without its key.
+        assert.equal(await storedKey(setup), undefined);
+        assert.equal(
+          await setup.call(() =>
+            document.querySelector(".setup-forward")?.textContent.trim(),
+          ),
+          t.setup.skipStep,
+        );
+        await clickElement(setup, ".setup-forward");
+
+        // What arrived, by kind.
+        await atStep(setup, t.setup.downloadTitle);
+        await arrived(setup);
         assert.equal(await hasText(setup, t.setup.noSyncedProvider), false);
         await clickElement(setup, ".setup-forward", { text: t.setup.next });
 
@@ -224,6 +241,30 @@ test(
         await poll(async () => (await storedKey(panel)) === API_KEY, 30000);
       } finally {
         await deviceB.close();
+      }
+
+      // Device C: the right passphrase. Each step goes on by itself, and
+      // what arrived has one primary action left: Next.
+      const deviceC = await launchExtension({ keepWelcome: true });
+      try {
+        const { setup } = await toPassphrase(deviceC);
+        await typeText(
+          setup,
+          PASSPHRASE,
+          '.sync-unlock-form input[type="password"]',
+        );
+        await clickElement(setup, "button", { text: t.setup.unlock });
+        await atStep(setup, t.setup.downloadTitle, 30000);
+        await arrived(setup);
+        assert.deepEqual(await primaryButtons(setup), [t.setup.next]);
+        await poll(async () => (await storedKey(setup)) === API_KEY, 30000);
+        // Back shows the passphrase step as done, without connecting again.
+        await clickElement(setup, "button", { text: t.setup.back });
+        await atStep(setup, t.setup.passphraseTitle);
+        await poll(() => hasText(setup, t.setup.keysUnlocked));
+        assert.deepEqual(await primaryButtons(setup), [t.setup.next]);
+      } finally {
+        await deviceC.close();
       }
     } finally {
       await model.close();

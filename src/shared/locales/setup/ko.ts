@@ -108,5 +108,6 @@ export const setupKo: SetupMessages = {
   keysLocked:
     "API 키가 동기화되었지만 잠겨 있습니다. 동기화 암호 문구를 입력하세요.",
   unlock: "잠금 해제",
+  unlocking: "잠금 해제 중…",
   skip: "나중에 하기",
 };

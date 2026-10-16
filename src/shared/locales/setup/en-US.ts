@@ -119,6 +119,7 @@ export const setupEnUS = {
   keysLocked:
     "Your API keys are synced but locked. Enter your sync passphrase.",
   unlock: "Unlock",
+  unlocking: "Unlocking…",
   skip: "Skip for now",
 };
 export type SetupMessages = typeof setupEnUS;
