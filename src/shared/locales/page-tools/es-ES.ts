@@ -1,8 +1,14 @@
 import type { PageToolsLocaleMessages } from "./en-US";
 
 export const pageToolsEsES: PageToolsLocaleMessages = {
-  translateInto: "Traducir a: {language}",
-  pageButton: "Botón de traducir en este sitio",
+  notWebPage: "No es una página web",
+  notWebPageReason: "Solo funciona en páginas web",
+  translate: "Traducir",
+  smartBarLabel: "Barra inteligente",
+  subtitlesLabel: "Subtítulos",
   smartBar: "Barra inteligente en este sitio",
   subtitles: "Subtítulos traducidos para este vídeo",
+  noVideo: "No hay ningún vídeo en esta página",
+  translateInto: "Traducir a: {language}",
+  pageButton: "Botón de traducir en este sitio",
 };

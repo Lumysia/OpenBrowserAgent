@@ -1,8 +1,14 @@
 import type { PageToolsLocaleMessages } from "./en-US";
 
 export const pageToolsDeDE: PageToolsLocaleMessages = {
-  translateInto: "Übersetzen in: {language}",
-  pageButton: "Übersetzen-Schaltfläche auf dieser Website",
+  notWebPage: "Keine Webseite",
+  notWebPageReason: "Funktioniert nur auf Webseiten",
+  translate: "Übersetzen",
+  smartBarLabel: "Smart Bar",
+  subtitlesLabel: "Untertitel",
   smartBar: "Smart Bar auf dieser Website",
   subtitles: "Übersetzte Untertitel für dieses Video",
+  noVideo: "Kein Video auf dieser Seite",
+  translateInto: "Übersetzen in: {language}",
+  pageButton: "Übersetzen-Schaltfläche auf dieser Website",
 };

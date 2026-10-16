@@ -1,0 +1,93 @@
+/* The toolbar button's menu (entrypoints/menu). The browser sizes a popup
+   to its content, so the page is as tall as the menu, not the window. */
+html.toolbar-menu-document,
+html.toolbar-menu-document body,
+html.toolbar-menu-document #root {
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+.toolbar-menu {
+  display: grid;
+  gap: var(--space-3);
+  width: 320px;
+  padding: var(--space-3);
+  background: var(--background);
+}
+.toolbar-menu-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.toolbar-menu-header img {
+  flex: none;
+}
+.toolbar-menu-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toolbar-menu-tools {
+  display: grid;
+  gap: var(--space-2);
+}
+.toolbar-menu-site {
+  min-height: 1.4em;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toolbar-menu-site[data-web="false"] {
+  font-style: italic;
+  font-weight: 400;
+}
+.toolbar-menu-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.toolbar-menu-translate-into {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+.toolbar-menu-translate-into .ui-select-trigger-inline {
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+.toolbar-menu-open-panel.ui-button {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-md);
+}
+.toolbar-menu-open-panel-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+}
+.toolbar-menu-shortcut {
+  flex: none;
+  padding: 2px 6px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 24%, var(--border));
+  border-radius: var(--radius-2xs);
+  color: var(--accent-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}

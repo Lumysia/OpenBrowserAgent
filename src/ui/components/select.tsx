@@ -7,13 +7,21 @@ import { usePortalContainer } from "./portal-container";
 const Select = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
 
+// `inline`: a trigger that reads as part of a line of text, for a choice
+// inside a sentence ("Translate into: French ▾").
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+    variant?: "field" | "inline";
+  }
+>(({ className, children, variant = "field", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn("ui-select-trigger", className)}
+    className={cn(
+      "ui-select-trigger",
+      variant === "inline" && "ui-select-trigger-inline",
+      className,
+    )}
     {...props}
   >
     {children}
