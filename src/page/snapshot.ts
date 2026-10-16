@@ -39,6 +39,8 @@ const BLOCK_TEXT_MAX = 2_000;
 const CELL_TEXT_MAX = 200;
 const SELECT_OPTIONS_SHOWN = 8;
 const VIEWPORT_MARGIN = 80;
+// Roles of native fields that take typed text.
+const TEXT_FIELD_ROLES = new Set(["textbox", "searchbox", "spinbutton"]);
 const TEXT_ROLES = new Set([
   "paragraph",
   "listitem",
@@ -316,6 +318,16 @@ function controlStates(
     attr("aria-disabled") === "true"
   )
     states.push("disabled");
+  const field = element as Partial<HTMLInputElement>;
+  // HTML ignores readonly on fields that take no text.
+  if (
+    (TEXT_FIELD_ROLES.has(role) && field.readOnly === true) ||
+    attr("aria-readonly") === "true"
+  )
+    states.push("readonly");
+  if (field.required === true || attr("aria-required") === "true")
+    states.push("required");
+  if (attr("aria-invalid") === "true") states.push("invalid");
   if (options.urls && element instanceof HTMLAnchorElement && element.href)
     states.push(`→ ${element.href}`);
   return states.join(" ");

@@ -9,6 +9,7 @@ What changed in each release. The release workflow publishes the section for the
 - After clicking or typing on a page, the agent now also sees text that appeared or changed in view, such as a quiz question, a score or a countdown, instead of being told nothing changed. Clocks and timers that tick on their own are shown once and no longer count as a change.
 - The agent no longer clicks buttons hidden under a banner or overlay, which a person couldn't click either. It is told what covers the button so it can close the banner first, and it clicks the visible part of a partly covered button.
 - When a page redraws a button the agent was about to click (for example a calendar after "Next month"), the agent now uses the identical button that replaced it instead of stopping, and says so.
+- The agent now sees which form fields are read-only, required or marked invalid, and the kind of field (such as a date), so it picks the right way to fill them in.
 
 ## 0.2.0-beta.17 - 2026-10-16
 
