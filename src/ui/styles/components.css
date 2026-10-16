@@ -15,9 +15,6 @@
   white-space: nowrap;
   transition: var(--transition-interactive);
 }
-.ui-button:hover:not(:disabled) {
-  filter: saturate(1.04) brightness(1.01);
-}
 .ui-button:active:not(:disabled) {
   scale: 0.98;
   filter: saturate(0.98) brightness(0.98);
@@ -29,8 +26,8 @@
   box-shadow: var(--glow);
 }
 .ui-button-default:hover:not(:disabled) {
-  border-color: color-mix(in oklab, var(--accent-strong) 34%, var(--border));
-  background: color-mix(in oklab, var(--accent-hover) 70%, var(--card));
+  border-color: var(--hover-border);
+  background: var(--accent-soft);
   box-shadow: var(--glow-strong), var(--inner-highlight);
 }
 .ui-button-default:active:not(:disabled) {
@@ -49,8 +46,8 @@
 :is(.ui-button-secondary, .ui-button-outline, .ui-button-ghost):hover:not(
     :disabled
   ) {
-  border-color: color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
 }
 .ui-button-ghost:hover:not(:disabled) {
   border-color: color-mix(in oklab, var(--accent-strong) 8%, transparent);
@@ -137,13 +134,21 @@
   padding: 10px 11px;
   resize: vertical;
 }
+/* Before the focus and disabled states, which keep their own edge. */
+:is(
+  .ui-input,
+  .ui-textarea,
+  .ui-select-trigger:where(:not(.ui-select-trigger-inline))
+):hover {
+  border-color: var(--hover-border);
+}
 :is(.ui-input, .ui-textarea, .ui-select-trigger):focus {
   outline: none;
   border-color: var(--accent-strong);
   box-shadow: 0 0 0 3px var(--ring);
 }
 .ui-select-trigger-inline:hover {
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+  background: var(--hover-surface);
 }
 .ui-select-trigger-inline:focus {
   border-color: transparent;
@@ -211,8 +216,8 @@
   transition: var(--transition-interactive);
 }
 .ui-switch:hover:not(:disabled) {
-  border-color: color-mix(in oklab, var(--accent-strong) 36%, var(--border));
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
   box-shadow: var(--glow), var(--inner-highlight);
 }
 .ui-switch:active:not(:disabled) {
@@ -235,6 +240,9 @@
 .ui-switch.checked {
   border-color: color-mix(in oklab, var(--accent-strong) 30%, var(--border));
   background: var(--accent-fill);
+}
+.ui-switch.checked:hover:not(:disabled) {
+  background: var(--accent-soft);
 }
 .ui-switch.checked span {
   translate: 20px 0;

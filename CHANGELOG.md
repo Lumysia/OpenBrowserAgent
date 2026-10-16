@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Buttons, cards, menus, fields and switches now clearly react when you point at them, in the guided setup and everywhere else, in light and dark mode. Choice cards in setup light up and lift slightly, the chosen one included; with "Reduce motion" on they don't move.
+
 ## 0.2.0-beta.17 - 2026-10-16
 
 - The side panel's message box is now frosted glass: the panel's colours show through it softly. With "Reduce transparency" turned on in your system, it stays solid.

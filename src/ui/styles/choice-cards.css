@@ -22,16 +22,28 @@
   transition: var(--transition-interactive);
   animation: enter var(--duration-base) var(--ease-standard) backwards;
 }
+.ui-choice-card[data-state="selected"] {
+  border-color: var(--accent-strong);
+  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
+}
+/* After the chosen state, so the chosen card answers the pointer too; its
+   accent edge stays. */
 .ui-choice-card:hover {
-  border-color: color-mix(in oklab, var(--accent-soft) 58%, var(--border));
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
+  box-shadow: var(--elevation-3);
+  translate: var(--hover-lift);
+}
+.ui-choice-card[data-state="selected"]:hover {
+  border-color: var(--accent-strong);
+  background: color-mix(in oklab, var(--accent-soft) 60%, var(--card));
+}
+.ui-choice-card:active {
+  scale: 0.99;
 }
 .ui-choice-card:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-}
-.ui-choice-card[data-state="selected"] {
-  border-color: var(--accent-strong);
-  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
 }
 .ui-choice-card-icon {
   display: grid;

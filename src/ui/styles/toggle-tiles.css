@@ -28,8 +28,8 @@
   overflow-wrap: anywhere;
 }
 .ui-toggle-tile:hover:not([aria-disabled="true"]) {
-  border-color: color-mix(in oklab, var(--accent-strong) 30%, var(--border));
-  background: color-mix(in oklab, var(--secondary) 82%, var(--accent-softer));
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
 }
 .ui-toggle-tile:active:not([aria-disabled="true"]) {
   scale: 0.97;

@@ -60,6 +60,16 @@
   --glow: 0 8px 18px -4px var(--accent-shadow);
   --glow-strong: 0 10px 24px -4px var(--accent-shadow);
   --inner-highlight: inset 0 1px 0 var(--highlight);
+  /* Hover on controls: an edge toward the accent and a tinted fill, each a
+     step that reads at a glance in either scheme (accent filled controls
+     go to --accent-soft instead). Cards that are choices also lift. */
+  --hover-border: color-mix(
+    in oklab,
+    var(--accent-strong) 50%,
+    var(--border-control)
+  );
+  --hover-surface: color-mix(in oklab, var(--accent-soft) 40%, var(--card));
+  --hover-lift: 0 -1px;
   /* Frosted glass: a field that lets what scrolls behind it show through,
      blurred past reading. */
   --glass-field: color-mix(in oklab, var(--field) 72%, transparent);
@@ -111,4 +121,9 @@
   --compact-panel-width: 420px;
 
   font-family: var(--font-sans);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --hover-lift: 0 0;
+  }
 }
