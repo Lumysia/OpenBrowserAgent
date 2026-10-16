@@ -10,5 +10,4 @@ export const pageToolsEsES: PageToolsLocaleMessages = {
   subtitles: "Subtítulos traducidos para este vídeo",
   noVideo: "No hay ningún vídeo en esta página",
   translateInto: "Traducir a: {language}",
-  pageButton: "Botón de traducir en este sitio",
 };

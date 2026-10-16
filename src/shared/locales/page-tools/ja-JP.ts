@@ -10,5 +10,4 @@ export const pageToolsJaJP: PageToolsLocaleMessages = {
   subtitles: "この動画の字幕を翻訳",
   noVideo: "このページに動画はありません",
   translateInto: "翻訳先: {language}",
-  pageButton: "このサイトで翻訳ボタンを表示",
 };

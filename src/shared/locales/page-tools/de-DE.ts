@@ -10,5 +10,4 @@ export const pageToolsDeDE: PageToolsLocaleMessages = {
   subtitles: "Übersetzte Untertitel für dieses Video",
   noVideo: "Kein Video auf dieser Seite",
   translateInto: "Übersetzen in: {language}",
-  pageButton: "Übersetzen-Schaltfläche auf dieser Website",
 };

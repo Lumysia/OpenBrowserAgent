@@ -10,5 +10,4 @@ export const pageToolsKo: PageToolsLocaleMessages = {
   subtitles: "이 동영상의 자막 번역",
   noVideo: "이 페이지에 동영상이 없습니다",
   translateInto: "번역할 언어: {language}",
-  pageButton: "이 사이트에서 번역 버튼",
 };

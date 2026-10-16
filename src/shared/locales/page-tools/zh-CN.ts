@@ -10,5 +10,4 @@ export const pageToolsZhCN: PageToolsLocaleMessages = {
   subtitles: "翻译此视频的字幕",
   noVideo: "此页面没有视频",
   translateInto: "翻译为：{language}",
-  pageButton: "在此网站显示翻译按钮",
 };

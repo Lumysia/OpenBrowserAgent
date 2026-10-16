@@ -63,9 +63,3 @@ export function engineLanguageCode(
   if (code === null) return undefined;
   return code ?? language.tag;
 }
-
-// The few offered where a short list fits (the toolbar button's "Translate
-// into" menu): the table starts with them.
-export const QUICK_TARGET_LANGUAGES = PAGE_TRANSLATE_LANGUAGES.slice(0, 8).map(
-  ({ tag }) => tag,
-);

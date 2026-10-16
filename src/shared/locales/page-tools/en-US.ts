@@ -14,7 +14,6 @@ export const pageToolsEnUS = {
   noVideo: "No video on this page",
   // {language}: the language picker.
   translateInto: "Translate into: {language}",
-  pageButton: "Translate button on this site",
 };
 
 export type PageToolsLocaleMessages = typeof pageToolsEnUS;

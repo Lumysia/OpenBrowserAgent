@@ -1,6 +1,5 @@
 // The page tools of a tab (see shared/page-tools.ts): their state, read
-// fresh each time, and the changes the toolbar button's menu and the side
-// panel's strip make.
+// fresh each time, and the changes the toolbar menu makes.
 import { getBrowserApi } from "../shared/browser-api";
 import {
   applyPageToolSetting,
@@ -26,7 +25,7 @@ import { startVideoSubtitles, stopVideoSubtitles } from "./video-subtitles";
 
 type Sender = chrome.runtime.MessageSender;
 
-// Extension pages (the side panel) hear when to read the state again: on
+// Extension pages (the toolbar menu) hear when to read the state again: on
 // the background's own changes, on settings changes and when the user
 // moves to another tab or page.
 export function setupPageTools() {
@@ -49,7 +48,7 @@ export function setupPageTools() {
   storage.language.watch(() => pageToolsChanged());
 }
 
-// Page tools messages from the side panel, and the subtitle script's state
+// Page tools messages from the toolbar menu, and the subtitle script's state
 // message; false for other messages.
 export function handlePageToolsMessage(
   message: unknown,
@@ -90,16 +89,14 @@ export async function tabPageTools(
       : tab;
   const host = pageHost(resolved?.url);
   const tabId = resolved?.id;
-  const [preferences, uiLanguage, translated, videos] = await Promise.all([
+  const [preferences, translated, videos] = await Promise.all([
     storage.preferences.get(),
-    storage.language.get(),
     isTabTranslated(tabId),
     host && tabId !== undefined ? probeVideos(tabId) : undefined,
   ]);
   return pageToolsState({
     host,
     preferences,
-    uiLanguage,
     translated,
     video: !!videos?.video,
     subtitles: !!videos?.subtitles,
