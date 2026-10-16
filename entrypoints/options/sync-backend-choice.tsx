@@ -1,4 +1,4 @@
-import { Cloud, FolderSync } from "lucide-react";
+import { Cloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import {
@@ -22,7 +22,11 @@ import {
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { syncBackendHint } from "../../src/ui/sync-backend-display";
-import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
+import {
+  SyncJoinButton,
+  SyncJoinFeedback,
+  useWebDavEdits,
+} from "../../src/ui/sync-join-form";
 import { useSyncJoin } from "../../src/ui/use-sync-join";
 import { WebDavConnectionFields } from "../../src/ui/webdav-connection-fields";
 
@@ -117,47 +121,25 @@ export function SyncBackendChoice({
 // The WebDAV server's details before it is used: tested and synced in one
 // step, as when joining from setup.
 function WebDavConnect({ backend }: { backend: WebDavSyncBackendConfig }) {
-  const t = useMessages();
   const join = useSyncJoin();
-  const [edits, setEdits] = useState<
-    Partial<Pick<WebDavSyncBackendConfig, "url" | "username" | "password">>
-  >({});
-  const draft = webDavBackendOf(withWebDavPatch([backend], edits));
-  const failed = join.phase === "failed";
+  const { shown, draft, edit } = useWebDavEdits(backend);
   return (
     <>
       <WebDavConnectionFields
-        backend={{ ...draft, ...edits }}
+        backend={shown}
         disabled={join.busy}
         live
         onChange={(patch) => {
-          setEdits((current) => ({ ...current, ...patch }));
+          edit(patch);
           join.reset();
         }}
       />
-      {(failed || join.busy) && (
-        <Feedback error={failed} className="setup-feedback">
-          {
-            t.setup[
-              join.phase === "pulling"
-                ? "pulling"
-                : failed
-                  ? "failed"
-                  : "testing"
-            ]
-          }
-        </Feedback>
-      )}
-      <div className="row">
-        <Button
-          className="setup-loading-action"
-          data-state={stateWhen(join.busy, UI_STATE.loading)}
-          disabled={!draft.url || join.busy}
-          onClick={() => join.joinWithBackend(draft)}
-        >
-          <FolderSync size={16} /> {t.setup.connect}
-        </Button>
-      </div>
+      <SyncJoinFeedback phase={join.phase} />
+      <SyncJoinButton
+        join={join}
+        ready={!!draft.url}
+        onClick={() => join.joinWithBackend(draft)}
+      />
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupKo: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupKo: SetupMessages = {
   progressStep: "{total}단계 중 {current}단계: {step}",
   steps: {
     language: "언어",
+    path: "사용 경험",
     provider: "AI 제공업체",
     pages: "페이지 기능",
+    sync: "동기화",
+    passphrase: "동기화 암호 문구",
+    download: "다운로드",
     done: "완료",
   },
   back: "이전",
@@ -17,6 +22,44 @@ export const setupKo: SetupMessages = {
   languageTitle: "언어 선택",
   languageDescription:
     "확장 프로그램의 표시 언어와 페이지를 번역할 언어입니다. 대부분은 그대로 두면 됩니다.",
+  pathTitle: "OpenBrowserAgent를 사용해 본 적이 있나요?",
+  pathDescription:
+    "다른 기기에서 사용 중이라면 동기화로 AI 제공업체, 에이전트, 채팅을 이 기기로 가져올 수 있습니다.",
+  pathNew: "처음 사용합니다",
+  pathNewDescription:
+    "AI 제공업체를 연결하고 OpenBrowserAgent가 웹 페이지에 추가할 기능을 고릅니다.",
+  pathReturning: "다른 기기에서 사용 중입니다",
+  pathReturningDescription:
+    "다른 기기에서 설정, AI 제공업체, 채팅을 동기화합니다.",
+  syncTitle: "동기화 방법 선택",
+  syncDescription: "다른 기기와 같은 방법으로 연결하세요.",
+  recommended: "추천",
+  methodCode: "동기화 코드 붙여넣기",
+  methodCodeDescription:
+    "코드 하나에 동기화 서버와 동기화할 항목이 담겨 있습니다.",
+  methodBrowser: "브라우저 계정 동기화",
+  browserConnect: "브라우저 계정 동기화 켜기",
+  tryAgain: "다시 시도",
+  asNewUser: "새 사용자로 설정",
+  passphraseTitle: "동기화 암호 문구 입력",
+  passphraseDescription:
+    "API 키는 암호화되어 동기화됩니다. 다른 기기에서 설정한 동기화 암호 문구를 입력하세요.",
+  keysUnlocked: "API 키의 잠금이 해제되었습니다.",
+  downloadTitle: "연결 및 다운로드",
+  downloadDescription:
+    "다른 기기에서 동기화한 내용을 OpenBrowserAgent가 다운로드합니다.",
+  downloading: "다운로드 중…",
+  downloadFailed: "동기화 서버에서 다운로드하지 못했습니다.",
+  arrived: "다른 기기에서 가져온 항목:",
+  noSyncedProvider:
+    "다른 기기에서 AI 제공업체를 가져오지 못했습니다. 채팅에는 AI 제공업체가 필요합니다.",
+  arrivedCount: {
+    providers: plural({ other: "AI 제공업체 {count}개" }),
+    agents: plural({ other: "에이전트 {count}개" }),
+    skills: plural({ other: "스킬 {count}개" }),
+    mcpServers: plural({ other: "MCP 서버 {count}개" }),
+    chats: plural({ other: "채팅 {count}개" }),
+  },
   providerTitle: "AI 제공업체 연결",
   providerDescription:
     "채팅과 에이전트에는 AI 제공업체가 필요합니다. 서비스를 고르거나, OpenAI 또는 Anthropic 호환 서버를 Base URL로 지정하세요.",
@@ -52,13 +95,9 @@ export const setupKo: SetupMessages = {
   openPanelDescription:
     "브라우저의 확장 프로그램 메뉴에서 OpenBrowserAgent를 고정한 뒤 아이콘을 클릭해 사이드 패널을 여세요.",
   openPanel: "사이드 패널 열기",
-  joinLink:
-    "다른 기기에서 이미 OpenBrowserAgent를 사용 중인가요? 동기화 코드 붙여넣기",
-  codeTab: "코드 붙여넣기",
-  manualTab: "수동 입력",
   code: "동기화 코드",
   codeDescription:
-    "다른 기기의 설정 → 동기화에서 복사하세요. 코드의 동기화 선택이 이 기기의 선택을 대체합니다.",
+    "다른 기기의 {settings} → {sync}에서 '{button}' 버튼을 누르세요. 코드의 동기화 선택이 이 기기의 선택을 대체합니다.",
   codeInvalid:
     "올바른 동기화 코드가 아닙니다. 다시 복사해 코드 전체를 붙여넣으세요.",
   connect: "연결 및 동기화",
@@ -69,5 +108,6 @@ export const setupKo: SetupMessages = {
   keysLocked:
     "API 키가 동기화되었지만 잠겨 있습니다. 동기화 암호 문구를 입력하세요.",
   unlock: "잠금 해제",
+  unlocking: "잠금 해제 중…",
   skip: "나중에 하기",
 };

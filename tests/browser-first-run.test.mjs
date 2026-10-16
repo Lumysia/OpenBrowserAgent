@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { OPTIONS_HASH } from "../src/shared/config.ts";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { getMessages } from "../src/shared/i18n.ts";
-import { SETUP_STEPS } from "../src/shared/setup-steps.ts";
+import { SETUP_PATH_STEPS } from "../src/shared/setup-steps.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { clickElement, pressKey, typeText } from "./cdp-input.mjs";
@@ -11,7 +11,8 @@ import { launchExtension, poll } from "./chromium.mjs";
 import { providerFixture, reply } from "./provider-fixtures.ts";
 
 // First run: installing opens the guided setup at its first step. Each
-// step is one thing (language, AI provider, on web pages, done) with Back
+// step is one thing (language, new or returning, AI provider, on web
+// pages, done) with Back
 // and Next; every step can be skipped. Until setup is finished, whatever
 // would open the side panel opens setup where it was left.
 
@@ -123,10 +124,12 @@ test(
     const { browser, fixture, extensionUrl } = session;
     try {
       const setup = await openedSetup(session);
-      // Step 1 of 4, in the sidebar-less setup page.
+      // Step 1 of the first-time path, in the sidebar-less setup page.
       assert.deepEqual(
         await stepDots(setup),
-        SETUP_STEPS.map((_, index) => (index === 0 ? "current" : "upcoming")),
+        SETUP_PATH_STEPS.new.map((_, index) =>
+          index === 0 ? "current" : "upcoming",
+        ),
       );
       assert.equal(
         await setup.call(() => !!document.querySelector(".settings-sidebar")),
@@ -147,12 +150,21 @@ test(
       // takes the focus.
       await setup.call(() => document.querySelector(".setup-step h1").focus());
       await pressKey(setup, "Enter");
-      await atStep(setup, t.setup.providerTitle);
+      await atStep(setup, t.setup.pathTitle);
       assert.equal(
         await setup.call(() => document.activeElement?.id),
         "setup-step",
       );
+
+      // New here: the first-time path.
+      await clickElement(setup, ".ui-choice-card", { text: t.setup.pathNew });
+      await atStep(setup, t.setup.providerTitle);
       assert.equal(await forward(setup), t.setup.skipStep);
+      // No sync on this path's AI provider step.
+      assert.equal(
+        await setup.call(() => !!document.querySelector(".sync-join-form")),
+        false,
+      );
 
       // A compatible server: its Base URL comes first, next to the API key.
       await choose(setup, t.options.providers, t.display.providerTypes.openai);
@@ -240,13 +252,38 @@ test(
           row.startsWith(t.settings.openSidePanelCommand),
         ),
       );
-      assert.equal(await forward(setup), "");
-      await clickElement(setup, "button", { text: t.setup.openPanel });
-      await poll(async () =>
-        (await browser.targets()).some(
-          (target) => target.url === extensionUrl("sidepanel.html"),
-        ),
+      // Every command is named in the UI language, whatever the browser's.
+      const zh = getMessages("zh-CN");
+      await setup.call(
+        (key) => chrome.storage.local.set({ [key]: "zh-CN" }),
+        STORAGE_KEYS.language,
       );
+      const commandTitles = (messages) =>
+        ["openSidePanelCommand", "smartBarCommand", "translatePageCommand"].map(
+          (key) => messages.settings[key],
+        );
+      await poll(async () => {
+        const titles = await texts(
+          setup,
+          ".settings-toggle-row .settings-section-title",
+        );
+        return commandTitles(zh).every((title) => titles.includes(title));
+      });
+      await setup.call(
+        (key) => chrome.storage.local.set({ [key]: "en-US" }),
+        STORAGE_KEYS.language,
+      );
+      await atStep(setup, t.setup.doneTitle);
+      assert.equal(await forward(setup), "");
+      // The side panel opens and the setup tab closes.
+      await clickElement(setup, "button", { text: t.setup.openPanel });
+      await poll(async () => {
+        const urls = (await browser.targets()).map((target) => target.url);
+        return (
+          urls.includes(extensionUrl("sidepanel.html")) &&
+          !urls.includes(extensionUrl(`options.html${OPTIONS_HASH.welcome}`))
+        );
+      });
     } finally {
       await session.close();
     }
@@ -278,6 +315,10 @@ test(
       // by itself: its click comes to the extension.
       assert.equal(await panelOpensItself(), false);
       await clickForward(setup);
+      await atStep(setup, t.setup.pathTitle);
+      // The question unanswered, Skip goes on as a first-time user.
+      assert.equal(await forward(setup), t.setup.skipStep);
+      await clickForward(setup);
       await atStep(setup, t.setup.providerTitle);
       assert.equal(await forward(setup), t.setup.skipStep);
       await poll(() =>
@@ -291,15 +332,16 @@ test(
       // Closed, setup opens again where it was from the toolbar button and
       // from "Ask" in the right-click menu, and the side panel doesn't.
       const page = await browser.open("about:blank");
-      const closeSetup = async () => {
+      const closeTab = async (url) => {
         const target = (await browser.targets()).find(
-          (item) => item.url === setupUrl,
+          (item) => item.url === url,
         );
         await browser.browser.send("Target.closeTarget", {
           targetId: target.id,
         });
-        await poll(async () => !(await isOpen(setupUrl)));
+        await poll(async () => !(await isOpen(url)));
       };
+      const closeSetup = () => closeTab(setupUrl);
       const tab = () =>
         worker.call(async () => (await chrome.tabs.query({ active: true }))[0]);
       await closeSetup();
@@ -353,7 +395,7 @@ test(
       await clickElement(setup, ".setup-note button");
       await atStep(setup, t.setup.providerTitle);
       await clickElement(setup, "button", { text: t.setup.back });
-      await atStep(setup, t.setup.languageTitle);
+      await atStep(setup, t.setup.pathTitle);
       await clickForward(setup);
       await atStep(setup, t.setup.providerTitle);
 
@@ -368,6 +410,31 @@ test(
           .length,
         1,
       );
+
+      // Done from there: the side panel opens, the setup tab closes and
+      // the settings tab that ran it is in front again.
+      await closeTab(panelUrl);
+      for (const title of [
+        t.setup.pathTitle,
+        t.setup.providerTitle,
+        t.setup.pagesTitle,
+      ]) {
+        await clickForward(setup);
+        await atStep(setup, title);
+      }
+      await clickForward(setup);
+      await atStep(setup, t.setup.doneTitle);
+      await clickElement(setup, "button", { text: t.setup.openPanel });
+      await poll(
+        async () => (await isOpen(panelUrl)) && !(await isOpen(setupUrl)),
+      );
+      const front = await worker.call(
+        async () =>
+          (
+            await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+          )[0]?.url,
+      );
+      assert.equal(front, extensionUrl("options.html"));
     } finally {
       await session.close();
     }

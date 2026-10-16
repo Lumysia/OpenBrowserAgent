@@ -163,7 +163,6 @@ test("settings: defaults, cleaned values, the target language", () => {
       videoSubtitles: false,
       pageButton: true,
       pageButtonHiddenHosts: [],
-      shortcut: true,
     },
   );
   // The browser's translator is the default; an engine already stored stays.

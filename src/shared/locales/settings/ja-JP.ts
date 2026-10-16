@@ -16,6 +16,10 @@ export const settingsJaJP: SettingsMessages = {
   shortcutsFirefoxHint:
     "変更するには about:addons を開き、歯車ボタンをクリックして「拡張機能のショートカットキーの管理」を選びます。",
   openSidePanelCommand: "サイドパネルを開く",
+  smartBarCommand: "選択したテキストにスマートバーを表示",
+  translatePageCommand: "このページを翻訳、または原文を表示",
+  sidePanelShortcutHint:
+    "ブラウザーのショートカット設定でキーを選んでください（例：{keys}）。",
   // One command's keys, with a button to change them.
   commandShortcut: {
     // {shortcut}: the keys, as the browser shows them.

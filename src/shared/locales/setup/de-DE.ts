@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupDeDE: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupDeDE: SetupMessages = {
   progressStep: "Schritt {current} von {total}: {step}",
   steps: {
     language: "Sprache",
+    path: "Neu oder bestehend",
     provider: "KI-Anbieter",
     pages: "Auf Webseiten",
+    sync: "Synchronisierung",
+    passphrase: "Sync-Passphrase",
+    download: "Download",
     done: "Fertig",
   },
   back: "Zurück",
@@ -17,6 +22,51 @@ export const setupDeDE: SetupMessages = {
   languageTitle: "Sprachen wählen",
   languageDescription:
     "Die Sprache der Erweiterung und die Sprache, in die Seiten übersetzt werden. Meist passt beides schon.",
+  pathTitle: "Haben Sie OpenBrowserAgent schon verwendet?",
+  pathDescription:
+    "Wenn Sie es auf einem anderen Gerät nutzen, bringt die Synchronisierung Ihre KI-Anbieter, Agents und Chats hierher.",
+  pathNew: "Zum ersten Mal hier",
+  pathNewDescription:
+    "Verbinden Sie einen KI-Anbieter und wählen Sie, was OpenBrowserAgent zu Webseiten hinzufügt.",
+  pathReturning: "Ich nutze es auf einem anderen Gerät",
+  pathReturningDescription:
+    "Synchronisieren Sie Ihre Einstellungen, KI-Anbieter und Chats von Ihrem anderen Gerät.",
+  syncTitle: "Art der Synchronisierung wählen",
+  syncDescription:
+    "Verbinden Sie sich auf dieselbe Weise wie auf Ihrem anderen Gerät.",
+  recommended: "Empfohlen",
+  methodCode: "Sync-Code einfügen",
+  methodCodeDescription:
+    "Ein Code enthält den Sync-Server und was synchronisiert wird.",
+  methodBrowser: "Synchronisierung über das Browserkonto",
+  browserConnect: "Synchronisierung über das Browserkonto einschalten",
+  tryAgain: "Erneut versuchen",
+  asNewUser: "Als neuer Nutzer einrichten",
+  passphraseTitle: "Sync-Passphrase eingeben",
+  passphraseDescription:
+    "Ihre API-Schlüssel werden verschlüsselt synchronisiert. Geben Sie die Sync-Passphrase ein, die Sie auf Ihrem anderen Gerät festgelegt haben.",
+  keysUnlocked: "Ihre API-Schlüssel sind entsperrt.",
+  downloadTitle: "Verbinden und herunterladen",
+  downloadDescription:
+    "OpenBrowserAgent lädt herunter, was Ihr anderes Gerät synchronisiert hat.",
+  downloading: "Wird heruntergeladen…",
+  downloadFailed: "Download vom Sync-Server fehlgeschlagen.",
+  arrived: "Von Ihrem anderen Gerät:",
+  noSyncedProvider:
+    "Von Ihrem anderen Gerät kam kein KI-Anbieter. Der Chat braucht einen.",
+  arrivedCount: {
+    providers: plural({
+      one: "{count} KI-Anbieter",
+      other: "{count} KI-Anbieter",
+    }),
+    agents: plural({ one: "{count} Agent", other: "{count} Agents" }),
+    skills: plural({ one: "{count} Skill", other: "{count} Skills" }),
+    mcpServers: plural({
+      one: "{count} MCP-Server",
+      other: "{count} MCP-Server",
+    }),
+    chats: plural({ one: "{count} Chat", other: "{count} Chats" }),
+  },
   providerTitle: "KI-Anbieter verbinden",
   providerDescription:
     "Chat und Agent brauchen einen KI-Anbieter. Wählen Sie einen Dienst oder einen beliebigen OpenAI- oder Anthropic-kompatiblen Server mit seiner Base URL.",
@@ -52,13 +102,9 @@ export const setupDeDE: SetupMessages = {
   openPanelDescription:
     "Heften Sie OpenBrowserAgent im Erweiterungsmenü des Browsers an und klicken Sie auf das Symbol, um die Seitenleiste zu öffnen.",
   openPanel: "Seitenleiste öffnen",
-  joinLink:
-    "Nutzen Sie OpenBrowserAgent schon auf einem anderen Gerät? Sync-Code einfügen",
-  codeTab: "Code einfügen",
-  manualTab: "Manuell einrichten",
   code: "Sync-Code",
   codeDescription:
-    "Kopieren Sie ihn auf dem anderen Gerät unter Einstellungen → Synchronisierung. Die Sync-Auswahl des Codes ersetzt die dieses Geräts.",
+    "Öffnen Sie auf Ihrem anderen Gerät {settings} → {sync} und klicken Sie auf „{button}“. Die Sync-Auswahl des Codes ersetzt die dieses Geräts.",
   codeInvalid:
     "Das ist kein gültiger Sync-Code. Kopieren Sie ihn erneut und fügen Sie den ganzen Code ein.",
   connect: "Verbinden und synchronisieren",
@@ -70,5 +116,6 @@ export const setupDeDE: SetupMessages = {
   keysLocked:
     "Ihre API-Schlüssel sind synchronisiert, aber gesperrt. Geben Sie Ihre Sync-Passphrase ein.",
   unlock: "Entsperren",
+  unlocking: "Wird entsperrt…",
   skip: "Später",
 };

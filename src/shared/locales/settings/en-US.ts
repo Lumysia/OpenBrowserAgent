@@ -17,8 +17,14 @@ export const settingsEnUS = {
   // Where the browser has no page to open for it.
   shortcutsFirefoxHint:
     'To change them, open about:addons, click the gear button and choose "Manage Extension Shortcuts".',
-  // The toolbar button's command, which has no description of its own.
+  // Command titles, in the extension's language (the browser gives them in
+  // its own).
   openSidePanelCommand: "Open the side panel",
+  smartBarCommand: "Show the smart bar for the selected text",
+  translatePageCommand: "Translate this page or show the original",
+  // Where the side panel's command has no keys; {keys}: the suggested ones.
+  sidePanelShortcutHint:
+    "Pick a key in the browser’s shortcut settings, for example {keys}.",
   // One command's keys, with a button to change them.
   commandShortcut: {
     // {shortcut}: the keys, as the browser shows them.

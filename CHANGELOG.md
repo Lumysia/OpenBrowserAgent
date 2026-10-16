@@ -8,6 +8,11 @@ What changed in each release. The release workflow publishes the section for the
 
 - Image generation: the AI picks the image size for each request; the Image size setting is gone.
 - Settings: the sidebar lists every page, with Agents, Skills, Translate, Smart bar, Right-click menu, MCP servers, Local execution bridges and Troubleshooting shown under their group instead of in tabs at the top of the page. Each page now starts with what you change most often and ends with what you set once: Translate starts with the translation engine and display, Smart bar's site lists and Sync's copy/paste code (now under "Sync code") come last. Outline buttons, badges and expand arrows are easier to see.
+- After pasting a sync code on the Sync page, the form now just says it connected instead of showing a "Connect and sync" button that did nothing more.
+- The keyboard shortcuts list no longer has an on/off switch for "Translate this page or show the original". To turn that shortcut off or change it, use the browser's shortcut settings ("Change shortcuts"), as for the other shortcuts. If you had turned it off with the switch, the shortcut works again until you remove its key there.
+- The keyboard shortcuts list (setup's last page and Settings → General) names every shortcut in the extension's language, not the browser's. When opening the side panel has no shortcut, the list says how to pick one (for example Ctrl+Shift+Y).
+- **Setup for returning users**: after the language, setup asks whether you've used OpenBrowserAgent before. "I use it on another device" connects sync (paste a sync code, browser account sync, or WebDAV), asks for your sync passphrase if your API keys are encrypted, shows what arrived (AI providers, agents, chats and more) and skips the AI provider and web page steps. Each step goes on by itself once its work is done, and while something runs the Next button says what is happening. If sync can't connect or brings no AI provider, you can try again or set up as a new user. The small sync code link on the AI provider step is gone.
+- "Open side panel" at the end of setup now closes the setup tab, and a setup started with "Run setup again" goes back to your Settings tab.
 
 ## 0.2.0-beta.13 - 2026-10-15
 

@@ -1,3 +1,5 @@
+import { plural } from "../../plural";
+
 // First run (the guided setup), joining sync from another device, and
 // unlocking synced keys.
 export const setupEnUS = {
@@ -9,8 +11,12 @@ export const setupEnUS = {
   progressStep: "Step {current} of {total}: {step}",
   steps: {
     language: "Language",
+    path: "New or returning",
     provider: "AI provider",
     pages: "On web pages",
+    sync: "Sync",
+    passphrase: "Sync passphrase",
+    download: "Download",
     done: "Done",
   },
   back: "Back",
@@ -19,6 +25,49 @@ export const setupEnUS = {
   languageTitle: "Choose your languages",
   languageDescription:
     "The extension’s language, and the language pages are translated into. Most people keep both as they are.",
+  pathTitle: "Have you used OpenBrowserAgent before?",
+  pathDescription:
+    "If you use it on another device, sync brings your AI providers, agents and chats here.",
+  pathNew: "First time here",
+  pathNewDescription:
+    "Connect an AI provider and choose what OpenBrowserAgent adds to web pages.",
+  pathReturning: "I use it on another device",
+  pathReturningDescription:
+    "Sync your settings, AI providers and chats from your other device.",
+  syncTitle: "Choose how to sync",
+  syncDescription: "Connect the same way as on your other device.",
+  recommended: "Recommended",
+  methodCode: "Paste a sync code",
+  methodCodeDescription: "One code holds the sync server and what syncs.",
+  methodBrowser: "Browser account sync",
+  browserConnect: "Turn on browser account sync",
+  tryAgain: "Try again",
+  asNewUser: "Set up as a new user",
+  passphraseTitle: "Enter your sync passphrase",
+  passphraseDescription:
+    "Your API keys are synced encrypted. Enter the passphrase you set on your other device.",
+  keysUnlocked: "Your API keys are unlocked.",
+  downloadTitle: "Connect and download",
+  downloadDescription:
+    "OpenBrowserAgent downloads what your other device synced.",
+  downloading: "Downloading…",
+  downloadFailed: "Couldn’t download from the sync server.",
+  arrived: "From your other device:",
+  noSyncedProvider:
+    "No AI provider came from your other device. Chat needs one.",
+  arrivedCount: {
+    providers: plural({
+      one: "{count} AI provider",
+      other: "{count} AI providers",
+    }),
+    agents: plural({ one: "{count} agent", other: "{count} agents" }),
+    skills: plural({ one: "{count} skill", other: "{count} skills" }),
+    mcpServers: plural({
+      one: "{count} MCP server",
+      other: "{count} MCP servers",
+    }),
+    chats: plural({ one: "{count} chat", other: "{count} chats" }),
+  },
   providerTitle: "Connect an AI provider",
   providerDescription:
     "Chat and the agent need an AI provider. Pick a service, or any OpenAI- or Anthropic-compatible server with its Base URL.",
@@ -55,12 +104,10 @@ export const setupEnUS = {
   openPanelDescription:
     "Pin OpenBrowserAgent from the browser’s Extensions menu, then click its icon to open the side panel.",
   openPanel: "Open side panel",
-  joinLink: "Already use OpenBrowserAgent on another device? Paste a sync code",
-  codeTab: "Paste code",
-  manualTab: "Manual setup",
   code: "Sync code",
+  // {settings} → {sync}: the settings page; {button}: its button's label.
   codeDescription:
-    "Copy it on your other device under Settings → Sync. The code’s sync choices replace this device’s.",
+    "On your other device, open {settings} → {sync} and press “{button}”. The code’s sync choices replace this device’s.",
   codeInvalid:
     "This isn’t a valid sync code. Copy it again and paste the whole code.",
   connect: "Connect and sync",
@@ -72,6 +119,7 @@ export const setupEnUS = {
   keysLocked:
     "Your API keys are synced but locked. Enter your sync passphrase.",
   unlock: "Unlock",
+  unlocking: "Unlocking…",
   skip: "Skip for now",
 };
 export type SetupMessages = typeof setupEnUS;

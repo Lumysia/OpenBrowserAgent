@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SetupMessages } from "./en-US";
 
 export const setupZhCN: SetupMessages = {
@@ -7,8 +8,12 @@ export const setupZhCN: SetupMessages = {
   progressStep: "第 {current} 步，共 {total} 步：{step}",
   steps: {
     language: "语言",
+    path: "开始方式",
     provider: "AI 提供商",
     pages: "网页功能",
+    sync: "同步",
+    passphrase: "同步口令",
+    download: "下载",
     done: "完成",
   },
   back: "上一步",
@@ -17,6 +22,41 @@ export const setupZhCN: SetupMessages = {
   languageTitle: "选择语言",
   languageDescription:
     "扩展程序的界面语言，以及网页翻译成的语言。大多数人保持默认即可。",
+  pathTitle: "以前用过 OpenBrowserAgent 吗？",
+  pathDescription:
+    "如果你在另一台设备上使用它，同步会把你的 AI 提供商、智能体和对话带到这里。",
+  pathNew: "第一次使用",
+  pathNewDescription:
+    "连接 AI 提供商，并选择 OpenBrowserAgent 在网页上添加的功能。",
+  pathReturning: "我在另一台设备上使用",
+  pathReturningDescription: "从另一台设备同步你的设置、AI 提供商和对话。",
+  syncTitle: "选择同步方式",
+  syncDescription: "使用与另一台设备相同的方式连接。",
+  recommended: "推荐",
+  methodCode: "粘贴同步码",
+  methodCodeDescription: "一个同步码包含同步服务器和要同步的内容。",
+  methodBrowser: "浏览器账号同步",
+  browserConnect: "开启浏览器账号同步",
+  tryAgain: "重试",
+  asNewUser: "作为新用户设置",
+  passphraseTitle: "输入同步口令",
+  passphraseDescription:
+    "你的 API Key 已加密同步。请输入你在另一台设备上设置的同步口令。",
+  keysUnlocked: "你的 API Key 已解锁。",
+  downloadTitle: "连接并下载",
+  downloadDescription: "OpenBrowserAgent 会下载另一台设备同步的内容。",
+  downloading: "正在下载…",
+  downloadFailed: "无法从同步服务器下载。",
+  arrived: "来自另一台设备：",
+  noSyncedProvider:
+    "另一台设备没有同步来任何 AI 提供商。对话需要一个 AI 提供商。",
+  arrivedCount: {
+    providers: plural({ other: "{count} 个 AI 提供商" }),
+    agents: plural({ other: "{count} 个智能体" }),
+    skills: plural({ other: "{count} 个技能" }),
+    mcpServers: plural({ other: "{count} 个 MCP 服务器" }),
+    chats: plural({ other: "{count} 个对话" }),
+  },
   providerTitle: "连接 AI 提供商",
   providerDescription:
     "对话和智能体需要一个 AI 提供商。选择一个服务，或填写任意 OpenAI 或 Anthropic 兼容服务器的 Base URL。",
@@ -47,12 +87,9 @@ export const setupZhCN: SetupMessages = {
   openPanelDescription:
     "在浏览器的扩展程序菜单中固定 OpenBrowserAgent，然后点击它的图标打开侧边栏。",
   openPanel: "打开侧边栏",
-  joinLink: "已在另一台设备上使用 OpenBrowserAgent？粘贴同步码",
-  codeTab: "粘贴同步码",
-  manualTab: "手动设置",
   code: "同步码",
   codeDescription:
-    "在另一台设备的“设置 → 同步”中复制。同步码中的同步选项会替换本设备的选项。",
+    "在另一台设备上打开“{settings} → {sync}”，然后点击“{button}”。同步码中的同步选项会替换本设备的选项。",
   codeInvalid: "这不是有效的同步码。请重新复制并粘贴完整的同步码。",
   connect: "连接并同步",
   testing: "正在连接…",
@@ -61,5 +98,6 @@ export const setupZhCN: SetupMessages = {
   connected: "已连接，设置正在同步。",
   keysLocked: "你的 API Key 已同步但处于锁定状态。请输入同步口令。",
   unlock: "解锁",
+  unlocking: "正在解锁…",
   skip: "暂时跳过",
 };

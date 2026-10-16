@@ -22,11 +22,10 @@ import {
 } from "../src/shared/page-translate/page-language";
 import { patternsCover } from "../src/shared/site-hosts";
 
-test("the page button and the shortcut are on by default, also for settings stored before them", () => {
+test("the page button is on by default, also for settings stored before it", () => {
   assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.pageButton, true);
-  assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.shortcut, true);
   assert.deepEqual(DEFAULT_PAGE_TRANSLATE_SETTINGS.pageButtonHiddenHosts, []);
-  // Written by an earlier release: no button, site list or shortcut fields.
+  // Written by an earlier release: no button or site list fields.
   const stored = {
     engine: "google",
     modelId: "",
@@ -42,15 +41,15 @@ test("the page button and the shortcut are on by default, also for settings stor
     videoSubtitles: false,
     pageButton: true,
     pageButtonHiddenHosts: [],
-    shortcut: true,
   });
-  // Turned off stays off.
+  // Turned off stays off. The shortcut switch of an earlier release is
+  // dropped: the browser's shortcut settings turn the key off.
   const off = normalizePageTranslateSettings({
     pageButton: false,
     shortcut: false,
-  });
+  } as Partial<PageTranslateSettings>);
   assert.equal(off.pageButton, false);
-  assert.equal(off.shortcut, false);
+  assert.equal("shortcut" in off, false);
   assert.equal(
     normalizePageTranslateSettings({ pageButton: "no" as never }).pageButton,
     true,

@@ -16,6 +16,9 @@ export const settingsZhTW: SettingsMessages = {
   shortcutsFirefoxHint:
     "如需修改，請開啟 about:addons，點選齒輪按鈕並選擇「管理擴充套件快速鍵」。",
   openSidePanelCommand: "開啟側邊欄",
+  smartBarCommand: "為選取的文字顯示智慧工具列",
+  translatePageCommand: "翻譯此頁面或顯示原文",
+  sidePanelShortcutHint: "請在瀏覽器的快速鍵設定中選擇按鍵，例如 {keys}。",
   // One command's keys, with a button to change them.
   commandShortcut: {
     // {shortcut}: the keys, as the browser shows them.

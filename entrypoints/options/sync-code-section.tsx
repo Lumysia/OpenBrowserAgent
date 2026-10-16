@@ -35,7 +35,7 @@ export function SyncCodeSection({
           </div>
         )
       }
-      <SyncJoinDisclosure label={t.sync.pasteCode} manual={false} />
+      <SyncJoinDisclosure />
     </SettingsSection>
   );
 }

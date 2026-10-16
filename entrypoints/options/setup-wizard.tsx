@@ -1,73 +1,36 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Loader2, PanelRight } from "lucide-react";
+import { leaveSetup } from "../../src/shared/setup-progress";
 import {
-  ArrowLeft,
-  ArrowRight,
-  PanelRight,
-  Languages,
-  MousePointerClick,
-  PartyPopper,
-  Server,
-  type LucideIcon,
-} from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
-import { storage } from "../../src/shared/storage";
-import {
+  chooseSetupPath,
   nextSetupStep,
   previousSetupStep,
-  SETUP_STEPS,
+  setupAsNewUser,
   setupForwardAction,
-  setupStepIndex,
+  setupSteps,
+  type SetupFacts,
   type SetupStep,
 } from "../../src/shared/setup-steps";
+import { storage } from "../../src/shared/storage";
+import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { Button, ScrollArea, StepDots } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { useLatest } from "../../src/ui/use-latest";
+import { useStoredState } from "../../src/ui/useStoredState";
 import { useConfiguredModels } from "./model-select";
 import { SetupDoneStep } from "./setup-done-step";
+import { SetupDownloadStep } from "./setup-download-step";
 import { SetupPagesStep } from "./setup-pages-step";
+import { SetupPassphraseStep } from "./setup-passphrase-step";
+import { SetupPathStep } from "./setup-path-step";
 import { SetupProviderStep } from "./setup-provider-step";
+import { SETUP_STEP_HEADINGS } from "./setup-step-headings";
+import { SetupSyncStep } from "./setup-sync-step";
 import { TranslateIntoSection } from "./translate-into";
 import { UiLanguageSection } from "./ui-language-section";
 import { useOpenSidePanel } from "./use-open-side-panel";
+import type { SetupBusyReport } from "./use-setup-busy";
 import { useSetupProgress } from "./use-setup-progress";
-
-// Each step's icon and heading.
-const STEPS: Record<
-  SetupStep,
-  {
-    icon: LucideIcon;
-    text: (t: Messages) => { title: string; description: string };
-  }
-> = {
-  language: {
-    icon: Languages,
-    text: (t) => ({
-      title: t.setup.languageTitle,
-      description: t.setup.languageDescription,
-    }),
-  },
-  provider: {
-    icon: Server,
-    text: (t) => ({
-      title: t.setup.providerTitle,
-      description: t.setup.providerDescription,
-    }),
-  },
-  pages: {
-    icon: MousePointerClick,
-    text: (t) => ({
-      title: t.setup.pagesTitle,
-      description: t.setup.pagesDescription,
-    }),
-  },
-  done: {
-    icon: PartyPopper,
-    text: (t) => ({
-      title: t.setup.doneTitle,
-      description: t.setup.doneDescription,
-    }),
-  },
-};
 
 // Where Enter belongs to the control (a button, a field, a list) instead
 // of meaning "Next".
@@ -75,18 +38,37 @@ const OWN_ENTER =
   'a, button, input, select, textarea, form, [contenteditable], [role="button"], [role="combobox"], [role="listbox"], [role="option"], [role="switch"], [role="checkbox"], [role="tab"]';
 
 // The guided setup, opened on install: one thing per step, with Back and
-// Next (Skip while a step isn't done) and dots for where it stands.
+// Next (Skip while a step isn't done) and dots for where it stands on the
+// path chosen.
 export function SetupWizard() {
   const t = useMessages();
   const s = t.setup;
-  const { progress, goTo, setProviderId } = useSetupProgress();
+  const { progress, goTo, goToPath, setProviderId } = useSetupProgress();
   const hasChatModel = useConfiguredModels().length > 0;
+  const [syncStatus] = useStoredState(storage.syncStatus);
+  const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const heading = useRef<HTMLHeadingElement>(null);
   const openSidePanel = useOpenSidePanel();
+  const facts: SetupFacts = {
+    hasChatModel,
+    syncOn: !!activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID,
+    keys: syncStatus?.keys,
+  };
   const step = progress?.step;
-  const forward = step && setupForwardAction(step, hasChatModel);
+  // What the step is doing meanwhile, if anything: the forward button says
+  // it and waits.
+  const [busy, setBusy] = useState<{ step: SetupStep; reason: string }>();
+  const busyReason = busy && busy.step === step ? busy.reason : undefined;
+  const reportBusy: SetupBusyReport = (reason) => {
+    if (!step) return;
+    setBusy((current) =>
+      reason ? { step, reason } : current?.step === step ? undefined : current,
+    );
+  };
+  const forward =
+    progress && !busyReason ? setupForwardAction(progress, facts) : undefined;
   const goForward = () => {
-    const next = step && nextSetupStep(step);
+    const next = progress && nextSetupStep(progress, facts);
     if (next) goTo(next);
   };
   const latestForward = useLatest(forward ? goForward : undefined);
@@ -120,16 +102,30 @@ export function SetupWizard() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [latestForward]);
 
-  if (!step || !progress) return null;
-  const { icon: Icon, text } = STEPS[step];
-  const { title, description } = text(t);
-  const back = previousSetupStep(step);
+  if (!step || !progress || !syncStatus || !activeSyncBackendId) return null;
+  const { icon: Icon, ...heads } = SETUP_STEP_HEADINGS[step];
+  const steps = setupSteps(progress, facts);
+  const back = previousSetupStep(progress, facts);
+  const asNewUser = () => goToPath(setupAsNewUser());
+  // Connected: on to the passphrase if the synced keys have one, as the
+  // sync round just stored.
+  const synced = async () => {
+    const { keys } = await storage.syncStatus.get();
+    const next = nextSetupStep({ step: "sync", path: "returning" }, { keys });
+    if (next) goTo(next);
+  };
   const bodies: Record<SetupStep, ReactNode> = {
     language: (
       <>
         <UiLanguageSection />
         <TranslateIntoSection />
       </>
+    ),
+    path: (
+      <SetupPathStep
+        path={progress.path}
+        onChoose={(path) => goToPath(chooseSetupPath(path, facts))}
+      />
     ),
     provider: (
       <SetupProviderStep
@@ -138,11 +134,27 @@ export function SetupWizard() {
       />
     ),
     pages: <SetupPagesStep />,
+    sync: (
+      <SetupSyncStep
+        connected={facts.syncOn}
+        onBusy={reportBusy}
+        onConnected={() => void synced().catch(console.warn)}
+        onNewUser={asNewUser}
+      />
+    ),
+    passphrase: (
+      <SetupPassphraseStep
+        unlocked={!!facts.keys?.unlocked}
+        onBusy={reportBusy}
+        onUnlocked={goForward}
+      />
+    ),
+    download: <SetupDownloadStep onBusy={reportBusy} onNewUser={asNewUser} />,
     done: (
       <SetupDoneStep
         hasChatModel={hasChatModel}
         canOpenPanel={!!openSidePanel}
-        onAddProvider={() => goTo("provider")}
+        onAddProvider={asNewUser}
       />
     ),
   };
@@ -152,14 +164,14 @@ export function SetupWizard() {
       <ScrollArea className="setup-wizard-scroll" inset>
         <section key={step} className="setup-step" aria-labelledby="setup-step">
           <header className="setup-step-header">
-            {!previousSetupStep(step) && (
+            {!back && (
               <span className="setup-wizard-brand">{s.welcomeTitle}</span>
             )}
             <Icon className="setup-step-icon" aria-hidden />
             <h1 id="setup-step" ref={heading} tabIndex={-1}>
-              {title}
+              {s[heads.title]}
             </h1>
-            <p className="muted">{description}</p>
+            <p className="muted">{s[heads.description]}</p>
           </header>
           <div className="setup-step-body">{bodies[step]}</div>
         </section>
@@ -174,17 +186,27 @@ export function SetupWizard() {
           )}
         </div>
         <StepDots
-          steps={SETUP_STEPS}
-          current={setupStepIndex(step)}
+          steps={steps}
+          current={steps.indexOf(step)}
           label={s.progressLabel}
           stepLabel={(index) =>
             s.progressStep
               .replace("{current}", String(index + 1))
-              .replace("{total}", String(SETUP_STEPS.length))
-              .replace("{step}", s.steps[SETUP_STEPS[index]])
+              .replace("{total}", String(steps.length))
+              .replace("{step}", s.steps[steps[index]])
           }
         />
         <div className="setup-wizard-action setup-forward-slot">
+          {busyReason && (
+            <Button
+              className="setup-forward setup-loading-action"
+              data-state="loading"
+              disabled
+            >
+              <Loader2 size={16} className="spin" />
+              {busyReason}
+            </Button>
+          )}
           {forward && (
             <Button
               className="setup-forward"
@@ -196,7 +218,13 @@ export function SetupWizard() {
             </Button>
           )}
           {step === "done" && openSidePanel && (
-            <Button onClick={openSidePanel}>
+            <Button
+              onClick={() =>
+                openSidePanel()
+                  .then(() => leaveSetup(progress.returnTo))
+                  .catch(console.warn)
+              }
+            >
               <PanelRight size={16} /> {s.openPanel}
             </Button>
           )}

@@ -40,6 +40,9 @@ export function useSetupProgress() {
   return {
     progress,
     goTo: (step: SetupStep) => save({ step }),
+    // A step on another path too (the path question answered, or sync
+    // that didn't work out).
+    goToPath: (change: Pick<SetupProgress, "step" | "path">) => save(change),
     setProviderId: (providerId: string | undefined) => save({ providerId }),
   };
 }
