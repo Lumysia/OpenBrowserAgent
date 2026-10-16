@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Tooltips close when the pointer moves quickly from the side panel or settings into the web page.
+
 - Image generation: the AI picks the image size for each request; the Image size setting is gone.
 - Settings: the sidebar lists every page, with Agents, Skills, Translate, Smart bar, Right-click menu, MCP servers, Local execution bridges and Troubleshooting shown under their group instead of in tabs at the top of the page. Each page now starts with what you change most often and ends with what you set once: Translate starts with the translation engine and display, Smart bar's site lists and Sync's copy/paste code (now under "Sync code") come last. Outline buttons, badges and expand arrows are easier to see.
 
