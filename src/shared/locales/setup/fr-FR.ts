@@ -101,7 +101,7 @@ export const setupFrFR: SetupMessages = {
     "Les discussions ont besoin d’un fournisseur d’IA. La traduction des pages avec le traducteur intégré fonctionne sans.",
   welcomeTitle: "Bienvenue dans OpenBrowserAgent",
   openPanelDescription:
-    "Épinglez OpenBrowserAgent depuis le menu Extensions du navigateur, puis cliquez sur son icône pour ouvrir le panneau latéral.",
+    "Épinglez OpenBrowserAgent depuis le menu Extensions du navigateur, cliquez sur son icône, puis choisissez « Ouvrir le panneau latéral ».",
   openPanel: "Ouvrir le panneau latéral",
   code: "Code de synchronisation",
   codeDescription:

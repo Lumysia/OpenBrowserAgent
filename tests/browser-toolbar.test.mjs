@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ACTION_MENU_ID } from "../src/shared/action-menu.ts";
+import { ACTION_COMMAND, SIDE_PANEL_COMMAND } from "../src/shared/commands.ts";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { SIDE_PANEL_SHORTCUT } from "../src/shared/config.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
@@ -16,7 +17,7 @@ import {
 // The toolbar button: its keyboard shortcut and its own right-click menu.
 
 test(
-  "the toolbar button's shortcut registers",
+  "the side panel's shortcut registers; the toolbar button has none",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const session = await startExtension();
@@ -24,11 +25,11 @@ test(
       const commands = await session.options.call(() =>
         chrome.commands.getAll(),
       );
-      const action = commands.find(
-        (command) => command.name === "_execute_action",
-      );
+      const shortcut = (name) =>
+        commands.find((command) => command.name === name)?.shortcut;
       // Chrome leaves the shortcut empty when it refuses the suggested key.
-      assert.equal(action?.shortcut, SIDE_PANEL_SHORTCUT.default);
+      assert.equal(shortcut(SIDE_PANEL_COMMAND), SIDE_PANEL_SHORTCUT.default);
+      assert.equal(shortcut(ACTION_COMMAND), "");
     } finally {
       await session.close();
     }

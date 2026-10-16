@@ -1,4 +1,5 @@
 import { getBrowserApi } from "../shared/browser-api";
+import { SIDE_PANEL_COMMAND } from "../shared/commands";
 import { openSetup } from "../shared/setup-progress";
 import { openOrFocusUrl } from "../shared/tab-navigation";
 import { knownSetupFinished, setupFinished } from "./setup-gate";
@@ -41,6 +42,12 @@ export function openSidePanel(windowId: number | undefined) {
     (error: unknown) => console.warn("Failed to open the side panel", error),
   );
   return true;
+}
+
+// The side panel's own keyboard shortcut (SIDE_PANEL_COMMAND). The key
+// press allows opening the panel only until the first await.
+export function handleSidePanelCommand(command: string, tab?: chrome.tabs.Tab) {
+  if (command === SIDE_PANEL_COMMAND) openSidePanel(tab?.windowId);
 }
 
 // `toggle`: the toolbar button closes Firefox's sidebar again.

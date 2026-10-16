@@ -102,7 +102,7 @@ export const setupEnUS = {
   noProviderNote:
     "Chat needs an AI provider. Page translation with the browser’s translator works without one.",
   openPanelDescription:
-    "Pin OpenBrowserAgent from the browser’s Extensions menu, then click its icon to open the side panel.",
+    "Pin OpenBrowserAgent from the browser’s Extensions menu, click its icon, then choose “Open side panel”.",
   openPanel: "Open side panel",
   code: "Sync code",
   // {settings} → {sync}: the settings page; {button}: its button's label.

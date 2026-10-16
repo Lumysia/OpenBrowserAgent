@@ -86,7 +86,7 @@ export const setupZhTW: SetupMessages = {
     "對話需要 AI 提供者。使用內建翻譯器的網頁翻譯不需要 AI 提供者。",
   welcomeTitle: "歡迎使用 OpenBrowserAgent",
   openPanelDescription:
-    "在瀏覽器的擴充功能選單中釘選 OpenBrowserAgent，然後點選它的圖示開啟側邊欄。",
+    "在瀏覽器的擴充功能選單中釘選 OpenBrowserAgent，點選它的圖示，然後選擇「開啟側邊欄」。",
   openPanel: "開啟側邊欄",
   code: "同步碼",
   codeDescription:

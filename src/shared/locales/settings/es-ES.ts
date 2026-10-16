@@ -15,6 +15,7 @@ export const settingsEsES: SettingsMessages = {
   changeShortcuts: "Cambiar atajos",
   shortcutsFirefoxHint:
     'Para cambiarlos, abre about:addons, haz clic en el botón del engranaje y elige "Gestionar atajos de extensiones".',
+  openMenuCommand: "Abrir el menú",
   openSidePanelCommand: "Abrir el panel lateral",
   smartBarCommand: "Mostrar la barra inteligente para el texto seleccionado",
   translatePageCommand: "Traducir esta página o mostrar el original",

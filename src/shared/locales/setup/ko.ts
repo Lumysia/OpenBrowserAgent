@@ -93,7 +93,7 @@ export const setupKo: SetupMessages = {
     "채팅에는 AI 제공업체가 필요합니다. 내장 번역기를 쓰는 페이지 번역은 없어도 됩니다.",
   welcomeTitle: "OpenBrowserAgent에 오신 것을 환영합니다",
   openPanelDescription:
-    "브라우저의 확장 프로그램 메뉴에서 OpenBrowserAgent를 고정한 뒤 아이콘을 클릭해 사이드 패널을 여세요.",
+    "브라우저의 확장 프로그램 메뉴에서 OpenBrowserAgent를 고정한 뒤 아이콘을 클릭하고 ‘사이드 패널 열기’를 선택하세요.",
   openPanel: "사이드 패널 열기",
   code: "동기화 코드",
   codeDescription:

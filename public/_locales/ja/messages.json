@@ -5,6 +5,9 @@
   "extDescription": {
     "message": "OpenBrowserAgent は AI エージェントをブラウザーに組み込み、タスクをスマートに自動化します。"
   },
+  "openSidePanelCommand": {
+    "message": "サイドパネルを開く"
+  },
   "smartBarCommand": {
     "message": "選択したテキストにスマートバーを表示"
   },

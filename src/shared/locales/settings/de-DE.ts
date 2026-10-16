@@ -15,6 +15,7 @@ export const settingsDeDE: SettingsMessages = {
   changeShortcuts: "Tastenkürzel ändern",
   shortcutsFirefoxHint:
     "Öffnen Sie dazu about:addons, klicken Sie auf das Zahnrad und wählen Sie „Tastenkombinationen für Erweiterungen verwalten“.",
+  openMenuCommand: "Menü öffnen",
   openSidePanelCommand: "Seitenleiste öffnen",
   smartBarCommand: "Smart Bar für den markierten Text anzeigen",
   translatePageCommand: "Diese Seite übersetzen oder das Original anzeigen",

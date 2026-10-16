@@ -92,7 +92,7 @@ export const setupJaJP: SetupMessages = {
     "チャットには AI プロバイダーが必要です。組み込み翻訳を使うページ翻訳は AI プロバイダーなしで使えます。",
   welcomeTitle: "OpenBrowserAgent へようこそ",
   openPanelDescription:
-    "ブラウザーの拡張機能メニューで OpenBrowserAgent を固定し、アイコンをクリックしてサイドパネルを開きます。",
+    "ブラウザーの拡張機能メニューで OpenBrowserAgent を固定し、アイコンをクリックして「サイドパネルを開く」を選びます。",
   openPanel: "サイドパネルを開く",
   code: "同期コード",
   codeDescription:
