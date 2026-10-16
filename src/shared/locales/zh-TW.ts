@@ -375,8 +375,8 @@ export const zhTW: LocaleMessages = {
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
-    enableImageGeneration: "啟用圖片產生",
-    enableImageGenerationDescription: "向智慧體開放圖片產生工具。",
+    imageModelDescription: "選擇模型後，智慧體即可產生和編輯圖片。",
+    imageModelOff: "關閉",
     providerConnection: "連線資訊",
     providerConnectionHint: "設定名稱和 API Key。",
     providerName: "名稱",

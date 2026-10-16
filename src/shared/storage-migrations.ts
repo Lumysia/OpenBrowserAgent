@@ -1,6 +1,7 @@
 import { getBrowserApi } from "./browser-api";
 import { normalizeMcpServers } from "./mcp";
 import { mcpServerFromPreset, MCP_SERVER_PRESETS } from "./mcp-presets";
+import { chooseChatModel, chooseImageModel } from "./model-choice";
 import { storage } from "./storage";
 import { STORAGE_KEYS } from "./storage-keys";
 
@@ -18,6 +19,30 @@ type Migration = {
 
 const REMOVED_USER_ID_KEY = "userId";
 const REMOVED_DEBUG_LOGGING_KEY = "debug-logging-enabled";
+
+// The "Enable image generation" switch, removed: the Images model choice is
+// the switch now. Switched on without a choice (or one no longer
+// configured), images used the chat's model, so that model becomes the
+// choice; switched off, a choice is
+// cleared, as image generation was off.
+async function imageModelIsTheSwitch() {
+  const providers = await storage.provider.get();
+  await storage.preferences.update((current) => {
+    const { imageGenerationEnabled: enabled, ...preferences } =
+      current as typeof current & { imageGenerationEnabled?: unknown };
+    if (enabled === undefined) return current;
+    return {
+      ...preferences,
+      selectedImageModelId:
+        enabled === true
+          ? (
+              chooseImageModel(providers, preferences) ??
+              chooseChatModel(providers, preferences)
+            )?.model.id
+          : undefined,
+    };
+  });
+}
 
 const MIGRATIONS: readonly Migration[] = [
   {
@@ -58,6 +83,11 @@ const MIGRATIONS: readonly Migration[] = [
     id: "setup-done-before-guided-setup",
     until: "0.2.0-beta.12",
     run: () => storage.setupDone.set(true),
+  },
+  {
+    id: "image-model-is-the-switch",
+    until: "0.2.0-beta.16",
+    run: imageModelIsTheSwitch,
   },
 ];
 

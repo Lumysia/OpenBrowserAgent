@@ -429,9 +429,9 @@ export const jaJP: LocaleMessages = {
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
-    enableImageGeneration: "画像生成を有効化",
-    enableImageGenerationDescription:
-      "エージェントが画像生成ツールを使えるようにします。",
+    imageModelDescription:
+      "モデルを選ぶと、エージェントが画像を生成・編集できるようになります。",
+    imageModelOff: "オフ",
     providerConnection: "接続情報",
     providerConnectionHint: "名前と API キーを設定します。",
     providerName: "名前",

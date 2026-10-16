@@ -57,7 +57,6 @@ export async function browserToolFixture(handleRequest, launch = {}) {
         }),
       },
       preferences: {
-        imageGenerationEnabled: true,
         selectedImageModelId: "fixture-image",
         maxToolSteps: 40,
       },

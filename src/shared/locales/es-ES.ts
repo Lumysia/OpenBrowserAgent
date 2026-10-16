@@ -465,9 +465,9 @@ export const esES: LocaleMessages = {
     selectModel: "Seleccionar modelo",
     selectModelDescription:
       "Elige el modelo de chat principal. Los agentes funcionan mejor con modelos compatibles con llamadas a herramientas.",
-    enableImageGeneration: "Activar generación de imágenes",
-    enableImageGenerationDescription:
-      "Pone la herramienta de generación de imágenes a disposición de los agentes.",
+    imageModelDescription:
+      "Elige un modelo para que el agente pueda crear y editar imágenes.",
+    imageModelOff: "Desactivada",
     providerConnection: "Conexión",
     providerConnectionHint: "Define el nombre y la clave API.",
     providerName: "Nombre",

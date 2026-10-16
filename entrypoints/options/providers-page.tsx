@@ -1,11 +1,8 @@
-import { Cpu, Image, Plus, Server } from "lucide-react";
+import { Cpu, Plus, Server } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import { MODEL_ROLES, type ModelRole } from "../../src/shared/model-roles";
 import { storage } from "../../src/shared/storage";
 import {
-  Card,
-  CardHeader,
-  SettingSwitch,
   SettingToggleRow,
   SettingsPageHeader,
   SettingsSection,
@@ -43,8 +40,8 @@ const ROLE_TEXT: Record<
   }),
   images: (t) => ({
     title: t.settings.modelImages,
-    description: t.options.enableImageGenerationDescription,
-    none: t.options.modelSameAsChat,
+    description: t.options.imageModelDescription,
+    none: t.options.imageModelOff,
   }),
 };
 
@@ -95,22 +92,6 @@ export function ProvidersPage() {
           })}
         </div>
       </SettingsSection>
-      <Card>
-        <CardHeader>
-          <SettingSwitch
-            icon={<Image size={18} />}
-            title={t.options.enableImageGeneration}
-            description={t.options.enableImageGenerationDescription}
-            checked={!!preferences.imageGenerationEnabled}
-            onChange={(imageGenerationEnabled) =>
-              setPreferences((previous) => ({
-                ...previous,
-                imageGenerationEnabled,
-              }))
-            }
-          />
-        </CardHeader>
-      </Card>
     </div>
   );
 }

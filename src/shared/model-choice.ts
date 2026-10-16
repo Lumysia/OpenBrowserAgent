@@ -62,21 +62,21 @@ export function chooseHelperModel(
   return findModel(normalizeProviderState(state), helperModelId);
 }
 
-// The image model: the one asked for or chosen, else the chat's model.
+// The image model: the one asked for, else the one chosen in Settings.
+// None while no configured model is chosen: image generation is off.
 export function chooseImageModel(
   state: ProviderState,
   preferences: Preferences,
   modelId?: string,
 ) {
+  const providers = normalizeProviderState(state);
+  const imageModels = (provider: ProviderConfig) => [
+    ...(provider.imageModels || []),
+    ...(provider.models || []),
+  ];
   return (
-    findModel(
-      normalizeProviderState(state),
-      modelId || preferences.selectedImageModelId,
-      (provider) => [
-        ...(provider.imageModels || []),
-        ...(provider.models || []),
-      ],
-    ) ?? chooseChatModel(state, preferences)
+    findModel(providers, modelId, imageModels) ??
+    findModel(providers, preferences.selectedImageModelId, imageModels)
   );
 }
 

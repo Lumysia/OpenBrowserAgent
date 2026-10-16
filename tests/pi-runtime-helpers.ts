@@ -45,6 +45,7 @@ export function setupPiRuntime(
       attachments: [],
       mcpServers: [],
       preferences: DEFAULT_PREFERENCES,
+      providers: {},
       depth: 0,
       tab: createRunTab(chatId, { id: 42, title: "Fixture tab" }),
     },

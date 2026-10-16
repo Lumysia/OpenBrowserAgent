@@ -429,9 +429,9 @@ export const enUS = {
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
-    enableImageGeneration: "Enable image generation",
-    enableImageGenerationDescription:
-      "Make the image generation tool available to agents.",
+    imageModelDescription:
+      "Choose a model to let the agent create and edit images.",
+    imageModelOff: "Off",
     providerConnection: "Connection",
     providerConnectionHint: "Set the name and API key.",
     providerName: "Name",
