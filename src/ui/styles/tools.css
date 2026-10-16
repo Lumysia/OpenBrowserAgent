@@ -345,7 +345,15 @@
   font-size: var(--text-base);
   line-height: 1.35;
 }
+/* Each option is a card of its own: it keeps the start line a toggle group
+   hides beside the selected item, and the selected one is marked by its
+   border. */
 .tool-question-option {
+  --question-option-edge: color-mix(
+    in oklab,
+    var(--accent-strong) 12%,
+    var(--border)
+  );
   height: auto;
   min-height: 56px;
   flex: none;
@@ -354,17 +362,20 @@
   align-content: center;
   gap: var(--space-1);
   padding: 10px 12px;
-  border: 1px solid color-mix(in oklab, var(--accent-strong) 12%, var(--border));
+  border: 1px solid var(--question-option-edge);
   border-radius: var(--radius-md);
-  text-align: left;
+  text-align: start;
   white-space: normal;
 }
 .tool-question-option:first-child,
 .tool-question-option[data-state="on"],
 .tool-question-option[data-state="on"] + .tool-question-option {
-  border-left-color: color-mix(
+  border-inline-start-color: var(--question-option-edge);
+}
+.tool-question-option[data-state="on"] {
+  --question-option-edge: color-mix(
     in oklab,
-    var(--accent-strong) 12%,
+    var(--accent-strong) 40%,
     var(--border)
   );
 }
