@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The side panel no longer has the "This page" row; its switches move to the toolbar button's menu.
+
 ## 0.2.0-beta.14 - 2026-10-15
 
 - Tooltips close when the pointer moves quickly from the side panel or settings into the web page.
