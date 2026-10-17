@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- A dropdown list too long for the window, such as Translate into in the toolbar menu, now shows a scrollbar and arrows, so it's clear there are more choices.
+
 ## 0.2.0-beta.18 - 2026-10-16
 
 - Buttons, cards, menus, fields and switches now clearly react when you point at them, in the guided setup and everywhere else, in light and dark mode. Choice cards in setup light up and lift slightly, the chosen one included, and the chosen card stays clearly marked while you point at another; with "Reduce motion" on they don't move.

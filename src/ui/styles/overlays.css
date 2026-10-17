@@ -51,11 +51,32 @@
   overflow: hidden;
   border-radius: var(--radius);
 }
+.ui-select-content[data-state] {
+  display: flex;
+  flex-direction: column;
+  /* A long list scrolls instead of running off the window. */
+  max-height: var(--radix-select-content-available-height);
+}
 .ui-select-viewport {
-  /* A long list scrolls instead of running off the window; minus the
-     content's 1px borders. */
-  max-height: calc(var(--radix-select-content-available-height) - 2px);
+  min-height: 0;
   padding: 5px;
+}
+/* Radix hides the list's scrollbar; a list longer than the window keeps a
+   thin one, and arrows at the ends say there is more. */
+.ui-select-content .ui-select-viewport {
+  scrollbar-width: thin;
+}
+.ui-select-content .ui-select-viewport::-webkit-scrollbar {
+  display: block;
+}
+.ui-select-scroll {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 22px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  cursor: default;
 }
 
 /* Rows inside menus, selects and command lists. */
