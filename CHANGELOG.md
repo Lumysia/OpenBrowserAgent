@@ -4,7 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
-- A dropdown list too long for the window, such as Translate into in the toolbar menu, now shows a scrollbar and arrows, so it's clear there are more choices.
+- A dropdown list too long for the window, such as Translate into in the toolbar menu, now shows a scrollbar, so it's clear there are more choices.
 
 ## 0.2.0-beta.18 - 2026-10-16
 

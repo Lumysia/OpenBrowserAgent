@@ -1,4 +1,5 @@
 import { OPTIONS_HASH } from "../src/shared/config.ts";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
@@ -137,6 +138,16 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
           document.body.textContent.includes(
             "Page text is sent to Google to translate it.",
           ),
+        ),
+      );
+      // Reload once the choice is stored: the notice shows from the page's
+      // state, which can be ahead of the write.
+      await poll(() =>
+        settings.call(
+          async (key) =>
+            (await chrome.storage.local.get(key))[key]?.pageTranslate
+              ?.engine === "google",
+          STORAGE_KEYS.preferences,
         ),
       );
       await settings.call(() => location.reload());

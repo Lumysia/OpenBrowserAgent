@@ -62,21 +62,13 @@
   padding: 5px;
 }
 /* Radix hides the list's scrollbar; a list longer than the window keeps a
-   thin one, and arrows at the ends say there is more. */
+   thin one so it's clear there is more. (Not Radix's scroll arrows: they
+   scroll the list while the pointer passes over them.) */
 .ui-select-content .ui-select-viewport {
   scrollbar-width: thin;
 }
 .ui-select-content .ui-select-viewport::-webkit-scrollbar {
   display: block;
-}
-.ui-select-scroll {
-  display: grid;
-  flex: none;
-  place-items: center;
-  height: 22px;
-  background: var(--popover);
-  color: var(--muted-foreground);
-  cursor: default;
 }
 
 /* Rows inside menus, selects and command lists. */
