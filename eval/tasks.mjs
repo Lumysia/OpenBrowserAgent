@@ -1,5 +1,9 @@
 import { orderRows, todoItems } from "./fixture-pages-apps.mjs";
-import { QUIZ_QUESTIONS, QUIZ_SECONDS } from "./fixture-pages-tools.mjs";
+import {
+  LOGIN_REFUSAL,
+  QUIZ_QUESTIONS,
+  QUIZ_SECONDS,
+} from "./fixture-pages-tools.mjs";
 import { SKILL_TASKS } from "./tasks-skills.mjs";
 
 // Each task opens `tabs` (fixture paths or live URLs; the first is active),
@@ -284,6 +288,23 @@ export const TASKS = [
       return result(!!data && answer.includes(data.code), {
         posted: !!data,
       });
+    },
+  },
+  {
+    // The reason is only in the API's response, not on the page.
+    id: "login-failure",
+    tabs: ["/login"],
+    prompt:
+      "I can't sign in on this page with the account that is filled in. Find out why the login fails and tell me the exact reason.",
+    check({ answer, posts }) {
+      const tried = posts.some((post) => post.path === "/auth/login_flow");
+      return result(
+        tried &&
+          answer.includes(LOGIN_REFUSAL.address) &&
+          /ban/i.test(answer) &&
+          !answer.includes(LOGIN_REFUSAL.password),
+        { tried },
+      );
     },
   },
   {

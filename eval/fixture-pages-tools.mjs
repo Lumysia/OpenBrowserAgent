@@ -89,3 +89,38 @@ document.getElementById("download").addEventListener("click", async () => {
 });`,
   );
 }
+
+// A sign-in form whose API refuses the login and says why only in its
+// response; the page itself shows a generic message.
+export const LOGIN_REFUSAL = {
+  password: "harbour-lamp-77",
+  address: "192.168.1.50",
+  status: 401,
+  body: {
+    error: "ip_banned",
+    message:
+      "Too many failed logins from 192.168.1.50: this address is banned until it is removed from the ban list.",
+  },
+};
+
+export function loginPage() {
+  return layout(
+    "Sign in",
+    `<h1>Home server</h1><form id="login"><p><label>Username <input name="username" value="owner"></label></p>
+<p><label>Password <input name="password" type="password" value="${LOGIN_REFUSAL.password}"></label></p>
+<p><button>Sign in</button></p><p id="error" role="alert"></p></form>`,
+    `document.getElementById("login").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const response = await fetch("/auth/login_flow", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: form.get("username"), password: form.get("password"), client_id: location.origin + "/" }),
+  });
+  if (!response.ok) {
+    document.getElementById("error").textContent = "Login failed. Please try again.";
+    console.warn("login request failed", response.status);
+  }
+});`,
+  );
+}

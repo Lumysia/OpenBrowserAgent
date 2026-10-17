@@ -3,6 +3,12 @@ import { PRODUCT_NAME } from "../../shared/config";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { cdpEvaluate, releaseCdp, withCdp, type CdpSend } from "../cdp";
+import {
+  CAPTURE_ACTIONS,
+  CAPTURE_PARAMETERS,
+  isCaptureAction,
+  runCaptureAction,
+} from "../devtools/capture-tool";
 import { pageTab } from "../page-agent";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
 import { pageHeader } from "./page";
@@ -11,7 +17,8 @@ import { fail, ok, schema, type ToolDefinition } from "./types";
 
 // Tools on the Chrome debugger: page JavaScript (its own, default-off
 // group) and diagnostics. Both detach after each call, except emulation,
-// which lasts until reset.
+// which lasts until reset, and capture, which records until stopped or
+// the end of the run.
 
 const available = () => areCdpAvailable();
 
@@ -57,30 +64,39 @@ export const runScriptTool: ToolDefinition = {
   },
 };
 
+const DEVTOOLS_ACTIONS = [...CAPTURE_ACTIONS, "resources", "emulate", "reset"];
+
 export const devtoolsTool: ToolDefinition = {
   name: TOOL_NAME.devtools,
   group: "devtools",
   onDemand: true,
   available,
-  summary: "Network resources and device emulation",
+  summary: "Network and console recording, resources, device emulation",
   description:
-    "Developer diagnostics for a tab: resources (network resources the page loaded, with timing and size), emulate (viewport like 390x844x2,mobile: a mobile viewport also sets the screen size and turns on touch; userAgent, which is unchanged unless given; colorScheme dark/light/auto; lasts until reset), reset (ends all emulation).",
+    "Developer diagnostics for a tab. capture (record failed requests, console errors and warnings, uncaught exceptions and WebSockets, across reloads, until the end of this reply), captured (what was recorded, with ids), request (one request's headers and bodies, or a WebSocket's frames, by id; credentials are always redacted), resources (resources the page loaded, with timing and size), emulate (viewport like 390x844x2,mobile: a mobile viewport also sets the screen size and turns on touch; userAgent, which is unchanged unless given; colorScheme dark/light/auto; lasts until reset), reset (ends all emulation). Out-of-process frames and service workers are not recorded.",
   parameters: schema(
     {
-      action: { type: "string", enum: ["resources", "emulate", "reset"] },
+      action: {
+        type: "string",
+        enum: DEVTOOLS_ACTIONS,
+      },
       tabId: RUN_TAB_ID_PARAM,
+      ...CAPTURE_PARAMETERS,
       viewport: { type: "string" },
       userAgent: { type: "string" },
       colorScheme: { type: "string", enum: ["dark", "light", "auto"] },
     },
     ["action"],
   ),
-  async execute(input, { run, signal }) {
+  async execute(input, context) {
+    const { run, signal } = context;
     const tab = await pageTab(run.tab, input.tabId);
     const action = trimmedString(input.action);
     const target = { tabId: tab.id };
+    if (isCaptureAction(action))
+      return runCaptureAction(action, tab.id, input, context);
     if (action === "reset") {
-      const active = await releaseCdp(target, resetEmulation);
+      const active = await releaseCdp(target, "emulation", resetEmulation);
       return ok(
         active
           ? `Emulation on tab ${tab.id} reset: viewport, screen size, touch, user agent and color scheme are the browser's own again.`
@@ -93,7 +109,7 @@ export const devtoolsTool: ToolDefinition = {
         target,
         (send) => emulate(send, input),
         signal,
-        true,
+        "emulation",
       );
       return ok(
         `Emulating on tab ${tab.id}: ${result.changes.join("; ")}. ${EMULATION_NOTE}`,
@@ -101,7 +117,7 @@ export const devtoolsTool: ToolDefinition = {
       );
     }
     if (action !== "resources")
-      return fail('action must be "resources", "emulate" or "reset".');
+      return fail(`action must be one of ${DEVTOOLS_ACTIONS.join(", ")}.`);
     const result = await withCdp(
       target,
       (send) =>
@@ -228,11 +244,13 @@ const MOBILE_TOUCH_POINTS = 5;
 const EMULATION_NOTE =
   'This lasts until {"action":"reset"}, the debugger detaching, or the tab closing.';
 
-// Clears what emulate may have set; the detach that follows ends the rest.
+// Clears everything emulate may set: a capture may keep the session.
 async function resetEmulation(send: CdpSend) {
   await send("Emulation.clearDeviceMetricsOverride");
   await send("Emulation.setTouchEmulationEnabled", { enabled: false });
   await send("Emulation.setEmulatedMedia", { features: [] });
+  // An empty user agent ends the override.
+  await send("Network.setUserAgentOverride", { userAgent: "" });
 }
 
 async function evaluate(send: CdpSend, args: Record<string, unknown>) {

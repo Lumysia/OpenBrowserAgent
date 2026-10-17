@@ -341,7 +341,8 @@ export const deDE: LocaleMessages = {
       localExecution:
         "Befehle über eine Ausführungs-Bridge auf diesem Computer ausführen.",
       scripts: "Eigenes JavaScript in Seiten ausführen. Standardmäßig aus.",
-      devtools: "Netzwerkressourcen und Geräteemulation.",
+      devtools:
+        "Netzwerk- und Konsolenaufzeichnung, Netzwerkressourcen und Geräteemulation.",
     },
     deleteAgent: "Agent löschen",
     agentWorkspace: "Arbeitsbereich des Agenten",

@@ -104,3 +104,20 @@ test("the system prompt states the run's tool step limit when there is one", () 
   assert.doesNotMatch(prompt(0), /tool steps/);
   assert.doesNotMatch(prompt(), /tool steps/);
 });
+
+test("the system prompt says to tell the user early what the tools can't do", () => {
+  const system = createSystemPrompt({
+    agent: DEFAULT_AGENT,
+    skills: [],
+    bridges: 0,
+  });
+  const rules = system.slice(
+    system.indexOf("<rules>"),
+    system.indexOf("</rules>"),
+  );
+  assert.match(
+    rules,
+    /If your tools can't do or see something the task needs, say so plainly as soon as you know/,
+  );
+  assert.match(rules, /never imply you did or checked it/);
+});

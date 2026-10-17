@@ -346,7 +346,8 @@ export const ptBR: LocaleMessages = {
         "Executar comandos neste computador por uma ponte de execução.",
       scripts:
         "Executar JavaScript personalizado nas páginas. Desativado por padrão.",
-      devtools: "Recursos de rede e emulação de dispositivo.",
+      devtools:
+        "Registro de rede e console, recursos de rede e emulação de dispositivo.",
     },
     deleteAgent: "Excluir agente",
     agentWorkspace: "Espaço de trabalho do agente",

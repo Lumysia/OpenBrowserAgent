@@ -272,7 +272,7 @@ export const zhTW: LocaleMessages = {
       mcpServers: "新增、測試和刪除 MCP 伺服器。",
       localExecution: "透過執行橋在本機執行命令。",
       scripts: "在頁面中執行自訂 JavaScript。預設關閉。",
-      devtools: "網路資源與裝置模擬。",
+      devtools: "網路與主控台記錄、網路資源與裝置模擬。",
     },
     deleteAgent: "刪除智慧體",
     agentWorkspace: "智慧體工作區",

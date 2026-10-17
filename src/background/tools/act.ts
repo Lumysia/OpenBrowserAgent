@@ -20,6 +20,7 @@ import {
   type StepOutcome,
 } from "./act-steps";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
+import { pageOutcomeLines } from "./act-report";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
 import { errorMessage } from "../../shared/error-message";
@@ -205,41 +206,44 @@ export const actTool: ToolDefinition = {
         changes = [`(Could not read changes: ${errorMessage(error)})`];
       }
     }
-    if (fresh || pageUrl(after.url || "") !== pageUrl(tab.url))
-      lines.push(
-        `Now at: ${after.title || "(untitled)"} | ${after.url}${fresh ? ". This is a new page: take a snapshot for refs." : ""}`,
-      );
     // A tab that turned into a download is gone by now.
     const openTabs: chrome.tabs.Tab[] = [];
     for (const id of opened) {
       const current = await api.tabs.get(id).catch(() => undefined);
       if (current) openTabs.push(current);
     }
-    for (const current of openTabs) {
-      await adoptAgentTab(run, current);
-      lines.push(
-        `Opened new ${tabLine(current, { mine: true }).slice(2)}. Pass its tabId to work on it.`,
-      );
-    }
-    lines.push(...changes);
+    for (const current of openTabs) await adoptAgentTab(run, current);
     const downloads = await downloadsStartedSince(run, since, signal);
-    lines.push(...startedDownloadLines(downloads));
     const moved = steps.some((step) =>
       ["scroll", "wait", "dialog"].includes(step.action),
     );
-    if (
-      !failure &&
-      !changes.length &&
-      !dialogs.length &&
-      !fresh &&
-      !openTabs.length &&
-      !downloads.length &&
-      !moved
-    )
-      lines.push(
-        "No visible change in the viewport. Check with snapshot or find if you expected one.",
-      );
-    lines.push(...notes);
+    const url = after.url || "";
+    lines.push(
+      ...pageOutcomeLines({
+        newPage: fresh,
+        loading: after.status === "loading",
+        pendingUrl:
+          after.pendingUrl && pageUrl(after.pendingUrl) !== pageUrl(url)
+            ? after.pendingUrl
+            : undefined,
+        urlChanged: pageUrl(url) !== pageUrl(tab.url),
+        title: after.title,
+        url,
+        changes,
+        otherwiseReported:
+          !!failure ||
+          !!dialogs.length ||
+          !!openTabs.length ||
+          !!downloads.length ||
+          moved,
+      }),
+      ...openTabs.map(
+        (current) =>
+          `Opened new ${tabLine(current, { mine: true }).slice(2)}. Pass its tabId to work on it.`,
+      ),
+      ...startedDownloadLines(downloads),
+      ...notes,
+    );
     if (input.snapshot === true)
       lines.push(await viewportSnapshot(tab.id, signal));
     return {

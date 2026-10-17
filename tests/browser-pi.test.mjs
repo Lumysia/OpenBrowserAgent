@@ -135,6 +135,11 @@ test(
         if (!composer) composer = await checkComposer(sidepanel, config);
       }
       if (!live) {
+        // The server sees a canceled stream close a moment after the run
+        // ends, later still on a busy machine.
+        await poll(() => cancelConnectionsClosed >= providers.length).catch(
+          () => undefined,
+        );
         assert.ok(
           cancelConnectionsClosed >= providers.length,
           "Cancellation must close each provider HTTP stream",

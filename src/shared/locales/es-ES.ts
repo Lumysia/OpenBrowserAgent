@@ -352,7 +352,8 @@ export const esES: LocaleMessages = {
         "Ejecutar comandos en este equipo mediante un puente de ejecución.",
       scripts:
         "Ejecutar JavaScript personalizado en las páginas. Desactivado de forma predeterminada.",
-      devtools: "Recursos de red y emulación de dispositivos.",
+      devtools:
+        "Registro de red y consola, recursos de red y emulación de dispositivos.",
     },
     deleteAgent: "Eliminar agente",
     agentWorkspace: "Espacio de trabajo del agente",
