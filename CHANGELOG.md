@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.21 - 2026-10-17
+
 - The agent can record a tab's failed network requests, console errors and warnings, uncaught errors and WebSocket connections while a problem is reproduced (for example a login that fails, even across reloads), and then look at one request's headers and response. Cookies, passwords, tokens and other credentials are always removed before the AI model sees them. Chrome shows its "being debugged" bar while recording, which ends with the agent's reply.
 - The agent can search inside a long page, file, attachment or saved result for a word or pattern and jump straight to each place it appears, instead of reading the whole thing piece by piece.
 - After clicking or typing, the agent is told separately whether the page went to a new address, whether it is still loading, and what changed on screen, so it no longer reads "no visible change" right after opening a new page and waits for the page to load instead.
