@@ -160,6 +160,7 @@ test("a mobile viewport also sets the screen size and touch, and reset undoes th
       ["Emulation.clearDeviceMetricsOverride", undefined],
       ["Emulation.setTouchEmulationEnabled", { enabled: false }],
       ["Emulation.setEmulatedMedia", { features: [] }],
+      ["Network.setUserAgentOverride", { userAgent: "" }],
     ],
   );
   assert.equal(f.attached.size, 0);

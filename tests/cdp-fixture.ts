@@ -20,7 +20,18 @@ export function cdpFixture(pages: Page[] = [{ id: "page-1", tabId: 501 }]) {
     method: string;
     params?: any;
   }> = [];
-  const onDetach = eventListeners<(target: chrome.debugger.Debuggee) => void>();
+  const onDetach =
+    eventListeners<
+      (target: chrome.debugger.Debuggee, reason?: string) => void
+    >();
+  const onEvent =
+    eventListeners<
+      (
+        target: chrome.debugger.Debuggee,
+        method: string,
+        params?: object,
+      ) => void
+    >();
   const page = (target: chrome.debugger.Debuggee) => {
     const found = pages.find((page) =>
       target.targetId
@@ -32,6 +43,7 @@ export function cdpFixture(pages: Page[] = [{ id: "page-1", tabId: 501 }]) {
   };
   const api = {
     onDetach,
+    onEvent,
     getTargets: async () =>
       pages.map((page) => ({
         ...page,
@@ -67,9 +79,13 @@ export function cdpFixture(pages: Page[] = [{ id: "page-1", tabId: 501 }]) {
   };
   Object.assign(chrome, { debugger: api, windows: { getAll: async () => [] } });
   chrome.tabs.query = async () => [{ id: pages[0].tabId }] as chrome.tabs.Tab[];
-  const drop = (target: chrome.debugger.Debuggee) => {
+  // Chrome detaching the debugger (the user canceled it, the tab closed).
+  const drop = (target: chrome.debugger.Debuggee, reason = "target_closed") => {
     attached.delete(page(target));
-    onDetach.emit(target);
+    onDetach.emit(target, reason);
   };
-  return { api, attached, attaches, detaches, calls, drop };
+  // An event of an attached page, as Chrome sends it.
+  const emit = (tabId: number, method: string, params: object) =>
+    onEvent.emit({ tabId }, method, params);
+  return { api, attached, attaches, detaches, calls, drop, emit };
 }

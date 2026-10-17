@@ -189,6 +189,6 @@ export const extractTool: ToolDefinition = {
 };
 
 // "1 matching line", "3 matching lines".
-function countOf(count: number, noun: string) {
+export function countOf(count: number, noun: string) {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

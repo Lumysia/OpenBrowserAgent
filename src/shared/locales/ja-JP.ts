@@ -321,7 +321,8 @@ export const jaJP: LocaleMessages = {
       localExecution:
         "実行ブリッジ経由で、このコンピューター上でコマンドを実行します。",
       scripts: "ページで任意の JavaScript を実行します。既定ではオフ。",
-      devtools: "ネットワークリソースとデバイスエミュレーション。",
+      devtools:
+        "ネットワークとコンソールの記録、ネットワークリソース、デバイスエミュレーション。",
     },
     deleteAgent: "エージェントを削除",
     agentWorkspace: "エージェントワークスペース",

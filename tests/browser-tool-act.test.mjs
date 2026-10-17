@@ -47,6 +47,10 @@ const picks = () => { document.getElementById("picks").innerHTML = "<button>Pick
 document.getElementById("refresh").onclick = picks;
 render(); picks();
 </script>`,
+  "/nav": `<title>Nav</title><a href="/quick">Quick</a>
+<button onclick="history.pushState({}, '', '/nav/route')">Route</button>
+<button onclick="setTimeout(() => { location.href = '/slow'; }, 150)">Slow</button>`,
+  "/quick": `<title>Quick</title><h1>Quick page</h1>`,
   "/dense": `<title>Dense</title><button>Go</button><div style="font-size:2px;line-height:2px">${Array.from(
     { length: 300 },
     (_, index) => `<p style="margin:0">Line ${index} of the dense page</p>`,
@@ -58,6 +62,17 @@ test(
   { timeout: BROWSER_TEST_TIMEOUT },
   async (t) => {
     const fixture = await browserToolFixture((request, response) => {
+      // A page that takes a while to answer: the navigation is pending.
+      if (request.url === "/slow") {
+        setTimeout(
+          () =>
+            response
+              .writeHead(200, { "Content-Type": "text/html" })
+              .end("<title>Slow</title>"),
+          3000,
+        );
+        return true;
+      }
       if (!PAGES[request.url]) return false;
       response
         .writeHead(200, { "Content-Type": "text/html" })
@@ -100,7 +115,7 @@ test(
           assert.match(scored, /Ticking: timer: Time left \d+/);
           assert.match(
             idle,
-            /No visible change in the viewport\.[^]*\nTicking: timer: Time left \d+$/,
+            /No visible change in the viewport, and no navigation\.[^]*\nTicking: timer: Time left \d+$/,
           );
         },
       );
@@ -212,6 +227,52 @@ test(
           assert.doesNotMatch(plain, /Snapshot:/);
           assert.match(capped, /\[Snapshot cut at \d+ characters/);
           assert.ok(capped.length < 9_000, `${capped.length} chars`);
+        },
+      );
+
+      await t.test(
+        "navigation, pending loads and route changes are told apart",
+        async () => {
+          const tabId = await open("/nav");
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const click = (label) => ({
+            name: "act",
+            args: {
+              tabId,
+              steps: [{ action: "click", ref: ref(snapshot, label) }],
+            },
+          });
+          const [route] = await fixture.run([click('button "Route"')]);
+          assert.match(
+            route,
+            /Same page, new URL: Nav \| http:\/\/\S+\/nav\/route\. Refs still work\.\nNothing in the viewport changed yet/,
+          );
+          const [pending] = await fixture.run([click('button "Slow"')]);
+          assert.match(
+            pending,
+            /Navigating to http:\/\/\S+\/slow, still loading\. Take a snapshot when it has loaded/,
+          );
+          const back = await open("/nav");
+          const [again] = await fixture.run([
+            { name: "snapshot", args: { tabId: back } },
+          ]);
+          const [quick] = await fixture.run([
+            {
+              name: "act",
+              args: {
+                tabId: back,
+                steps: [{ action: "click", ref: ref(again, "[Quick]") }],
+              },
+            },
+          ]);
+          assert.match(
+            quick,
+            /New page: Quick \| http:\/\/\S+\/quick\. Refs from before are gone: take a snapshot\./,
+          );
+          for (const text of [route, pending, quick])
+            assert.doesNotMatch(text, /No visible change/);
         },
       );
     } finally {

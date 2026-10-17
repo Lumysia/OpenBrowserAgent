@@ -41,6 +41,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | MCP server                        | MCP 服务器         | MCP 伺服器         | MCP サーバー                   | MCP 서버               |
 | recommended (MCP servers)         | 推荐               | 推薦               | おすすめ                       | 추천                   |
 | request header                    | 请求头             | 請求標頭           | ヘッダー                       | 헤더                   |
+| recording (devtools capture)      | 记录               | 記錄               | 記録                           | 기록                   |
+| request (HTTP, devtools)          | 请求               | 請求               | リクエスト                     | 요청                   |
 | local execution bridge            | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ           | 로컬 실행 브리지       |
 | native messaging host             | 原生消息主机       | 原生訊息主機       | ネイティブメッセージングホスト | 네이티브 메시징 호스트 |
 | workspace                         | 工作区             | 工作區             | ワークスペース                 | 워크스페이스           |
@@ -89,6 +91,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | MCP server                        | serveur MCP                       | MCP-Server                  | servidor MCP                          | servidor MCP                     |
 | recommended (MCP servers)         | recommandé                        | empfohlen                   | recomendado                           | recomendado                      |
 | request header                    | en-tête                           | Header                      | cabecera                              | cabeçalho                        |
+| recording (devtools capture)      | enregistrement                    | Aufzeichnung                | registro                              | registro                         |
+| request (HTTP, devtools)          | requête                           | Anfrage                     | solicitud                             | requisição                       |
 | local execution bridge            | pont d’exécution local            | lokale Ausführungs-Bridge   | puente de ejecución local             | ponte de execução local          |
 | native messaging host             | hôte de messagerie native         | Native-Messaging-Host       | host de mensajería nativa             | host de mensagens nativas        |
 | workspace                         | espace de travail                 | Arbeitsbereich              | espacio de trabajo                    | espaço de trabalho               |

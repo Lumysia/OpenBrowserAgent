@@ -48,6 +48,9 @@ export type RunContext = {
   readArtifact(
     handle: string,
   ): Promise<{ label: string; text: string } | undefined>;
+  // Runs `cleanup` when the run ends, however it ends (for what a tool
+  // keeps going only while its run lasts, such as a capture).
+  onEnd(cleanup: () => unknown): void;
   // Adds the usage of a run made for this one (a sub-agent's).
   addUsage(metrics: UsageMetrics): void;
   // How much text one helper request may carry.

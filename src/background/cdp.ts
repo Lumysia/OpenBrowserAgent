@@ -6,11 +6,21 @@ export type CdpSend = (
 ) => Promise<Record<string, any>>;
 
 type Debuggee = chrome.debugger.Debuggee;
-type Retained = { target: Debuggee; onDetach: (source: Debuggee) => void };
+// What keeps a session attached between calls: "emulation" (its
+// overrides live only while the debugger stays attached) or "capture"
+// (recording network and console events).
+export type CdpHold = "emulation" | "capture";
+type Retained = {
+  target: Debuggee;
+  onDetach: (source: Debuggee) => void;
+  holds: Set<CdpHold>;
+};
 
-// Emulation overrides live only while the debugger stays attached, so an
-// emulated page keeps its session until reset, detach, or tab close.
+// Held sessions stay attached until every hold is released, the debugger
+// is detached (the user cancels it, the tab closes) or a call is stopped.
 const retained = new Map<string, Retained>();
+
+const tabKey = (tabId: number) => `tab:${tabId}`;
 
 // targetId, then tabId; callers name the page, there is no default (the
 // active tab may be the user's). `url`/`title` are destinations or
@@ -28,13 +38,11 @@ async function resolveTarget(args: Record<string, unknown>) {
     return {
       target: { targetId },
       key:
-        match?.tabId !== undefined
-          ? `tab:${match.tabId}`
-          : `target:${targetId}`,
+        match?.tabId !== undefined ? tabKey(match.tabId) : `target:${targetId}`,
     };
   }
   if (!hasTab) throw new Error("A tabId or targetId is required.");
-  return { target: { tabId }, key: `tab:${tabId}` };
+  return { target: { tabId }, key: tabKey(tabId) };
 }
 
 function sameTarget(a: Debuggee, b: Debuggee) {
@@ -53,12 +61,23 @@ function release(key: string) {
   return detach(session.target);
 }
 
-// Attach (or reuse a retained session), run, then detach unless `retain`.
+function retain(key: string, target: Debuggee, hold: CdpHold) {
+  const onDetach = (source: Debuggee) => {
+    if (!sameTarget(target, source)) return;
+    retained.delete(key);
+    chrome.debugger.onDetach.removeListener(onDetach);
+  };
+  chrome.debugger.onDetach.addListener(onDetach);
+  retained.set(key, { target, onDetach, holds: new Set([hold]) });
+}
+
+// Attach (or reuse a held session), run, then detach unless the session
+// is held. A successful call with `hold` adds that hold.
 export async function withCdp<T>(
   args: Record<string, unknown>,
   run: (send: CdpSend) => Promise<T>,
   signal?: AbortSignal,
-  retain = false,
+  hold?: CdpHold,
 ): Promise<T> {
   const { target: selected, key } = await resolveTarget(args);
   signal?.throwIfAborted();
@@ -79,47 +98,49 @@ export async function withCdp<T>(
     );
     return (result || {}) as Record<string, any>;
   };
-  // A failed call leaves an existing emulation session in place.
-  let keep = retained.has(key);
+  let succeeded = false;
   try {
     const result = await run(send);
-    keep ||= retain;
+    succeeded = true;
     return result;
   } finally {
-    if (!keep || signal?.aborted) {
-      if (retained.has(key)) await release(key);
+    // A failed call leaves a held session in place.
+    const session = retained.get(key);
+    if (signal?.aborted) {
+      if (session) await release(key);
       else await detach(target);
-    } else if (!retained.has(key)) {
-      const onDetach = (source: Debuggee) => {
-        if (!sameTarget(target, source)) return;
-        retained.delete(key);
-        chrome.debugger.onDetach.removeListener(onDetach);
-      };
-      chrome.debugger.onDetach.addListener(onDetach);
-      retained.set(key, { target, onDetach });
-    }
+    } else if (session) {
+      if (succeeded && hold) session.holds.add(hold);
+    } else if (succeeded && hold) retain(key, target, hold);
+    else await detach(target);
   }
 }
 
-// Ends a retained session. `undo` runs on it first, to clear overrides
-// explicitly rather than rely on the detach alone. Returns whether a
-// session was there.
+// Releases one hold on a tab's session; the session detaches when no hold
+// is left. `undo` runs on it first, to clear what the hold set rather than
+// rely on the detach alone. Returns whether the hold was there.
 export async function releaseCdp(
   args: Record<string, unknown>,
+  hold: CdpHold,
   undo?: (send: CdpSend) => Promise<unknown>,
 ) {
   const { key } = await resolveTarget(args);
   const session = retained.get(key);
-  if (!session) return false;
+  if (!session?.holds.has(hold)) return false;
   if (undo)
     await undo(
       async (command, params) =>
         ((await chrome.debugger.sendCommand(session.target, command, params)) ||
           {}) as Record<string, any>,
     ).catch(() => {});
-  await release(key);
+  session.holds.delete(hold);
+  if (!session.holds.size) await release(key);
   return true;
 }
+
+// Whether a tab's session is attached and held for `hold`.
+export const isCdpHeld = (tabId: number, hold: CdpHold) =>
+  !!retained.get(tabKey(tabId))?.holds.has(hold);
 
 export async function cdpEvaluate(send: CdpSend, expression: string) {
   const result = await send("Runtime.evaluate", {

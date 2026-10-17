@@ -6,6 +6,18 @@ export function compact(value: string | null | undefined) {
   return (value || "").replace(/\s+/g, " ").trim();
 }
 
+// A search query as a global RegExp: /regex/flags as written, or plain
+// text matched case-insensitively, any white space matching any run of
+// it. Throws a SyntaxError for an invalid regex.
+export function queryPattern(query: string) {
+  const regex = query.match(/^\/(.+)\/([a-z]*)$/s);
+  if (regex) return new RegExp(regex[1], `${regex[2].replace("g", "")}g`);
+  const words = compact(query)
+    .split(" ")
+    .map((word) => word.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&"));
+  return new RegExp(words.join("\\s+"), "gi");
+}
+
 let words: Intl.Segmenter | undefined;
 
 // Words in the text, by the browser's word segmentation: scripts written
