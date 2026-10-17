@@ -29,7 +29,12 @@ export function createNativeTrack(video: HTMLVideoElement) {
   }
 
   return {
-    show(content: OverlayContent | undefined, until: number) {
+    // Without the original, only the translation shows.
+    show(
+      content: OverlayContent | undefined,
+      until: number,
+      showOriginal: boolean,
+    ) {
       const covered =
         document.fullscreenElement === video ||
         document.pictureInPictureElement === video;
@@ -40,8 +45,9 @@ export function createNativeTrack(video: HTMLVideoElement) {
       const current = ensure();
       current.mode = "showing";
       // The browser can't keep unsaid words' place: only what is said shows.
-      const original =
-        content.words && content.said !== undefined
+      const original = !showOriginal
+        ? ""
+        : content.words && content.said !== undefined
           ? content.words
               .slice(0, content.said)
               .map((word) => word.text)

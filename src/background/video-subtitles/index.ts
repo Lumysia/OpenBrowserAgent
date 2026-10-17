@@ -169,8 +169,6 @@ async function pageNotes(): Promise<VideoSubtitlesNotes> {
 
 async function subtitlesConfig(): Promise<VideoSubtitlesConfig> {
   const preferences = await storage.preferences.get();
-  return {
-    always: normalizePageTranslateSettings(preferences.pageTranslate)
-      .videoSubtitles,
-  };
+  const settings = normalizePageTranslateSettings(preferences.pageTranslate);
+  return { always: settings.videoSubtitles, style: settings.subtitleStyle };
 }

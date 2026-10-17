@@ -115,5 +115,32 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     setting: "Video-Untertitel automatisch übersetzen",
     settingDescription:
       "Videos mit Untertiteln zeigen jede Zeile mit ihrer Übersetzung darunter, auf allen Websites. „Untertitel übersetzen“ im Kontextmenü eines Videos schaltet sie für dieses Video aus oder ein. Ist diese Option aus, übersetzen das Menü und „Diese Seite übersetzen“ sie weiterhin.",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "Untertitelstil",
+      description:
+        "So sehen übersetzte Untertitel über Videos aus. Angezeigte Untertitel ändern sich sofort.",
+      preview: "Vorschau",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "In jenem Frühling stand der Fluss hoch.",
+      background: "Deckkraft des Hintergrunds",
+      translationColor: "Farbe der Übersetzung",
+      originalColor: "Farbe des Originals",
+      colors: {
+        yellow: "Gelb",
+        white: "Weiß",
+        cyan: "Hellblau",
+        grey: "Grau",
+      },
+      font: "Schrift",
+      fonts: {
+        system: "System",
+        serif: "Serifen",
+        monospace: "Festbreite",
+      },
+      size: "Größe",
+      showOriginal: "Originalzeile anzeigen",
+      showOriginalDescription: "Wenn aus, wird nur die Übersetzung angezeigt.",
+    },
   },
 };

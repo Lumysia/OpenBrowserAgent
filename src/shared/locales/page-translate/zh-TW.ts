@@ -100,5 +100,31 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     setting: "自動翻譯影片字幕",
     settingDescription:
       "有字幕的影片會在每行字幕下顯示譯文，適用於所有網站。在影片的右鍵選單中選擇「翻譯字幕」可為該影片關閉或重新開啟。此項關閉時，仍可透過選單和「翻譯此頁面」翻譯字幕。",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "字幕樣式",
+      description: "翻譯字幕在影片上的外觀。正在顯示的字幕會立即更新。",
+      preview: "預覽",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "那年春天，河水漲得很高。",
+      background: "背景不透明度",
+      translationColor: "譯文顏色",
+      originalColor: "原文顏色",
+      colors: {
+        yellow: "黃色",
+        white: "白色",
+        cyan: "淺藍色",
+        grey: "灰色",
+      },
+      font: "字型",
+      fonts: {
+        system: "系統",
+        serif: "襯線",
+        monospace: "等寬",
+      },
+      size: "大小",
+      showOriginal: "顯示原文字幕",
+      showOriginalDescription: "關閉後只顯示譯文。",
+    },
   },
 };

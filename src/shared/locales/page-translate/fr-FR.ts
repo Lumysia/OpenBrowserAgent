@@ -114,5 +114,32 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     setting: "Traduire automatiquement les sous-titres des vidéos",
     settingDescription:
       "Les vidéos avec sous-titres affichent chaque ligne avec sa traduction en dessous, sur tous les sites. « Traduire les sous-titres » dans le menu contextuel d’une vidéo les désactive ou les réactive pour cette vidéo. Quand cette option est désactivée, le menu et « Traduire cette page » les traduisent toujours.",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "Style des sous-titres",
+      description:
+        "L’apparence des sous-titres traduits sur les vidéos. Les sous-titres affichés changent aussitôt.",
+      preview: "Aperçu",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "La rivière était haute ce printemps-là.",
+      background: "Opacité de l’arrière-plan",
+      translationColor: "Couleur de la traduction",
+      originalColor: "Couleur de l’original",
+      colors: {
+        yellow: "Jaune",
+        white: "Blanc",
+        cyan: "Bleu clair",
+        grey: "Gris",
+      },
+      font: "Police",
+      fonts: {
+        system: "Système",
+        serif: "Serif",
+        monospace: "Chasse fixe",
+      },
+      size: "Taille",
+      showOriginal: "Afficher la ligne originale",
+      showOriginalDescription: "Désactivé, seule la traduction s’affiche.",
+    },
   },
 };

@@ -113,5 +113,32 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     setting: "동영상 자막 자동 번역",
     settingDescription:
       '자막이 있는 동영상은 모든 사이트에서 각 줄 아래에 번역을 표시합니다. 동영상의 컨텍스트 메뉴에서 "자막 번역"을 선택하면 그 동영상만 끄거나 켤 수 있습니다. 이 설정이 꺼져 있어도 메뉴와 "이 페이지 번역"으로 자막을 번역할 수 있습니다.',
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "자막 스타일",
+      description:
+        "동영상 위에 표시되는 번역 자막의 모양입니다. 표시 중인 자막에도 바로 적용됩니다.",
+      preview: "미리보기",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "그해 봄에는 강물이 높았다.",
+      background: "배경 불투명도",
+      translationColor: "번역 색상",
+      originalColor: "원문 색상",
+      colors: {
+        yellow: "노란색",
+        white: "흰색",
+        cyan: "하늘색",
+        grey: "회색",
+      },
+      font: "글꼴",
+      fonts: {
+        system: "시스템",
+        serif: "세리프",
+        monospace: "고정폭",
+      },
+      size: "크기",
+      showOriginal: "원문 줄 표시",
+      showOriginalDescription: "끄면 번역만 표시됩니다.",
+    },
   },
 };

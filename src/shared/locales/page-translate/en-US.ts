@@ -127,6 +127,33 @@ export const pageTranslateEnUS = {
     setting: "Translate video subtitles automatically",
     settingDescription:
       'Videos with subtitles show each line with its translation under it, on every site. "Translate subtitles" in a video\'s right-click menu turns them off or on for that video. When this is off, the menu and "Translate this page" still translate them.',
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "Subtitle style",
+      description:
+        "How translated subtitles look over videos. Subtitles on screen change at once.",
+      preview: "Preview",
+      previewOriginal: "La rivière était haute ce printemps-là.",
+      previewTranslation: "The river was high that spring.",
+      background: "Background opacity",
+      translationColor: "Translation color",
+      originalColor: "Original color",
+      colors: {
+        yellow: "Yellow",
+        white: "White",
+        cyan: "Light blue",
+        grey: "Gray",
+      },
+      font: "Font",
+      fonts: {
+        system: "System",
+        serif: "Serif",
+        monospace: "Monospace",
+      },
+      size: "Size",
+      showOriginal: "Show the original line",
+      showOriginalDescription: "When off, only the translation shows.",
+    },
   },
 };
 

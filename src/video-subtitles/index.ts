@@ -20,6 +20,10 @@ import {
   type VideoSubtitlesStartAllMessage,
   type VideoSubtitlesToggleMessage,
 } from "../shared/video-subtitles/protocol";
+import {
+  DEFAULT_SUBTITLE_STYLE,
+  normalizeSubtitleStyle,
+} from "../shared/video-subtitles/style";
 import { listenForCaptionFiles } from "./sources/caption-files";
 import { createTranslator, type SubtitleTranslator } from "./translator";
 import { startVideoSession, type VideoSession } from "./video-session";
@@ -55,7 +59,8 @@ export function installVideoSubtitles() {
   // Videos a note was shown for: at most one each.
   const noted = new WeakSet<HTMLVideoElement>();
   let translator: SubtitleTranslator | undefined;
-  let always: Promise<boolean> | undefined;
+  let configured: Promise<boolean> | undefined;
+  let style = DEFAULT_SUBTITLE_STYLE;
   // No engine to translate with: nothing starts by itself again.
   let halted = false;
   let pointed: WeakRef<HTMLVideoElement> | undefined;
@@ -92,10 +97,12 @@ export function installVideoSubtitles() {
       session: startVideoSession(video, translator, {
         notes: note,
         pageText: origin !== "always",
+        style,
       }),
       origin,
     });
     announce();
+    void config();
     removedTimer ??= window.setInterval(() => {
       for (const video of sessions.keys()) if (!video.isConnected) stop(video);
     }, REMOVED_CHECK_MS);
@@ -132,12 +139,19 @@ export function installVideoSubtitles() {
   }
 
   // Whether subtitles start by themselves, asked once the frame has a
-  // video, and again when the settings change.
+  // video, and again when the settings change; the subtitles shown take
+  // the style that comes with it.
   function config() {
-    always ??= send<VideoSubtitlesConfig>({
+    configured ??= send<VideoSubtitlesConfig>({
       type: VIDEO_SUBTITLES_MESSAGE.config,
-    }).then((reply) => reply?.always === true);
-    return always;
+    }).then((reply) => {
+      if (reply) {
+        style = normalizeSubtitleStyle(reply.style);
+        for (const { session } of sessions.values()) session.setStyle(style);
+      }
+      return reply?.always === true;
+    });
+    return configured;
   }
 
   // Starts the subtitles of `videos` that should have them by themselves.
@@ -181,8 +195,8 @@ export function installVideoSubtitles() {
   );
 
   getBrowserApi().storage.onChanged.addListener((changes) => {
-    if (!always || !changes[STORAGE_KEYS.preferences]) return;
-    always = undefined;
+    if (!configured || !changes[STORAGE_KEYS.preferences]) return;
+    configured = undefined;
     void config().then((on) => {
       if (on) scan();
       else stopAll((origin) => origin === "always");

@@ -39,6 +39,7 @@ test("the page button is on by default, also for settings stored before it", () 
   assert.deepEqual(settings, {
     ...stored,
     videoSubtitles: false,
+    subtitleStyle: DEFAULT_PAGE_TRANSLATE_SETTINGS.subtitleStyle,
     pageButton: true,
     pageButtonHiddenHosts: [],
   });

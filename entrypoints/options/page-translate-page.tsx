@@ -47,6 +47,7 @@ import {
   TRANSLATE_MENU_ITEMS,
 } from "./context-menu-page";
 import { PageTranslateAccess } from "./page-translate-access";
+import { SubtitleStyleSection } from "./subtitle-style-section";
 import { useMessages } from "../../src/ui/messages";
 
 // Without the Translator API the on-device engine falls back to the AI model.
@@ -170,6 +171,10 @@ export function PageTranslatePage() {
         description={p.subtitles.settingDescription}
         checked={settings.videoSubtitles}
         onChange={(videoSubtitles) => update({ videoSubtitles })}
+      />
+      <SubtitleStyleSection
+        style={settings.subtitleStyle}
+        onChange={(subtitleStyle) => update({ subtitleStyle })}
       />
       <Disclosure label={t.settings.advanced}>
         <SettingSwitchCard

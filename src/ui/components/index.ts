@@ -13,6 +13,7 @@ export * from "./progress";
 export * from "./scroll-area";
 export * from "./tooltip";
 export * from "./toggle-group";
+export * from "./slider";
 export * from "./toggle-tile";
 export * from "./tabs";
 export * from "./setting-switch";

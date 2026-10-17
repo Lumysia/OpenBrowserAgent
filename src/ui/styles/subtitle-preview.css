@@ -1,0 +1,18 @@
+/* Settings' subtitle preview: a sample video frame, half bright and half
+   dark, so the subtitle style can be judged on both. The frame stands for
+   video content, so its colours don't follow the theme. */
+.subtitle-preview {
+  --subtitle-preview-bright: #e8eef3;
+  --subtitle-preview-dark: #16181d;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--subtitle-preview-bright) 0 50%,
+    var(--subtitle-preview-dark) 50% 100%
+  );
+}

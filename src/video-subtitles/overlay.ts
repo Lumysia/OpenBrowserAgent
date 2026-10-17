@@ -18,6 +18,12 @@ import {
   visibleBox,
   type ClippingAncestor,
 } from "./placement";
+import type { SubtitleStyle } from "../shared/video-subtitles/style";
+import {
+  applySubtitleStyle,
+  createSubtitleLayer,
+  SUBTITLE_LAYER_CSS,
+} from "./overlay-css";
 
 // Marks the extension's elements in the page, so the caption finder and
 // page translation leave them alone.
@@ -26,45 +32,6 @@ export const OWN_ATTRIBUTE = "data-oba-subtitles";
 // A player that re-renders its children may drop the layer: it is put back,
 // unless that keeps happening this often, then it moves to the viewport.
 const REMOVALS = { count: 5, withinMs: 2_000 } as const;
-
-// The original line, as a share of the translation's size: the translation
-// is what the reader follows.
-const CSS = `
-:host { all: initial; }
-.layer {
-  --oba-subtitle-text: #fff;
-  --oba-subtitle-translation: #ffe9a6;
-  --oba-subtitle-background: rgb(8 8 8 / 0.78);
-  --oba-subtitle-shadow: 0 1px 2px rgb(0 0 0 / 0.9);
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15em;
-  pointer-events: none;
-  text-align: center;
-  font: 500 var(--oba-subtitle-size, 20px) / 1.3 system-ui, sans-serif;
-}
-.layer[hidden] { display: none; }
-.line {
-  max-width: 90%;
-  padding: 0.1em 0.45em;
-  border-radius: 0.2em;
-  background: var(--oba-subtitle-background);
-  color: var(--oba-subtitle-text);
-  text-shadow: var(--oba-subtitle-shadow);
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-.line:empty { display: none; }
-.original { font-size: 0.85em; }
-.word[data-ahead] { visibility: hidden; }
-.translation { color: var(--oba-subtitle-translation); }
-.translation[data-pending] { opacity: 0.7; }
-@media (prefers-reduced-motion: no-preference) {
-  .translation { transition: opacity 120ms ease-out; }
-}
-`;
 
 // The host is an empty box at its containing block's corner, which the
 // layer is placed from; inline and important, so the page's rules for its
@@ -98,7 +65,10 @@ export type OverlayContent = {
   pending?: boolean;
 };
 
-export function createOverlay(video: HTMLVideoElement) {
+export function createOverlay(
+  video: HTMLVideoElement,
+  subtitleStyle: SubtitleStyle,
+) {
   const host = document.createElement("div");
   host.setAttribute(OWN_ATTRIBUTE, "");
   host.setAttribute("translate", "no");
@@ -106,16 +76,10 @@ export function createOverlay(video: HTMLVideoElement) {
     host.style.setProperty(name, value, "important");
   const shadow = host.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
-  style.textContent = CSS;
-  const layer = document.createElement("div");
-  layer.className = "layer";
+  style.textContent = SUBTITLE_LAYER_CSS;
+  const { layer, original, translation } = createSubtitleLayer();
   layer.hidden = true;
-  const original = document.createElement("div");
-  original.className = "line original";
-  const translation = document.createElement("div");
-  translation.className = "line translation";
-  translation.setAttribute("lang", "");
-  layer.append(original, translation);
+  applySubtitleStyle(layer, subtitleStyle);
   shadow.append(style, layer);
 
   let content: OverlayContent | undefined;
@@ -289,6 +253,9 @@ export function createOverlay(video: HTMLVideoElement) {
       }
       content = next;
       if (appears || fixed || moved()) place();
+    },
+    setStyle(next: SubtitleStyle) {
+      applySubtitleStyle(layer, next);
     },
     dispose() {
       for (const [target, type, listener] of events)

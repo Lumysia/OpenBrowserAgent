@@ -1,6 +1,7 @@
 // Messages between the subtitle page scripts and the background.
 // Dependency-free (types only): the page scripts import this module.
 import type { PageToastTheme } from "../page-toast";
+import type { SubtitleStyle } from "./style";
 
 export const VIDEO_SUBTITLES_MESSAGE = {
   // Background -> page: start or stop translating one video's subtitles
@@ -10,8 +11,8 @@ export const VIDEO_SUBTITLES_MESSAGE = {
   // user translated the page), or stop all of them.
   startAll: "video-subtitles:start-all",
   stopAll: "video-subtitles:stop-all",
-  // Page -> background: whether subtitles start by themselves. Answers
-  // VideoSubtitlesConfig.
+  // Page -> background: whether subtitles start by themselves, and how they
+  // look. Answers VideoSubtitlesConfig.
   config: "video-subtitles:config",
   // Page -> background: put the caption observer in the frame's page world
   // if it isn't there yet (see caption-observer.ts). Answers
@@ -59,6 +60,7 @@ export type VideoSubtitlesStopAllMessage = {
 export type VideoSubtitlesConfig = {
   // "Translate video subtitles automatically" is on.
   always: boolean;
+  style: SubtitleStyle;
 };
 
 // What the caption observer passes on, at most: larger responses aren't
