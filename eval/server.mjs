@@ -26,7 +26,12 @@ import {
   researchHubPage,
   researchSourcePage,
 } from "./fixture-pages-skills.mjs";
-import { coveredPage, quizPage } from "./fixture-pages-tools.mjs";
+import {
+  coveredPage,
+  LOGIN_REFUSAL,
+  loginPage,
+  quizPage,
+} from "./fixture-pages-tools.mjs";
 
 const PAGES = {
   "/article": articlePage,
@@ -50,6 +55,7 @@ const PAGES = {
   "/catalog-more": loadMorePage,
   "/quiz": quizPage,
   "/covered": coveredPage,
+  "/login": loginPage,
 };
 
 // One local server for fixture pages, their form endpoints, and a recording
@@ -69,6 +75,20 @@ export async function startServer({ upstream }) {
       state.posts.push({ path: url.pathname, data, code });
       response.writeHead(200, { "content-type": "application/json" });
       response.end(JSON.stringify({ ok: true, code }));
+      return;
+    }
+    // Only the page's own POST gets the reason, as from a real API.
+    if (url.pathname === "/auth/login_flow") {
+      const post = request.method === "POST";
+      if (post) state.posts.push({ path: url.pathname, data: {} });
+      response.writeHead(post ? LOGIN_REFUSAL.status : 405, {
+        "content-type": "application/json",
+      });
+      response.end(
+        JSON.stringify(
+          post ? LOGIN_REFUSAL.body : { message: "Method not allowed" },
+        ),
+      );
       return;
     }
     const post = url.pathname.match(/^\/blog\/post-(\d+)$/);
