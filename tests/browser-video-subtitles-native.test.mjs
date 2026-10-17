@@ -10,10 +10,19 @@ import {
 import { elementCenter, hover } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import { fixtureTranslator } from "./page-translate-fixture.mjs";
-import { seek, startSubtitles, subtitles } from "./video-subtitles-fixture.mjs";
+import { inShadowRoot } from "./shadow-roots.mjs";
+import {
+  isLayerRoot,
+  seek,
+  startSubtitles,
+  subtitles,
+} from "./video-subtitles-fixture.mjs";
 import {
   CHAPTER_TITLE,
+  ROLLING_WORDS,
+  rollingLine,
   TIP_LABEL,
+  WORD_SECONDS,
 } from "./video-subtitles-rolling-fixture.mjs";
 
 // Whether the element `selector` shows: neither it nor a box around it
@@ -35,6 +44,34 @@ const shows = (page, selector) =>
   }, selector);
 
 const LINE = "#cc-area > div > span:last-child";
+
+// Our layer's original line: the words that show, and its width.
+const originalShown = (page) =>
+  inShadowRoot(page, isLayerRoot, (root) => {
+    const original = root?.querySelector(".original");
+    if (!original || root.querySelector(".layer").hidden) return null;
+    return {
+      said: [...original.children]
+        .filter((word) => getComputedStyle(word).visibility === "visible")
+        .map((word) => word.textContent)
+        .join("")
+        .trim(),
+      width: original.getBoundingClientRect().width,
+      translation: root.querySelector(".translation").textContent,
+    };
+  });
+
+// The cue of our own text track in the video (shown in its fullscreen).
+const ownCue = (page) =>
+  page.call(() => {
+    const track = [...document.getElementById("video").textTracks].find(
+      (item) => item.mode === "showing",
+    );
+    const cue = track?.activeCues?.[0];
+    if (!cue) return null;
+    window.firstCue ??= cue;
+    return { text: cue.text, same: cue === window.firstCue };
+  });
 
 // The player's own captions don't show under ours: while our layer shows
 // the lines, the player's are hidden, and they come back when ours stop.
@@ -134,6 +171,57 @@ test(
             ),
             0,
           );
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: a line with timed words shows them as they are said",
+        async () => {
+          const pageUrl = url("/rolling");
+          const page = await browser.open(pageUrl);
+          await poll(() => page.call(() => window.loaded === 40));
+          const line = rollingLine(30);
+          const saidBy = (count) => ROLLING_WORDS(30).slice(0, count).join(" ");
+          // Halfway through the line: three words said of seven.
+          await seek(page, 30 + 2 * WORD_SECONDS + 0.2);
+          const half = await poll(async () => {
+            const value = await originalShown(page);
+            return value?.translation ? value : null;
+          });
+          assert.equal(half.said, saidBy(3));
+          // The translation shows whole.
+          assert.equal(half.translation, `FR: ${line}`);
+          // The words not said yet keep their place.
+          await seek(page, 30 + 6 * WORD_SECONDS + 0.2);
+          const whole = await poll(async () => {
+            const value = await originalShown(page);
+            return value?.said === line ? value : null;
+          });
+          assert.equal(whole.width, half.width);
+
+          // In the video's own fullscreen, its text track shows the words
+          // said, in the same cue as they come.
+          await seek(page, 30 + WORD_SECONDS + 0.2);
+          await page.send("Runtime.evaluate", {
+            expression: "document.getElementById('video').requestFullscreen()",
+            userGesture: true,
+            awaitPromise: true,
+          });
+          const first = await poll(async () => {
+            const cue = await ownCue(page);
+            return cue?.text.startsWith(saidBy(2)) ? cue : null;
+          });
+          assert.equal(first.text, `${saidBy(2)}\nFR: ${line}`);
+          assert.ok(first.same);
+          await seek(page, 30 + 4 * WORD_SECONDS + 0.2);
+          const later = await poll(async () => {
+            const cue = await ownCue(page);
+            return cue?.text.startsWith(saidBy(5)) ? cue : null;
+          });
+          assert.equal(later.text, `${saidBy(5)}\nFR: ${line}`);
+          assert.ok(later.same);
+          await page.call(() => document.exitFullscreen());
           await page.send("Page.close");
         },
       );

@@ -5,6 +5,7 @@ import {
   lineAt,
   linesInWindow,
   SUBTITLE_WINDOW,
+  wordsSaid,
 } from "../src/shared/video-subtitles/schedule";
 import {
   SEGMENT_LIMITS,
@@ -89,4 +90,39 @@ test("the line on screen, and the lines to translate around the playhead", () =>
   );
   // A seek moves the window.
   assert.equal(linesInWindow(lines, 300)[0]!.text, "line 298");
+});
+
+test("timed words: each line keeps its words, said one after another", () => {
+  const [line, human] = segmentCues([
+    {
+      start: 0,
+      end: 4,
+      text: "so  this is",
+      words: [
+        { start: 0, text: "so " },
+        { start: 0.4, text: " this" },
+        { start: 0.8, text: " is" },
+      ],
+    },
+    {
+      start: 1.2,
+      end: 4,
+      text: "it.",
+      words: [{ start: 1.2, text: "it." }],
+    },
+    cue(6, 7, "No word times here."),
+  ]);
+  assert.equal(line!.text, "so this is it.");
+  // The words join into the text, spacing and all.
+  assert.equal(line!.words!.map((word) => word.text).join(""), line!.text);
+  assert.deepEqual(
+    line!.words!.map((word) => word.start),
+    [0, 0.4, 0.8, 1.2],
+  );
+  assert.equal(wordsSaid(line!, 0), 1);
+  assert.equal(wordsSaid(line!, 0.5), 2);
+  assert.equal(wordsSaid(line!, 3), 4);
+  // A line without word times shows whole.
+  assert.equal(human!.words, undefined);
+  assert.equal(wordsSaid(human!, 6.5), undefined);
 });

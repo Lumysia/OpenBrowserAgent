@@ -11,7 +11,11 @@
 // While our layer shows the lines, the player's own captions of them are
 // hidden (see player-captions.ts and text-track.ts).
 import type { Cue } from "../shared/video-subtitles/cues";
-import { linesInWindow, lineAt } from "../shared/video-subtitles/schedule";
+import {
+  linesInWindow,
+  lineAt,
+  wordsSaid,
+} from "../shared/video-subtitles/schedule";
 import {
   segmentCues,
   type SubtitleLine,
@@ -154,7 +158,11 @@ export function startVideoSession(
     if (cueSource) {
       const line = lineAt(lines, time);
       if (line) {
-        content = contentFor(line.text);
+        content = {
+          ...contentFor(line.text),
+          words: line.words,
+          said: wordsSaid(line, time),
+        };
         until = line.end;
       }
     } else if (liveText) content = contentFor(liveText);

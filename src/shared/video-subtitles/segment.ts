@@ -3,7 +3,7 @@
 // not sentences; human ones are usually a line each, and a sentence over
 // two cues reads (and translates) better as one. Dependency-free: the page
 // script imports this module.
-import type { Cue } from "./cues";
+import type { Cue, CueWord } from "./cues";
 
 export type SubtitleLine = {
   // Seconds from the start of the video.
@@ -11,6 +11,9 @@ export type SubtitleLine = {
   end: number;
   // The original text, translated as one item.
   text: string;
+  // For lines with timed words: the text in the order said, each part with
+  // the spacing before it, so they join into `text`.
+  words?: CueWord[];
 };
 
 export const SEGMENT_LIMITS = {
@@ -29,6 +32,8 @@ type Piece = {
   // Joins the text before it with a space: a cue's first word or a whole
   // cue. The other words of a cue bring their own spacing.
   spaced: boolean;
+  // A word with its own time.
+  timed: boolean;
 };
 
 // Sentence-final punctuation, then closing quotes or brackets.
@@ -52,12 +57,21 @@ export function segmentCues(cues: readonly Cue[]): SubtitleLine[] {
   let words = 0;
   const flush = () => {
     if (!group.length) return;
-    const text = joinPieces(group);
+    const parts = joinPieces(group);
+    const text = parts.join("");
     if (text)
       lines.push({
         start: group[0]!.start,
         end: Math.max(...group.map((piece) => piece.end)),
         text,
+        ...(group.some((piece) => piece.timed) && {
+          words: group
+            .map((piece, index) => ({
+              start: piece.start,
+              text: parts[index]!,
+            }))
+            .filter((word) => word.text),
+        }),
       });
     group = [];
     words = 0;
@@ -70,7 +84,7 @@ export function segmentCues(cues: readonly Cue[]): SubtitleLine[] {
       (SENTENCE_END.test(last.text.trim()) ||
         piece.start - last.end > SEGMENT_LIMITS.pauseSeconds ||
         words + count > SEGMENT_LIMITS.maxWords ||
-        joinPieces([...group, piece]).length > SEGMENT_LIMITS.maxChars)
+        joinPieces([...group, piece]).join("").length > SEGMENT_LIMITS.maxChars)
     )
       flush();
     group.push(piece);
@@ -100,6 +114,7 @@ function* pieces(cues: readonly Cue[]): Generator<Piece> {
           end: Math.min(next, word.start + SEGMENT_LIMITS.wordSeconds),
           text: word.text,
           spaced: index === 0,
+          timed: true,
         };
       }
       previous = [];
@@ -121,15 +136,28 @@ function* pieces(cues: readonly Cue[]): Generator<Piece> {
       end: cue.end,
       text: lines.join(" "),
       spaced: true,
+      timed: false,
     };
   }
 }
 
+// Each piece's part of the line's text: spacing collapsed, none at the
+// ends; the parts join into the line.
 function joinPieces(group: Piece[]) {
+  const parts: string[] = [];
   let text = "";
   for (const piece of group) {
-    if (!text) text = piece.text;
-    else text += piece.spaced ? ` ${piece.text}` : piece.text;
+    let part = ((text && piece.spaced ? " " : "") + piece.text).replace(
+      /\s+/g,
+      " ",
+    );
+    if (!text || text.endsWith(" ")) part = part.trimStart();
+    parts.push(part);
+    text += part;
   }
-  return text.replace(/\s+/g, " ").trim();
+  for (let index = parts.length - 1; index >= 0; index--) {
+    parts[index] = parts[index]!.trimEnd();
+    if (parts[index]) break;
+  }
+  return parts;
 }

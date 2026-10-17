@@ -54,3 +54,13 @@ export function linesInWindow(lines: readonly SubtitleLine[], time: number) {
   }
   return result;
 }
+
+// How many of a line's timed words are said by `time` (undefined for a
+// line without word times, shown whole). Words are in the order said.
+export function wordsSaid(line: SubtitleLine, time: number) {
+  const words = line.words;
+  if (!words) return undefined;
+  let count = 0;
+  while (count < words.length && words[count]!.start <= time) count++;
+  return count;
+}

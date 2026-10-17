@@ -58,6 +58,7 @@ const CSS = `
 }
 .line:empty { display: none; }
 .original { font-size: 0.85em; }
+.word[data-ahead] { visibility: hidden; }
 .translation { color: var(--oba-subtitle-translation); }
 .translation[data-pending] { opacity: 0.7; }
 @media (prefers-reduced-motion: no-preference) {
@@ -87,6 +88,11 @@ const HOST_STYLE = {
 
 export type OverlayContent = {
   original: string;
+  // The original's words with their spacing, for a line whose words are
+  // timed, and how many of them are said: the others keep their place,
+  // unseen, so the line doesn't move as they come.
+  words?: readonly { text: string }[];
+  said?: number;
   // The translation, or the part written so far.
   translation?: string;
   pending?: boolean;
@@ -113,6 +119,9 @@ export function createOverlay(video: HTMLVideoElement) {
   shadow.append(style, layer);
 
   let content: OverlayContent | undefined;
+  // The word spans of the original, and how many show.
+  let wordSpans: HTMLSpanElement[] = [];
+  let shownWords = 0;
   let clips: ClippingAncestor[] | undefined;
   // Where the layer is, and the video's parent it was placed for.
   let parent: Node | undefined;
@@ -218,6 +227,31 @@ export function createOverlay(video: HTMLVideoElement) {
     layer.style.bottom = `${-placement.bottom}px`;
   }
 
+  function setOriginal(next: OverlayContent | undefined) {
+    wordSpans =
+      next?.words?.map((word) => {
+        const span = document.createElement("span");
+        span.className = "word";
+        span.textContent = word.text;
+        return span;
+      }) ?? [];
+    shownWords = wordSpans.length;
+    if (wordSpans.length) original.replaceChildren(...wordSpans);
+    else original.textContent = next?.original ?? "";
+  }
+
+  // Only the words whose state changes are touched: this runs each frame.
+  function reveal(said: number) {
+    const count = Math.max(0, Math.min(said, wordSpans.length));
+    for (
+      let index = Math.min(count, shownWords);
+      index < Math.max(count, shownWords);
+      index++
+    )
+      wordSpans[index]!.toggleAttribute("data-ahead", index >= count);
+    shownWords = count;
+  }
+
   // The layout changed around the video.
   function relaid() {
     clips = undefined;
@@ -240,10 +274,15 @@ export function createOverlay(video: HTMLVideoElement) {
       const appears = !!next?.original !== !!content?.original;
       if (
         next?.original !== content?.original ||
+        next?.words !== content?.words
+      )
+        setOriginal(next);
+      if (next?.words) reveal(next.said ?? next.words.length);
+      if (
+        next?.original !== content?.original ||
         next?.translation !== content?.translation ||
         next?.pending !== content?.pending
       ) {
-        original.textContent = next?.original ?? "";
         translation.textContent = next?.translation ?? "";
         translation.toggleAttribute("data-pending", !!next?.pending);
         translation.setAttribute("lang", language);

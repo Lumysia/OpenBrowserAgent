@@ -7,6 +7,7 @@ What changed in each release. The release workflow publishes the section for the
 - A dropdown list too long for the window, such as Translate into in the toolbar menu, now shows a scrollbar, so it's clear there are more choices.
 - Translated video subtitles no longer show the video player's tooltips (such as "Mute" or "Settings" when you point at its buttons) as subtitle lines. On a video without captions turned on you now get the note asking you to turn on the player's captions instead.
 - With the player's own captions turned on (for example CC on YouTube), translated video subtitles now hide the player's captions while they show, so the two no longer overlap. The player's captions come back when you stop translating.
+- For automatic captions that come a few words at a time (such as YouTube's), the original line in translated video subtitles now shows its words as they are said instead of the whole sentence ahead of the speech. The line keeps its place while words appear, and the translation shows in full as soon as it is ready.
 
 ## 0.2.0-beta.18 - 2026-10-16
 
