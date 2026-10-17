@@ -119,6 +119,7 @@ export function fakeTabs(initial: FakeTab[] = [], active = initial[0]?.id) {
     discarded: false,
     autoDiscardable: true,
     groupId: -1,
+    lastAccessed: 0,
     ...tab,
   });
   const add = (tab: FakeTab) => {
