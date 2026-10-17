@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.20 - 2026-10-17
+
 - Translated video subtitles have a lighter background, so more of the video shows through, and a new Subtitle style group in Settings → Page translation lets you set how see-through the background is, the colors of the translation and the original, the font and its size, and whether the original line shows, with a preview. Changes apply to subtitles on screen right away.
 
 ## 0.2.0-beta.19 - 2026-10-17
