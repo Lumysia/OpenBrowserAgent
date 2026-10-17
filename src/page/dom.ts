@@ -10,6 +10,7 @@ import {
   SECTIONING_SELECTOR,
 } from "../shared/dom-vocabulary";
 import { compact } from "../shared/text";
+import { GUESSED_NAME_ROLES, guessedName, type Named } from "./guessed-name";
 
 const IMPLICIT_ROLE: Record<string, string> = {
   button: "button",
@@ -232,8 +233,26 @@ function labelText(element: Element) {
 }
 
 // Accessible name, simplified: ARIA naming, labels, alt/title/placeholder,
-// then visible text for roles named by their content.
+// then visible text for roles named by their content. A link or button
+// without one gets a guessed name (see guessed-name.ts).
 export function nameOf(element: Element, role = roleOf(element)): string {
+  return namedFrom(element, role).name;
+}
+
+// The name and, for a guessed one, where it came from.
+export function namedFrom(element: Element, role = roleOf(element)): Named {
+  const name = contentName(element, role);
+  if (name) return { name };
+  if (GUESSED_NAME_ROLES.has(role)) return guessedName(element, role);
+  return {
+    name:
+      compact(element.getAttribute("title")) ||
+      compact(element.getAttribute("placeholder")) ||
+      compact(element.getAttribute("aria-placeholder")),
+  };
+}
+
+function contentName(element: Element, role: string) {
   const labelledBy = element.getAttribute("aria-labelledby");
   const name =
     compact(element.getAttribute("aria-label")) ||
@@ -247,31 +266,25 @@ export function nameOf(element: Element, role = roleOf(element)): string {
     ["button", "submit", "reset"].includes(element.type)
   )
     return compact(element.value);
-  if (
-    [
-      "link",
-      "button",
-      "tab",
-      "menuitem",
-      "option",
-      "treeitem",
-      "clickable",
-      "menuitemcheckbox",
-      "menuitemradio",
-      "heading",
-      "caption",
-      "label",
-    ].includes(role)
-  ) {
-    const text = compact((element as HTMLElement).innerText);
-    if (text) return text;
-  }
-  return (
-    compact(element.getAttribute("title")) ||
-    compact(element.getAttribute("placeholder")) ||
-    compact(element.getAttribute("aria-placeholder"))
-  );
+  if (CONTENT_NAMED_ROLES.has(role))
+    return compact((element as HTMLElement).innerText);
+  return "";
 }
+
+const CONTENT_NAMED_ROLES = new Set([
+  "link",
+  "button",
+  "tab",
+  "menuitem",
+  "option",
+  "treeitem",
+  "clickable",
+  "menuitemcheckbox",
+  "menuitemradio",
+  "heading",
+  "caption",
+  "label",
+]);
 
 const BLOCK_DISPLAYS = new Set([
   "block",

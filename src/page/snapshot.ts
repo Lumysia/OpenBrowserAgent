@@ -9,9 +9,11 @@ import {
   isBlock,
   isHidden,
   isInteractive,
+  namedFrom,
   nameOf,
   roleOf,
 } from "./dom";
+import { nameSourceNote } from "./guessed-name";
 import { refFor } from "./refs";
 
 // The page as one line per meaningful node:
@@ -245,11 +247,18 @@ export function renderLines({
 }
 
 function controlLine(element: Element, role: string, options: SnapshotOptions) {
-  const name = clip(nameOf(element, role), NAME_MAX);
-  const parts = [`- ${role}${name ? ` "${name}"` : ""} [${refFor(element)}]`];
+  const parts = [`- ${role}${quotedName(element, role)} [${refFor(element)}]`];
   const states = controlStates(element, role, options);
   if (states) parts.push(states);
   return parts.join(" ");
+}
+
+// ` "Name"`, with where a guessed name came from; "" without a name.
+function quotedName(element: Element, role: string) {
+  const named = namedFrom(element, role);
+  return named.name
+    ? ` "${clip(named.name, NAME_MAX)}"${nameSourceNote(named)}`
+    : "";
 }
 
 function controlStates(
@@ -344,17 +353,19 @@ function inlineText(
   if (node.localName === "br") return " ";
   const role = roleOf(node);
   if (role === "link") {
-    const text = compact((node as HTMLElement).innerText) || nameOf(node, role);
+    const text = compact((node as HTMLElement).innerText);
+    const named = text ? { name: text } : namedFrom(node, role);
     const url = options.urls ? ` ${(node as HTMLAnchorElement).href}` : "";
-    return text ? ` [${clip(text, NAME_MAX * 2)}](${refFor(node)}${url}) ` : "";
+    return named.name
+      ? ` [${clip(named.name, NAME_MAX * 2)}${nameSourceNote(named)}](${refFor(node)}${url}) `
+      : "";
   }
   if (isInteractive(node, role) && role !== "clickable") {
     const states = controlStates(node, role, {
       mode: "page",
       urls: options.urls,
     });
-    const name = clip(nameOf(node, role), NAME_MAX);
-    return ` [${role}${name ? ` "${name}"` : ""} ${refFor(node)}${states ? ` ${states}` : ""}] `;
+    return ` [${role}${quotedName(node, role)} ${refFor(node)}${states ? ` ${states}` : ""}] `;
   }
   if (role === "img" || node.localName === "svg") return "";
   const parts = children(node).map((child) => inlineText(child, options));
