@@ -6,7 +6,6 @@
   --subtitle-preview-dark: #16181d;
   position: relative;
   width: 100%;
-  max-width: 480px;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
