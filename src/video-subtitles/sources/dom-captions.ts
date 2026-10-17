@@ -2,7 +2,8 @@
 // caption data can't be read. Found by structure and layout, never by the
 // site or its class names: an element over the video, outside the
 // player's controls, whose text keeps changing while the video plays, and
-// that isn't live chat or bullet comments (see danmaku.ts). Only the line
+// that isn't live chat or bullet comments (see danmaku.ts) nor the tooltip
+// of a control the user points at (see pointed-controls.ts). Only the line
 // on screen is known, so translations follow it with a delay.
 import { OWN_ATTRIBUTE } from "../overlay";
 import {
@@ -13,9 +14,10 @@ import {
   movedSideways,
   type Box,
 } from "./danmaku";
+import { CONTROLS, watchPointedControls } from "./pointed-controls";
 
-// Text changes over the video while it plays before an element counts as
-// its captions.
+// Text changes over the video while it plays, not from pointing at a
+// control, before an element counts as its captions.
 const CHANGES_TO_LOCK = 2;
 // A line is final when it hasn't changed for this long, or after the
 // longest wait (rolling captions change word by word).
@@ -26,8 +28,6 @@ const MAX_AREA_SHARE = 0.5;
 const MAX_LINE_CHARS = 300;
 // A player wraps its video in boxes about its size.
 const PLAYER_AREA_SHARE = 1.6;
-const CONTROLS =
-  "button, input, select, textarea, a[href], [role=button], [role=slider], [role=menu], [role=menuitem], [role=tooltip], [role=dialog], [contenteditable]";
 
 // The player around `video`: its largest ancestor about the video's size.
 function playerOf(video: HTMLVideoElement) {
@@ -61,8 +61,9 @@ export function watchDomCaptions(
   },
 ) {
   const player = playerOf(video);
+  const pointer = watchPointedControls(player, video);
   // How often each element's text changed, and where it was first.
-  const changes = new WeakMap<
+  let changes = new WeakMap<
     Element,
     { count: number; text: string; first: Box }
   >();
@@ -218,6 +219,15 @@ export function watchDomCaptions(
     box = undefined;
   }
 
+  // The box turned out to be a tooltip: its earlier changes may have been
+  // too, so counting starts again.
+  function release() {
+    unlock();
+    boxParent = undefined;
+    changes = new WeakMap();
+    update("");
+  }
+
   function update(value: string) {
     if (value === text) return;
     text = value;
@@ -267,7 +277,10 @@ export function watchDomCaptions(
       changed.push(target, ...items);
     }
     if (box) {
-      update(textOf(box));
+      const value = textOf(box);
+      // A tooltip taken for captions before it showed what it is.
+      if (pointer.isTooltip(value)) release();
+      else update(value);
       return;
     }
     if (!playing) return;
@@ -276,15 +289,23 @@ export function watchDomCaptions(
       seen.add(element);
       if (isRefused(element) || !isCandidate(element)) continue;
       const value = textOf(element);
+      if (pointer.isTooltip(value)) {
+        changes.delete(element);
+        continue;
+      }
       const previous = changes.get(element);
       if (previous?.text === value) continue;
-      const count = (previous?.count ?? 0) + 1;
+      const pointed = pointer.recentlyPointed();
+      const count = (previous?.count ?? 0) + (pointed ? 0 : 1);
       changes.set(element, {
         count,
         text: value,
         first: previous?.first ?? element.getBoundingClientRect(),
       });
-      if (count < CHANGES_TO_LOCK && element.parentElement !== boxParent)
+      if (
+        pointed ||
+        (count < CHANGES_TO_LOCK && element.parentElement !== boxParent)
+      )
         continue;
       const outer = outerBox(element);
       const layer = commentLayer(outer, element, previous?.first);
@@ -309,6 +330,7 @@ export function watchDomCaptions(
     },
     dispose() {
       observer.disconnect();
+      pointer.dispose();
       clearTimeout(settleTimer);
       unlock();
     },
