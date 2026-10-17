@@ -115,6 +115,54 @@ setInterval(() => {
 </script>
 </body></html>`;
 
+// The controls of a player that shows their names as tooltips.
+export const CONTROL_LABELS = ["Play", "Mute (m)", "Settings", "Full screen"];
+// The chapters on its seek bar, whose names show as the pointer goes along
+// it (no control is called that).
+export const CHAPTERS = ["Into the valley", "The crossing", "Evening camp"];
+// The lines a player draws as page text.
+export const DRAWN_LINES = [
+  "The river was high that spring.",
+  "We waited two days to cross.",
+  "Then the water went down.",
+];
+
+// A player whose controls (icons named by aria-label) show a tooltip over
+// the video while pointed at: a plain div with the control's name, as many
+// players draw them, in one place above them; its seek bar shows the name
+// of the chapter pointed at there. With `captions`, it also draws its captions as page
+// text. `window.showTip(text)` shows the tooltip without the pointer.
+const tooltipPage = ({ captions = false } = {}) =>
+  `<!doctype html><html lang="en"><head><title>Player with tooltips</title>${STYLE}
+<style>#bar button{width:40px;height:32px;margin-right:8px}#bar i{display:block;width:16px;height:16px;margin:auto;background:#fff}</style></head><body>
+<div id="player" style="position:relative;width:640px;height:360px">
+${VIDEO_TAG.replace('style="', 'autoplay loop style="')}></video>
+<div id="captions" style="position:absolute;left:0;right:0;bottom:120px;text-align:center"><span id="caption-line" style="background:#000;color:#fff"></span></div>
+<div id="tip" style="position:absolute;left:8px;bottom:56px;padding:2px 6px;background:#222;color:#fff;display:none"></div>
+<div id="seek" role="slider" aria-label="Seek" aria-valuenow="0" style="position:absolute;left:8px;right:8px;bottom:44px;height:8px;display:flex">${CHAPTERS.map((_, index) => `<div id="chapter-${index}" style="flex:1;margin-right:2px;background:#888"></div>`).join("")}</div>
+<div id="bar" style="position:absolute;left:8px;bottom:8px">${CONTROL_LABELS.map((label, index) => `<button id="control-${index}" aria-label="${label}"><i></i></button>`).join("")}</div>
+</div>
+<script>
+const video = document.getElementById("video");
+const tip = document.getElementById("tip");
+window.showTip = (text) => { tip.textContent = text; tip.style.display = "block"; };
+for (const button of document.querySelectorAll("#bar button")) {
+  button.addEventListener("pointerenter", () => window.showTip(button.getAttribute("aria-label")));
+  button.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+}
+const chapters = ${JSON.stringify(CHAPTERS)};
+chapters.forEach((name, index) => document.getElementById("chapter-" + index).addEventListener("pointerenter", () => window.showTip(name)));
+document.getElementById("seek").addEventListener("pointerleave", () => { tip.style.display = "none"; });
+if (${captions}) {
+  const lines = ${JSON.stringify(DRAWN_LINES)};
+  let index = 0;
+  setInterval(() => {
+    if (!video.paused) document.getElementById("caption-line").textContent = lines[index++ % lines.length];
+  }, 700);
+}
+</script>
+</body></html>`;
+
 export const PAGES = {
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
   "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
@@ -160,6 +208,8 @@ setInterval(() => {
   "/danmaku": danmakuPage(),
   "/danmaku-pool": danmakuPage({ pool: true }),
   "/danmaku-track": danmakuPage({ track: true }),
+  "/tooltips": tooltipPage(),
+  "/tooltips-captions": tooltipPage({ captions: true }),
   // A player that loads its own caption file when its CC button is pressed
   // (after the user started translating), and draws nothing we can read.
   "/stub-later": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
