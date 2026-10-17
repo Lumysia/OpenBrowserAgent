@@ -290,7 +290,7 @@ export const ko: LocaleMessages = {
       localExecution: "실행 브리지를 통해 이 컴퓨터에서 명령을 실행합니다.",
       scripts:
         "페이지에서 사용자 지정 JavaScript를 실행합니다. 기본적으로 꺼져 있습니다.",
-      devtools: "네트워크 리소스와 기기 에뮬레이션.",
+      devtools: "네트워크와 콘솔 기록, 네트워크 리소스, 기기 에뮬레이션.",
     },
     deleteAgent: "에이전트 삭제",
     agentWorkspace: "에이전트 워크스페이스",

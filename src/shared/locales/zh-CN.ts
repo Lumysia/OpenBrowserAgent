@@ -272,7 +272,7 @@ export const zhCN: LocaleMessages = {
       mcpServers: "添加、测试和删除 MCP 服务器。",
       localExecution: "通过执行桥在本机运行命令。",
       scripts: "在页面中运行自定义 JavaScript。默认关闭。",
-      devtools: "网络资源与设备模拟。",
+      devtools: "网络与控制台记录、网络资源与设备模拟。",
     },
     deleteAgent: "删除智能体",
     agentWorkspace: "智能体工作区",

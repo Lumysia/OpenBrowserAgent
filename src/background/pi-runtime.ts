@@ -43,6 +43,7 @@ export type RunSetup = Omit<
   | "askHelper"
   | "addUsage"
   | "helperInputChars"
+  | "onEnd"
 >;
 
 export async function runPiAgent(options: {
@@ -104,12 +105,14 @@ export async function runPiAgent(options: {
     return result.text;
   };
   const store = options.artifacts || indexedDbArtifacts;
+  const endings: Array<() => unknown> = [];
   const run: RunContext = {
     ...setup,
     chatId,
     session,
     askHelper,
     addUsage: events.addUsage,
+    onEnd: (cleanup) => void endings.push(cleanup),
     helperInputChars: tokenChars(
       (helperModel.contextLength || CONTEXT_POLICY.defaultContextWindow) *
         CONTEXT_POLICY.helperInputRatio,
@@ -294,6 +297,7 @@ export async function runPiAgent(options: {
   } finally {
     signal.removeEventListener("abort", abort);
     unsubscribe();
+    await Promise.allSettled(endings.map(async (cleanup) => cleanup()));
   }
 }
 

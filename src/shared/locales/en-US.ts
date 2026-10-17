@@ -316,7 +316,8 @@ export const enUS = {
       localExecution:
         "Run commands on this computer through an execution bridge.",
       scripts: "Run custom JavaScript in pages. Off by default.",
-      devtools: "Network resources and device emulation.",
+      devtools:
+        "Network and console recording, network resources and device emulation.",
     },
     deleteAgent: "Delete agent",
     agentWorkspace: "Agent workspace",

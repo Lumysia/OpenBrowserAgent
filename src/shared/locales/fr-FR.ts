@@ -343,7 +343,8 @@ export const frFR: LocaleMessages = {
         "Exécuter des commandes sur cet ordinateur via un pont d’exécution.",
       scripts:
         "Exécuter du JavaScript personnalisé dans les pages. Désactivé par défaut.",
-      devtools: "Ressources réseau et émulation d’appareils.",
+      devtools:
+        "Enregistrement du réseau et de la console, ressources réseau et émulation d’appareils.",
     },
     deleteAgent: "Supprimer l’agent",
     agentWorkspace: "Espace de travail de l’agent",

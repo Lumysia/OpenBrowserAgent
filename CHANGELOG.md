@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The agent can record a tab's failed network requests, console errors and warnings, uncaught errors and WebSocket connections while a problem is reproduced (for example a login that fails, even across reloads), and then look at one request's headers and response. Cookies, passwords, tokens and other credentials are always removed before the AI model sees them. Chrome shows its "being debugged" bar while recording, which ends with the agent's reply.
+
 ## 0.2.0-beta.20 - 2026-10-17
 
 - Translated video subtitles have a lighter background, so more of the video shows through, and a new Subtitle style group in Settings → Page translation lets you set how see-through the background is, the colors of the translation and the original, the font and its size, and whether the original line shows, with a preview. Changes apply to subtitles on screen right away.

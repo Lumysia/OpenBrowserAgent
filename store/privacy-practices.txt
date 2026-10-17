@@ -48,7 +48,7 @@ When the user asks the agent to tidy tabs, it groups them and names and colors t
 The extension's whole interface (chat, agent steps, composer) lives in the browser side panel.
 
 == debugger justification ==
-Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, and developer diagnostics. It is detached right after the call.
+Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, and developer diagnostics. It is detached right after the call, except while the agent emulates a device (until it resets the emulation) or records a tab's network requests and console messages to debug a page (until the agent's reply ends); Chrome shows its "being debugged" bar meanwhile. A recording stays in memory and is discarded when the tab closes; cookies, authorization headers, and password and token fields are removed from it before the AI model sees it.
 
 == offscreen justification ==
 Does DOM work the background service worker cannot: converts fetched web page HTML into Markdown with the browser's DOM parser, holds the files the agent saves to the user's downloads, and hosts the extension's sandboxed page (code-sandbox.html) in which the agent's code tool runs a bundled JavaScript interpreter in a Worker. The offscreen document shows nothing and loads nothing from servers.
