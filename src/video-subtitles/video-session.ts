@@ -8,14 +8,21 @@
 //    be live chat.
 // With the whole track known, lines are translated a little ahead of the
 // playhead (schedule.ts); page text is translated as each line settles.
+// While our layer shows the lines, the player's own captions of them are
+// hidden (see player-captions.ts and text-track.ts).
 import type { Cue } from "../shared/video-subtitles/cues";
-import { linesInWindow, lineAt } from "../shared/video-subtitles/schedule";
+import {
+  linesInWindow,
+  lineAt,
+  wordsSaid,
+} from "../shared/video-subtitles/schedule";
 import {
   segmentCues,
   type SubtitleLine,
 } from "../shared/video-subtitles/segment";
 import { createNativeTrack } from "./native-track";
 import { createOverlay, type OverlayContent } from "./overlay";
+import { createPlayerCaptions } from "./player-captions";
 import { watchCaptionFiles, type CaptionFile } from "./sources/caption-files";
 import { watchDomCaptions } from "./sources/dom-captions";
 import { createTextTrackSource } from "./sources/text-track";
@@ -55,6 +62,8 @@ export function startVideoSession(
   const owner = {};
   const overlay = createOverlay(video);
   const native = createNativeTrack(video);
+  // The player's own captions of the lines we show, hidden under ours.
+  const playerCaptions = createPlayerCaptions(video);
   let file: CaptionFile | undefined;
   // When the video last loaded a new source: files from before belong to
   // the previous one.
@@ -104,6 +113,7 @@ export function startVideoSession(
     if (next === cueSource) return;
     cueSource = next;
     lines = next ? segmentCues(next) : [];
+    playerCaptions.follow(next);
     scheduledAt = undefined;
     update();
   }
@@ -148,7 +158,11 @@ export function startVideoSession(
     if (cueSource) {
       const line = lineAt(lines, time);
       if (line) {
-        content = contentFor(line.text);
+        content = {
+          ...contentFor(line.text),
+          words: line.words,
+          said: wordsSaid(line, time),
+        };
         until = line.end;
       }
     } else if (liveText) content = contentFor(liveText);
@@ -217,6 +231,7 @@ export function startVideoSession(
       stopFiles();
       track.dispose();
       dom?.dispose();
+      playerCaptions.dispose();
       native.dispose();
       overlay.dispose();
       translator.forget(owner);
