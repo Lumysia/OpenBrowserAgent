@@ -10,6 +10,11 @@ import {
   type SiteMatchPatterns,
 } from "../site-hosts";
 import { oneOf } from "../values";
+import {
+  DEFAULT_SUBTITLE_STYLE,
+  normalizeSubtitleStyle,
+  type SubtitleStyle,
+} from "../video-subtitles/style";
 
 // Where translations come from. `model`: the user's AI provider. `browser`:
 // the browser's on-device translator (Chrome's Translator API). `google`
@@ -67,6 +72,8 @@ export type PageTranslateSettings = {
   // without being asked. Off: only the right-click menu and "Translate this
   // page" start them.
   videoSubtitles: boolean;
+  // How translated subtitles look.
+  subtitleStyle: SubtitleStyle;
   // A button on an edge of the page that translates the page or shows the
   // original, except on the sites listed (each with its subdomains).
   pageButton: boolean;
@@ -82,6 +89,7 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
   translateMenus: false,
   videoSubtitles: false,
+  subtitleStyle: DEFAULT_SUBTITLE_STYLE,
   pageButton: true,
   pageButtonHiddenHosts: [],
 };
@@ -113,6 +121,7 @@ export function normalizePageTranslateSettings(
     display,
     translateMenus: flag("translateMenus"),
     videoSubtitles: flag("videoSubtitles"),
+    subtitleStyle: normalizeSubtitleStyle(value?.subtitleStyle),
     pageButton: flag("pageButton"),
     pageButtonHiddenHosts: normalizeHostList(value?.pageButtonHiddenHosts),
     // An older release's `shortcut` switch is left out: the browser's

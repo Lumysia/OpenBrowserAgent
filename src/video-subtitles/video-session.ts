@@ -27,6 +27,7 @@ import { watchCaptionFiles, type CaptionFile } from "./sources/caption-files";
 import { watchDomCaptions } from "./sources/dom-captions";
 import { createTextTrackSource } from "./sources/text-track";
 import type { VideoSubtitlesNotes } from "../shared/video-subtitles/protocol";
+import type { SubtitleStyle } from "../shared/video-subtitles/style";
 import { showToast } from "../page-translate/toast";
 import type { SubtitleTranslator, WantedLine } from "./translator";
 
@@ -52,15 +53,18 @@ export function startVideoSession(
   {
     notes,
     pageText,
+    style: initialStyle,
   }: {
     // The notes to show; none for subtitles that started by themselves.
     notes?: VideoSubtitlesNotes;
     // Whether captions drawn as page text are read.
     pageText: boolean;
+    style: SubtitleStyle;
   },
 ) {
   const owner = {};
-  const overlay = createOverlay(video);
+  let style = initialStyle;
+  const overlay = createOverlay(video, style);
   const native = createNativeTrack(video);
   // The player's own captions of the lines we show, hidden under ours.
   const playerCaptions = createPlayerCaptions(video);
@@ -167,7 +171,7 @@ export function startVideoSession(
       }
     } else if (liveText) content = contentFor(liveText);
     overlay.show(content, translator.language);
-    native.show(content, until);
+    native.show(content, until, style.showOriginal);
   }
 
   function update() {
@@ -223,6 +227,11 @@ export function startVideoSession(
     },
     // A translation arrived: the line on screen may be it.
     refresh: render,
+    setStyle(next: SubtitleStyle) {
+      style = next;
+      overlay.setStyle(next);
+      render();
+    },
     stop() {
       for (const [target, type, listener] of events)
         target.removeEventListener(type, listener, { capture: true });

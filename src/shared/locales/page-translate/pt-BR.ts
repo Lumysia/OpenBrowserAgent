@@ -114,5 +114,32 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     setting: "Traduzir legendas de vídeos automaticamente",
     settingDescription:
       "Vídeos com legendas mostram cada linha com a tradução embaixo, em todos os sites. “Traduzir legendas” no menu de contexto de um vídeo as desativa ou ativa para esse vídeo. Com esta opção desativada, o menu e “Traduzir esta página” continuam traduzindo as legendas.",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "Estilo das legendas",
+      description:
+        "Como as legendas traduzidas aparecem sobre os vídeos. As que estão na tela mudam na hora.",
+      preview: "Pré-visualização",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "Naquela primavera, o rio estava cheio.",
+      background: "Opacidade do fundo",
+      translationColor: "Cor da tradução",
+      originalColor: "Cor do original",
+      colors: {
+        yellow: "Amarelo",
+        white: "Branco",
+        cyan: "Azul-claro",
+        grey: "Cinza",
+      },
+      font: "Fonte",
+      fonts: {
+        system: "Sistema",
+        serif: "Serifada",
+        monospace: "Monoespaçada",
+      },
+      size: "Tamanho",
+      showOriginal: "Mostrar a linha original",
+      showOriginalDescription: "Desativado, só a tradução aparece.",
+    },
   },
 };

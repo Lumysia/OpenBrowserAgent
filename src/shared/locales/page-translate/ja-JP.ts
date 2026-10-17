@@ -114,5 +114,32 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     setting: "動画の字幕を自動で翻訳",
     settingDescription:
       "字幕のある動画では、どのサイトでも各行の下に翻訳を表示します。動画のコンテキストメニューの「字幕を翻訳」で、その動画だけオフ／オンにできます。この設定がオフでも、メニューと「このページを翻訳」で字幕を翻訳できます。",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "字幕のスタイル",
+      description:
+        "動画に重ねて表示する翻訳字幕の見た目です。表示中の字幕にもすぐ反映されます。",
+      preview: "プレビュー",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "その春、川の水は高かった。",
+      background: "背景の不透明度",
+      translationColor: "訳文の色",
+      originalColor: "原文の色",
+      colors: {
+        yellow: "黄",
+        white: "白",
+        cyan: "水色",
+        grey: "グレー",
+      },
+      font: "フォント",
+      fonts: {
+        system: "システム",
+        serif: "セリフ",
+        monospace: "等幅",
+      },
+      size: "サイズ",
+      showOriginal: "原文の行を表示",
+      showOriginalDescription: "オフにすると訳文だけを表示します。",
+    },
   },
 };

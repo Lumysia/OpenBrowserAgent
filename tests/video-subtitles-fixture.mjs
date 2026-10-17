@@ -10,12 +10,20 @@ import { rollingPages } from "./video-subtitles-rolling-fixture.mjs";
 // captions drawn as page text, a player that loads its own json3 file), all
 // on our own made-up lines. The video is a silent black clip made with
 // `ffmpeg -f lavfi -i color=c=black:s=160x90:r=1 -t 200 -c:v libvpx -b:v 1k
-// -g 200 blank.webm`, long enough to seek in.
+// -g 200 blank.webm`, long enough to seek in. `frames.webm` shows a bright
+// frame for its first 10 seconds and a dark one for the next 10 (two
+// `color=c=0xe8eef3` and `color=c=0x16181d` clips, 320x180, concatenated),
+// for how subtitles read on both.
 
 export const VIDEO_SECONDS = 200;
 const video = await readFile(
   new URL("fixtures/video/blank.webm", import.meta.url),
 );
+const frames = await readFile(
+  new URL("fixtures/video/frames.webm", import.meta.url),
+);
+// When `/frames` shows its bright frame and its dark one, each during a line.
+export const FRAME_SECONDS = { bright: 1, dark: 11 };
 
 const VIDEO_TAG = `<video id="video" src="/blank.webm" muted playsinline preload="auto" style="display:block;width:640px;height:360px"`;
 const STYLE = `<style>body{margin:16px;font:16px system-ui}</style>`;
@@ -167,6 +175,7 @@ if (${captions}) {
 export const PAGES = {
   ...rollingPages(VIDEO_TAG, STYLE),
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
+  "/frames.webm": { html: frames, headers: { "Content-Type": "video/webm" } },
   "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
   // Served as plain text, as such players often get it.
   "/api/captions": {
@@ -176,6 +185,10 @@ export const PAGES = {
   // A <track> the browser reads.
   "/track": `<!doctype html><html lang="en"><head><title>A track video</title>${STYLE}</head><body>
 ${VIDEO_TAG}><track id="track" kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
+</body></html>`,
+  // A <track> over a bright frame, then a dark one.
+  "/frames": `<!doctype html><html lang="en"><head><title>Bright and dark</title>${STYLE}</head><body>
+${VIDEO_TAG.replace("/blank.webm", "/frames.webm")}><track kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
 </body></html>`,
   // A player that adds its cues while the video plays, like HLS players.
   "/streamed": `<!doctype html><html lang="en"><head><title>Streamed cues</title>${STYLE}</head><body>

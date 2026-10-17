@@ -100,5 +100,31 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     setting: "自动翻译视频字幕",
     settingDescription:
       "有字幕的视频会在每行字幕下显示译文，适用于所有网站。在视频的右键菜单中选择“翻译字幕”可为该视频关闭或重新打开。此项关闭时，仍可通过菜单和“翻译此页面”翻译字幕。",
+    // Settings: how translated subtitles look; the preview's two lines.
+    style: {
+      title: "字幕样式",
+      description: "翻译字幕在视频上的外观。正在显示的字幕会立即更新。",
+      preview: "预览",
+      previewOriginal: "The river was high that spring.",
+      previewTranslation: "那年春天，河水涨得很高。",
+      background: "背景不透明度",
+      translationColor: "译文颜色",
+      originalColor: "原文颜色",
+      colors: {
+        yellow: "黄色",
+        white: "白色",
+        cyan: "浅蓝色",
+        grey: "灰色",
+      },
+      font: "字体",
+      fonts: {
+        system: "系统",
+        serif: "衬线",
+        monospace: "等宽",
+      },
+      size: "大小",
+      showOriginal: "显示原文字幕",
+      showOriginalDescription: "关闭后只显示译文。",
+    },
   },
 };

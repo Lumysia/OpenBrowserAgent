@@ -234,18 +234,29 @@
   display: grid;
   gap: var(--space-2);
 }
+/* The control stays beside the title while both fit, else it moves under
+   it, so a long title or a wide control can't push it out of the card. */
 .settings-toggle-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
   padding: 10px 12px;
 }
 .settings-toggle-row > div {
   min-width: 0;
 }
+.settings-toggle-row > :first-child {
+  flex: 1 1 10rem;
+}
+/* A select fills a form field's width; beside a title it takes its own. */
+.settings-toggle-row > .ui-select-trigger {
+  width: auto;
+  max-width: 100%;
+}
 .settings-toggle-row-detail {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   display: grid;
   gap: var(--space-2);
 }

@@ -19,6 +19,7 @@ import {
   translateIntoLanguage,
 } from "../src/shared/page-translate/settings";
 import { mergePreferences } from "../src/shared/default-preferences";
+import { DEFAULT_SUBTITLE_STYLE } from "../src/shared/video-subtitles/style";
 
 test("placeholders: pairs nest, atoms stand alone, models' spacing is tolerated", () => {
   const source = "See <b1>the <b2>guide</b2></b1> and {3}.";
@@ -161,6 +162,7 @@ test("settings: defaults, cleaned values, the target language", () => {
       display: "bilingual",
       translateMenus: false,
       videoSubtitles: false,
+      subtitleStyle: DEFAULT_SUBTITLE_STYLE,
       pageButton: true,
       pageButtonHiddenHosts: [],
     },
