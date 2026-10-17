@@ -419,9 +419,18 @@ test(
             /1 matching line \(2 occurrences\) for "Slotted"/,
           );
           const table = await open("/table");
-          const [counted] = await fixture.run([
+          const [counted, searched] = await fixture.run([
             { name: "snapshot", args: { tabId: table } },
+            {
+              name: "read",
+              args: { source: `tab:${table}`, search: "refunded" },
+            },
           ]);
+          assert.match(
+            searched,
+            /\| 6 matches for "refunded" in \d+ characters/,
+          );
+          assert.match(searched, /\n@\d+: .*«Refunded»/);
           assert.match(
             counted,
             /- counts of Status \(24 rows\): Paid 18, Refunded 6/,

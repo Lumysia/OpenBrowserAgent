@@ -1,4 +1,4 @@
-import { compact } from "../shared/text";
+import { queryPattern } from "../shared/text";
 import { snapshotLines } from "./snapshot";
 
 // Characters of a long line shown around a match, and of its role/ref
@@ -36,27 +36,10 @@ export function matchLines(lines: string[], query: string, limit: number) {
 type Matcher = (text: string) => { index: number; count: number };
 
 function toMatcher(query: string): Matcher {
-  const regex = query.match(/^\/(.+)\/([a-z]*)$/s);
-  if (regex) {
-    const pattern = new RegExp(regex[1], `${regex[2].replace("g", "")}g`);
-    return (text) => {
-      const hits = [...text.matchAll(pattern)];
-      return { index: hits[0]?.index ?? -1, count: hits.length };
-    };
-  }
-  const needle = compact(query).toLowerCase();
+  const pattern = queryPattern(query);
   return (text) => {
-    const lower = text.toLowerCase();
-    const index = lower.indexOf(needle);
-    let count = 0;
-    if (needle)
-      for (
-        let at = index;
-        at >= 0;
-        at = lower.indexOf(needle, at + needle.length)
-      )
-        count++;
-    return { index, count: needle ? count : index < 0 ? 0 : 1 };
+    const hits = [...text.matchAll(pattern)];
+    return { index: hits[0]?.index ?? -1, count: hits.length };
   };
 }
 

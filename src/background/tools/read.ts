@@ -18,6 +18,7 @@ import type { UploadedAttachment } from "../../shared/types";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { callPage, pageTab } from "../page-agent";
 import { pageHeader, pageSource } from "./page";
+import { searchText } from "./text-search";
 import { findWorkspaceFile } from "./workspace-source";
 import {
   attachmentSource,
@@ -60,6 +61,26 @@ function sliceRange(text: string, input: Record<string, unknown>, max: number) {
   return { offset, end: Math.min(text.length, offset + limit) };
 }
 
+// A text source as read returns it: the range asked for, or with `search`
+// the matches in the whole text.
+function textResult(
+  label: string,
+  text: string,
+  input: Record<string, unknown>,
+  rest: Omit<ToolResult, "text"> = {},
+  max?: number,
+): ToolResult {
+  const search = trimmedString(input.search);
+  if (!search) return { ...rest, text: textSlice(label, text, input, max) };
+  const found = searchText(label, text, search);
+  if ("error" in found) return fail(found.error, rest.details);
+  return {
+    ...rest,
+    text: found.text,
+    details: { ...rest.details, search, matches: found.total },
+  };
+}
+
 export const readTool: ToolDefinition = {
   name: TOOL_NAME.read,
   readOnly: true,
@@ -67,11 +88,15 @@ export const readTool: ToolDefinition = {
   timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
-    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; "tab" is the tab you are working on), a stored output handle "art-…", a URL (web pages as Markdown of their HTML, fetched with the browser\'s cookies for the site, without running scripts), "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
+    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; "tab" is the tab you are working on), a stored output handle "art-…", a URL (web pages as Markdown of their HTML, fetched with the browser\'s cookies for the site, without running scripts), "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. search returns the matches in the whole source with their offsets and the text around them (plain text, case-insensitive, or /regex/flags), to read on from one. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
   parameters: schema({
     source: { type: "string", description: 'What to read. Defaults to "tab".' },
     offset: { type: "number" },
     limit: { type: "number", description: "Characters to return." },
+    search: {
+      type: "string",
+      description: "Text or /regex/ to find instead of reading a range.",
+    },
     encoding: {
       type: "string",
       enum: ["text", "base64"],
@@ -92,8 +117,7 @@ export const readTool: ToolDefinition = {
         signal,
       );
       const current = { ...tab, title, url };
-      return {
-        text: textSlice(pageHeader(current), value.text, input),
+      return textResult(pageHeader(current), value.text, input, {
         details: {
           source: tabSource(tab.id),
           title,
@@ -101,7 +125,7 @@ export const readTool: ToolDefinition = {
           chars: value.text.length,
         },
         sources: [pageSource(current)],
-      };
+      });
     }
     if (source.kind === "artifact") {
       const artifact = await run.readArtifact(source.handle);
@@ -109,14 +133,12 @@ export const readTool: ToolDefinition = {
         return fail(
           `No stored output "${source.handle}" in this chat. Use a handle from a truncated, masked or unchanged result.`,
         );
-      return {
-        text: textSlice(
-          `${source.handle}: ${artifact.label}`,
-          artifact.text,
-          input,
-        ),
-        details: { source: source.handle, label: artifact.label },
-      };
+      return textResult(
+        `${source.handle}: ${artifact.label}`,
+        artifact.text,
+        input,
+        { details: { source: source.handle, label: artifact.label } },
+      );
     }
     if (source.kind === "url") return readUrl(source.url, input, run, signal);
     if (source.kind === "skill")
@@ -126,10 +148,9 @@ export const readTool: ToolDefinition = {
       const found = findWorkspaceFile(run.workspace, source.path);
       if (!found.ok) return fail(found.error);
       const { file } = found;
-      return {
-        text: textSlice(workspaceSource(file.path), file.content, input),
+      return textResult(workspaceSource(file.path), file.content, input, {
         details: { source: workspaceSource(file.path) },
-      };
+      });
     }
     return readAttachment(run, source.id, input, signal);
   },
@@ -164,6 +185,10 @@ function readSkill(
   // the end, where the reader stops. A skill is instructions, not a source
   // to cite, so it adds none.
   const source = skillSource(skill.name, file.path);
+  if (trimmedString(input.search))
+    return textResult(source, file.content, input, {
+      details: { source, name: skill.name, chars: file.content.length },
+    });
   const max = tokenChars(CONTEXT_POLICY.skillReadMaxTokens);
   const { offset, end } = sliceRange(file.content, input, max);
   const total = file.content.length;
@@ -205,11 +230,10 @@ async function readAttachment(
     attachment.kind === ATTACHMENT_KIND.text &&
     typeof attachment.text === "string"
   )
-    return {
-      text: textSlice(attachment.name, attachment.text, input),
+    return textResult(attachment.name, attachment.text, input, {
       details,
       sources,
-    };
+    });
   if (
     attachment.kind === ATTACHMENT_KIND.image &&
     attachment.dataUrl &&
@@ -240,17 +264,16 @@ async function binaryResult(
   sources: SourceInput[],
 ): Promise<ToolResult> {
   if (input.encoding === "base64")
-    return {
-      text: textSlice(`${label} as base64`, bytesToBase64(bytes), input),
+    return textResult(`${label} as base64`, bytesToBase64(bytes), input, {
       details: { ...details, encoding: "base64" },
-    };
+    });
   const text = await documentText(bytes);
   if (text === undefined)
     return fail(
       `${label} (${bytes.length} bytes) has no text that can be extracted (only PDF, Word, Excel, PowerPoint and OpenDocument files do, and scanned pages have none). Read it with encoding "base64" to pass its bytes on.`,
       details,
     );
-  return { text: textSlice(label, text, input), details, sources };
+  return textResult(label, text, input, { details, sources });
 }
 
 // Fetched HTML with less text than this is likely a shell that needs
@@ -293,11 +316,10 @@ async function readUrl(
     (type === "application/octet-stream" &&
       isTextType(typeForName(new URL(url).pathname)))
   )
-    return {
-      text: textSlice(url, await blob.text(), input),
+    return textResult(url, await blob.text(), input, {
       details,
       sources: [{ kind: "file", title: url, url }],
-    };
+    });
   if (isVisionImageMimeType(type)) {
     const bytes = new Uint8Array(await blob.arrayBuffer());
     return {
@@ -330,11 +352,11 @@ async function readHtml(
     visible.length < THIN_PAGE_CHARS
       ? `\n[Only ${visible.length} characters of text in the fetched HTML: the page may need JavaScript, a login or a bot check.${canOpenTabs ? " Open it with tabs (action open) to read it as the browser shows it." : ""}]`
       : "";
-  return {
-    text: `${textSlice(`${title} | ${url}`, page.text, input)}${thin}`,
+  const result = textResult(`${title} | ${url}`, page.text, input, {
     details: { ...details, title, chars: page.text.length },
     sources: [{ kind: "page", title, url }],
-  };
+  });
+  return { ...result, text: `${result.text}${thin}` };
 }
 
 // HTML in the charset its Content-Type or its first <meta> names.
