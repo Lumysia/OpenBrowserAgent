@@ -5,7 +5,14 @@
 // that isn't live chat or bullet comments (see danmaku.ts) nor the tooltip
 // of a control the user points at (see pointed-controls.ts). Only the line
 // on screen is known, so translations follow it with a delay.
-import { OWN_ATTRIBUTE } from "../overlay";
+import {
+  hideCaptionBox,
+  holdsSkipped,
+  isOverVideo,
+  isSkipped,
+  playerOf,
+  shownText,
+} from "../player";
 import {
   animatesSideways,
   DANMAKU,
@@ -14,7 +21,7 @@ import {
   movedSideways,
   type Box,
 } from "./danmaku";
-import { CONTROLS, watchPointedControls } from "./pointed-controls";
+import { watchPointedControls } from "./pointed-controls";
 
 // Text changes over the video while it plays, not from pointing at a
 // control, before an element counts as its captions.
@@ -26,27 +33,6 @@ const MAX_SETTLE_MS = 2_500;
 // A caption box covers at most this part of the video.
 const MAX_AREA_SHARE = 0.5;
 const MAX_LINE_CHARS = 300;
-// A player wraps its video in boxes about its size.
-const PLAYER_AREA_SHARE = 1.6;
-
-// The player around `video`: its largest ancestor about the video's size.
-function playerOf(video: HTMLVideoElement) {
-  const area = (element: Element) => {
-    const rect = element.getBoundingClientRect();
-    return rect.width * rect.height;
-  };
-  const own = area(video);
-  let player: Element = video.parentElement ?? video;
-  for (
-    let parent = player.parentElement;
-    parent && parent !== document.body && parent !== document.documentElement;
-    parent = parent.parentElement
-  ) {
-    if (own > 0 && area(parent) > own * PLAYER_AREA_SHARE) break;
-    player = parent;
-  }
-  return player;
-}
 
 export function watchDomCaptions(
   video: HTMLVideoElement,
@@ -75,58 +61,34 @@ export function watchDomCaptions(
   // Where the last caption box was: a player that replaces its box puts
   // the next one there.
   let boxParent: Element | undefined;
-  let hidden:
-    { element: HTMLElement; opacity: string; priority: string } | undefined;
+  let show: (() => void) | undefined;
   let text = "";
   let settled = "";
   let settleTimer: number | undefined;
   let changedAt = 0;
 
-  function textOf(element: Element) {
-    return ((element as HTMLElement).innerText ?? element.textContent ?? "")
-      .replace(/[ \t\u00a0]+/g, " ")
-      .replace(/\s*\n\s*/g, "\n")
-      .trim();
-  }
-
-  // Inside our own layer or the player's controls.
-  function isSkipped(element: Element) {
-    return !!(
-      element.closest(`[${OWN_ATTRIBUTE}]`) || element.closest(CONTROLS)
-    );
-  }
-
   // Over the video, small, not a control, with words in it.
   function isCandidate(element: Element) {
     if (element === player || element.contains(video)) return false;
-    if (
-      isSkipped(element) ||
-      element.querySelector(`[${OWN_ATTRIBUTE}]`) ||
-      element.querySelector(CONTROLS)
-    )
-      return false;
+    if (isSkipped(element) || holdsSkipped(element)) return false;
+    if (!isOverVideo(element, video)) return false;
     const rect = element.getBoundingClientRect();
     const frame = video.getBoundingClientRect();
-    if (!rect.width || !rect.height) return false;
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    if (x < frame.left || x > frame.right || y < frame.top || y > frame.bottom)
-      return false;
     if (rect.width * rect.height > frame.width * frame.height * MAX_AREA_SHARE)
       return false;
-    const value = textOf(element);
+    const value = shownText(element);
     return value.length <= MAX_LINE_CHARS && /\p{L}/u.test(value);
   }
 
   // The outermost wrapper with the same text: hidden as a whole.
   function outerBox(element: Element) {
     let current = element;
-    const value = textOf(element);
+    const value = shownText(element);
     while (
       current.parentElement &&
       current.parentElement !== player &&
       !current.parentElement.contains(video) &&
-      textOf(current.parentElement) === value
+      shownText(current.parentElement) === value
     )
       current = current.parentElement;
     return current;
@@ -197,25 +159,12 @@ export function watchDomCaptions(
   function lock(outer: Element) {
     box = outer;
     boxParent = box.parentElement ?? undefined;
-    const target = box as HTMLElement;
-    if (target.style) {
-      hidden = {
-        element: target,
-        opacity: target.style.getPropertyValue("opacity"),
-        priority: target.style.getPropertyPriority("opacity"),
-      };
-      target.style.setProperty("opacity", "0", "important");
-    }
+    show = hideCaptionBox(box);
   }
 
   function unlock() {
-    if (hidden)
-      hidden.element.style.setProperty(
-        "opacity",
-        hidden.opacity,
-        hidden.priority,
-      );
-    hidden = undefined;
+    show?.();
+    show = undefined;
     box = undefined;
   }
 
@@ -277,7 +226,7 @@ export function watchDomCaptions(
       changed.push(target, ...items);
     }
     if (box) {
-      const value = textOf(box);
+      const value = shownText(box);
       // A tooltip taken for captions before it showed what it is.
       if (pointer.isTooltip(value)) release();
       else update(value);
@@ -288,7 +237,7 @@ export function watchDomCaptions(
       if (seen.has(element)) continue;
       seen.add(element);
       if (isRefused(element) || !isCandidate(element)) continue;
-      const value = textOf(element);
+      const value = shownText(element);
       if (pointer.isTooltip(value)) {
         changes.delete(element);
         continue;

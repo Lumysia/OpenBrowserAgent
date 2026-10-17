@@ -3,6 +3,7 @@ import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { poll } from "./chromium.mjs";
 import { startPageTranslate } from "./page-translate-fixture.mjs";
 import { hasClass, inShadowRoot } from "./shadow-roots.mjs";
+import { rollingPages } from "./video-subtitles-rolling-fixture.mjs";
 
 // Test helpers for translated video subtitles: pages with the kinds of
 // players the feature reads (a <track>, cues a player adds over time,
@@ -164,6 +165,7 @@ if (${captions}) {
 </body></html>`;
 
 export const PAGES = {
+  ...rollingPages(VIDEO_TAG, STYLE),
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
   "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
   // Served as plain text, as such players often get it.
