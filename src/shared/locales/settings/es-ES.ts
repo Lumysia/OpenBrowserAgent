@@ -38,6 +38,10 @@ export const settingsEsES: SettingsMessages = {
   modelHelper: "Auxiliar",
   modelSmartBar: "Barra inteligente",
   modelTranslation: "Traducción",
+  modelTranslationFallback:
+    "Se usa cuando el traductor integrado no puede traducir una página.",
+  modelTranslationUnavailable:
+    "La traducción de páginas usa {engine}, no un modelo de IA. Cambia el motor de traducción en la configuración de Traducción de páginas.",
   modelImages: "Imágenes",
   translateMenuItems: "Entradas del menú contextual",
   translateMenuItemsDescription:

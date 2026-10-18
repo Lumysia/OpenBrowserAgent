@@ -43,6 +43,14 @@ export const settingsEnUS = {
   modelHelper: "Helper",
   modelSmartBar: "Smart bar",
   modelTranslation: "Translation",
+  // The Translation model's description while the built-in translator is
+  // the engine: the model takes over the pages it can't translate.
+  modelTranslationFallback:
+    "Used when the built-in translator can't translate a page.",
+  // Why the Translation model can't be chosen; {engine}: the engine's name
+  // inside a sentence (engineNames).
+  modelTranslationUnavailable:
+    "Page translation uses {engine}, not an AI model. Change the engine in Page translation settings.",
   modelImages: "Images",
   translateMenuItems: "Right-click menu items",
   translateMenuItemsDescription:
