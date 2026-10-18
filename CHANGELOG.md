@@ -5,6 +5,7 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - In Settings > AI providers & models, the Translation model can't be changed while page translation uses Google or Microsoft, which don't use a model; pointing at it explains why and where to change the engine. With the built-in translator, it says the model is used for pages the built-in translator can't translate.
+- In bilingual page translation each translation sits a little further from its original and has a little space after it, so original and translation read as a pair, set apart from the next one, even in lists and paragraphs without spacing of their own. Menus, tables and other compact parts of the page keep their spacing.
 
 ## 0.2.0-beta.21 - 2026-10-17
 

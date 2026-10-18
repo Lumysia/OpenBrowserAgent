@@ -4,7 +4,7 @@
 // reads styles and boxes (see layout.ts).
 import { HEADING_SELECTOR } from "../shared/dom-vocabulary";
 import { wordCount } from "../shared/text";
-import { MARK_OFFSET_PX, TRANSLATION_GAP, type Look } from "./render";
+import { MARK_OFFSET_PX, type Look } from "./render";
 import { clipsOverflow, hasBackground } from "./styles";
 
 // What layout.ts decides about the look; the form is decided separately.
@@ -35,25 +35,6 @@ export function copiedText(
       ? [`${name}: ${value}`]
       : [];
   }).join("; ");
-}
-
-// The space the page keeps under the source (the bottom padding and
-// margin of the box the translation follows) moves under the translation,
-// so the translation stays close to its source and what comes next keeps
-// its distance. Not into a box with a background or a bottom border.
-export function spacingAfter(
-  anchor: Element,
-  style: CSSStyleDeclaration,
-  textBottom: number,
-) {
-  const inside =
-    hasBackground(style) || parseFloat(style.borderBlockEndWidth) > 0
-      ? 0
-      : Math.max(0, anchor.getBoundingClientRect().bottom - textBottom);
-  const space = Math.round(inside + (parseFloat(style.marginBlockEnd) || 0));
-  return space > 0
-    ? `margin-block-start: calc(${TRANSLATION_GAP} - ${space}px); margin-block-end: ${space}px`
-    : "";
 }
 
 // How a box cuts its text: a number of lines, one line with an ellipsis,

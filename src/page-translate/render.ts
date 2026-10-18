@@ -30,7 +30,8 @@ export type Look = {
   // The source's font and colour, for a translation outside the source's
   // element (it can't inherit them).
   css?: string;
-  // The space kept under the source, moved under a block translation.
+  // The space around a block translation (see spacing.ts): the space kept
+  // under the source moved under it, and the space setting the pair apart.
   spacing?: string;
   // The source's clamp: as many lines, or one line with an ellipsis. The
   // whole translation is then the element's tooltip.
@@ -44,7 +45,10 @@ export type Look = {
 };
 
 // The space between the source and a translation under it.
-export const TRANSLATION_GAP = "0.3em";
+export const TRANSLATION_GAP = "0.5em";
+// The least space after a block translation, setting the pair apart from
+// what comes next (see spacing.ts).
+export const TRANSLATION_SPACE_AFTER = "0.75em";
 // The rule before a block translation: its width, and its distance from the
 // text; it sits in the margin, this far before the text.
 const MARK_WIDTH_PX = 2;
