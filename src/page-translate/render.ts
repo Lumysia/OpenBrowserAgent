@@ -45,7 +45,7 @@ export type Look = {
 };
 
 // The space between the source and a translation under it.
-export const TRANSLATION_GAP = "0.5em";
+export const TRANSLATION_GAP = "0.35em";
 // The least space after a block translation, setting the pair apart from
 // what comes next (see spacing.ts).
 export const TRANSLATION_SPACE_AFTER = "0.75em";
