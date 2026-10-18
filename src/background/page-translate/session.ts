@@ -1,4 +1,5 @@
 import { errorMessage } from "../../shared/error-message";
+import { normalizeLanguageTag } from "../../shared/language-tags";
 import {
   pruneTranslations,
   readTranslations,
@@ -54,7 +55,11 @@ type Session = {
   target: string;
   language: string;
   theme: PageToastTheme;
+  // The language the page declares for the text it sends, and one that is
+  // only a hint: the document's language says what a page's own text is
+  // in, not what its videos say.
   pageLanguage?: string;
+  languageHint?: string;
   pageTitle?: string;
   pageDescription?: string;
   content?: PageTranslateContent;
@@ -76,11 +81,16 @@ export function createPageSession(post: Post, signal: AbortSignal) {
     }
     if (request.type !== "translate" || !session) return;
     const batch = request.batch;
-    const items = request.items.map(({ id, text, role }) => ({
-      id,
-      text,
-      ...(isPageTranslateRole(role) && { role }),
-    }));
+    const items = request.items.map(({ id, text, role, language }) => {
+      const declared =
+        typeof language === "string" ? normalizeLanguageTag(language) : "";
+      return {
+        id,
+        text,
+        ...(isPageTranslateRole(role) && { role }),
+        ...(declared && { language: declared }),
+      };
+    });
     const context = boundedContext(request.context);
     session
       .then(
@@ -158,13 +168,15 @@ async function startSession(
       pruned = true;
       void pruneTranslations().catch(() => undefined);
     }
+    const subtitles = request.content === PAGE_TRANSLATE_CONTENT.subtitles;
     return {
       chain,
       selected: settings.engine,
       target,
       language,
       theme,
-      pageLanguage: request.pageLanguage,
+      pageLanguage: subtitles ? undefined : request.pageLanguage,
+      languageHint: subtitles ? request.pageLanguage : undefined,
       pageTitle: request.title,
       pageDescription:
         typeof request.description === "string" && request.description.trim()
@@ -173,10 +185,7 @@ async function startSession(
               PAGE_TRANSLATE_CONTEXT_LIMITS.description,
             )
           : undefined,
-      content:
-        request.content === PAGE_TRANSLATE_CONTENT.subtitles
-          ? request.content
-          : undefined,
+      content: subtitles ? request.content : undefined,
       terms: createTermMemory(),
     };
   } catch (error) {
@@ -244,6 +253,7 @@ async function runBatch(
     translateItems(chain, batchItems, {
       target,
       pageLanguage: session.pageLanguage,
+      languageHint: session.languageHint,
       pageTitle: session.pageTitle,
       pageDescription: session.pageDescription,
       content,

@@ -82,11 +82,15 @@ export type PageTranslateItem = {
   text: string;
   // What the text is on the page, when its structure says (see context.ts).
   role?: PageTranslateRole;
+  // The language its source declares for it (a subtitle track's), when it
+  // does.
+  language?: string;
 };
 
 export type PageTranslateRequest =
   | {
       type: "start";
+      // The document's declared language (`<html lang>`).
       pageLanguage?: string;
       title?: string;
       // The page's own summary (its meta description).

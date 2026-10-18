@@ -25,8 +25,8 @@ const frames = await readFile(
 // When `/frames` shows its bright frame and its dark one, each during a line.
 export const FRAME_SECONDS = { bright: 1, dark: 11 };
 
-const VIDEO_TAG = `<video id="video" src="/blank.webm" muted playsinline preload="auto" style="display:block;width:640px;height:360px"`;
-const STYLE = `<style>body{margin:16px;font:16px system-ui}</style>`;
+export const VIDEO_TAG = `<video id="video" src="/blank.webm" muted playsinline preload="auto" style="display:block;width:640px;height:360px"`;
+export const STYLE = `<style>body{margin:16px;font:16px system-ui}</style>`;
 
 // A line every five seconds, said for four.
 export const lineAt = (seconds) => `Line at ${seconds} seconds.`;
@@ -301,10 +301,11 @@ ${VIDEO_TAG}></video>
 };
 
 // The extension with the fixture model translating (every line comes back
-// as "FR: <line>"); `batches` gets each request's lines.
-export async function startSubtitles({ answer, preferences } = {}) {
+// as "FR: <line>"); `batches` gets each request's lines. `pages` adds to
+// the fixture's pages.
+export async function startSubtitles({ answer, preferences, pages } = {}) {
   const session = await startPageTranslate({
-    pages: PAGES,
+    pages: { ...PAGES, ...pages },
     answer,
     preferences,
   });

@@ -1,7 +1,10 @@
 import { sameLanguage } from "../../../shared/language-tags";
 import { engineLanguageCode } from "../../../shared/page-translate/languages";
 import { stripPlaceholders } from "../../../shared/page-translate/placeholders";
-import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
+import {
+  PAGE_TRANSLATE_CONTENT,
+  PAGE_TRANSLATE_ERROR,
+} from "../../../shared/page-translate/protocol";
 import { wordCount } from "../../../shared/text";
 import {
   EngineError,
@@ -40,6 +43,8 @@ const detectorApi = () =>
   (globalThis as { LanguageDetector?: DetectorApi }).LanguageDetector;
 
 const SERVICE = "Built-in translator";
+// Raised when subtitles saved before would now be translated differently.
+const BROWSER_SUBTITLES_CACHE_VERSION = 1;
 
 // One translator per language pair; each translates one text at a time.
 const translators = new Map<string, Promise<TranslatorInstance>>();
@@ -51,6 +56,11 @@ export function browserEngine(): TranslationEngine {
   return {
     id: "browser",
     cacheKey: "browser",
+    // Subtitles have a key of their own: lines saved under "browser" were
+    // taken to be in the page's language and some were left untranslated.
+    contentCacheKeys: {
+      [PAGE_TRANSLATE_CONTENT.subtitles]: `browser:subtitles:${BROWSER_SUBTITLES_CACHE_VERSION}`,
+    },
     limits: { concurrency: 1, maxItems: 12, maxChars: 3000, firstItems: 4 },
     translate: translateInBrowser,
   };
@@ -121,8 +131,13 @@ const MIN_ITEM_WORDS = 3;
 // The batch's items by source language, and the language of the batch as a
 // whole. Pages mix languages (posts in several languages, a Chinese line in
 // an English page), so each text long enough to tell is detected on its
-// own; the others take the batch's language: the detector's guess for all
-// of its text when it is sure, else the page's declared language.
+// own; the others take the language their source declares, else the
+// batch's: the detector's guess for all of its text when it is sure, else
+// the page's declared language, else the detector's unsure guess, else the
+// language hint. Every source but the hint is evidence of what the text is
+// in, so a text is left as it is only on evidence: a hint in the target
+// language says nothing (an English video on a site whose interface is in
+// the target language).
 async function groupBySource(request: EngineRequest) {
   const texts = request.items.map((item) => stripPlaceholders(item.text));
   const [whole, ...own] = await Promise.all([
@@ -133,17 +148,23 @@ async function groupBySource(request: EngineRequest) {
         : undefined,
     ),
   ]);
+  const hint =
+    request.languageHint && !sameLanguage(request.languageHint, request.target)
+      ? request.languageHint
+      : undefined;
   const language =
     (whole && whole.confidence >= MIN_ITEM_CONFIDENCE
       ? whole.language
-      : request.pageLanguage) || whole?.language;
+      : request.pageLanguage) ||
+    whole?.language ||
+    hint;
   const groups = new Map<string, EngineRequest["items"]>();
   request.items.forEach((item, index) => {
     const guess = own[index];
     const source =
       guess && guess.confidence >= MIN_ITEM_CONFIDENCE
         ? guess.language
-        : language;
+        : item.language || language;
     if (!source)
       throw new EngineError(
         PAGE_TRANSLATE_ERROR.unavailable,

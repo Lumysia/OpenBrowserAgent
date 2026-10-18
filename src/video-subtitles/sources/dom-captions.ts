@@ -6,6 +6,7 @@
 // of a control the user points at (see pointed-controls.ts). Only the line
 // on screen is known, so translations follow it with a delay.
 import {
+  declaredLanguage,
   hideCaptionBox,
   holdsSkipped,
   isOverVideo,
@@ -42,8 +43,9 @@ export function watchDomCaptions(
   }: {
     // The text on screen now, as it changes ("" when none).
     onText: (text: string) => void;
-    // A line that stopped changing.
-    onLine: (text: string) => void;
+    // A line that stopped changing, and the language the player declares
+    // for it.
+    onLine: (text: string, language?: string) => void;
   },
 ) {
   const player = playerOf(video);
@@ -195,7 +197,7 @@ export function watchDomCaptions(
     changedAt = 0;
     if (text && text !== settled) {
       settled = text;
-      onLine(text);
+      onLine(text, box && declaredLanguage(box, player));
     }
   }
 

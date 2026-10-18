@@ -31,6 +31,8 @@ export type WantedLine = {
   text: string;
   // The lines said just before, as context for the AI model.
   before?: string;
+  // The language its source declares (the text track's), if any.
+  language?: string;
 };
 
 type LineState =
@@ -54,6 +56,7 @@ export function createTranslator({
   const ids = new Map<string, number>();
   const texts = new Map<number, string>();
   const before = new Map<number, string>();
+  const languages = new Map<number, string>();
   // Each owner's wanted lines, nearest first.
   const wanted = new Map<object, WantedLine[]>();
   // Each batch's texts by item id.
@@ -99,6 +102,7 @@ export function createTranslator({
         if (state && state !== "queued") return;
         const id = idOf(line.text);
         if (line.before) before.set(id, line.before);
+        if (line.language) languages.set(id, line.language);
         lines.set(line.text, { state: "queued" });
         queue.set({ id, text: line.text, priority: rank });
       });
@@ -126,7 +130,10 @@ export function createTranslator({
       post({
         type: "translate",
         batch,
-        items: items.map(({ id, text }) => ({ id, text })),
+        items: items.map(({ id, text }) => {
+          const language = languages.get(id);
+          return { id, text, ...(language && { language }) };
+        }),
         ...(context && { context: { before: context } }),
       });
     }
@@ -211,6 +218,8 @@ export function createTranslator({
       requeue();
       if (queue.size) flush();
     });
+    // The document's language is the site's, maybe not its videos': only a
+    // hint for lines whose source declares none.
     post({
       type: "start",
       content: PAGE_TRANSLATE_CONTENT.subtitles,

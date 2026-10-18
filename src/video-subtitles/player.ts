@@ -43,6 +43,19 @@ export function shownText(element: Element) {
     .trim();
 }
 
+// The language the player declares for `element`'s text: a `lang` on it or
+// on a box of the player's around it. The document's own is the site's,
+// not the video's.
+export function declaredLanguage(element: Element, player: Element) {
+  const marked = element.closest("[lang]");
+  return (
+    (marked &&
+      player.contains(marked) &&
+      marked.getAttribute("lang")?.trim()) ||
+    undefined
+  );
+}
+
 // Inside our own layer or the player's controls.
 export function isSkipped(element: Element) {
   return !!(element.closest(`[${OWN_ATTRIBUTE}]`) || element.closest(CONTROLS));
