@@ -2,6 +2,8 @@ OpenBrowserAgent pone un agente de IA en el panel lateral de tu navegador. Pregu
 
 Tú eliges el modelo. OpenBrowserAgent no tiene cuentas ni servidor propio: tus mensajes solo van a los proveedores de modelos, servidores MCP y almacenamiento de sincronización que tú configures. Antes de que un proveedor en otro servidor reciba tu contenido por primera vez, lo aceptas para ese proveedor; los modelos locales no necesitan permiso.
 
+Al instalarla, la configuración te guía por tus idiomas, un proveedor de IA (o un código de sincronización de otro dispositivo), lo que quieres añadir a las páginas web y tus atajos de teclado.
+
 QUÉ PUEDES HACER
 
 • Preguntar sobre la página actual o sobre varias pestañas: resúmenes, comparaciones, explicaciones, traducciones.
@@ -9,8 +11,11 @@ QUÉ PUEDES HACER
 • Dejar que el agente haga el trabajo en el navegador: rellenar formularios, comparar productos, reunir información de varias páginas, ordenar y agrupar tus pestañas.
 • Editar una página directamente, por ejemplo para traducirla, y hacer capturas de pantalla o descargar archivos.
 • Seleccionar texto en cualquier página para usar acciones rápidas (explicar, traducir, mejorar la redacción, leer en voz alta). Esta función está desactivada hasta que la actives, y puedes limitarla a los sitios que elijas.
-• Hacer clic derecho en una página, un enlace o texto seleccionado para preguntar, resumir, buscar en la web o copiar la página como Markdown. Puedes desactivar el menú o cada uno de sus elementos.
-• Traducir el contenido de una página con el botón del borde de la página, el menú del botón de la barra de herramientas, un atajo de teclado o el menú contextual, junto al original o en su lugar, sin alterar el diseño de la página, y volver con «Mostrar original». Las siguientes páginas que abras en esa pestaña también se traducen, hasta que la vuelvas a cargar. Con tu modelo de IA, el traductor integrado del navegador (si lo tiene) o la traducción gratuita de Google o Microsoft (el texto de la página se envía entonces a ellos).
+• Traducir una sola palabra o una frase corta con la barra inteligente para obtener una entrada de diccionario, con primero el significado que tiene en esa página.
+• Hacer clic derecho en una página, un enlace, un vídeo o texto seleccionado para preguntar, resumir, traducir, buscar en la web o copiar la página como Markdown. Puedes desactivar el menú o cada uno de sus elementos.
+• Traducir el contenido de una página con el botón del borde de la página, el menú del botón de la barra de herramientas, un atajo de teclado o el menú contextual, junto al original o en su lugar, sin alterar el diseño de la página, y volver con «Mostrar original». Las siguientes páginas que abras en esa pestaña también se traducen, hasta que la vuelvas a cargar. Con el traductor integrado del navegador (el predeterminado, si lo tiene), tu modelo de IA o la traducción gratuita de Google o Microsoft (el texto de la página se envía entonces a ellos).
+• Traducir los subtítulos de vídeos en cualquier sitio, también en pantalla completa: cada línea se muestra con su traducción debajo. Actívalos para un solo vídeo o para todos, y ajusta el fondo, los colores, la fuente y el tamaño con una vista previa en directo.
+• Hacer clic en el botón de la barra de herramientas para abrir un pequeño menú del sitio actual: traducir la página, activar o desactivar la barra inteligente o los subtítulos del vídeo, elegir el idioma al que traducir o abrir el panel lateral. Ctrl+Mayús+Y (Comando+Mayús+Y en Mac) abre el panel lateral directamente.
 
 AGENTES Y HABILIDADES
 

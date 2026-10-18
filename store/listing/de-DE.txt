@@ -2,6 +2,8 @@ OpenBrowserAgent bringt einen KI-Agenten in die Seitenleiste Ihres Browsers. Ste
 
 Das Modell wählen Sie selbst. OpenBrowserAgent hat kein Konto und keinen eigenen Server: Ihre Nachrichten gehen ausschließlich an die Modellanbieter, MCP-Server und den Sync-Speicher, die Sie selbst einrichten. Bevor ein Anbieter auf einem anderen Server zum ersten Mal Ihre Inhalte erhält, stimmen Sie dem für diesen Anbieter zu; lokale Modelle brauchen keine Erlaubnis.
 
+Nach der Installation führt Sie die Einrichtung durch Ihre Sprachen, einen KI-Anbieter (oder einen Sync-Code von einem anderen Gerät), die Funktionen für Webseiten und Ihre Tastenkombinationen.
+
 WAS SIE DAMIT TUN KÖNNEN
 
 • Fragen zur aktuellen Seite oder zu mehreren Tabs stellen: Zusammenfassungen, Vergleiche, Erklärungen, Übersetzungen.
@@ -9,8 +11,11 @@ WAS SIE DAMIT TUN KÖNNEN
 • Browserarbeit an den Agenten abgeben: Formulare ausfüllen, Produkte vergleichen, Informationen von mehreren Seiten sammeln, Tabs aufräumen und gruppieren.
 • Eine Seite direkt bearbeiten, etwa um sie zu übersetzen, sowie Screenshots aufnehmen oder Dateien herunterladen.
 • Auf jeder Seite Text markieren und Schnellaktionen nutzen (erklären, übersetzen, Formulierung verbessern, vorlesen). Diese Funktion ist aus, bis Sie sie einschalten, und lässt sich auf die Websites Ihrer Wahl beschränken.
-• Mit einem Rechtsklick auf eine Seite, einen Link oder markierten Text dazu fragen, zusammenfassen, im Web suchen oder die Seite als Markdown kopieren. Das Menü und einzelne Einträge lassen sich ausschalten.
-• Den Inhalt einer Seite mit der Schaltfläche am Seitenrand, dem Menü der Symbolleisten-Schaltfläche, einer Tastenkombination oder über das Kontextmenü übersetzen, neben dem Original oder an seiner Stelle, ohne das Layout der Seite zu verändern, und mit „Original anzeigen“ zurückkehren. Weitere Seiten, die Sie in diesem Tab öffnen, werden ebenfalls übersetzt, bis Sie ihn neu laden. Mit Ihrem KI-Modell, dem integrierten Übersetzer des Browsers (wo vorhanden) oder der kostenlosen Übersetzung von Google oder Microsoft (der Seitentext wird dann an sie gesendet).
+• Ein einzelnes Wort oder eine kurze Wendung mit der Smart Bar übersetzen und einen Wörterbucheintrag erhalten, mit der Bedeutung auf dieser Seite an erster Stelle.
+• Mit einem Rechtsklick auf eine Seite, einen Link, ein Video oder markierten Text dazu fragen, zusammenfassen, übersetzen, im Web suchen oder die Seite als Markdown kopieren. Das Menü und einzelne Einträge lassen sich ausschalten.
+• Den Inhalt einer Seite mit der Schaltfläche am Seitenrand, dem Menü der Symbolleisten-Schaltfläche, einer Tastenkombination oder über das Kontextmenü übersetzen, neben dem Original oder an seiner Stelle, ohne das Layout der Seite zu verändern, und mit „Original anzeigen“ zurückkehren. Weitere Seiten, die Sie in diesem Tab öffnen, werden ebenfalls übersetzt, bis Sie ihn neu laden. Mit dem integrierten Übersetzer des Browsers (Standard, wo vorhanden), Ihrem KI-Modell oder der kostenlosen Übersetzung von Google oder Microsoft (der Seitentext wird dann an sie gesendet).
+• Video-Untertitel auf jeder Website übersetzen, auch im Vollbild: Unter jeder Zeile steht ihre Übersetzung. Für ein einzelnes Video oder für alle Videos einschalten und Hintergrund, Farben, Schrift und Größe mit Live-Vorschau einstellen.
+• Ein Klick auf die Symbolleisten-Schaltfläche öffnet ein kleines Menü für die aktuelle Website: Seite übersetzen, Smart Bar oder Untertitel des Videos ein- oder ausschalten, die Zielsprache wählen oder die Seitenleiste öffnen. Strg+Umschalt+Y (Befehl+Umschalt+Y auf dem Mac) öffnet die Seitenleiste direkt.
 
 AGENTEN UND SKILLS
 

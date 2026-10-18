@@ -2,6 +2,8 @@ OpenBrowserAgent puts an AI agent in your browser's side panel. Ask about the pa
 
 You bring your own model. OpenBrowserAgent has no account and no server of its own: your messages go only to the model providers, MCP servers and sync storage that you set up. Before a provider on another server first receives your content, you agree to it for that provider; local models need no permission.
 
+A guided setup on install takes you through your languages, an AI provider (or a sync code from another device), what to add to web pages, and your keyboard shortcuts.
+
 WHAT YOU CAN DO
 
 • Ask about the current page or several tabs: summaries, comparisons, explanations, translations.
@@ -9,8 +11,11 @@ WHAT YOU CAN DO
 • Let the agent do browser work: fill in forms, compare products, collect information from several pages, tidy and group your tabs.
 • Edit a page in place, for example to translate it, and take screenshots or download files.
 • Select text on any page for quick actions (explain, translate, improve wording, read aloud). This is off until you turn it on, and you can limit it to the sites you choose.
-• Right-click a page, link or selected text to ask about it, summarize it, search the web about it, or copy the page as Markdown. You can turn the menu or single items off.
-• Translate a page's content with the button on the page's edge, the menu of the toolbar button, a keyboard shortcut or the right-click menu, next to the original or in its place, without changing the page's layout, and go back with "Show original". The next pages you open in that tab are translated too, until you reload it. Use your AI model, the browser's on-device translator where it has one, or Google's or Microsoft's free translation (the page text is then sent to them).
+• Translate a single word or short phrase with the smart bar to get a dictionary entry, with the meaning it has on that page first.
+• Right-click a page, link, video or selected text to ask about it, summarize it, translate it, search the web about it, or copy the page as Markdown. You can turn the menu or single items off.
+• Translate a page's content with the button on the page's edge, the menu of the toolbar button, a keyboard shortcut or the right-click menu, next to the original or in its place, without changing the page's layout, and go back with "Show original". The next pages you open in that tab are translated too, until you reload it. Use the browser's on-device translator (the default, where the browser has one), your AI model, or Google's or Microsoft's free translation (the page text is then sent to them).
+• Translate video subtitles on any site, also in fullscreen: each line shows with its translation under it. Start it for one video, or turn it on for every video, and set the background, colors, font and size with a live preview.
+• Click the toolbar button for a small menu for the current site: translate the page, turn the smart bar or the video's subtitles on or off, choose the language to translate into, or open the side panel. Ctrl+Shift+Y (Command+Shift+Y on Mac) opens the side panel directly.
 
 AGENTS AND SKILLS
 
