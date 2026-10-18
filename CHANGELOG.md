@@ -4,7 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
-0.2.0 is the second public release of OpenBrowserAgent, after 25 test pre-releases. It adds page and video subtitle translation, a guided setup, a toolbar menu and a smart bar dictionary, makes the agent better at real pages, and reworks sync and settings. Each pre-release's own notes are below.
+0.2.0 is the second public release of OpenBrowserAgent, after 25 test pre-releases. It adds page and video subtitle translation, a guided setup, a toolbar menu and a smart bar dictionary, makes the agent better at real pages, and reworks sync and settings. Each pre-release's own notes are in [CHANGELOG.md](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md).
 
 **Status:** Chrome and other Chromium-based browsers (Edge, Brave, Arc) are the supported target. The Firefox and Safari builds are experimental. They build and pass the shared tests, but they have not been tested on real browsers yet.
 
