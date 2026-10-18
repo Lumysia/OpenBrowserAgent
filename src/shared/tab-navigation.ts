@@ -24,6 +24,18 @@ export async function focusTab(tabId: number, url?: string) {
   return tab;
 }
 
+// A tab the UI refers to (attached to a message, cited as a source): that tab
+// while it still shows `url`, else a tab at `url`, opened when none is.
+export async function focusTabOrUrl(tabId?: number, url?: string) {
+  if (tabId !== undefined) {
+    const tab = await getBrowserApi()
+      .tabs.get(tabId)
+      .catch(() => undefined);
+    if (tab && (!url || tab.url === url)) return focusTab(tabId);
+  }
+  if (url) return openOrFocusUrl(url);
+}
+
 async function openOrFocusTab(
   url: string,
   matches: (tabUrl: string) => boolean,

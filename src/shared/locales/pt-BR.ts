@@ -150,9 +150,10 @@ export const ptBR: LocaleMessages = {
       other: "Mostrar mais {count} fontes",
     }),
     showFewerSources: "Mostrar menos fontes",
-    unavailableAttachments: plural({
-      one: "{count} indisponível",
-      other: "{count} indisponíveis",
+    attachmentUnavailable: "Indisponível neste dispositivo",
+    showMoreContext: plural({
+      one: "Mostrar mais {count} item",
+      other: "Mostrar mais {count} itens",
     }),
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",

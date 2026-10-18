@@ -1,0 +1,93 @@
+/* Context pills (src/ui/components/context-pill.tsx): light tags in the
+   bubble's colours, so they read as part of the message they go with. */
+.ui-context-pill-list {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.ui-context-pill {
+  --enter-y: -3px;
+  --enter-scale: 0.97;
+  --pill-tint: 42%;
+  min-width: 0;
+  max-width: 100%;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px 0 3px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 12%, var(--border));
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--bubble) var(--pill-tint), transparent),
+    color-mix(in oklab, var(--bubble-2) var(--pill-tint), transparent)
+  );
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+  transition: var(--transition-interactive);
+}
+.ui-context-pill:not(:has(.ui-context-pill-icon)) {
+  padding-inline: 9px;
+}
+button.ui-context-pill:hover {
+  --pill-tint: 72%;
+  border-color: var(--hover-border);
+}
+button.ui-context-pill:active {
+  scale: 0.98;
+}
+.ui-context-pill-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  color: var(--accent-strong);
+}
+/* Brand colours of favicons stay quiet next to the message. */
+.ui-context-pill-icon img {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+  filter: saturate(0.6);
+  opacity: 0.88;
+}
+.ui-context-pill-icon[data-fill] img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+  opacity: 1;
+}
+.ui-context-pill-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.ui-context-pill-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Gone from this device: the edge breaks and the name is struck out. */
+.ui-context-pill[data-unavailable] {
+  --pill-tint: 0%;
+  border-style: dashed;
+  color: var(--muted-foreground);
+}
+.ui-context-pill[data-unavailable] .ui-context-pill-label {
+  text-decoration: line-through;
+}
+.ui-context-pill[data-unavailable] .ui-context-pill-icon {
+  color: inherit;
+}

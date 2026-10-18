@@ -154,9 +154,10 @@ export const enUS = {
       other: "Show {count} more sources",
     }),
     showFewerSources: "Show fewer sources",
-    unavailableAttachments: plural({
-      one: "{count} unavailable",
-      other: "{count} unavailable",
+    attachmentUnavailable: "Not available on this device",
+    showMoreContext: plural({
+      one: "Show {count} more item",
+      other: "Show {count} more items",
     }),
     allOpenTabs: "All open tabs",
     selectElement: "Select element",

@@ -151,9 +151,10 @@ export const frFR: LocaleMessages = {
       other: "Afficher {count} sources de plus",
     }),
     showFewerSources: "Afficher moins de sources",
-    unavailableAttachments: plural({
-      one: "{count} indisponible",
-      other: "{count} indisponibles",
+    attachmentUnavailable: "Indisponible sur cet appareil",
+    showMoreContext: plural({
+      one: "Afficher {count} élément de plus",
+      other: "Afficher {count} éléments de plus",
     }),
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",

@@ -136,8 +136,13 @@ export const LOCAL_EXECUTION_BRIDGE_LIMITS = {
 } as const;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
-export const SENT_TABS_PREVIEW_COUNT = 2;
-export const SENT_ATTACHMENTS_PREVIEW_COUNT = 3;
+// How many pills of each kind a sent message shows before a "+N" pill.
+export const SENT_CONTEXT_PREVIEW_COUNT = {
+  tab: 2,
+  attachment: 3,
+  element: 2,
+  text: 2,
+} as const;
 
 // The settings pages, in the sidebar's order, then the setup page.
 export const OPTIONS_PAGE_ROUTE = {

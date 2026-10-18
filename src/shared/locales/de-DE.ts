@@ -151,9 +151,10 @@ export const deDE: LocaleMessages = {
       other: "{count} weitere Quellen anzeigen",
     }),
     showFewerSources: "Weniger Quellen anzeigen",
-    unavailableAttachments: plural({
-      one: "{count} nicht verfügbar",
-      other: "{count} nicht verfügbar",
+    attachmentUnavailable: "Auf diesem Gerät nicht verfügbar",
+    showMoreContext: plural({
+      one: "{count} weiteres Element anzeigen",
+      other: "{count} weitere Elemente anzeigen",
     }),
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",
