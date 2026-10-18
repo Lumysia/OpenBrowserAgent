@@ -38,8 +38,6 @@ export const settingsKo: SettingsMessages = {
   modelHelper: "보조",
   modelSmartBar: "스마트 바",
   modelTranslation: "번역",
-  modelTranslationFallback:
-    "내장 번역기로 페이지를 번역할 수 없을 때 사용합니다.",
   modelTranslationUnavailable:
     "현재 페이지 번역 엔진: {engine}. AI 모델은 사용하지 않습니다. 번역 엔진은 페이지 번역 설정에서 변경할 수 있습니다.",
   modelImages: "이미지",

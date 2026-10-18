@@ -38,8 +38,6 @@ export const settingsPtBR: SettingsMessages = {
   modelHelper: "Auxiliar",
   modelSmartBar: "Barra inteligente",
   modelTranslation: "Tradução",
-  modelTranslationFallback:
-    "Usado quando o tradutor integrado não consegue traduzir uma página.",
   modelTranslationUnavailable:
     "A tradução de páginas usa {engine}, não um modelo de IA. Mude o mecanismo de tradução nas configurações de Tradução de páginas.",
   modelImages: "Imagens",

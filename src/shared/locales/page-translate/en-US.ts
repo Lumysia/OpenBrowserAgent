@@ -20,7 +20,7 @@ export const pageTranslateEnUS = {
     model:
       "Your AI provider translates pages with the Translation model set in AI providers & models.",
     browser:
-      "The browser translates on this device; no text leaves it. Each language is downloaded once. Where it can't translate a page, the AI model below does.",
+      "The browser translates on this device; no text leaves it. Each language is downloaded once.",
     google:
       "An unofficial free service, not a Google API. It can stop working at any time.",
     microsoft:
@@ -66,7 +66,7 @@ export const pageTranslateEnUS = {
   // Notes on the page. {engine}: the engine's name.
   errors: {
     unavailable:
-      "{engine} isn't available. Check page translation in Settings.",
+      "{engine} can't translate this page. Choose another engine in Page translation settings.",
     rateLimited:
       "{engine} is limiting requests from this network. Try again later or choose another engine in Settings.",
     refused:
@@ -87,7 +87,7 @@ export const pageTranslateEnUS = {
   },
   // Below the engine choice where the browser has no built-in translator.
   browserMissing:
-    "This browser has no built-in translator, so the AI model below translates pages.",
+    "This browser has no built-in translator. Choose another engine.",
   // The page script was injected but didn't answer.
   notStarted:
     "Couldn't start translating this page. Reload the page and try again.",

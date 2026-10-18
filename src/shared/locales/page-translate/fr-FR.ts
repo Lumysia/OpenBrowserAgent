@@ -21,7 +21,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     model:
       "Votre fournisseur d’IA traduit les pages avec le modèle de traduction choisi dans Fournisseurs d’IA et modèles.",
     browser:
-      "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois. Lorsqu’il ne peut pas traduire une page, le modèle d’IA choisi ci-dessous prend le relais.",
+      "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois.",
     google:
       "Un service gratuit non officiel, pas une API de Google. Il peut cesser de fonctionner à tout moment.",
     microsoft:
@@ -63,7 +63,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   clearCacheFailed: "Impossible d’effacer les traductions enregistrées",
   errors: {
     unavailable:
-      "{engine} n’est pas disponible. Vérifiez la traduction de page dans les paramètres.",
+      "{engine} ne peut pas traduire cette page. Choisissez un autre moteur de traduction dans les paramètres Traduction de page.",
     rateLimited:
       "{engine} limite les requêtes de ce réseau. Réessayez plus tard ou choisissez un autre moteur dans les paramètres.",
     refused:
@@ -83,7 +83,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
       "Pour cette page, {fallback} prend le relais : {engine} ne peut pas la traduire ici.",
   },
   browserMissing:
-    "Ce navigateur n’a pas de traducteur intégré : le modèle d’IA choisi ci-dessous traduit donc les pages.",
+    "Ce navigateur n’a pas de traducteur intégré. Choisissez un autre moteur de traduction.",
   notStarted:
     "Impossible de lancer la traduction de cette page. Rechargez la page et réessayez.",
   unavailablePage:

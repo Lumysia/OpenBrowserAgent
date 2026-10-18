@@ -21,10 +21,9 @@ const MODELS = [
   { id: "fixture-beta", name: "fixture-beta" },
 ];
 
-// The Models table's Translation row: chosen with the AI engine, and with
-// the built-in translator, which hands pages it can't translate to the
-// model; with a free service the model is never used, so the row says why
-// instead of taking a choice, and keeps the stored one.
+// The Models table's Translation row: chosen with the AI engine only; with
+// the built-in translator or a free service the model is never used, so
+// the row says why instead of taking a choice, and keeps the stored one.
 test(
   "Models table: the Translation model follows the page translation engine",
   { timeout: BROWSER_TEST_TIMEOUT },
@@ -68,25 +67,39 @@ test(
       options.call(() => !!document.querySelector('[role="listbox"]'));
     const setEngine = (engine) =>
       setPreferences({ pageTranslate: { engine, modelId: MODELS[1].id } });
-    const unavailable = formatMessage(t.settings.modelTranslationUnavailable, {
-      engine: t.pageTranslate.engineNames.google,
-    });
-    try {
-      await options.send("Page.navigate", {
-        url: extensionUrl(`options.html${OPTIONS_HASH.providers}`),
+    const unavailableFor = (engine) =>
+      formatMessage(t.settings.modelTranslationUnavailable, {
+        engine: t.pageTranslate.engineNames[engine],
       });
-      await poll(row);
-
-      // Google: not editable, the stored model still shown, the reason on
-      // hover.
+    const unavailable = unavailableFor(PAGE_TRANSLATE_ENGINE.google);
+    // Not editable, the stored model still shown, the engine's reason on
+    // hover.
+    const assertUnavailable = async (engine) => {
+      await poll(async () => (await row()).unavailable);
       assert.deepEqual(await row(), {
         unavailable: true,
         disabled: false,
         value: MODELS[1].name,
         description: t.pageTranslate.modelDescription,
       });
+      await options.call(() => document.activeElement?.blur());
       const point = await elementCenter(options, TRIGGER);
-      assert.equal(await hoverTooltip(options, point), unavailable);
+      // Polled: the row may still show the last engine's reason.
+      const expected = unavailableFor(engine);
+      const shown = await poll(async () => {
+        const text = await hoverTooltip(options, point);
+        return text === expected ? text : null;
+      });
+      assert.equal(shown, expected);
+      return point;
+    };
+    try {
+      await options.send("Page.navigate", {
+        url: extensionUrl(`options.html${OPTIONS_HASH.providers}`),
+      });
+      await poll(row);
+
+      const point = await assertUnavailable(PAGE_TRANSLATE_ENGINE.google);
       await click(options, point);
       assert.equal(await unchangedFor(listOpen), false);
 
@@ -132,13 +145,15 @@ test(
       await poll(listOpen);
       await pressKey(options, "Escape");
 
-      // The built-in translator: the model is its fallback.
-      await setEngine(PAGE_TRANSLATE_ENGINE.browser);
-      await poll(
-        async () =>
-          (await row()).description === t.settings.modelTranslationFallback,
-      );
-      assert.equal((await row()).unavailable, false);
+      // The built-in translator and Microsoft never use the model either.
+      for (const engine of [
+        PAGE_TRANSLATE_ENGINE.browser,
+        PAGE_TRANSLATE_ENGINE.microsoft,
+      ]) {
+        await setEngine(engine);
+        await assertUnavailable(engine);
+        assert.equal(await unchangedFor(listOpen), false);
+      }
       assert.equal(await storedModelId(), MODELS[1].id);
     } finally {
       await session.close();

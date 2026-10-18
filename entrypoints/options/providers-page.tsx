@@ -3,7 +3,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { MODEL_ROLES, type ModelRole } from "../../src/shared/model-roles";
 import {
   normalizePageTranslateSettings,
-  pageTranslateModelUse,
+  pageTranslateUsesModel,
 } from "../../src/shared/page-translate/settings";
 import { storage } from "../../src/shared/storage";
 import { formatMessage } from "../../src/shared/text";
@@ -51,15 +51,11 @@ const ROLE_TEXT: Record<
     const { engine } = normalizePageTranslateSettings(
       preferences.pageTranslate,
     );
-    const use = pageTranslateModelUse(engine);
     return {
       title: t.settings.modelTranslation,
-      description:
-        use === "fallback"
-          ? t.settings.modelTranslationFallback
-          : t.pageTranslate.modelDescription,
+      description: t.pageTranslate.modelDescription,
       none: t.options.modelSameAsChat,
-      unavailableReason: use
+      unavailableReason: pageTranslateUsesModel(engine)
         ? undefined
         : formatMessage(t.settings.modelTranslationUnavailable, {
             engine: t.pageTranslate.engineNames[engine],

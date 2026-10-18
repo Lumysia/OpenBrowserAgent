@@ -4,29 +4,20 @@ import {
   PAGE_TRANSLATE_ENGINE,
   PAGE_TRANSLATE_ENGINES,
   PAGE_TRANSLATE_FALLBACK,
-  pageTranslateModelUse,
+  pageTranslateUsesModel,
 } from "../src/shared/page-translate/settings";
 
-test("model use: the AI engine uses the model, engines handing over to it use it as fallback", () => {
-  for (const engine of PAGE_TRANSLATE_ENGINES) {
-    const expected =
-      engine === PAGE_TRANSLATE_ENGINE.model
-        ? "engine"
-        : PAGE_TRANSLATE_FALLBACK[engine] === PAGE_TRANSLATE_ENGINE.model
-          ? "fallback"
-          : undefined;
-    assert.equal(pageTranslateModelUse(engine), expected, engine);
-  }
+test("model use: only the AI engine uses the model", () => {
+  assert.deepEqual(PAGE_TRANSLATE_ENGINES.filter(pageTranslateUsesModel), [
+    PAGE_TRANSLATE_ENGINE.model,
+  ]);
 });
 
-test("model use: the free services never reach the model, the built-in translator does", () => {
-  assert.equal(
-    pageTranslateModelUse(PAGE_TRANSLATE_ENGINE.browser),
-    "fallback",
-  );
-  assert.equal(pageTranslateModelUse(PAGE_TRANSLATE_ENGINE.google), undefined);
-  assert.equal(
-    pageTranslateModelUse(PAGE_TRANSLATE_ENGINE.microsoft),
-    undefined,
-  );
+test("model use: no engine hands its pages to the AI model", () => {
+  for (const engine of PAGE_TRANSLATE_ENGINES)
+    assert.notEqual(
+      PAGE_TRANSLATE_FALLBACK[engine],
+      PAGE_TRANSLATE_ENGINE.model,
+      engine,
+    );
 });

@@ -35,7 +35,6 @@ export const settingsZhCN: SettingsMessages = {
   modelHelper: "辅助",
   modelSmartBar: "智能工具栏",
   modelTranslation: "翻译",
-  modelTranslationFallback: "内置翻译器无法翻译页面时使用。",
   modelTranslationUnavailable:
     "网页翻译目前使用 {engine}，而非 AI 模型。请在“网页翻译”设置中更改翻译引擎。",
   modelImages: "图片",

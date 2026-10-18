@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
+import { pageTranslateEnUS as messages } from "../src/shared/locales/page-translate/en-US.ts";
+import { formatMessage } from "../src/shared/text.ts";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { poll } from "./chromium.mjs";
 import { fixtureTranslator } from "./page-translate-fixture.mjs";
@@ -130,8 +132,15 @@ test(
   "built-in translator: subtitles on a page in another language",
   { timeout: BROWSER_TEST_TIMEOUT },
   async (t) => {
+    // Every request the AI model fixture gets: none, as the built-in
+    // translator translates alone.
+    let modelRequests = 0;
+    const model = fixtureTranslator();
     const session = await startSubtitles({
-      answer: fixtureTranslator(),
+      answer: (prompt, write) => {
+        modelRequests++;
+        return model(prompt, write);
+      },
       pages: PAGES,
       preferences: {
         pageTranslate: { engine: "browser", targetLanguage: "zh-CN" },
@@ -191,15 +200,26 @@ test(
         );
 
       await t.test(
-        "a track in no declared language, detector missing: not echoed",
+        "a track in no declared language, detector missing: not echoed, the page says so",
         async () => {
           const tab = await open("/zh-ui/unlabeled", "missing");
-          // The built-in translator can't tell the source: the AI model
-          // takes over.
-          assert.deepEqual(
-            await shownLines(tab, ENGLISH),
-            ENGLISH.map((line) => `FR: ${line}`),
-          );
+          await seek(tab, 1);
+          // The built-in translator can't tell the source: its note, in a
+          // closed shadow root.
+          const note = formatMessage(messages.errors.unavailable, {
+            engine: messages.engines.browser,
+          });
+          await poll(async () => {
+            const snapshot = await tab.send("DOM.getDocument", {
+              depth: -1,
+              pierce: true,
+            });
+            return JSON.stringify(snapshot).includes(note);
+          });
+          const shown = await subtitles(tab);
+          assert.ok(!shown?.translation, "no translation shown");
+          assert.deepEqual(await pairs(), []);
+          assert.equal(modelRequests, 0);
           await tab.send("Page.close");
         },
       );

@@ -6,10 +6,14 @@ import {
   engineCacheKey,
   type EngineRequest,
 } from "../src/background/page-translate/engines/types";
+import { createPageSession } from "../src/background/page-translate/session";
 import {
   PAGE_TRANSLATE_CONTENT,
   PAGE_TRANSLATE_ERROR,
+  type PageTranslateEvent,
 } from "../src/shared/page-translate/protocol";
+import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { installChrome } from "./fake-chrome";
 
 // Which language the built-in translator takes each text to be in, without
 // a language detector (one that isn't downloaded yet): what the items and
@@ -72,7 +76,8 @@ test("built-in translator: a hint in the target language leaves no text as it is
       [...english.values()],
       ["[en>zh] Okay.", "[en>zh] We waited two days to cross."],
     );
-    // Nothing says what they are in: refused, for the fallback engine.
+    // Nothing says what they are in: refused, and the page says the
+    // built-in translator can't translate it.
     await assert.rejects(
       translate({ items: [{ id: 1, text: "Thank you." }], languageHint: "zh" }),
       unknownSource,
@@ -124,3 +129,95 @@ test("built-in translator: subtitles saved apart from the page's text", () => {
     "browser",
   );
 });
+
+// Like a detector given too little text: no answer under 60 characters.
+async function withShortSighted(run: () => Promise<void>) {
+  const scope = globalThis as Record<string, unknown>;
+  scope.LanguageDetector = {
+    availability: async () => "available",
+    create: async () => ({
+      detect: async (text: string) =>
+        text.length < 60 ? [] : [{ detectedLanguage: "en", confidence: 0.9 }],
+    }),
+  };
+  try {
+    await run();
+  } finally {
+    delete scope.LanguageDetector;
+  }
+}
+
+const SHORT_LINES = [
+  { id: 1, text: "Okay." },
+  { id: 2, text: "Thank you." },
+];
+
+test("built-in translator: short lines take their language from the text before them", () =>
+  withShortSighted(() =>
+    withoutDetector(async (translate) => {
+      const subtitles = PAGE_TRANSLATE_CONTENT.subtitles;
+      await assert.rejects(
+        translate({ items: SHORT_LINES, content: subtitles }),
+        unknownSource,
+      );
+      const results = await translate({
+        items: SHORT_LINES,
+        content: subtitles,
+        sample:
+          "The river was high that spring. We waited two days to cross it.",
+      });
+      assert.deepEqual(
+        [...results.values()],
+        ["[en>zh] Okay.", "[en>zh] Thank you."],
+      );
+    }),
+  ));
+
+test("subtitle session: later short lines are told by the lines asked for before", () =>
+  withShortSighted(() =>
+    withoutDetector(async () => {
+      const { local } = installChrome({
+        runtime: { getManifest: () => ({}) },
+      });
+      await local.set({
+        [STORAGE_KEYS.preferences]: {
+          pageTranslate: { engine: "browser", targetLanguage: "zh-CN" },
+        },
+      });
+      const events: PageTranslateEvent[] = [];
+      const finished = new Map<number, () => void>();
+      const send = createPageSession((event) => {
+        events.push(event);
+        if (event.type === "done") finished.get(event.batch)?.();
+      }, new AbortController().signal);
+      const batch = (number: number, items: typeof SHORT_LINES) => {
+        const done = new Promise<void>((resolve) =>
+          finished.set(number, resolve),
+        );
+        send({ type: "translate", batch: number, items });
+        return done;
+      };
+      send({
+        type: "start",
+        content: PAGE_TRANSLATE_CONTENT.subtitles,
+        pageLanguage: "zh-CN",
+      });
+      await batch(1, [
+        {
+          id: 1,
+          text: "The river was high that spring, and we waited two days to cross.",
+        },
+      ]);
+      await batch(2, [
+        { id: 2, text: "Okay." },
+        { id: 3, text: "Thank you." },
+      ]);
+      assert.ok(!events.some((event) => event.type === "error"));
+      assert.deepEqual(
+        events.flatMap((event) =>
+          event.type === "item" && event.batch === 2 ? [event.text] : [],
+        ),
+        ["[en>zh] Okay.", "[en>zh] Thank you."],
+      );
+    }),
+  ));
