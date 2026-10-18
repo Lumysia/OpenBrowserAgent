@@ -125,11 +125,8 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
       translationColor: "번역 색상",
       originalColor: "원문 색상",
       colors: {
-        yellow: "노란색",
-        white: "흰색",
-        cyan: "하늘색",
-        green: "연두색",
         grey: "회색",
+        theme: "테마 색상",
       },
       pickColor: "색상 선택",
       hexColor: "16진수 코드",

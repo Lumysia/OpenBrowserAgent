@@ -8,18 +8,14 @@ import { oneOf } from "../values";
 // the text alone, 100 an opaque box.
 export const SUBTITLE_OPACITY = { min: 0, max: 100, step: 5 } as const;
 
-// Quick choices offered beside the colour pickers. Every one keeps a
-// contrast of 4.5:1 or more on the box at SUBTITLE_OUTLINE_OPACITY over a
+// Named colours: white is the default, grey a quick choice beside the
+// colour pickers (with the theme colour, see theme-color.ts). Each keeps
+// a contrast of 4.5:1 or more on the box at SUBTITLE_OUTLINE_OPACITY over a
 // white frame (checked by a unit test).
-export const SUBTITLE_COLOR_PRESETS = {
+export const SUBTITLE_COLORS = {
   white: "#ffffff",
-  yellow: "#ffe9a6",
-  cyan: "#bfefff",
-  green: "#c4f5b8",
   grey: "#e6e6e6",
 } as const;
-
-export type SubtitleColorPreset = keyof typeof SUBTITLE_COLOR_PRESETS;
 
 // Up to 0.2.0-beta.24 the colours were stored by these names; they read as
 // the colours they showed. Fixed: changing the presets doesn't change them.
@@ -56,8 +52,8 @@ export type SubtitleStyle = {
 
 export const DEFAULT_SUBTITLE_STYLE: SubtitleStyle = {
   backgroundOpacity: 30,
-  translationColor: SUBTITLE_COLOR_PRESETS.white,
-  originalColor: SUBTITLE_COLOR_PRESETS.white,
+  translationColor: SUBTITLE_COLORS.white,
+  originalColor: SUBTITLE_COLORS.white,
   font: SUBTITLE_FONT.system,
   scale: 100,
   showOriginal: true,

@@ -4,7 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
-- In Settings > Page translation > Subtitle style, the translation and original colours can now be any colour: pick one, type or paste its hex code, or choose a quick colour. A colour that may be hard to read on bright video is pointed out. New installs start with white subtitles on a lighter 30% box; your current style stays as it is.
+- In Settings > Page translation > Subtitle style, the translation and original colours can now be any colour: pick one, type or paste its hex code, or choose gray or your theme colour. A colour that may be hard to read on bright video is pointed out. New installs start with white subtitles on a lighter 30% box; your current style stays as it is.
 
 ## 0.2.0-beta.24 - 2026-10-18
 

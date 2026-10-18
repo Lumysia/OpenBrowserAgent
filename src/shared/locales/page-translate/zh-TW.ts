@@ -111,11 +111,8 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
       translationColor: "譯文顏色",
       originalColor: "原文顏色",
       colors: {
-        yellow: "黃色",
-        white: "白色",
-        cyan: "淺藍色",
-        green: "淺綠色",
         grey: "灰色",
+        theme: "主題色",
       },
       pickColor: "選擇顏色",
       hexColor: "十六進位代碼",

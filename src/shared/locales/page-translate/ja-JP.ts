@@ -126,11 +126,8 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
       translationColor: "訳文の色",
       originalColor: "原文の色",
       colors: {
-        yellow: "黄",
-        white: "白",
-        cyan: "水色",
-        green: "薄緑",
         grey: "グレー",
+        theme: "テーマカラー",
       },
       pickColor: "色を選択",
       hexColor: "16 進コード",

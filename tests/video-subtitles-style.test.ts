@@ -9,13 +9,15 @@ import {
 import {
   DEFAULT_SUBTITLE_STYLE,
   normalizeSubtitleStyle,
-  SUBTITLE_COLOR_PRESETS,
+  SUBTITLE_COLORS,
   SUBTITLE_OUTLINE_OPACITY,
   subtitleBox,
   subtitleColorReadable,
   subtitleShadow,
   subtitleStyleProperties,
 } from "../src/shared/video-subtitles/style";
+import { THEMES, type ThemeId } from "../src/shared/theme/themes";
+import { subtitleThemeColor } from "../src/shared/video-subtitles/theme-color";
 
 test("subtitle style: settings from the last release read with the default style", () => {
   // Written by 0.2.0-beta.19: no subtitleStyle.
@@ -191,11 +193,14 @@ const overWhite = (color: string) => {
   return [r!, g!, b!].map((value) => value * a! + 255 * (1 - a!));
 };
 
-test("subtitle style: every preset stays readable on the box over a bright frame", () => {
+test("subtitle style: the named colours stay readable on the box over a bright frame, theme colours without a warning", () => {
   // At and above SUBTITLE_OUTLINE_OPACITY the box alone carries the
   // contrast; below it the outline comes in (see above).
   const box = overWhite(subtitleBox(SUBTITLE_OUTLINE_OPACITY));
-  for (const color of Object.values(SUBTITLE_COLOR_PRESETS)) {
+  const themeColors = (Object.keys(THEMES) as ThemeId[]).map(
+    subtitleThemeColor,
+  );
+  for (const color of Object.values(SUBTITLE_COLORS)) {
     assert.ok(
       contrast(hex(color), box) >= 4.5,
       `${color}: ${contrast(hex(color), box).toFixed(2)}`,
@@ -203,11 +208,13 @@ test("subtitle style: every preset stays readable on the box over a bright frame
     for (const opacity of [0, DEFAULT_SUBTITLE_STYLE.backgroundOpacity, 100])
       assert.ok(subtitleColorReadable(color, opacity), color);
   }
-  assert.ok(
-    Object.values(SUBTITLE_COLOR_PRESETS).includes(
-      DEFAULT_SUBTITLE_STYLE.translationColor as never,
-    ),
-  );
+  // Theme colours keep the theme's hue, so they don't reach 4.5:1 on a white
+  // frame; they still clear the bar of the low-contrast hint.
+  for (const color of themeColors)
+    for (const opacity of [0, DEFAULT_SUBTITLE_STYLE.backgroundOpacity, 100])
+      assert.ok(subtitleColorReadable(color, opacity), color);
+  assert.equal(DEFAULT_SUBTITLE_STYLE.translationColor, SUBTITLE_COLORS.white);
+  assert.equal(DEFAULT_SUBTITLE_STYLE.originalColor, SUBTITLE_COLORS.white);
   // The default is lighter than the box of earlier versions.
   assert.ok(
     luminance(

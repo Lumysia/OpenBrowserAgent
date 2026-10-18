@@ -139,11 +139,8 @@ export const pageTranslateEnUS = {
       translationColor: "Translation color",
       originalColor: "Original color",
       colors: {
-        yellow: "Yellow",
-        white: "White",
-        cyan: "Light blue",
-        green: "Light green",
         grey: "Gray",
+        theme: "Theme color",
       },
       // The colour fields: the swatch that opens the colour picker, the
       // field for the colour's hex code, the note when that code isn't a

@@ -126,11 +126,8 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
       translationColor: "Couleur de la traduction",
       originalColor: "Couleur de l’original",
       colors: {
-        yellow: "Jaune",
-        white: "Blanc",
-        cyan: "Bleu clair",
-        green: "Vert clair",
         grey: "Gris",
+        theme: "Couleur du thème",
       },
       pickColor: "Choisir une couleur",
       hexColor: "Code hexadécimal",

@@ -6,11 +6,13 @@ import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { pageTranslateEnUS } from "../src/shared/locales/page-translate/en-US.ts";
 import {
   DEFAULT_SUBTITLE_STYLE,
-  SUBTITLE_COLOR_PRESETS,
+  SUBTITLE_COLORS,
   SUBTITLE_FONTS,
   subtitleBox,
 } from "../src/shared/video-subtitles/style.ts";
 import { BROWSER_TEST_TIMEOUT, unchangedFor } from "./browser-harness.mjs";
+import { DEFAULT_THEME } from "../src/shared/theme/themes.ts";
+import { subtitleThemeColor } from "../src/shared/video-subtitles/theme-color.ts";
 import { clickElement, pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import { fixtureTranslator } from "./page-translate-fixture.mjs";
@@ -145,14 +147,14 @@ test(
           await pressKey(options, "End");
           await clickElement(
             options,
-            `${colorField(labels.translationColor)} button[aria-label="${labels.colors.cyan}"]`,
+            `${colorField(labels.translationColor)} button[aria-label="${labels.colors.grey}"]`,
           );
           await choose(options, labels.font, labels.fonts.serif);
           await poll(async () => (await storedStyle())?.font === "serif");
           assert.deepEqual(await storedStyle(), {
             ...DEFAULT_SUBTITLE_STYLE,
             backgroundOpacity: 100,
-            translationColor: SUBTITLE_COLOR_PRESETS.cyan,
+            translationColor: SUBTITLE_COLORS.grey,
             font: "serif",
           });
           assert.equal(
@@ -160,11 +162,11 @@ test(
               (selector) => document.querySelector(selector).value,
               hexField(labels.translationColor),
             ),
-            SUBTITLE_COLOR_PRESETS.cyan,
+            SUBTITLE_COLORS.grey,
           );
           const expected = {
             background: computed(subtitleBox(100)),
-            color: computed(SUBTITLE_COLOR_PRESETS.cyan),
+            color: computed(SUBTITLE_COLORS.grey),
             font: SUBTITLE_FONTS.serif,
           };
           const matches = (look) =>
@@ -240,6 +242,17 @@ test(
           ).then((value) => assert.equal(value, "#ffcc00"));
           await poll(
             async () => (await previewLook(options))?.original.color === yellow,
+          );
+
+          // The theme colour: the accent as drawn on dark surfaces, stored
+          // as its hex.
+          const accent = subtitleThemeColor(DEFAULT_THEME);
+          await clickElement(
+            options,
+            `${colorField(labels.originalColor)} button[aria-label="${labels.colors.theme}"]`,
+          );
+          await poll(
+            async () => (await storedStyle())?.originalColor === accent,
           );
         },
       );

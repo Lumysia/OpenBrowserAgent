@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Palette } from "lucide-react";
 import { formatNumber } from "../../src/shared/format";
+import type { ThemeId } from "../../src/shared/theme/themes";
+import { subtitleThemeColor } from "../../src/shared/video-subtitles/theme-color";
 import {
-  SUBTITLE_COLOR_PRESETS,
+  SUBTITLE_COLORS,
   SUBTITLE_FONT,
   SUBTITLE_OPACITY,
   SUBTITLE_SCALES,
   subtitleColorReadable,
-  type SubtitleColorPreset,
   type SubtitleStyle,
 } from "../../src/shared/video-subtitles/style";
 import {
@@ -34,9 +35,12 @@ type ColorKey = "translationColor" | "originalColor";
 // setting is saved when they are let go.
 export function SubtitleStyleSection({
   style,
+  theme,
   onChange,
 }: {
   style: SubtitleStyle;
+  // The extension's theme, for the "theme colour" choice.
+  theme: ThemeId | undefined;
   onChange: (style: SubtitleStyle) => void;
 }) {
   const s = useMessages().pageTranslate.subtitles.style;
@@ -56,9 +60,10 @@ export function SubtitleStyleSection({
     translationColor: colors.translationColor ?? style.translationColor,
     originalColor: colors.originalColor ?? style.originalColor,
   };
-  const presetList = (
-    Object.entries(SUBTITLE_COLOR_PRESETS) as [SubtitleColorPreset, string][]
-  ).map(([name, value]) => ({ value, label: s.colors[name] }));
+  const presetList = [
+    { value: SUBTITLE_COLORS.grey, label: s.colors.grey },
+    { value: subtitleThemeColor(theme), label: s.colors.theme },
+  ];
   const colorField = (key: ColorKey, title: string) => (
     <SettingToggleRow
       title={title}
