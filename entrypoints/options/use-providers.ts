@@ -36,30 +36,13 @@ export function useProviders() {
     );
   }
 
-  // Deleting a provider unsets the models picked from it.
+  // Deleting a provider unsets the models picked from it (see
+  // forgetRemovedModels).
   function deleteProvider(providerId: string) {
-    const removed = providers?.[providerId];
     setProviderState((previous) => {
       const { [providerId]: _removed, ...next } = previous;
       return next;
     });
-    if (removed?.models?.length) forgetModels(removed.models);
-  }
-
-  function forgetModels(models: ModelConfig[]) {
-    setPreferences((previous) =>
-      models.some(
-        (model) =>
-          model.id === previous.selectedModelId ||
-          model.id === previous.selectedImageModelId,
-      )
-        ? {
-            ...previous,
-            selectedModelId: undefined,
-            selectedImageModelId: undefined,
-          }
-        : previous,
-    );
   }
 
   // The first model added becomes the chat model; the other features use

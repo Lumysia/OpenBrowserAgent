@@ -18,17 +18,33 @@ export type ModelChoice = {
 
 type Providers = ReturnType<typeof normalizeProviderState>;
 
+// The models of a provider a feature can use: chat models, or for images
+// its image models and then its chat models.
+export type ProviderModels = (provider: ProviderConfig) => ModelConfig[];
+
+export const chatModels: ProviderModels = (provider) => provider.models || [];
+
+export const imageModels: ProviderModels = (provider) => [
+  ...(provider.imageModels || []),
+  ...(provider.models || []),
+];
+
+// The model of `models` a stored choice names: by id, or by the name
+// older choices hold.
+export function namedModel(models: ModelConfig[], modelId: string | undefined) {
+  if (!modelId) return undefined;
+  return models.find(
+    (candidate) => candidate.id === modelId || candidate.name === modelId,
+  );
+}
+
 function findModel(
   providers: Providers,
   modelId: string | undefined,
-  models: (provider: ProviderConfig) => ModelConfig[] = (provider) =>
-    provider.models || [],
+  models: ProviderModels = chatModels,
 ): ModelChoice | undefined {
-  if (!modelId) return undefined;
   for (const [providerId, provider] of Object.entries(providers)) {
-    const model = models(provider).find(
-      (candidate) => candidate.id === modelId || candidate.name === modelId,
-    );
+    const model = namedModel(models(provider), modelId);
     if (model) return { providerId, provider, model };
   }
   return undefined;
@@ -70,19 +86,20 @@ export function chooseImageModel(
   modelId?: string,
 ) {
   const providers = normalizeProviderState(state);
-  const imageModels = (provider: ProviderConfig) => [
-    ...(provider.imageModels || []),
-    ...(provider.models || []),
-  ];
   return (
     findModel(providers, modelId, imageModels) ??
     findModel(providers, preferences.selectedImageModelId, imageModels)
   );
 }
 
-// Every configured chat model, in provider order.
-export function configuredModels(state: ProviderState | undefined) {
-  return Object.values(normalizeProviderState(state)).flatMap(
-    (provider) => provider.models || [],
-  );
+// Every configured model of `models` (chat models), in provider order,
+// the order a choice is looked up in. A model listed twice is the first.
+export function configuredModels(
+  state: ProviderState | undefined,
+  models: ProviderModels = chatModels,
+) {
+  const seen = new Set<string>();
+  return Object.values(normalizeProviderState(state))
+    .flatMap(models)
+    .filter((model) => !seen.has(model.id) && !!seen.add(model.id));
 }
