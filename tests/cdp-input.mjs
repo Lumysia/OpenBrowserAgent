@@ -39,10 +39,13 @@ const mouse = (page, type, { x, y }, { scale = 1, ...rest } = {}) =>
 // click at its center would hit. An opening accordion, for one, moves
 // what it holds while it animates, and scrolling into view inside it
 // shifts the rows further, so a point taken then lands on another row.
+// Content arriving late moves what follows it without an animation (the
+// setup's buttons under a step whose list loads): the element's box has to
+// stay put for two frames.
 export function elementCenter(page, selector, { text, exact = false } = {}) {
   return poll(() =>
     page.call(
-      ({ selector, text, exact }) => {
+      async ({ selector, text, exact }) => {
         const element = [...document.querySelectorAll(selector)].find(
           (item) =>
             !text ||
@@ -67,7 +70,13 @@ export function elementCenter(page, selector, { text, exact = false } = {}) {
           y: rect.y + rect.height / 2,
         };
         const hit = document.elementFromPoint(point.x, point.y);
-        return hit && element.contains(hit) ? point : null;
+        if (!hit || !element.contains(hit)) return null;
+        if (!document.hidden)
+          await new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          );
+        const after = element.getBoundingClientRect();
+        return after.x === rect.x && after.y === rect.y ? point : null;
       },
       { selector, text, exact },
     ),
