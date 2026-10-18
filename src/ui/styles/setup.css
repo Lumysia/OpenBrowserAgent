@@ -74,8 +74,12 @@
   text-align: start;
 }
 
-/* The guided setup: a page of its own, one calm column whose step scrolls
-   between the dots and the Back / Next row. */
+/* The guided setup: a page of its own, one calm column. The step and its
+   Back / Next row are one group, a little above the middle of the window:
+   the free height splits 38 : 62 above and below it (the wizard's ::before
+   and ::after rows). A step taller than the window takes the whole height
+   and scrolls, the row right under it. The split is measured on what
+   shows, so steps keep no least height: the row follows each step. */
 .standalone-shell {
   height: 100vh;
   display: flex;
@@ -88,14 +92,17 @@
   margin-inline: auto;
   padding: var(--space-6) var(--space-6) var(--space-4);
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: var(--space-4);
+  grid-template-rows:
+    minmax(0, 38fr) minmax(0, max-content) auto
+    minmax(0, 62fr);
+}
+.setup-wizard::before,
+.setup-wizard::after {
+  content: "";
 }
 .setup-wizard-scroll {
   min-height: 0;
 }
-/* The step sits in the middle of the free height; a step taller than the
-   window starts at the top and scrolls (auto margins resolve to 0). */
 .setup-wizard-scroll > .ui-scroll-area-viewport {
   display: grid;
 }
@@ -104,10 +111,13 @@
   font-size: var(--text-sm);
   font-weight: 600;
 }
-.setup-step {
+.setup-step,
+.setup-wizard-actions {
   width: 100%;
   max-width: 720px;
-  margin: auto;
+}
+.setup-step {
+  margin-inline: auto;
   display: grid;
   align-content: start;
   gap: var(--space-5);
@@ -144,6 +154,7 @@
   min-width: 0;
 }
 .setup-wizard-actions {
+  margin: var(--space-6) auto 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;

@@ -12,11 +12,11 @@ import {
   copiedText,
   hasMarkRoom,
   isContent,
-  spacingAfter,
   startAligned,
   type LookDetails,
 } from "./look";
 import { originalText } from "./originals";
+import { separates, spaceStyle, spacingAfter } from "./spacing";
 import {
   boxOf,
   clipsOverflow,
@@ -199,6 +199,7 @@ export function choosePlacement(
   )
     form = anchor ? "block" : "tooltip";
   const rtl = hostStyle.direction === "rtl";
+  const shownClamp = anchor && clamp ? clamp : undefined;
   const placement: Placement = {
     form,
     host,
@@ -212,10 +213,20 @@ export function choosePlacement(
       css: anchor
         ? copiedText(view.getComputedStyle(block), hostStyle)
         : undefined,
-      spacing: anchor
-        ? spacingAfter(anchor, view.getComputedStyle(anchor), box.bottom)
-        : undefined,
-      clamp: anchor && clamp ? clamp : undefined,
+      spacing:
+        form === "block"
+          ? spaceStyle(
+              anchor
+                ? spacingAfter(
+                    anchor,
+                    view.getComputedStyle(anchor),
+                    box.bottom,
+                  )
+                : 0,
+              shownClamp !== "ellipsis" && separatesAfter(paragraph, anchor),
+            )
+          : undefined,
+      clamp: shownClamp,
       link: anchor ? linkOf(block, anchor) : undefined,
       item: /flex|grid/.test(hostStyle.display),
       mark:
@@ -228,6 +239,16 @@ export function choosePlacement(
   if (placement.area && compact.has(placement.area))
     placement.form = tighter(placement.form, "tooltip");
   return placement;
+}
+
+// Whether the space after a block translation sets its pair apart (see
+// separates): the translation goes after the anchor, at the end of the
+// paragraph's block, or right after the paragraph's nodes.
+function separatesAfter(paragraph: Paragraph, anchor?: Element) {
+  if (anchor?.parentElement)
+    return separates(anchor.parentElement, anchor.nextSibling);
+  const last = paragraph.nodes[paragraph.nodes.length - 1];
+  return separates(paragraph.parent, paragraph.whole ? null : last.nextSibling);
 }
 
 // A box fixed over the page, outside the article, covering part of the

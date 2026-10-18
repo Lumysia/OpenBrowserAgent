@@ -186,7 +186,9 @@ test(
           });
         },
       );
-      await page.send("Page.close");
+      // No Page.close here: the tab is in the background with its video
+      // playing, and Page.close on it timed out on busy runners. Closing
+      // the session closes it with the browser.
     } finally {
       await session.close();
     }
