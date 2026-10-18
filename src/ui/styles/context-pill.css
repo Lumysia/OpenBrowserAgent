@@ -12,7 +12,8 @@
   --enter-scale: 0.97;
   --pill-tint: 42%;
   min-width: 0;
-  max-width: 100%;
+  /* A long title doesn't make a pill outweigh a short message. */
+  max-width: min(100%, 15rem);
   height: 24px;
   display: inline-flex;
   align-items: center;
