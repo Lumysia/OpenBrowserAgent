@@ -8,6 +8,7 @@ What changed in each release. The release workflow publishes the section for the
 - In bilingual page translation each translation sits a little further from its original and has a little space after it, so original and translation read as a pair, set apart from the next one, even in lists and paragraphs without spacing of their own. Menus, tables and other compact parts of the page keep their spacing.
 - The guided setup sits a little above the middle of the window, with Back and Next right under each step instead of at the bottom of the window. A step taller than the window still scrolls, with the buttons in view.
 - With the built-in translator, subtitles of a video in another language are now translated on sites whose own language is the one you translate into (such as an English video on YouTube in Chinese), instead of showing the original line again as its "translation".
+- In Settings → AI providers & models, a model choice that no longer matches a configured model now shows as Off (Images) or "Same as chat model" instead of an empty box, the Images choice lists image models too, and deleting a model also clears every feature set to use it.
 
 ## 0.2.0-beta.21 - 2026-10-17
 

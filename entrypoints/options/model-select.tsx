@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import { configuredModels } from "../../src/shared/model-choice";
+import { configuredModels, namedModel } from "../../src/shared/model-choice";
+import { roleModels, type ModelRole } from "../../src/shared/model-roles";
 import { storage } from "../../src/shared/storage";
 import type { ModelConfig } from "../../src/shared/types";
 import {
@@ -22,7 +23,7 @@ const NO_MODEL = "no-model";
 export function ModelSelect({
   t,
   models,
-  value,
+  value: modelId,
   noneLabel,
   label,
   disabled,
@@ -38,6 +39,9 @@ export function ModelSelect({
   unavailableReason?: string;
   onChange: (modelId: string | undefined) => void;
 }) {
+  // A choice naming none of `models` reads as none, as the feature then
+  // uses none of them.
+  const value = namedModel(models, modelId)?.id;
   return (
     <Select
       value={value || NO_MODEL}
@@ -62,4 +66,13 @@ export function ModelSelect({
 export function useConfiguredModels() {
   const [providers] = useStoredState(storage.provider);
   return useMemo(() => configuredModels(providers), [providers]);
+}
+
+// The configured models each feature can use.
+export function useRoleModels() {
+  const [providers] = useStoredState(storage.provider);
+  return useCallback(
+    (role: ModelRole) => roleModels(role, providers),
+    [providers],
+  );
 }

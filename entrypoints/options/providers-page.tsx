@@ -15,7 +15,7 @@ import {
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { ModelSelect, useConfiguredModels } from "./model-select";
+import { ModelSelect, useRoleModels } from "./model-select";
 import { ProviderList } from "./provider-list";
 
 // Each feature's row in the Models table: its name, what it does, what
@@ -76,7 +76,7 @@ const ROLE_TEXT: Record<
 export function ProvidersPage() {
   const t = useMessages();
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const models = useConfiguredModels();
+  const modelsOf = useRoleModels();
 
   if (!preferences) return null;
 
@@ -106,7 +106,7 @@ export function ProvidersPage() {
                 aside={
                   <ModelSelect
                     t={t}
-                    models={models}
+                    models={modelsOf(role)}
                     value={role.get(preferences)}
                     label={text.title}
                     noneLabel={text.none}
