@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- In Settings > Page translation > Subtitle style, the translation and original colours can now be any colour: pick one, type or paste its hex code, or choose a quick colour. A colour that may be hard to read on bright video is pointed out. New installs start with white subtitles on a lighter 30% box; your current style stays as it is.
+
 ## 0.2.0-beta.24 - 2026-10-18
 
 - In the side panel, the tabs, files, selected text and elements sent with a message now show as small one-line tags right under your message, in its colours. Pointing at one shows its full title and site (or file size); clicking a tab brings that tab to the front, and "+N" shows the rest. A file no longer stored on this device is struck out, also when the message's other files are still there.

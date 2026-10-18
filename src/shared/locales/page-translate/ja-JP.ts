@@ -129,8 +129,13 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
         yellow: "黄",
         white: "白",
         cyan: "水色",
+        green: "薄緑",
         grey: "グレー",
       },
+      pickColor: "色を選択",
+      hexColor: "16 進コード",
+      invalidColor: "#ffcc00 のような 16 進カラーを入力してください。",
+      lowContrast: "明るい動画では読みにくい場合があります。",
       font: "フォント",
       fonts: {
         system: "システム",

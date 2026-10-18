@@ -129,8 +129,13 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
         yellow: "Amarelo",
         white: "Branco",
         cyan: "Azul-claro",
+        green: "Verde-claro",
         grey: "Cinza",
       },
+      pickColor: "Escolher uma cor",
+      hexColor: "Código hexadecimal",
+      invalidColor: "Digite uma cor hexadecimal, como #ffcc00.",
+      lowContrast: "Pode ficar difícil de ler em vídeos claros.",
       font: "Fonte",
       fonts: {
         system: "Sistema",

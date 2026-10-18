@@ -129,8 +129,13 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
         yellow: "Jaune",
         white: "Blanc",
         cyan: "Bleu clair",
+        green: "Vert clair",
         grey: "Gris",
       },
+      pickColor: "Choisir une couleur",
+      hexColor: "Code hexadécimal",
+      invalidColor: "Saisissez une couleur hexadécimale, par exemple #ffcc00.",
+      lowContrast: "Peut être difficile à lire sur une vidéo claire.",
       font: "Police",
       fonts: {
         system: "Système",

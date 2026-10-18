@@ -16,6 +16,20 @@ function parseHex(hex: string): Rgb {
   ) as Rgb;
 }
 
+// `#rrggbb` (lowercase) from a hex colour as people write it: 3 or 6
+// digits, with or without `#`; undefined for anything else.
+export function parseHexColor(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value.trim());
+  if (!match) return undefined;
+  const digits = match[1]!.toLowerCase();
+  return `#${
+    digits.length === 3
+      ? [...digits].map((digit) => digit + digit).join("")
+      : digits
+  }`;
+}
+
 function toLinear(channel: number) {
   const value = channel / 255;
   return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;

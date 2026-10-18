@@ -142,8 +142,16 @@ export const pageTranslateEnUS = {
         yellow: "Yellow",
         white: "White",
         cyan: "Light blue",
+        green: "Light green",
         grey: "Gray",
       },
+      // The colour fields: the swatch that opens the colour picker, the
+      // field for the colour's hex code, the note when that code isn't a
+      // colour, and the note when the chosen colour has little contrast.
+      pickColor: "Choose a color",
+      hexColor: "Hex code",
+      invalidColor: "Enter a hex color, like #ffcc00.",
+      lowContrast: "May be hard to read on bright video.",
       font: "Font",
       fonts: {
         system: "System",

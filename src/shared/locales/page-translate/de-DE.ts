@@ -130,8 +130,13 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
         yellow: "Gelb",
         white: "Weiß",
         cyan: "Hellblau",
+        green: "Hellgrün",
         grey: "Grau",
       },
+      pickColor: "Farbe auswählen",
+      hexColor: "Hex-Code",
+      invalidColor: "Geben Sie eine Hex-Farbe ein, z. B. #ffcc00.",
+      lowContrast: "Auf hellem Video eventuell schwer lesbar.",
       font: "Schrift",
       fonts: {
         system: "System",
