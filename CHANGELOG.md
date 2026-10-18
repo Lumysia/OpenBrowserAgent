@@ -4,6 +4,38 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+0.2.0 is the second public release of OpenBrowserAgent, after 25 test pre-releases. It adds page and video subtitle translation, a guided setup, a toolbar menu and a smart bar dictionary, makes the agent better at real pages, and reworks sync and settings. Each pre-release's own notes are in [CHANGELOG.md](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md).
+
+**Status:** Chrome and other Chromium-based browsers (Edge, Brave, Arc) are the supported target. The Firefox and Safari builds are experimental. They build and pass the shared tests, but they have not been tested on real browsers yet.
+
+### Install or update
+
+- **Chrome / Chromium:** unzip `open-browser-agent-0.2.0-chrome.zip`, open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and select the unzipped folder. To update, replace the folder's contents and click the reload button on the extension's card.
+- **Firefox (experimental):** `open-browser-agent-0.2.0-firefox.zip`. Load it as a temporary add-on from `about:debugging`.
+- **Safari (experimental):** `open-browser-agent-0.2.0-safari.zip`. It needs Xcode's Safari web extension converter.
+- `open-browser-agent-0.2.0-sources.zip` is the source package for store review.
+
+### Highlights
+
+- **Page translation**: translate a whole page from the toolbar menu, the translate button on the page edge, the right-click menu or a keyboard shortcut. The translation sits under each paragraph (or replaces it), with the page's font and layout kept; menus, buttons, names and dates stay as they are. Engines: the browser's on-device translator (the default), your AI model, or Google's or Microsoft's free translation.
+- **Video subtitles**: each subtitle line shows with its translation under it, on any site, also in fullscreen, from the video's tracks, the caption files a player loads or captions it draws. Turn it on for every video in Settings or for one video from its right-click menu, and set the background, colours, font and size with a live preview.
+- **Guided setup** on install: languages, an AI provider (or a sync code from another device), what to add to web pages, and your keyboard shortcuts. Returning users connect sync instead and skip the rest.
+- **Toolbar menu**: the toolbar button opens a small menu for the current site (translate it, the smart bar on this site, video subtitles, "Translate into") and a button to open the side panel. Ctrl+Shift+Y (Command+Shift+Y on Mac) opens the side panel directly.
+- **Smart bar dictionary**: translating a single word or short phrase shows a dictionary entry with the meaning on this page first. One "Translate into" language is used by page translation, subtitles and the smart bar.
+- **A more capable agent**: it sees what changed after each click or typing, notices covered buttons, read-only and invalid fields, and pages that are still loading; it can search inside long pages and files, take enlarged screenshots of one element, download files, run JavaScript in a sandbox to compute or parse data, record a tab's failed requests and console errors while you reproduce a problem (credentials removed), and stays on its own tab while it works.
+- **Sync in groups**: settings always sync; API keys (encrypted with a sync passphrase), chats and files each have one switch. A sync code connects another device in one paste, and a broken sync file on the server is rebuilt instead of failing.
+- **Simpler settings**: one Models table picks the model for chat, helper tasks, the smart bar, page translation and images; named AI providers such as DeepSeek or OpenRouter can be added straight from the list; recommended MCP servers are added with one click.
+- **A new look**: one set of design tokens throughout, pride themes, holiday touches, a frosted message box, and the tabs and files sent with a message shown as small tags under it.
+
+### Good to know
+
+- **Sync users, update every device.** The sync format changed in this version (see 0.2.0-beta.9). The first sync from 0.2.0 replaces the old data on the server with that device's, so update and sync the device with the most data first, then the others. Older versions stop syncing with the new format. Your data on each device stays as it is.
+- Settings and data from 0.1.0 carry over; nothing needs to be set up again apart from turning sync's keys, chats and files switches back on.
+- Page translation with the built-in translator, Google or Microsoft keeps your AI provider out of it; Google and Microsoft receive the page text. See [Permissions and privacy](https://github.com/Lumysia/OpenBrowserAgent/blob/main/docs/permissions-and-privacy.md).
+- You bring your own model provider and API key. Nothing is sent anywhere except the providers, MCP servers, translation engine and sync servers you choose.
+
+Please report problems on the [issue tracker](https://github.com/Lumysia/OpenBrowserAgent/issues).
+
 ## 0.2.0-beta.25 - 2026-10-18
 
 - In Settings > Page translation > Subtitle style, the translation and original colours can now be any colour: pick one, type or paste its hex code, or choose gray or your theme colour. A colour that may be hard to read on bright video is pointed out. New installs start with white subtitles on a lighter 30% box; your current style stays as it is.
@@ -15,7 +47,6 @@ What changed in each release. The release workflow publishes the section for the
 ## 0.2.0-beta.23 - 2026-10-18
 
 - The built-in translator no longer hands pages or subtitles it can't translate to the AI model: it says so on the page and asks you to choose another engine in Page translation settings. The Translation model in Settings > AI providers & models is used only with the AI model engine.
-- In bilingual page translation the translation sits a little closer to its original again (0.35em instead of 0.5em).
 - In bilingual page translation the translation sits a little closer to its original again (0.3em instead of 0.5em), and the space before the next pair is 0.7em instead of 0.75em.
 
 ## 0.2.0-beta.22 - 2026-10-18
