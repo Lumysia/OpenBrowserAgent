@@ -97,7 +97,12 @@ test(
 
       await t.test("the gap under the source", async () => {
         const item = await spacing(page, "#plain li");
-        assert.equal(item.gap, em(TRANSLATION_GAP, item.fontSize));
+        // Computed margins keep fractions of a pixel.
+        assert.ok(
+          Math.abs(item.gap - parseFloat(TRANSLATION_GAP) * item.fontSize) <
+            0.5,
+          `${item.gap}`,
+        );
       });
 
       await t.test(

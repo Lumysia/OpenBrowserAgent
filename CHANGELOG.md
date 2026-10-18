@@ -5,6 +5,8 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - The built-in translator no longer hands pages or subtitles it can't translate to the AI model: it says so on the page and asks you to choose another engine in Page translation settings. The Translation model in Settings > AI providers & models is used only with the AI model engine.
+- In bilingual page translation the translation sits a little closer to its original again (0.35em instead of 0.5em).
+- In bilingual page translation the translation sits a little closer to its original again (0.3em instead of 0.5em), and the space before the next pair is 0.7em instead of 0.75em.
 
 ## 0.2.0-beta.22 - 2026-10-18
 
