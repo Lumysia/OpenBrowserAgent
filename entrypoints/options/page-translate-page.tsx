@@ -174,6 +174,7 @@ export function PageTranslatePage() {
       />
       <SubtitleStyleSection
         style={settings.subtitleStyle}
+        theme={preferences.accentColor}
         onChange={(subtitleStyle) => update({ subtitleStyle })}
       />
       <Disclosure label={t.settings.advanced}>

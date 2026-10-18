@@ -111,11 +111,13 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
       translationColor: "譯文顏色",
       originalColor: "原文顏色",
       colors: {
-        yellow: "黃色",
-        white: "白色",
-        cyan: "淺藍色",
         grey: "灰色",
+        theme: "主題色",
       },
+      pickColor: "選擇顏色",
+      hexColor: "十六進位代碼",
+      invalidColor: "請輸入十六進位顏色，例如 #ffcc00。",
+      lowContrast: "在明亮的影片上可能不易看清。",
       font: "字型",
       fonts: {
         system: "系統",

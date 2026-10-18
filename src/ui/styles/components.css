@@ -147,6 +147,12 @@
   border-color: var(--accent-strong);
   box-shadow: 0 0 0 3px var(--ring);
 }
+:is(.ui-input, .ui-textarea)[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+:is(.ui-input, .ui-textarea)[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 28%, transparent);
+}
 .ui-select-trigger-inline:hover {
   background: var(--hover-surface);
 }

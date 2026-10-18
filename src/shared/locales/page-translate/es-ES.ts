@@ -126,11 +126,13 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
       translationColor: "Color de la traducción",
       originalColor: "Color del original",
       colors: {
-        yellow: "Amarillo",
-        white: "Blanco",
-        cyan: "Azul claro",
         grey: "Gris",
+        theme: "Color del tema",
       },
+      pickColor: "Elegir un color",
+      hexColor: "Código hexadecimal",
+      invalidColor: "Escribe un color hexadecimal, como #ffcc00.",
+      lowContrast: "Puede costar leerlo en vídeos claros.",
       font: "Fuente",
       fonts: {
         system: "Sistema",

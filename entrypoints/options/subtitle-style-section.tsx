@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Palette } from "lucide-react";
 import { formatNumber } from "../../src/shared/format";
+import type { ThemeId } from "../../src/shared/theme/themes";
+import { subtitleThemeColor } from "../../src/shared/video-subtitles/theme-color";
 import {
+  SUBTITLE_COLORS,
   SUBTITLE_FONT,
   SUBTITLE_OPACITY,
-  SUBTITLE_ORIGINAL_COLOR,
   SUBTITLE_SCALES,
-  SUBTITLE_TRANSLATION_COLOR,
+  subtitleColorReadable,
   type SubtitleStyle,
 } from "../../src/shared/video-subtitles/style";
 import {
+  ColorField,
+  Feedback,
   Select,
   SelectContent,
   SelectItem,
@@ -24,24 +28,67 @@ import {
 import { useLocale, useMessages } from "../../src/ui/messages";
 import { SubtitlePreview } from "./subtitle-preview";
 
+type ColorKey = "translationColor" | "originalColor";
+
 // How translated subtitles look, with a preview of the layer pages show. The
-// preview follows the opacity slider as it moves; the setting is saved when
-// it is let go.
+// preview follows the opacity slider and the colours while they move; the
+// setting is saved when they are let go.
 export function SubtitleStyleSection({
   style,
+  theme,
   onChange,
 }: {
   style: SubtitleStyle;
+  // The extension's theme, for the "theme colour" choice.
+  theme: ThemeId | undefined;
   onChange: (style: SubtitleStyle) => void;
 }) {
   const s = useMessages().pageTranslate.subtitles.style;
   const language = useLocale();
   const [opacity, setOpacity] = useState<number>();
+  const [colors, setColors] = useState<
+    Partial<Record<ColorKey, string | undefined>>
+  >({});
   const update = (change: Partial<SubtitleStyle>) =>
     onChange({ ...style, ...change });
   const percent = (value: number) =>
     formatNumber(language, value / 100, { style: "percent" });
   const backgroundOpacity = opacity ?? style.backgroundOpacity;
+  const shown: SubtitleStyle = {
+    ...style,
+    backgroundOpacity,
+    translationColor: colors.translationColor ?? style.translationColor,
+    originalColor: colors.originalColor ?? style.originalColor,
+  };
+  const presetList = [
+    { value: SUBTITLE_COLORS.grey, label: s.colors.grey },
+    { value: subtitleThemeColor(theme), label: s.colors.theme },
+  ];
+  const colorField = (key: ColorKey, title: string) => (
+    <SettingToggleRow
+      title={title}
+      aside={
+        <ColorField
+          label={title}
+          value={style[key]}
+          presets={presetList}
+          labels={{
+            picker: s.pickColor,
+            hex: s.hexColor,
+            invalid: s.invalidColor,
+          }}
+          onInput={(color) =>
+            setColors((current) => ({ ...current, [key]: color }))
+          }
+          onChange={(color) => update({ [key]: color })}
+        />
+      }
+    >
+      {!subtitleColorReadable(shown[key], backgroundOpacity) && (
+        <Feedback>{s.lowContrast}</Feedback>
+      )}
+    </SettingToggleRow>
+  );
   // One row of presets; `labels` names each of `values`.
   const presets = <K extends keyof SubtitleStyle>(
     key: K,
@@ -78,7 +125,7 @@ export function SubtitleStyleSection({
       description={s.description}
       contentClassName="stack"
     >
-      <SubtitlePreview style={{ ...style, backgroundOpacity }} />
+      <SubtitlePreview style={shown} />
       <div className="settings-toggle-list">
         <SettingToggleRow
           title={s.background}
@@ -97,18 +144,8 @@ export function SubtitleStyleSection({
             }}
           />
         </SettingToggleRow>
-        {presets(
-          "translationColor",
-          s.translationColor,
-          Object.values(SUBTITLE_TRANSLATION_COLOR),
-          s.colors,
-        )}
-        {presets(
-          "originalColor",
-          s.originalColor,
-          Object.values(SUBTITLE_ORIGINAL_COLOR),
-          s.colors,
-        )}
+        {colorField("translationColor", s.translationColor)}
+        {colorField("originalColor", s.originalColor)}
         {presets("font", s.font, Object.values(SUBTITLE_FONT), s.fonts)}
         <SettingToggleRow
           title={s.size}

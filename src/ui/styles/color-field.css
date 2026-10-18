@@ -1,0 +1,81 @@
+/* Colour field: a swatch opening the browser's colour picker, the hex code
+   and quick presets on one line. The swatches show the colour itself, so
+   their fill doesn't follow the theme; their edges do. */
+.ui-color-field {
+  --color-field-height: 30px;
+  display: inline-grid;
+  gap: var(--space-1);
+  max-width: 100%;
+}
+.ui-color-field-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.ui-color-field-swatch,
+.ui-color-field-preset {
+  flex: none;
+  border: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
+  background: var(--color-field-value);
+  box-shadow: 0 1px 0 var(--shadow-contact);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+}
+.ui-color-field-swatch {
+  position: relative;
+  width: var(--color-field-height);
+  height: var(--color-field-height);
+  border-radius: var(--radius-sm);
+}
+/* The native input covers the swatch, so a click opens its picker. */
+.ui-color-field-swatch > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.ui-color-field-swatch:hover,
+.ui-color-field-preset:hover {
+  border-color: var(--hover-border);
+}
+.ui-color-field-swatch:has(:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.ui-input.ui-color-field-hex {
+  width: calc(7ch + 2 * var(--space-2) + 2px);
+  min-width: 0;
+  height: var(--color-field-height);
+  padding: 0 var(--space-2);
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-sm);
+}
+.ui-color-field-presets {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.ui-color-field-preset {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+}
+.ui-color-field-preset:focus-visible {
+  outline-offset: 2px;
+}
+.ui-color-field-preset[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 0 4px var(--accent-strong);
+}
+/* The note wraps within the controls' width instead of widening them. */
+.ui-color-field-error {
+  inline-size: 0;
+  min-inline-size: 100%;
+}

@@ -127,11 +127,13 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
       translationColor: "Farbe der Übersetzung",
       originalColor: "Farbe des Originals",
       colors: {
-        yellow: "Gelb",
-        white: "Weiß",
-        cyan: "Hellblau",
         grey: "Grau",
+        theme: "Designfarbe",
       },
+      pickColor: "Farbe auswählen",
+      hexColor: "Hex-Code",
+      invalidColor: "Geben Sie eine Hex-Farbe ein, z. B. #ffcc00.",
+      lowContrast: "Auf hellem Video eventuell schwer lesbar.",
       font: "Schrift",
       fonts: {
         system: "System",
