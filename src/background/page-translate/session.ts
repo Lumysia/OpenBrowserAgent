@@ -63,8 +63,14 @@ type Session = {
   pageTitle?: string;
   pageDescription?: string;
   content?: PageTranslateContent;
+  // Subtitles only: the lines asked for so far, the latest last, for
+  // telling the language of the next ones.
+  heard?: string;
   terms: TermMemory;
 };
+
+// Characters of a video's subtitles a session keeps in `heard`.
+const HEARD_CHARS = 2_000;
 
 let pruned = false;
 
@@ -186,6 +192,7 @@ async function startSession(
             )
           : undefined,
       content: subtitles ? request.content : undefined,
+      heard: subtitles ? "" : undefined,
       terms: createTermMemory(),
     };
   } catch (error) {
@@ -212,6 +219,13 @@ async function runBatch(
   signal: AbortSignal,
 ) {
   const { chain, target, content } = session;
+  const sample = session.heard || undefined;
+  if (session.heard !== undefined)
+    session.heard = clipContext(
+      [session.heard, ...items.map((item) => item.text)].join("\n"),
+      HEARD_CHARS,
+      "end",
+    );
   const cacheKey = (engine: TranslationEngine, text: string) =>
     translationCacheKey(engineCacheKey(engine, content), target, text);
   const keys = new Map<number, string>();
@@ -254,6 +268,7 @@ async function runBatch(
       target,
       pageLanguage: session.pageLanguage,
       languageHint: session.languageHint,
+      sample,
       pageTitle: session.pageTitle,
       pageDescription: session.pageDescription,
       content,

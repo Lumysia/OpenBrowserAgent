@@ -19,8 +19,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model: "由你的 AI 提供者使用「AI 提供者和模型」中設定的翻譯模型翻譯頁面。",
-    browser:
-      "由瀏覽器在此裝置上翻譯，文字不會離開裝置。每種語言只需下載一次。無法翻譯的頁面會改由下方的 AI 模型翻譯。",
+    browser: "由瀏覽器在此裝置上翻譯，文字不會離開裝置。每種語言只需下載一次。",
     google: "非官方的免費服務，不是 Google 的 API，可能隨時停止運作。",
     microsoft: "非官方的免費服務，不是 Microsoft 的 API，可能隨時停止運作。",
   },
@@ -58,7 +57,8 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   cacheCleared: "已清除儲存的譯文。",
   clearCacheFailed: "無法清除已儲存的譯文",
   errors: {
-    unavailable: "{engine}無法使用。請在設定中檢查網頁翻譯。",
+    unavailable:
+      "{engine}無法翻譯此頁面。請在「網頁翻譯」設定中選擇其他翻譯引擎。",
     rateLimited:
       "{engine}正在限制來自此網路的請求。請稍後再試，或在設定中選擇其他翻譯引擎。",
     refused: "{engine}拒絕了翻譯請求。請在設定中選擇其他翻譯引擎。",
@@ -72,7 +72,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     failed: "{engine} 暫時無法使用，此頁面已改用 {fallback} 翻譯。",
     unavailable: "{engine}無法在此翻譯這個頁面，已改用 {fallback}。",
   },
-  browserMissing: "此瀏覽器沒有內建翻譯器，頁面會由下方的 AI 模型翻譯。",
+  browserMissing: "此瀏覽器沒有內建翻譯器。請選擇其他翻譯引擎。",
   notStarted: "無法開始翻譯此頁面。請重新載入頁面後再試。",
   unavailablePage: "無法翻譯此頁面：瀏覽器不允許擴充功能修改它。",
   button: {

@@ -21,7 +21,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     model:
       "Ihr KI-Anbieter übersetzt Seiten mit dem Übersetzungsmodell aus „KI-Anbieter und Modelle“.",
     browser:
-      "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen. Wo er eine Seite nicht übersetzen kann, übernimmt das unten gewählte KI-Modell.",
+      "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen.",
     google:
       "Ein inoffizieller kostenloser Dienst, keine API von Google. Er kann jederzeit aufhören zu funktionieren.",
     microsoft:
@@ -63,7 +63,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   clearCacheFailed: "Gespeicherte Übersetzungen konnten nicht gelöscht werden",
   errors: {
     unavailable:
-      "{engine} ist nicht verfügbar. Prüfen Sie die Seitenübersetzung in den Einstellungen.",
+      "{engine} kann diese Seite nicht übersetzen. Wählen Sie in den Einstellungen unter „Seitenübersetzung“ einen anderen Übersetzungsdienst.",
     rateLimited:
       "{engine} begrenzt Anfragen aus diesem Netzwerk. Versuchen Sie es später erneut oder wählen Sie in den Einstellungen einen anderen Dienst.",
     refused:
@@ -83,7 +83,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
       "Für diese Seite übernimmt jetzt {fallback}: {engine} kann sie hier nicht übersetzen.",
   },
   browserMissing:
-    "Dieser Browser hat keinen integrierten Übersetzer; Seiten übersetzt daher das unten gewählte KI-Modell.",
+    "Dieser Browser hat keinen integrierten Übersetzer. Wählen Sie einen anderen Übersetzungsdienst.",
   notStarted:
     "Die Übersetzung dieser Seite konnte nicht gestartet werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
   unavailablePage:

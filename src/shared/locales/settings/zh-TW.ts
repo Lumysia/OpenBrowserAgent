@@ -35,7 +35,6 @@ export const settingsZhTW: SettingsMessages = {
   modelHelper: "輔助",
   modelSmartBar: "智慧工具列",
   modelTranslation: "翻譯",
-  modelTranslationFallback: "內建翻譯器無法翻譯頁面時使用。",
   modelTranslationUnavailable:
     "網頁翻譯目前使用 {engine}，而非 AI 模型。請在「網頁翻譯」設定中變更翻譯引擎。",
   modelImages: "圖片",

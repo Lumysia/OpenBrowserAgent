@@ -19,6 +19,10 @@ export type EngineRequest = {
   // document's language for its videos' subtitles): a source to translate
   // from at most, never a reason to leave a text as it is.
   languageHint?: string;
+  // Earlier text of the items' source (a video's subtitles so far), the
+  // latest last: more of it to tell their language from. Engines that
+  // detect no language ignore it.
+  sample?: string;
   pageTitle?: string;
   // What the items are: the page's text when unset, or a video's
   // subtitles. Engines that translate texts one by one ignore it.

@@ -25,11 +25,6 @@ import {
   PAGE_TRANSLATE_ENGINES,
   PAGE_TRANSLATE_FALLBACK,
 } from "../src/shared/page-translate/settings";
-import {
-  USER_ERROR_CODE,
-  UserError,
-  userErrorText,
-} from "../src/shared/user-errors";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { installChrome } from "./fake-chrome";
 
@@ -206,11 +201,10 @@ test("no fallback: the AI model reports its own errors", async () => {
   assert.equal(model.calls.length, 1);
 });
 
-test("fallback table: free services swap, the browser's translator falls back to the AI model", () => {
+test("fallback table: free services swap, the other engines translate alone", () => {
   assert.deepEqual(PAGE_TRANSLATE_FALLBACK, {
     google: "microsoft",
     microsoft: "google",
-    browser: "model",
   });
   // Every engine named in a note has a name in every locale.
   for (const engine of PAGE_TRANSLATE_ENGINES)
@@ -240,20 +234,6 @@ async function withTranslator<T>(
   }
 }
 
-// The browser's translator with the AI model as its fallback.
-function browserChain(resolveModel: () => TranslationEngine) {
-  const switches: Array<{ from: string; to: string; kind: string }> = [];
-  const chain = createEngineChain(
-    { kind: "browser", engine: browserEngine() },
-    {
-      fallback: { kind: "model", resolve: resolveModel },
-      onSwitch: (from, to, error) =>
-        switches.push({ from: from.kind, to: to.kind, kind: error.kind }),
-    },
-  );
-  return { chain, switches };
-}
-
 const translatorCases: Array<[string, Record<string, unknown> | undefined]> = [
   ["no Translator API in this browser", undefined],
   [
@@ -275,43 +255,30 @@ const translatorCases: Array<[string, Record<string, unknown> | undefined]> = [
 ];
 
 for (const [name, api] of translatorCases)
-  test(`fallback: ${name} hands the page to the AI model`, () =>
+  test(`built-in translator: ${name} fails as unavailable, with no other engine`, () =>
     withTranslator(api, async () => {
-      const model = fakeEngine("model");
-      const { chain, switches } = browserChain(() => model.engine);
-      const { results, producers } = await run(chain);
-      assert.deepEqual(switches, [
-        { from: "browser", to: "model", kind: "unavailable" },
-      ]);
-      assert.equal(results.get(1), "model:One");
-      assert.equal(producers.get(2), "model");
-      assert.equal(chain.current.kind, "model");
-    }));
-
-test("fallback: without an AI model either, every batch says to set one up", () =>
-  withTranslator(undefined, async () => {
-    const noModel = () => {
-      throw new UserError(USER_ERROR_CODE.noModel, "No model configured.");
-    };
-    const { chain, switches } = browserChain(noModel);
-    for (let batch = 0; batch < 2; batch++)
+      const chain = createEngineChain({
+        kind: "browser",
+        engine: browserEngine(),
+      });
       await assert.rejects(
         run(chain),
         (error) =>
-          error instanceof UserError && error.code === USER_ERROR_CODE.noModel,
+          error instanceof EngineError &&
+          error.kind === PAGE_TRANSLATE_ERROR.unavailable,
       );
-    assert.equal(switches.length, 0);
-  }));
+      assert.equal(chain.current.kind, "browser");
+    }));
 
 test("notes: a switch names both engines in the UI language", () => {
   const unavailable = new EngineError(PAGE_TRANSLATE_ERROR.unavailable, "x");
   assert.equal(
-    switchMessage("en-US", "browser", "model", unavailable),
-    "Switched to the AI model for this page: the built-in translator can't translate it here.",
+    switchMessage("en-US", "google", "microsoft", unavailable),
+    "Switched to Microsoft for this page: Google can't translate it here.",
   );
   assert.equal(
-    switchMessage("zh-CN", "browser", "model", unavailable),
-    "内置翻译器无法在此翻译这个页面，已改用 AI 模型。",
+    switchMessage("zh-CN", "google", "microsoft", unavailable),
+    "Google无法在此翻译这个页面，已改用 Microsoft。",
   );
   assert.equal(
     switchMessage("en-US", "google", "microsoft", rateLimited()),
@@ -329,7 +296,7 @@ test("notes: a switch names both engines in the UI language", () => {
   );
 });
 
-test("session: the built-in translator without a Translator API or a model reports the missing model", () =>
+test("session: the built-in translator without a Translator API says to choose another engine, without the AI model", () =>
   withTranslator(undefined, async () => {
     const { local } = installChrome({ runtime: { getManifest: () => ({}) } });
     await local.set({
@@ -352,11 +319,27 @@ test("session: the built-in translator without a Translator API or a model repor
     );
     const error = events.find((event) => event.type === "error");
     assert.equal(
+      error?.type === "error" && error.kind,
+      PAGE_TRANSLATE_ERROR.unavailable,
+    );
+    // No AI model is set up: asking it would have said to set one up.
+    assert.equal(
       error?.type === "error" && error.message,
-      userErrorText(
-        new UserError(USER_ERROR_CODE.noModel, ""),
-        getMessages("en-US"),
-      ),
+      "Built-in translator (on device) can't translate this page. Choose another engine in Page translation settings.",
+    );
+    const zh = errorEvent(
+      new EngineError(PAGE_TRANSLATE_ERROR.unavailable, "x"),
+      1,
+      {
+        language: "zh-CN",
+        theme: { colorScheme: "system", accentColor: "pink" },
+        kind: "browser",
+        selected: "browser",
+      },
+    );
+    assert.equal(
+      zh.type === "error" && zh.message,
+      "内置翻译器（设备端）无法翻译此页面。请在“网页翻译”设置中选择其他翻译引擎。",
     );
     assert.ok(!events.some((event) => event.type === "switched"));
   }));

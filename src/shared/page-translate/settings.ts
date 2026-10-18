@@ -38,26 +38,18 @@ export const FREE_CLOUD_ENGINES: readonly PageTranslateEngine[] = [
 ];
 
 // The engine a page continues with when its engine can't translate it: one
-// free service hands over to the other, and the browser's translator (absent
-// in this browser, or without the language pair) to the AI model.
+// free service hands over to the other. The others translate alone.
 export const PAGE_TRANSLATE_FALLBACK: Partial<
   Record<PageTranslateEngine, PageTranslateEngine>
 > = {
   [PAGE_TRANSLATE_ENGINE.google]: PAGE_TRANSLATE_ENGINE.microsoft,
   [PAGE_TRANSLATE_ENGINE.microsoft]: PAGE_TRANSLATE_ENGINE.google,
-  [PAGE_TRANSLATE_ENGINE.browser]: PAGE_TRANSLATE_ENGINE.model,
 };
 
-// How pages translated with `engine` use the AI model (`modelId`): as the
-// engine, as its fallback, or not at all. A page hands over once, so only
-// the engine's own fallback counts.
-export function pageTranslateModelUse(
-  engine: PageTranslateEngine,
-): "engine" | "fallback" | undefined {
-  if (engine === PAGE_TRANSLATE_ENGINE.model) return "engine";
-  if (PAGE_TRANSLATE_FALLBACK[engine] === PAGE_TRANSLATE_ENGINE.model)
-    return "fallback";
-  return undefined;
+// Whether pages translated with `engine` use the AI model (`modelId`): only
+// with the AI model engine, since no engine falls back to it.
+export function pageTranslateUsesModel(engine: PageTranslateEngine) {
+  return engine === PAGE_TRANSLATE_ENGINE.model;
 }
 
 // `bilingual`: the translation under each paragraph. `translation`: only the
@@ -92,8 +84,8 @@ export type PageTranslateSettings = {
   pageButtonHiddenHosts: string[];
 };
 
-// The browser's translator by default: where the browser has none, pages
-// fall back to the AI model (PAGE_TRANSLATE_FALLBACK).
+// The browser's translator by default: where the browser has none, the
+// settings say so and pages say to choose another engine.
 export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   engine: PAGE_TRANSLATE_ENGINE.browser,
   modelId: "",

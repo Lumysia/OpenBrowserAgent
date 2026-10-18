@@ -21,7 +21,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     model:
       "AI 제공업체 및 모델에서 설정한 번역 모델로 AI 제공업체가 페이지를 번역합니다.",
     browser:
-      "브라우저가 이 기기에서 번역하며, 텍스트가 기기 밖으로 나가지 않습니다. 언어마다 한 번만 다운로드합니다. 번역할 수 없는 페이지는 아래 AI 모델이 번역합니다.",
+      "브라우저가 이 기기에서 번역하며, 텍스트가 기기 밖으로 나가지 않습니다. 언어마다 한 번만 다운로드합니다.",
     google:
       "Google API가 아닌 비공식 무료 서비스입니다. 언제든지 작동이 중단될 수 있습니다.",
     microsoft:
@@ -63,7 +63,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   clearCacheFailed: "저장된 번역을 지우지 못했습니다",
   errors: {
     unavailable:
-      "{engine}을(를) 사용할 수 없습니다. 설정에서 페이지 번역을 확인하세요.",
+      "{engine}(으)로는 이 페이지를 번역할 수 없습니다. 페이지 번역 설정에서 다른 엔진을 선택하세요.",
     rateLimited:
       "{engine}이(가) 이 네트워크의 요청을 제한하고 있습니다. 나중에 다시 시도하거나 설정에서 다른 엔진을 선택하세요.",
     refused:
@@ -82,7 +82,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
       "{engine}(으)로는 이 페이지를 번역할 수 없어 {fallback}(으)로 번역합니다.",
   },
   browserMissing:
-    "이 브라우저에는 내장 번역기가 없어 아래 AI 모델이 페이지를 번역합니다.",
+    "이 브라우저에는 내장 번역기가 없습니다. 다른 엔진을 선택하세요.",
   notStarted:
     "이 페이지의 번역을 시작하지 못했습니다. 페이지를 새로고침한 후 다시 시도하세요.",
   unavailablePage:

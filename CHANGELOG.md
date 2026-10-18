@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The built-in translator no longer hands pages or subtitles it can't translate to the AI model: it says so on the page and asks you to choose another engine in Page translation settings. The Translation model in Settings > AI providers & models is used only with the AI model engine.
+
 ## 0.2.0-beta.22 - 2026-10-18
 
 - In Settings > AI providers & models, the Translation model can't be changed while page translation uses Google or Microsoft, which don't use a model; pointing at it explains why and where to change the engine. With the built-in translator, it says the model is used for pages the built-in translator can't translate.

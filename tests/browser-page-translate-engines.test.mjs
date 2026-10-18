@@ -55,9 +55,15 @@ const clickAt = (page, selector, text) =>
   clickElement(page, selector, { text, exact: true });
 
 test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
+  // Every request the AI model fixture gets.
+  let modelRequests = 0;
+  const model = fixtureTranslator();
   const session = await startPageTranslate({
     pages: { "/article": articlePage({ paragraphs: 3 }) },
-    answer: fixtureTranslator(),
+    answer: (prompt, write) => {
+      modelRequests++;
+      return model(prompt, write);
+    },
   });
   const { browser, url, clickMenu, worker, extensionUrl } = session;
   // Each test has its own tab, at its own address.
@@ -267,29 +273,49 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       page.close();
     });
 
-    await t.test(
-      "no built-in translator in the background: the AI model translates",
-      async () => {
-        mode = "ok";
-        await session.setPreferences({
-          engine: "browser",
-          targetLanguage: "fr",
-        });
-        // The background as in a browser without the Translator API.
-        await worker.call(() => {
-          self.Translator = undefined;
-        });
-        const page = await translatePage("FR: Notes from the field");
-        await noteOn(
-          page,
-          formatMessage(messages.switched.unavailable, {
-            engine: messages.engineNames.browser,
-            fallback: messages.engineNames.model,
-          }),
-        );
-        page.close();
-      },
-    );
+    // The built-in translator translates alone: where it can't, the page
+    // says to choose another engine and the AI model isn't asked.
+    for (const [name, target, translator] of [
+      ["no Translator API in the background", "pt", "none"],
+      ["no language pair", "ja", "no-pair"],
+    ])
+      await t.test(
+        `built-in translator, ${name}: the page says so`,
+        async () => {
+          mode = "ok";
+          await session.setPreferences({
+            engine: "browser",
+            targetLanguage: target,
+          });
+          // No language detector either: one that isn't downloaded would
+          // keep the page waiting.
+          await worker.call((kind) => {
+            delete self.LanguageDetector;
+            self.Translator =
+              kind === "none"
+                ? undefined
+                : {
+                    availability: async () => "unavailable",
+                    create: async () => {
+                      throw new Error("create() for an unavailable pair");
+                    },
+                  };
+          }, translator);
+          const before = modelRequests;
+          const pageUrl = nextUrl();
+          const page = await browser.open(pageUrl);
+          await clickMenu(pageUrl);
+          await noteOn(
+            page,
+            formatMessage(messages.errors.unavailable, {
+              engine: messages.engines.browser,
+            }),
+          );
+          assert.equal(await translationIn(page, "#title"), undefined);
+          assert.equal(modelRequests, before);
+          page.close();
+        },
+      );
 
     await t.test("Microsoft", async () => {
       mode = "ok";

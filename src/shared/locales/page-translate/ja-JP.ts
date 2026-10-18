@@ -21,7 +21,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     model:
       "「AI プロバイダーとモデル」で設定した翻訳モデルを使い、AI プロバイダーがページを翻訳します。",
     browser:
-      "ブラウザーがこのデバイス上で翻訳します。テキストはデバイスの外に送信されません。言語ごとに一度だけダウンロードされます。翻訳できないページは、下の AI モデルで翻訳します。",
+      "ブラウザーがこのデバイス上で翻訳します。テキストはデバイスの外に送信されません。言語ごとに一度だけダウンロードされます。",
     google:
       "非公式の無料サービスで、Google の API ではありません。いつでも使えなくなる可能性があります。",
     microsoft:
@@ -63,7 +63,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   clearCacheFailed: "保存された翻訳を消去できませんでした",
   errors: {
     unavailable:
-      "{engine} を利用できません。設定でページ翻訳を確認してください。",
+      "{engine} ではこのページを翻訳できません。「ページ翻訳」の設定で別のエンジンを選んでください。",
     rateLimited:
       "{engine} がこのネットワークからのリクエストを制限しています。しばらくしてから再試行するか、設定で別のエンジンを選んでください。",
     refused:
@@ -83,7 +83,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
       "{engine}ではこのページを翻訳できないため、{fallback}で翻訳します。",
   },
   browserMissing:
-    "このブラウザーには組み込み翻訳がないため、下の AI モデルでページを翻訳します。",
+    "このブラウザーには組み込み翻訳がありません。別のエンジンを選んでください。",
   notStarted:
     "このページの翻訳を開始できませんでした。ページを再読み込みして、もう一度お試しください。",
   unavailablePage:

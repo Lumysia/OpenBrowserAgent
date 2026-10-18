@@ -127,27 +127,43 @@ async function translateInBrowser(request: EngineRequest) {
 // confidence.
 const MIN_ITEM_CONFIDENCE = 0.6;
 const MIN_ITEM_WORDS = 3;
+// Characters given to the detector for a batch as a whole.
+const DETECT_CHARS = 2000;
 
 // The batch's items by source language, and the language of the batch as a
 // whole. Pages mix languages (posts in several languages, a Chinese line in
 // an English page), so each text long enough to tell is detected on its
 // own; the others take the language their source declares, else the
-// batch's: the detector's guess for all of its text when it is sure, else
-// the page's declared language, else the detector's unsure guess, else the
+// batch's: the detector's guess for all of its text (with the earlier text
+// of its source when that alone tells nothing) when it is sure, else the
+// page's declared language, else the detector's unsure guess, else the
 // language hint. Every source but the hint is evidence of what the text is
 // in, so a text is left as it is only on evidence: a hint in the target
 // language says nothing (an English video on a site whose interface is in
-// the target language).
+// the target language). A text in no language found is refused: the page
+// says the built-in translator can't translate it.
 async function groupBySource(request: EngineRequest) {
   const texts = request.items.map((item) => stripPlaceholders(item.text));
-  const [whole, ...own] = await Promise.all([
-    detect(texts.join("\n").slice(0, 2000)),
+  const joined = texts.join("\n");
+  const [batch, ...own] = await Promise.all([
+    detect(joined.slice(0, DETECT_CHARS)),
     ...texts.map((text) =>
       wordCount(text.replace(/\p{N}+/gu, " ")) >= MIN_ITEM_WORDS
         ? detect(text)
         : undefined,
     ),
   ]);
+  // Too little to tell (a few short subtitle lines): the same source's
+  // earlier text with it, before giving up.
+  const whole =
+    batch ??
+    (request.sample
+      ? await detect(
+          `${stripPlaceholders(request.sample)}\n${joined}`.slice(
+            -DETECT_CHARS,
+          ),
+        )
+      : undefined);
   const hint =
     request.languageHint && !sameLanguage(request.languageHint, request.target)
       ? request.languageHint
@@ -220,8 +236,8 @@ function translatorFor(
   if (!instance) {
     instance = (async () => {
       const options = { sourceLanguage, targetLanguage };
-      // A pair the browser rejects or can't set up counts as unavailable, so
-      // the page continues with the fallback engine.
+      // A pair the browser rejects or can't set up counts as unavailable:
+      // the page says to choose another engine.
       const unavailable = (reason: unknown) =>
         new EngineError(
           PAGE_TRANSLATE_ERROR.unavailable,

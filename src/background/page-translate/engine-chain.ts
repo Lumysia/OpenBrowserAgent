@@ -87,8 +87,6 @@ export function createEngineChain(
         if (count < NETWORK_FAILURES) return "retry";
       }
       if (!fallback) return "exhausted";
-      // A fallback that can't be set up (no AI model) keeps failing with its
-      // own error, for this batch and the later ones.
       switching = switchEngine(active, error).then(() => {
         switching = undefined;
       });

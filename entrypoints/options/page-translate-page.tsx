@@ -50,7 +50,7 @@ import { PageTranslateAccess } from "./page-translate-access";
 import { SubtitleStyleSection } from "./subtitle-style-section";
 import { useMessages } from "../../src/ui/messages";
 
-// Without the Translator API the on-device engine falls back to the AI model.
+// Without the Translator API the on-device engine can't translate here.
 const hasBrowserTranslator = "Translator" in globalThis;
 
 export function PageTranslatePage() {

@@ -21,7 +21,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     model:
       "Tu proveedor de IA traduce las páginas con el modelo de traducción elegido en Proveedores de IA y modelos.",
     browser:
-      "El navegador traduce en este dispositivo; ningún texto sale de él. Cada idioma se descarga una vez. Cuando no puede traducir una página, la traduce el modelo de IA de abajo.",
+      "El navegador traduce en este dispositivo; ningún texto sale de él. Cada idioma se descarga una vez.",
     google:
       "Un servicio gratuito no oficial, no una API de Google. Puede dejar de funcionar en cualquier momento.",
     microsoft:
@@ -63,7 +63,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   clearCacheFailed: "No se han podido borrar las traducciones guardadas",
   errors: {
     unavailable:
-      "{engine} no está disponible. Revisa la traducción de páginas en la configuración.",
+      "{engine} no puede traducir esta página. Elige otro motor de traducción en la configuración de Traducción de páginas.",
     rateLimited:
       "{engine} está limitando las solicitudes de esta red. Inténtalo más tarde o elige otro motor en la configuración.",
     refused:
@@ -83,7 +83,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
       "En esta página, {fallback} toma el relevo: {engine} no puede traducirla aquí.",
   },
   browserMissing:
-    "Este navegador no tiene traductor integrado, así que las páginas las traduce el modelo de IA de abajo.",
+    "Este navegador no tiene traductor integrado. Elige otro motor de traducción.",
   notStarted:
     "No se ha podido empezar a traducir esta página. Vuelve a cargar la página e inténtalo de nuevo.",
   unavailablePage:

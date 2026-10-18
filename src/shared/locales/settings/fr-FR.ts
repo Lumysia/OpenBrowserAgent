@@ -38,8 +38,6 @@ export const settingsFrFR: SettingsMessages = {
   modelHelper: "Auxiliaire",
   modelSmartBar: "Barre intelligente",
   modelTranslation: "Traduction",
-  modelTranslationFallback:
-    "Utilisé quand le traducteur intégré ne peut pas traduire une page.",
   modelTranslationUnavailable:
     "La traduction de page utilise {engine}, pas un modèle d’IA. Changez de moteur de traduction dans les paramètres Traduction de page.",
   modelImages: "Images",
