@@ -1,45 +1,32 @@
-OpenBrowserAgent puts an AI agent in your browser's side panel. Ask about the page you're on, research across the web, or hand over a browser task. The agent reads pages, clicks, types and moves between tabs while you watch every step.
+OpenBrowserAgent puts an AI agent in your browser's side panel. Ask about the page you're on, research a question across the web, or hand over a task in the browser. The agent reads pages, clicks, types and moves between tabs while you watch every step.
 
-You bring your own model. OpenBrowserAgent has no account and no server of its own: your messages go only to the model providers, MCP servers and sync storage that you set up. Before a provider on another server first receives your content, you agree to it for that provider; local models need no permission.
-
-A guided setup on install takes you through your languages, an AI provider (or a sync code from another device), what to add to web pages, and your keyboard shortcuts.
+You bring your own model: a cloud AI provider with your own API key, or a model running on your own computer. OpenBrowserAgent has no account and no server of its own. Your content goes only to the services you set up, and an AI provider on another server receives nothing until you agree to it for that provider. Models on your own computer or local network need no permission.
 
 WHAT YOU CAN DO
 
-• Ask about the current page or several tabs: summaries, comparisons, explanations, translations.
-• Research a question across the web and get an answer with clickable sources.
-• Let the agent do browser work: fill in forms, compare products, collect information from several pages, tidy and group your tabs.
-• Edit a page in place, for example to translate it, and take screenshots or download files.
-• Select text on any page for quick actions (explain, translate, improve wording, read aloud). This is off until you turn it on, and you can limit it to the sites you choose.
-• Translate a single word or short phrase with the smart bar to get a dictionary entry, with the meaning it has on that page first.
-• Right-click a page, link, video or selected text to ask about it, summarize it, translate it, search the web about it, or copy the page as Markdown. You can turn the menu or single items off.
-• Translate a page's content with the button on the page's edge, the menu of the toolbar button, a keyboard shortcut or the right-click menu, next to the original or in its place, without changing the page's layout, and go back with "Show original". The next pages you open in that tab are translated too, until you reload it. Use the browser's on-device translator (the default, where the browser has one), your AI model, or Google's or Microsoft's free translation (the page text is then sent to them).
-• Translate video subtitles on any site, also in fullscreen: each line shows with its translation under it. Start it for one video, or turn it on for every video, and set the background, colors, font and size with a live preview.
-• Click the toolbar button for a small menu for the current site: translate the page, turn the smart bar or the video's subtitles on or off, choose the language to translate into, or open the side panel. Ctrl+Shift+Y (Command+Shift+Y on Mac) opens the side panel directly.
+• Ask about one page or several tabs: summaries, comparisons, explanations, and answers with clickable sources.
+• Let the agent do browser work for you, such as filling in forms, collecting information from several pages or tidying your tabs. It can also take screenshots and save files for you.
+• Translate web pages without breaking their layout, next to the original or in its place, and translate video subtitles while you watch. You choose the engine: your AI model, the browser's on-device translator where available, or a free online translation service.
+• Select text on a page for quick actions, such as explaining it, translating it or looking up a word with the meaning it has on that page. You decide on which sites this appears.
+• Start from the page itself: the browser's right-click menu and the extension's toolbar button lead to the agent and the page tools.
 
-AGENTS AND SKILLS
+AGENTS, SKILLS AND TOOLS
 
-• Browse and Ask agents are included. You can create your own with their instructions, tools, model and private notes.
-• Agents can hand work to sub-agents that run in the background.
-• Skills are reusable instructions. Built-in skills cover filling forms, tidying tabs, help with the extension, and writing new skills. Pick a skill with "/", or let the agent use one when a request fits. Skills can be imported and exported.
-
-YOUR MODELS, YOUR TOOLS
-
-• Connect OpenAI-compatible or Anthropic-compatible services, or a local model, with your own API keys and base URLs.
-• Use a cheaper helper model for reading long pages.
-• Connect remote MCP servers (Streamable HTTP) for extra tools. Keyless web search servers are recommended and added with one click, tested and turned on as you add them.
-• Exact numbers: the agent can run JavaScript it writes in a sandbox on your device, with no internet access, to calculate, parse tables and reshape data.
-• Optional local execution bridge: lets an agent run commands on your computer, only after you install and enable it.
+• Create agents with their own instructions, tools and model. Agents can hand work to sub-agents that run in the background.
+• Skills are reusable instructions: pick one yourself, or let the agent use one when a request fits. Write your own, and import or export them.
+• Connect MCP servers to give the agent more tools, such as web search.
+• For exact numbers, the agent can write code and run it in a sandbox on your device that has no internet access.
+• An optional local bridge lets an agent run commands on your computer, only after you install and enable it.
 
 SYNC ACROSS DEVICES
 
-• Sync settings, agents and skills through your browser account or your own WebDAV storage; if you choose, also API keys (encrypted on your device with your own passphrase), chats and files.
-• Changes merge item by item, so edits on two devices don't overwrite each other, and large deletions ask you first.
+• Sync settings, agents and skills through your browser account or your own WebDAV storage. If you choose, also sync your chats, files and API keys; keys are encrypted on your device with your own passphrase.
+• Changes merge item by item, so edits on two devices don't overwrite each other.
 
 YOU STAY IN CONTROL
 
-• Every tool step is shown as it runs, with its details available.
-• The agent asks before submitting, buying, sending or deleting when it's unsure.
-• Interface in English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 and 繁體中文, with light and dark themes.
+• Every step the agent takes is shown as it runs, with its details.
+• When it's unsure, the agent asks before submitting, buying, sending or deleting anything.
+• The interface is available in many languages, with light and dark themes.
 
 OpenBrowserAgent is open source. Source code, documentation and issue tracker: https://github.com/Lumysia/OpenBrowserAgent

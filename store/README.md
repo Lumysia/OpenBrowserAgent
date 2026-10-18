@@ -14,6 +14,8 @@ Everything the Chrome Web Store listing needs, kept with the code so a new relea
 
   Omit `--locale` to make every language. `demo/` holds the demo pages and the per-language texts the script uses.
 
+The listing, the Privacy practices answers and `PRIVACY.md` are written so they stay correct across releases: no version numbers, counts, language lists, named built-in agents or skills, menu items, keyboard shortcuts or setting paths. Describe lasting capabilities and rules instead, and keep every listing file at the same line count as `en-US`. They need an edit only when a permission, a kind of data or a data recipient changes, or a capability is added or removed.
+
 In the dashboard, put the `en-US` screenshots under Global screenshots, and each language's own set under Localized screenshots.
 
 ## Review history

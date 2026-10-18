@@ -1,45 +1,32 @@
 OpenBrowserAgent bringt einen KI-Agenten in die Seitenleiste Ihres Browsers. Stellen Sie Fragen zur aktuellen Seite, recherchieren Sie im ganzen Web oder übergeben Sie eine Aufgabe im Browser. Der Agent liest Seiten, klickt, tippt und wechselt zwischen Tabs – und Sie verfolgen jeden Schritt mit.
 
-Das Modell wählen Sie selbst. OpenBrowserAgent hat kein Konto und keinen eigenen Server: Ihre Nachrichten gehen ausschließlich an die Modellanbieter, MCP-Server und den Sync-Speicher, die Sie selbst einrichten. Bevor ein Anbieter auf einem anderen Server zum ersten Mal Ihre Inhalte erhält, stimmen Sie dem für diesen Anbieter zu; lokale Modelle brauchen keine Erlaubnis.
-
-Nach der Installation führt Sie die Einrichtung durch Ihre Sprachen, einen KI-Anbieter (oder einen Sync-Code von einem anderen Gerät), die Funktionen für Webseiten und Ihre Tastenkombinationen.
+Das Modell bringen Sie selbst mit: einen KI-Anbieter in der Cloud mit Ihrem eigenen API-Schlüssel oder ein Modell, das auf Ihrem eigenen Computer läuft. OpenBrowserAgent hat kein Konto und keinen eigenen Server. Ihre Inhalte gehen nur an die Dienste, die Sie einrichten, und ein KI-Anbieter auf einem anderen Server erhält nichts, bevor Sie dem für diesen Anbieter zugestimmt haben. Modelle auf Ihrem eigenen Computer oder im lokalen Netzwerk brauchen keine Erlaubnis.
 
 WAS SIE DAMIT TUN KÖNNEN
 
-• Fragen zur aktuellen Seite oder zu mehreren Tabs stellen: Zusammenfassungen, Vergleiche, Erklärungen, Übersetzungen.
-• Eine Frage im ganzen Web recherchieren lassen und eine Antwort mit anklickbaren Quellen erhalten.
-• Browserarbeit an den Agenten abgeben: Formulare ausfüllen, Produkte vergleichen, Informationen von mehreren Seiten sammeln, Tabs aufräumen und gruppieren.
-• Eine Seite direkt bearbeiten, etwa um sie zu übersetzen, sowie Screenshots aufnehmen oder Dateien herunterladen.
-• Auf jeder Seite Text markieren und Schnellaktionen nutzen (erklären, übersetzen, Formulierung verbessern, vorlesen). Diese Funktion ist aus, bis Sie sie einschalten, und lässt sich auf die Websites Ihrer Wahl beschränken.
-• Ein einzelnes Wort oder eine kurze Wendung mit der Smart Bar übersetzen und einen Wörterbucheintrag erhalten, mit der Bedeutung auf dieser Seite an erster Stelle.
-• Mit einem Rechtsklick auf eine Seite, einen Link, ein Video oder markierten Text dazu fragen, zusammenfassen, übersetzen, im Web suchen oder die Seite als Markdown kopieren. Das Menü und einzelne Einträge lassen sich ausschalten.
-• Den Inhalt einer Seite mit der Schaltfläche am Seitenrand, dem Menü der Symbolleisten-Schaltfläche, einer Tastenkombination oder über das Kontextmenü übersetzen, neben dem Original oder an seiner Stelle, ohne das Layout der Seite zu verändern, und mit „Original anzeigen“ zurückkehren. Weitere Seiten, die Sie in diesem Tab öffnen, werden ebenfalls übersetzt, bis Sie ihn neu laden. Mit dem integrierten Übersetzer des Browsers (Standard, wo vorhanden), Ihrem KI-Modell oder der kostenlosen Übersetzung von Google oder Microsoft (der Seitentext wird dann an sie gesendet).
-• Video-Untertitel auf jeder Website übersetzen, auch im Vollbild: Unter jeder Zeile steht ihre Übersetzung. Für ein einzelnes Video oder für alle Videos einschalten und Hintergrund, Farben, Schrift und Größe mit Live-Vorschau einstellen.
-• Ein Klick auf die Symbolleisten-Schaltfläche öffnet ein kleines Menü für die aktuelle Website: Seite übersetzen, Smart Bar oder Untertitel des Videos ein- oder ausschalten, die Zielsprache wählen oder die Seitenleiste öffnen. Strg+Umschalt+Y (Befehl+Umschalt+Y auf dem Mac) öffnet die Seitenleiste direkt.
+• Fragen zu einer Seite oder zu mehreren Tabs stellen: Zusammenfassungen, Vergleiche, Erklärungen und Antworten mit anklickbaren Quellen.
+• Browserarbeit an den Agenten abgeben, etwa Formulare ausfüllen, Informationen von mehreren Seiten sammeln oder Tabs aufräumen. Er kann auch Screenshots aufnehmen und Dateien für Sie speichern.
+• Webseiten übersetzen, ohne ihr Layout zu zerstören, neben dem Original oder an seiner Stelle, und Video-Untertitel beim Ansehen übersetzen. Sie wählen die Übersetzung: Ihr KI-Modell, den integrierten Übersetzer des Browsers, wo vorhanden, oder einen kostenlosen Online-Übersetzungsdienst.
+• Text auf einer Seite markieren und Schnellaktionen nutzen, etwa ihn erklären, übersetzen oder ein Wort mit der Bedeutung nachschlagen, die es auf dieser Seite hat. Sie legen fest, auf welchen Websites das erscheint.
+• Direkt von der Seite aus starten: Das Kontextmenü des Browsers und die Symbolleisten-Schaltfläche der Erweiterung führen zum Agenten und zu den Seitenwerkzeugen.
 
-AGENTEN UND SKILLS
+AGENTEN, SKILLS UND TOOLS
 
-• Die Agenten „Browsen“ und „Fragen stellen“ sind bereits enthalten. Eigene Agenten erstellen Sie mit individuellen Anweisungen, Tools, Modell und privaten Notizen.
-• Agenten können Arbeit an Subagenten übergeben, die im Hintergrund laufen.
-• Skills sind wiederverwendbare Anweisungen. Integrierte Skills helfen beim Ausfüllen von Formularen, beim Aufräumen von Tabs, bei Fragen zur Erweiterung und beim Schreiben neuer Skills. Wählen Sie einen Skill mit „/“ aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Skills lassen sich importieren und exportieren.
-
-IHRE MODELLE, IHRE TOOLS
-
-• Verbinden Sie OpenAI-kompatible oder Anthropic-kompatible Dienste oder ein lokales Modell mit Ihren eigenen API-Schlüsseln und Basis-URLs.
-• Nutzen Sie für das Lesen langer Seiten ein günstigeres Hilfsmodell.
-• Verbinden Sie entfernte MCP-Server (Streamable HTTP) für zusätzliche Tools. Server für die Websuche ohne API-Schlüssel werden empfohlen und lassen sich mit einem Klick hinzufügen; beim Hinzufügen wird jeder getestet und eingeschaltet.
-• Genaue Zahlen: Der Agent kann selbst geschriebenen JavaScript-Code in einer Sandbox auf Ihrem Gerät ausführen, ohne Internetzugriff, um zu rechnen, Tabellen auszuwerten und Daten umzuformen.
-• Optionale lokale Ausführungs-Bridge: Damit kann ein Agent Befehle auf Ihrem Computer ausführen – aber erst, nachdem Sie sie installiert und aktiviert haben.
+• Erstellen Sie Agenten mit eigenen Anweisungen, Tools und eigenem Modell. Agenten können Arbeit an Subagenten übergeben, die im Hintergrund laufen.
+• Skills sind wiederverwendbare Anweisungen: Wählen Sie selbst einen aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Schreiben Sie eigene und importieren oder exportieren Sie sie.
+• Verbinden Sie MCP-Server, um dem Agenten weitere Tools zu geben, etwa die Websuche.
+• Für genaue Zahlen kann der Agent Code schreiben und ihn in einer Sandbox auf Ihrem Gerät ausführen, die keinen Internetzugriff hat.
+• Mit einer optionalen lokalen Bridge kann ein Agent Befehle auf Ihrem Computer ausführen – erst, nachdem Sie sie installiert und aktiviert haben.
 
 SYNCHRONISIERUNG ÜBER GERÄTE HINWEG
 
-• Synchronisieren Sie Einstellungen, Agenten und Skills über Ihr Browserkonto oder Ihren eigenen WebDAV-Speicher – auf Wunsch auch API-Schlüssel (auf Ihrem Gerät mit Ihrer eigenen Passphrase verschlüsselt), Chats und Dateien.
-• Änderungen werden Eintrag für Eintrag zusammengeführt, sodass sich Bearbeitungen auf zwei Geräten nicht gegenseitig überschreiben. Vor umfangreichen Löschungen fragt die Erweiterung zuerst nach.
+• Synchronisieren Sie Einstellungen, Agenten und Skills über Ihr Browserkonto oder Ihren eigenen WebDAV-Speicher. Auf Wunsch auch Ihre Chats, Dateien und API-Schlüssel; Schlüssel werden auf Ihrem Gerät mit Ihrer eigenen Passphrase verschlüsselt.
+• Änderungen werden Eintrag für Eintrag zusammengeführt, sodass sich Bearbeitungen auf zwei Geräten nicht gegenseitig überschreiben.
 
 SIE BEHALTEN DIE KONTROLLE
 
-• Jeder Tool-Schritt wird angezeigt, während er läuft, und seine Details lassen sich aufrufen.
+• Jeder Schritt des Agenten wird angezeigt, während er läuft, mit seinen Details.
 • Ist sich der Agent unsicher, fragt er nach, bevor er etwas absendet, kauft, verschickt oder löscht.
-• Oberfläche auf English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 und 繁體中文, mit hellem und dunklem Design.
+• Die Oberfläche gibt es in vielen Sprachen, mit hellem und dunklem Design.
 
 OpenBrowserAgent ist Open Source. Quellcode, Dokumentation und Issue-Tracker: https://github.com/Lumysia/OpenBrowserAgent
