@@ -78,9 +78,8 @@
    Back / Next row are one group, a little above the middle of the window:
    the free height splits 38 : 62 above and below it (the wizard's ::before
    and ::after rows). A step taller than the window takes the whole height
-   and scrolls, the row right under it. Steps share one least height (up to
-   a share of the window), so the row stays in place from step to step
-   unless a step needs more room. */
+   and scrolls, the row right under it. The split is measured on what
+   shows, so steps keep no least height: the row follows each step. */
 .standalone-shell {
   height: 100vh;
   display: flex;
@@ -92,8 +91,6 @@
   min-height: 0;
   margin-inline: auto;
   padding: var(--space-6) var(--space-6) var(--space-4);
-  container-type: size;
-  --setup-step-min-height: min(28rem, 60cqb);
   display: grid;
   grid-template-rows:
     minmax(0, 38fr) minmax(0, max-content) auto
@@ -114,13 +111,15 @@
   font-size: var(--text-sm);
   font-weight: 600;
 }
-.setup-step {
+.setup-step,
+.setup-wizard-actions {
   width: 100%;
   max-width: 720px;
-  min-height: var(--setup-step-min-height);
+}
+.setup-step {
   margin-inline: auto;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: var(--space-5);
   --enter-y: 8px;
   animation: enter var(--duration-base) var(--ease-out) backwards;
@@ -155,7 +154,7 @@
   min-width: 0;
 }
 .setup-wizard-actions {
-  margin-top: var(--space-4);
+  margin: var(--space-6) auto 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
