@@ -86,12 +86,16 @@ export function startVideoSession(
           liveText = text;
           update();
         },
-        onLine(text) {
+        onLine(text, language) {
           liveLines.push(text);
           if (liveLines.length > CONTEXT_LINES + 1) liveLines.shift();
           if (!cueSource)
             translator.want(owner, [
-              { text, before: liveLines.slice(0, -1).join(" ") || undefined },
+              {
+                text,
+                before: liveLines.slice(0, -1).join(" ") || undefined,
+                language,
+              },
             ]);
         },
       })
@@ -127,6 +131,11 @@ export function startVideoSession(
     return !!cueSource || !!dom?.found || !!liveText;
   }
 
+  // The language the lines' source declares: only a text track says.
+  function cueLanguage() {
+    return cueSource && cueSource === track.cues ? track.language : undefined;
+  }
+
   function schedule(time: number) {
     if (
       scheduledAt !== undefined &&
@@ -135,13 +144,18 @@ export function startVideoSession(
       return;
     scheduledAt = time;
     const indexes = new Map(lines.map((line, index) => [line, index]));
+    const language = cueLanguage();
     const wanted: WantedLine[] = linesInWindow(lines, time).map((line) => {
       const index = indexes.get(line)!;
       const before = lines
         .slice(Math.max(0, index - CONTEXT_LINES), index)
         .map((previous) => previous.text)
         .join(" ");
-      return { text: line.text, ...(before && { before }) };
+      return {
+        text: line.text,
+        ...(before && { before }),
+        ...(language && { language }),
+      };
     });
     translator.want(owner, wanted);
   }

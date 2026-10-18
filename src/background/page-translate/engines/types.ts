@@ -12,8 +12,13 @@ export type EngineRequest = {
   items: PageTranslateItem[];
   // A language tag from PAGE_TRANSLATE_LANGUAGES.
   target: string;
-  // The page's declared language, a hint at best.
+  // The language the page declares for the items' text. Items may declare
+  // their own (`language`).
   pageLanguage?: string;
+  // A language the items are likely in, without saying they are (the
+  // document's language for its videos' subtitles): a source to translate
+  // from at most, never a reason to leave a text as it is.
+  languageHint?: string;
   pageTitle?: string;
   // What the items are: the page's text when unset, or a video's
   // subtitles. Engines that translate texts one by one ignore it.

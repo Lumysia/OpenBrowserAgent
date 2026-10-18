@@ -96,6 +96,10 @@ export function createTextTrackSource(
     get cues() {
       return cues;
     },
+    // The language the track declares (`<track srclang>`), if any.
+    get language() {
+      return track?.language || undefined;
+    },
     // A track with cues to translate.
     get available() {
       return cues.length > 0;
