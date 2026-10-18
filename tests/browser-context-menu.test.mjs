@@ -211,29 +211,31 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       );
       assert.match(prompt, /Reply in American English\./);
       assert.match(prompt, new RegExp(`<tab_id>${tabId}</tab_id>`));
-      // The bubble shows the request; the text is a chip under it.
+      // The bubble shows the request; the text is a pill under it.
       assert.deepEqual(
         await poll(() =>
           panel.call(() => {
             const message = [...document.querySelectorAll(".message.user")].at(
               -1,
             );
-            const chip = message?.querySelector(".sent-tab-chip");
+            const pill = message?.querySelector(
+              ".sent-context-pills [data-kind='text']",
+            );
             return (
-              chip && {
+              pill && {
                 bubble: message.querySelector(".user-bubble").textContent,
-                chip: chip.textContent,
+                pill: pill.textContent,
               }
             );
           }),
         ),
         {
           bubble: "Search the web about the selected text",
-          chip: "The quick brown fox jumps over the lazy dog.Selected text",
+          pill: "The quick brown fox jumps over the lazy dog.",
         },
       );
       assert.equal(
-        await sentChipTooltip(panel),
+        await sentPillTooltip(panel),
         "The quick brown fox jumps over the lazy dog.",
       );
     });
@@ -313,11 +315,11 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
             () =>
               !![...document.querySelectorAll(".message.user")]
                 .at(-1)
-                ?.querySelector(".sent-tab-chip")
+                ?.querySelector(".sent-context-pills [data-kind='text']")
                 ?.textContent.startsWith("brown fox"),
           ),
         );
-        assert.equal(await sentChipTooltip(panel), "brown fox");
+        assert.equal(await sentPillTooltip(panel), "brown fox");
         assert.equal(
           await panel.call(
             () =>
@@ -424,13 +426,12 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   }
 });
 
-// The full text of the last sent chip, from the tooltip its label opens on
-// hover.
-async function sentChipTooltip(panel) {
+// The full text of the last sent pill, from the tooltip it opens on hover.
+async function sentPillTooltip(panel) {
   const point = await panel.call(() => {
     const label = [...document.querySelectorAll(".message.user")]
       .at(-1)
-      .querySelector(".sent-tab-chip .sent-chip-label");
+      .querySelector(".sent-context-pills [data-kind='text']");
     label.scrollIntoView({ block: "center" });
     const rect = label.getBoundingClientRect();
     return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };

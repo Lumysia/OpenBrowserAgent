@@ -151,9 +151,10 @@ export const esES: LocaleMessages = {
       other: "Mostrar {count} fuentes más",
     }),
     showFewerSources: "Mostrar menos fuentes",
-    unavailableAttachments: plural({
-      one: "{count} no disponible",
-      other: "{count} no disponibles",
+    attachmentUnavailable: "No disponible en este dispositivo",
+    showMoreContext: plural({
+      one: "Mostrar {count} elemento más",
+      other: "Mostrar {count} elementos más",
     }),
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",

@@ -27,13 +27,8 @@ import {
 } from "./assistant-message-text";
 import { replyCutOff } from "../../src/shared/run-stop";
 import { UserMessageActions } from "./user-message-actions";
-import {
-  SentAttachmentsChip,
-  SentSelectedTextChip,
-  SentElementsChip,
-  SentTabsChip,
-  SourceChips,
-} from "./message-chips";
+import { SourceChips } from "./message-chips";
+import { SentContextPills } from "./sent-context-pills";
 import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
 import { cn } from "../../src/ui/utils";
 import { useLocale, useMessages } from "../../src/ui/messages";
@@ -106,19 +101,22 @@ export function MessageBubble({
   )
     ? (message.metadata.uploadedAttachments as UploadedAttachment[])
     : [];
-  const displayAttachments = sentAttachments.length
-    ? sentAttachments
-    : metadataAttachments;
-  const availableAttachments = displayAttachments
-    .map(
-      (attachment) =>
-        activeAttachments.find((item) => item.id === attachment.id) ||
-        sentAttachments.find((item) => item.id === attachment.id),
-    )
-    .filter((attachment): attachment is UploadedAttachment => !!attachment);
+  // A sent file is shown from this page's copy, else from the message when
+  // it holds the content; without either it is unavailable here.
+  const loadedAttachment = (attachment: UploadedAttachment) =>
+    activeAttachments.find((item) => item.id === attachment.id) ||
+    sentAttachments.find((item) => item.id === attachment.id) ||
+    (attachment.dataUrl || attachment.text !== undefined
+      ? attachment
+      : undefined);
+  const displayAttachments = (
+    metadataAttachments.length ? metadataAttachments : sentAttachments
+  ).map((attachment) => loadedAttachment(attachment) || attachment);
+  const availableAttachments = displayAttachments.filter(
+    (attachment) => !!loadedAttachment(attachment),
+  );
   const missingAttachments = displayAttachments.filter(
-    (attachment) =>
-      !availableAttachments.some((item) => item.id === attachment.id),
+    (attachment) => !loadedAttachment(attachment),
   );
   const modelLabel = assistantModel
     ? [
@@ -217,30 +215,17 @@ export function MessageBubble({
             </span>
           </div>
         )}
-      {message.role === "user" && !!sentTabs.length && (
-        <div className="sent-context-row">
-          <SentTabsChip tabs={sentTabs} />
-        </div>
+      {message.role === "user" && (
+        <SentContextPills
+          tabs={sentTabs}
+          attachments={displayAttachments}
+          missingAttachmentIds={
+            new Set(missingAttachments.map((attachment) => attachment.id))
+          }
+          elements={sentElements}
+          texts={sentTexts}
+        />
       )}
-      {message.role === "user" && !!displayAttachments.length && (
-        <div className="sent-context-row">
-          <SentAttachmentsChip
-            attachments={displayAttachments}
-            unavailableCount={missingAttachments.length}
-          />
-        </div>
-      )}
-      {message.role === "user" && !!sentElements.length && (
-        <div className="sent-context-row">
-          <SentElementsChip elements={sentElements} />
-        </div>
-      )}
-      {message.role === "user" &&
-        sentTexts.map((selection, index) => (
-          <div key={index} className="sent-context-row">
-            <SentSelectedTextChip selection={selection} />
-          </div>
-        ))}
       {message.role === "user" && (
         <UserMessageActions
           message={message}

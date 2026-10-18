@@ -120,13 +120,13 @@ async function chatShot({ demo, agentId, page, prompt, waitFor, handle }) {
   }
 }
 
-// Page titles in sent-context chips end in an ellipsis when they are too
+// Page titles in sent-context pills end in an ellipsis when they are too
 // long; the demo titles should still fit, so report any that do not.
 function chipWarnings(panel) {
   return panel.call(() =>
-    [...document.querySelectorAll(".sent-chip-title")]
+    [...document.querySelectorAll(".ui-context-pill-label")]
       .filter((label) => label.scrollWidth > label.clientWidth + 1)
-      .map((label) => `page title clipped in chip: ${label.textContent}`),
+      .map((label) => `page title clipped in pill: ${label.textContent}`),
   );
 }
 

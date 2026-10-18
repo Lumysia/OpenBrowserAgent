@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- In the side panel, the tabs, files, selected text and elements sent with a message now show as small one-line tags right under your message, in its colours. Pointing at one shows its full title and site (or file size); clicking a tab brings that tab to the front, and "+N" shows the rest. A file no longer stored on this device is struck out, also when the message's other files are still there.
+
 ## 0.2.0-beta.23 - 2026-10-18
 
 - The built-in translator no longer hands pages or subtitles it can't translate to the AI model: it says so on the page and asks you to choose another engine in Page translation settings. The Translation model in Settings > AI providers & models is used only with the AI model engine.

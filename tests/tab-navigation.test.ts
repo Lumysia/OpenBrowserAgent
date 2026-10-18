@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { OPTIONS_HASH } from "../src/shared/config";
 import {
+  focusTabOrUrl,
   openOrFocusOptions,
   openOrFocusUrl,
 } from "../src/shared/tab-navigation";
@@ -46,4 +47,23 @@ test("openOrFocusOptions focuses the settings tab already at that place", async 
   assert.deepEqual(updates, [
     [3, { active: true, url: url(OPTIONS_HASH.sync) }],
   ]);
+});
+
+test("focusTabOrUrl focuses the tab while it shows the URL, else the URL", async () => {
+  toolBrowser([
+    { id: 3, url: "https://example.test/a" },
+    { id: 4, url: "https://example.test/b" },
+  ]);
+  Object.assign(chrome, { windows: { update: async () => undefined } });
+  const active = async () => (await chrome.tabs.query({ active: true }))[0]?.id;
+  await focusTabOrUrl(3, "https://example.test/a");
+  assert.equal(await active(), 3);
+  // The tab went elsewhere: the tab at the URL instead.
+  await chrome.tabs.update(3, { url: "https://example.test/c" });
+  await focusTabOrUrl(3, "https://example.test/b");
+  assert.equal(await active(), 4);
+  // Closed, and no tab at the URL: a new tab opens there.
+  await focusTabOrUrl(9, "https://example.test/d");
+  const opened = (await chrome.tabs.query({ active: true }))[0];
+  assert.equal(opened?.url, "https://example.test/d");
 });

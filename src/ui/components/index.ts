@@ -31,3 +31,4 @@ export * from "./action-list-item";
 export * from "./disclosure";
 export * from "./step-dots";
 export * from "./choice-card";
+export * from "./context-pill";
