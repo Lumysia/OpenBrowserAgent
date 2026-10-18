@@ -1,7 +1,13 @@
 import { Cpu, Plus, Server } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import { MODEL_ROLES, type ModelRole } from "../../src/shared/model-roles";
+import {
+  normalizePageTranslateSettings,
+  pageTranslateModelUse,
+} from "../../src/shared/page-translate/settings";
 import { storage } from "../../src/shared/storage";
+import { formatMessage } from "../../src/shared/text";
+import type { Preferences } from "../../src/shared/types";
 import {
   SettingToggleRow,
   SettingsPageHeader,
@@ -12,11 +18,19 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
 import { ProviderList } from "./provider-list";
 
-// Each feature's row in the Models table: its name, what it does, and what
-// "no choice" means.
+// Each feature's row in the Models table: its name, what it does, what
+// "no choice" means and, while the feature doesn't use a model, why.
 const ROLE_TEXT: Record<
   ModelRole["id"],
-  (t: Messages) => { title: string; description: string; none: string }
+  (
+    t: Messages,
+    preferences: Preferences,
+  ) => {
+    title: string;
+    description: string;
+    none: string;
+    unavailableReason?: string;
+  }
 > = {
   chat: (t) => ({
     title: t.settings.modelChat,
@@ -33,11 +47,25 @@ const ROLE_TEXT: Record<
     description: t.smartBar.modelDescription,
     none: t.options.modelSameAsChat,
   }),
-  translation: (t) => ({
-    title: t.settings.modelTranslation,
-    description: t.pageTranslate.modelDescription,
-    none: t.options.modelSameAsChat,
-  }),
+  translation: (t, preferences) => {
+    const { engine } = normalizePageTranslateSettings(
+      preferences.pageTranslate,
+    );
+    const use = pageTranslateModelUse(engine);
+    return {
+      title: t.settings.modelTranslation,
+      description:
+        use === "fallback"
+          ? t.settings.modelTranslationFallback
+          : t.pageTranslate.modelDescription,
+      none: t.options.modelSameAsChat,
+      unavailableReason: use
+        ? undefined
+        : formatMessage(t.settings.modelTranslationUnavailable, {
+            engine: t.pageTranslate.engineNames[engine],
+          }),
+    };
+  },
   images: (t) => ({
     title: t.settings.modelImages,
     description: t.options.imageModelDescription,
@@ -69,7 +97,7 @@ export function ProvidersPage() {
       >
         <div className="settings-toggle-list models-table">
           {MODEL_ROLES.map((role) => {
-            const text = ROLE_TEXT[role.id](t);
+            const text = ROLE_TEXT[role.id](t, preferences);
             return (
               <SettingToggleRow
                 key={role.id}
@@ -82,6 +110,7 @@ export function ProvidersPage() {
                     value={role.get(preferences)}
                     label={text.title}
                     noneLabel={text.none}
+                    unavailableReason={text.unavailableReason}
                     onChange={(modelId) =>
                       setPreferences((previous) => role.set(previous, modelId))
                     }

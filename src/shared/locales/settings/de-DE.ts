@@ -38,6 +38,10 @@ export const settingsDeDE: SettingsMessages = {
   modelHelper: "Hilfsmodell",
   modelSmartBar: "Smart Bar",
   modelTranslation: "Übersetzung",
+  modelTranslationFallback:
+    "Wird verwendet, wenn der integrierte Übersetzer eine Seite nicht übersetzen kann.",
+  modelTranslationUnavailable:
+    "Die Seitenübersetzung verwendet {engine}, kein KI-Modell. Den Übersetzungsdienst ändern Sie in den Einstellungen unter „Seitenübersetzung“.",
   modelImages: "Bilder",
   translateMenuItems: "Einträge im Kontextmenü",
   translateMenuItemsDescription:

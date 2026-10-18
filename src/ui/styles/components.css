@@ -157,13 +157,18 @@
 :is(.ui-input, .ui-textarea)::placeholder {
   color: var(--muted-foreground);
 }
-:is(.ui-input, .ui-textarea, .ui-select-trigger):disabled {
+:is(.ui-input, .ui-textarea, .ui-select-trigger):disabled,
+.ui-select-trigger[aria-disabled="true"] {
   cursor: not-allowed;
   border-color: color-mix(in oklab, var(--border) 70%, transparent);
   background: color-mix(in oklab, var(--muted) 62%, var(--background));
   color: var(--muted-foreground);
   opacity: 0.58;
   box-shadow: none;
+}
+/* An unavailable select stays focusable, to show why. */
+.ui-select-trigger[aria-disabled="true"]:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring);
 }
 .ui-label {
   display: grid;

@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- In Settings > AI providers & models, the Translation model can't be changed while page translation uses Google or Microsoft, which don't use a model; pointing at it explains why and where to change the engine. With the built-in translator, it says the model is used for pages the built-in translator can't translate.
+
 ## 0.2.0-beta.21 - 2026-10-17
 
 - The agent can record a tab's failed network requests, console errors and warnings, uncaught errors and WebSocket connections while a problem is reproduced (for example a login that fails, even across reloads), and then look at one request's headers and response. Cookies, passwords, tokens and other credentials are always removed before the AI model sees them. Chrome shows its "being debugged" bar while recording, which ends with the agent's reply.

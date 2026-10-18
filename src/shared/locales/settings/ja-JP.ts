@@ -38,6 +38,10 @@ export const settingsJaJP: SettingsMessages = {
   modelHelper: "補助",
   modelSmartBar: "スマートバー",
   modelTranslation: "翻訳",
+  modelTranslationFallback:
+    "組み込み翻訳でページを翻訳できないときに使います。",
+  modelTranslationUnavailable:
+    "ページ翻訳は AI モデルではなく {engine} を使っています。翻訳エンジンは「ページ翻訳」の設定で変更できます。",
   modelImages: "画像",
   translateMenuItems: "右クリックメニューの項目",
   translateMenuItemsDescription:

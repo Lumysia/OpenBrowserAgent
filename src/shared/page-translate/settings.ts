@@ -48,6 +48,18 @@ export const PAGE_TRANSLATE_FALLBACK: Partial<
   [PAGE_TRANSLATE_ENGINE.browser]: PAGE_TRANSLATE_ENGINE.model,
 };
 
+// How pages translated with `engine` use the AI model (`modelId`): as the
+// engine, as its fallback, or not at all. A page hands over once, so only
+// the engine's own fallback counts.
+export function pageTranslateModelUse(
+  engine: PageTranslateEngine,
+): "engine" | "fallback" | undefined {
+  if (engine === PAGE_TRANSLATE_ENGINE.model) return "engine";
+  if (PAGE_TRANSLATE_FALLBACK[engine] === PAGE_TRANSLATE_ENGINE.model)
+    return "fallback";
+  return undefined;
+}
+
 // `bilingual`: the translation under each paragraph. `translation`: only the
 // translation where the page allows it (the original stays in the page).
 export const PAGE_TRANSLATE_DISPLAY = {

@@ -17,7 +17,8 @@ import { useStoredState } from "../../src/ui/useStoredState";
 const NO_MODEL = "no-model";
 
 // A configured model, or none (shown as `noneLabel`: a default such as the
-// chat's model, or a prompt to pick one).
+// chat's model, or a prompt to pick one). `unavailableReason`: why the choice
+// can't be changed now; the stored choice stays as it is.
 export function ModelSelect({
   t,
   models,
@@ -25,6 +26,7 @@ export function ModelSelect({
   noneLabel,
   label,
   disabled,
+  unavailableReason,
   onChange,
 }: {
   t: Messages;
@@ -33,15 +35,16 @@ export function ModelSelect({
   noneLabel: string;
   label: string;
   disabled?: boolean;
+  unavailableReason?: string;
   onChange: (modelId: string | undefined) => void;
 }) {
   return (
     <Select
       value={value || NO_MODEL}
-      disabled={disabled || models.length === 0}
+      disabled={!unavailableReason && (disabled || models.length === 0)}
       onValueChange={(next) => onChange(next === NO_MODEL ? undefined : next)}
     >
-      <SelectTrigger aria-label={label}>
+      <SelectTrigger aria-label={label} unavailableReason={unavailableReason}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
