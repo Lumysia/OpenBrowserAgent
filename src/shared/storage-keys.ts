@@ -68,6 +68,9 @@ export const STORAGE_KEYS = {
   tasks: "tasks",
   taskDevices: "task-devices",
   taskDeviceId: "task-device-id",
+  // The sync device id this device's task id was paired with: when sync
+  // gives this install a new id (a copied profile), so does tasks.
+  taskDeviceSyncId: "task-device-sync-id",
   taskStates: "task-states",
 } as const;
 

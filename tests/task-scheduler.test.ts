@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { storage } from "../src/shared/storage";
-import { deleteTask } from "../src/shared/tasks/edit";
+import { createTask, deleteTask } from "../src/shared/tasks/edit";
+import { ensureTaskDevice } from "../src/background/tasks/device";
 import { TASK_MESSAGE } from "../src/shared/tasks/messages";
 import {
   armTasks,
@@ -61,4 +62,31 @@ test("states of tasks deleted on another device are dropped when arming", async 
   });
   await armTasks();
   assert.deepEqual(Object.keys(await storage.taskStates.get()), ["t1"]);
+});
+
+test("a copied profile takes a new task device id when sync gives it a new id", async () => {
+  await schedulerEnv();
+  await storage.taskDeviceId.set("");
+  await storage.syncDeviceId.set("sync-1");
+  const first = await ensureTaskDevice();
+  assert.equal(await ensureTaskDevice(), first, "stable while sync's is");
+  await createTask({
+    title: "Mine",
+    prompt: "p",
+    agentId: "custom",
+    trigger: { kind: "interval", every: 1, unit: "hours" },
+  });
+  // Sync found a copy of this profile and rotated its id.
+  await storage.syncDeviceId.set("sync-2");
+  const second = await ensureTaskDevice();
+  assert.notEqual(second, first);
+  const devices = (await storage.taskDevices.get()).map((device) => device.id);
+  assert.ok(devices.includes(first) && devices.includes(second));
+  // The old device's tasks stay listed under it, not run by the copy.
+  const [mine] = (await storage.tasks.get()).filter((t) => t.title === "Mine");
+  assert.equal(mine.deviceId, first);
+  // A first sync id (sync turned on later) keeps the task id.
+  await storage.taskDeviceSyncId.set("");
+  await storage.syncDeviceId.set("sync-3");
+  assert.equal(await ensureTaskDevice(), second);
 });

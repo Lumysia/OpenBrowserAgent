@@ -2,8 +2,10 @@ import { getBrowserApi } from "../../shared/browser-api";
 import { storage } from "../../shared/storage";
 
 // This device's id among the devices that run tasks. It is its own id, not
-// the sync device id (which a copied profile changes), so the tasks a
-// device owns stay its own.
+// the sync device id, so the tasks a device owns stay its own. A copied
+// profile carries it along: when sync finds the copy and gives this
+// install a new sync id, this install takes a new task id too, and the
+// tasks of the old id stay listed under it for the user to move.
 
 const SEEN_REFRESH_MS = 24 * 60 * 60_000;
 
@@ -31,10 +33,15 @@ async function defaultName(id: string) {
 // devices (its last-seen time refreshed once a day). Returns the id.
 export async function ensureTaskDevice(now = Date.now()) {
   let id = await storage.taskDeviceId.get();
-  if (!id) {
+  const [syncId, pairedSyncId] = await Promise.all([
+    storage.syncDeviceId.get(),
+    storage.taskDeviceSyncId.get(),
+  ]);
+  if (!id || (syncId && pairedSyncId && syncId !== pairedSyncId)) {
     id = crypto.randomUUID();
     await storage.taskDeviceId.set(id);
   }
+  if (syncId !== pairedSyncId) await storage.taskDeviceSyncId.set(syncId);
   const deviceId = id;
   const devices = await storage.taskDevices.get();
   const listed = devices.find((device) => device.id === deviceId);

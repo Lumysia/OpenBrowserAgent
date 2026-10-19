@@ -291,6 +291,9 @@ export const storage = {
   ),
   // This device's id among taskDevices; empty until the background sets it.
   taskDeviceId: createItem<string>(STORAGE_KEYS.taskDeviceId, () => ""),
+  taskDeviceSyncId: createItem<string>(STORAGE_KEYS.taskDeviceSyncId, () => ""),
+  // Written only by sync (src/shared/sync/device.ts); read here.
+  syncDeviceId: createItem<string>(STORAGE_KEYS.syncDeviceId, () => ""),
   taskStates: createItem<TaskStates>(STORAGE_KEYS.taskStates, () => ({}), {
     normalize: normalizeTaskStates,
   }),

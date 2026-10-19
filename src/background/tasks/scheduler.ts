@@ -325,6 +325,15 @@ export function setupTasks() {
       );
   storage.tasks.watch(rearm);
   storage.taskDeviceId.watch(rearm);
+  // Sync gave this install a new id (a copied profile): a new task id too.
+  storage.syncDeviceId.watch(
+    () =>
+      void tasksReady()
+        .then(() => ensureTaskDevice())
+        .catch((error: unknown) =>
+          console.warn("Failed to update the task device", error),
+        ),
+  );
   storage.preferences.watch((next, previous) => {
     if (next.tasksPaused !== previous.tasksPaused) rearm();
   });
