@@ -161,8 +161,8 @@ const DETAILS: Record<
             ? compactJoin([
                 output.mayAct === true
                   ? t.tasks.agentPermission.label
-                  : t.tasks.form.looksOnly,
-                t.tasks.approval.waits,
+                  : t.tasks.approval.onlyLooks,
+                t.tasks.status.needsOk,
               ])
             : "",
         ]),

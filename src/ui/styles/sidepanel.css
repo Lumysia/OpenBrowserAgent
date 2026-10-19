@@ -470,6 +470,10 @@
 .tool-detail-content .task-approval-actions {
   padding: var(--space-1) 0 0;
 }
+.task-approval-actions small {
+  flex-basis: 100%;
+  color: var(--muted-foreground);
+}
 .task-form {
   padding: var(--space-3);
 }

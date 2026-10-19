@@ -111,6 +111,7 @@ export const tasksZhTW: TasksLocaleMessages = {
     paused: "任務連續多次失敗，已暫停。",
   },
   approval: {
+    onlyLooks: "只查看",
     allow: "允許",
     discard: "捨棄",
     waits: "需等你允許後才會在此裝置上執行。",

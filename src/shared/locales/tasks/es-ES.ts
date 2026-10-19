@@ -118,6 +118,7 @@ export const tasksEsES: TasksLocaleMessages = {
     paused: "La tarea falló varias veces seguidas y se ha pausado.",
   },
   approval: {
+    onlyLooks: "Solo mira",
     allow: "Permitir",
     discard: "Descartar",
     waits: "Espera tu aprobación antes de ejecutarse en este dispositivo.",

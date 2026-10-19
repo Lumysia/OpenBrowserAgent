@@ -1,5 +1,6 @@
 import { getMessages } from "../src/shared/i18n.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
+import { agentActApproval, approvalOf } from "../src/shared/tasks/approval.ts";
 import { TASK_MESSAGE } from "../src/shared/tasks/messages.ts";
 import { TOOL_NAME } from "../src/shared/tool-names.ts";
 import {
@@ -187,4 +188,81 @@ export function taskRowText(panel, taskId) {
     (id) => document.querySelector(`[data-task-id="${id}"]`)?.textContent || "",
     taskId,
   );
+}
+
+// Stores tasks as this device's own task list would: allowed here (see
+// tasks/approval.ts). `allowed: false` stores them as sync does: waiting
+// for the user's OK.
+export async function seedTasks(page, tasks, { allowed = true } = {}) {
+  await page.call((items) => chrome.storage.local.set(items), {
+    ...(allowed
+      ? {
+          [STORAGE_KEYS.taskStates]: Object.fromEntries(
+            tasks.map((task) => [
+              task.id,
+              { failures: 0, approved: approvalOf(task, Date.now()) },
+            ]),
+          ),
+        }
+      : {}),
+    [STORAGE_KEYS.tasks]: tasks,
+  });
+}
+
+// An agent's permission to act on its own, allowed on this device.
+export function allowAgents(page, agents) {
+  return page.call((items) => chrome.storage.local.set(items), {
+    [STORAGE_KEYS.agentActApprovals]: Object.fromEntries(
+      agents.map((agent) => [agent.id, agentActApproval(agent)]),
+    ),
+  });
+}
+
+// Whether the run is a scheduled task's (its instruction says so).
+export const isTaskRun = (body) =>
+  JSON.stringify(body.messages).includes("You are running a scheduled task");
+
+export const pricePage = (price) =>
+  `<!doctype html><title>Bracket</title><main><h1>Steel bracket</h1><p>Price: ${price}</p><p>In stock</p></main>`;
+
+// Sends a message from the side panel's composer.
+export async function send(panel, text) {
+  await panel.call(() =>
+    document.querySelector(".composer-box textarea").focus(),
+  );
+  await panel.send("Input.insertText", { text });
+  await clickElement(panel, ".send-button");
+}
+
+export const chatText = (panel) =>
+  panel.call(() => document.querySelector(".messages")?.textContent || "");
+
+// A model that calls `steps` in order in the chat (one call per reply,
+// then a final answer); task runs report "nothing".
+export function scriptedModel(steps, final) {
+  return (body) => {
+    if (isTaskRun(body))
+      return body.messages.some((m) => m.role === "tool")
+        ? { text: "Checked." }
+        : {
+            calls: [
+              {
+                id: "r",
+                name: TOOL_NAME.taskResult,
+                args: { outcome: "nothing", summary: "Nothing new." },
+              },
+            ],
+          };
+    const done = body.messages.filter((m) => m.role === "tool").length;
+    const step = steps[done];
+    if (!step) return { text: final };
+    return {
+      calls: [
+        {
+          id: `c${done}`,
+          ...(typeof step === "function" ? step(body) : step),
+        },
+      ],
+    };
+  };
 }

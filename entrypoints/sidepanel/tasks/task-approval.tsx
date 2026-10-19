@@ -12,11 +12,19 @@ import { useStoredState } from "../../../src/ui/useStoredState";
 // changed by the agent, or come by sync): Allow runs it as it is now;
 // Discard goes back to what was allowed (or deletes a task never allowed).
 // The task list and the task tool's step card show the same buttons.
-export function TaskApprovalActions({ taskId }: { taskId: string }) {
+export function TaskApprovalActions({
+  taskId,
+  hint = false,
+}: {
+  taskId: string;
+  // Say why it waits (on a step card; the list row has its status).
+  hint?: boolean;
+}) {
   const t = useMessages();
   const fail = (error: unknown) => console.warn(error);
   return (
     <div className="task-approval-actions">
+      {hint && <small>{t.tasks.approval.waits}</small>}
       <Button size="sm" onClick={() => void approveTask(taskId).catch(fail)}>
         <Check size={14} />
         {t.tasks.approval.allow}

@@ -6,14 +6,17 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { clickElement } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
+  allowAgents,
   createWatchInUi,
   notifications,
   offeredTools,
   openTaskList,
   openSidePanel,
+  pricePage,
   ranAfter,
   runNow,
   runStarts,
+  seedTasks,
   storageValue,
   t,
   taskRowText,
@@ -22,9 +25,6 @@ import {
   startTaskExtension,
   watchModel,
 } from "./browser-tasks-helpers.mjs";
-
-const pricePage = (price) =>
-  `<!doctype html><title>Bracket</title><main><h1>Steel bracket</h1><p>Price: ${price}</p><p>In stock</p></main>`;
 
 test(
   "a watch runs the model only when its page changed, notifies, and stores the run as a chat",
@@ -187,12 +187,11 @@ test(
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
-      await options.call((items) => chrome.storage.local.set(items), {
-        [STORAGE_KEYS.tasks]: [
-          task("read-only", "looker"),
-          task("acting", "doer"),
-        ],
-      });
+      await seedTasks(options, [
+        task("read-only", "looker"),
+        task("acting", "doer"),
+      ]);
+      await allowAgents(options, [agent(true)]);
       await runNow(options, "read-only");
       const readOnly = await ranAfter(options, "read-only");
       const lookerRuns = runStarts(original);
@@ -245,21 +244,19 @@ test(
     const { browser, extensionUrl, fixture, options } = session;
     try {
       const deviceId = await thisDevice(options);
-      await options.call((items) => chrome.storage.local.set(items), {
-        [STORAGE_KEYS.tasks]: [
-          {
-            id: "daily",
-            title: "Morning news",
-            prompt: "Summarize the news",
-            agentId: "general-agent",
-            trigger: { kind: "daily", time: "09:00" },
-            deviceId,
-            enabled: true,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
-        ],
-      });
+      await seedTasks(options, [
+        {
+          id: "daily",
+          title: "Morning news",
+          prompt: "Summarize the news",
+          agentId: "general-agent",
+          trigger: { kind: "daily", time: "09:00" },
+          deviceId,
+          enabled: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
       const panel = await openSidePanel(browser, extensionUrl);
       await clickElement(panel, ".tasks-button");
       const row = '[data-task-id="daily"]';
@@ -355,21 +352,19 @@ test(
     const { options } = session;
     try {
       const deviceId = await thisDevice(options);
-      await options.call((items) => chrome.storage.local.set(items), {
-        [STORAGE_KEYS.tasks]: [
-          {
-            id: "asks",
-            title: "Stock check",
-            prompt: "Check the stock",
-            agentId: "general-agent",
-            trigger: { kind: "interval", every: 1, unit: "hours" },
-            deviceId,
-            enabled: true,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
-        ],
-      });
+      await seedTasks(options, [
+        {
+          id: "asks",
+          title: "Stock check",
+          prompt: "Check the stock",
+          agentId: "general-agent",
+          trigger: { kind: "interval", every: 1, unit: "hours" },
+          deviceId,
+          enabled: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ]);
       await runNow(options, "asks");
       const state = await ranAfter(options, "asks");
       assert.equal(state.lastResult.status, "needsUser");
@@ -380,82 +375,6 @@ test(
         return all.length && all;
       });
       assert.match(ids[0], /asks:/);
-    } finally {
-      await session.close();
-    }
-  },
-);
-
-test(
-  "the agent creates a task when asked in words, with its own agent, never acting by itself",
-  { timeout: BROWSER_TEST_TIMEOUT },
-  async () => {
-    let baseUrl = "";
-    const session = await startTaskExtension({
-      pages: { "/item": pricePage(42) },
-      model: (body) => {
-        const tools = body.messages.filter((m) => m.role === "tool").length;
-        if (tools === 0)
-          return {
-            calls: [
-              {
-                id: "load",
-                name: TOOL_NAME.toolSearch,
-                args: { names: [TOOL_NAME.scheduleTask] },
-              },
-            ],
-          };
-        if (tools === 1)
-          return {
-            calls: [
-              {
-                id: "make",
-                name: TOOL_NAME.scheduleTask,
-                args: {
-                  title: "Price watch",
-                  prompt: "Tell me when the price drops below 40",
-                  kind: "watch",
-                  url: `${baseUrl}/item`,
-                  everyMinutes: 0,
-                },
-              },
-            ],
-          };
-        return { text: "I will watch the page every minute." };
-      },
-    });
-    const { browser, extensionUrl, options } = session;
-    baseUrl = session.fixture.baseUrl;
-    try {
-      const panel = await openSidePanel(browser, extensionUrl);
-      await panel.call(() => {
-        const box = document.querySelector(".composer-box textarea");
-        box.focus();
-      });
-      await panel.send("Input.insertText", {
-        text: "Check this page every minute and tell me when the price drops",
-      });
-      await clickElement(panel, ".send-button");
-      const [task] = await poll(async () => {
-        const tasks = await storageValue(options, STORAGE_KEYS.tasks);
-        return tasks?.length && tasks;
-      });
-      assert.equal(task.trigger.kind, "watch");
-      // The least interval holds whatever the model asked for.
-      assert.equal(task.trigger.everyMinutes, 1);
-      assert.equal(task.agentId, "general-agent");
-      // The step tells the user that runs only look.
-      await poll(() =>
-        panel.call(
-          (text) =>
-            (document.querySelector(".messages")?.textContent || "").includes(
-              text,
-            ),
-          t.tasks.form.looksOnly,
-        ),
-      );
-      const agents = (await storageValue(options, STORAGE_KEYS.agents)) || [];
-      assert.ok(agents.every((agent) => agent.actUnattended !== true));
     } finally {
       await session.close();
     }

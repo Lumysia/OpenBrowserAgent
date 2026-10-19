@@ -116,6 +116,7 @@ export const tasksJaJP: TasksLocaleMessages = {
     paused: "タスクが続けて失敗したため一時停止しました。",
   },
   approval: {
+    onlyLooks: "見るだけ",
     allow: "許可",
     discard: "取り消す",
     waits: "このデバイスで実行する前にあなたの許可を待ちます。",

@@ -72,7 +72,9 @@ export const TOOL_CARD_KINDS: Partial<Record<string, ToolCardKind>> = {
 function TaskStepBody({ part }: ToolBodyProps) {
   const taskId = String(output(part).taskId || "");
   const waiting = useTaskWaitingForOk(taskId);
-  return taskId && waiting ? <TaskApprovalActions taskId={taskId} /> : null;
+  return taskId && waiting ? (
+    <TaskApprovalActions taskId={taskId} hint />
+  ) : null;
 }
 
 function SubAgentBody({
