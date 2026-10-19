@@ -19,8 +19,9 @@ import { fail, schema, type ToolDefinition, type ToolResult } from "./types";
 
 // Screenshots never take the user's tab or window: the debugger and
 // Firefox's captureTab capture a tab in the background. Only a browser with
-// neither (Safari) shows the tab for the capture, then puts the user's tab
-// back.
+// neither (Safari), or a background capture that failed, shows the tab for
+// the capture, then puts the user's tab back; never in a run nobody watches
+// (a scheduled task), which fails instead.
 
 // Longest edge of a full-page screenshot; vision models scale larger images
 // down anyway.
@@ -72,10 +73,13 @@ export const screenshotTool: ToolDefinition = {
   }),
   async execute(input, { run, signal }) {
     const tab = await run.tab.target(input.tabId);
+    const showTab = !run.unattended;
     if (input.ref !== undefined || input.region !== undefined)
-      return croppedShot(tab, input, signal);
+      return croppedShot(tab, input, showTab, signal);
     if (input.fullPage === true) return fullPageShot(tab, signal);
-    const { image, note } = await visibleShot(tab, signal);
+    const capture = await visibleShot(tab, showTab, signal);
+    if (!capture) return fail(NO_BACKGROUND_CAPTURE);
+    const { image, note } = capture;
     return {
       text: `Screenshot of tab ${tab.id} (${tab.title || tab.url}) attached.${note ? ` ${note}` : ""}`,
       details: {
@@ -90,9 +94,19 @@ export const screenshotTool: ToolDefinition = {
   },
 };
 
-async function visibleShot(tab: Tab, signal?: AbortSignal): Promise<Capture> {
+const NO_BACKGROUND_CAPTURE =
+  "The tab could not be captured in the background, and this run runs on its own, so it never brings a tab to the front. Use snapshot or read for the page's content.";
+
+// The visible part; `showTab`: the tab may be shown for a moment when it
+// cannot be captured where it is (else undefined).
+async function visibleShot(
+  tab: Tab,
+  showTab: boolean,
+  signal?: AbortSignal,
+): Promise<Capture | undefined> {
   const background = await backgroundShot(tab, signal);
-  return background ? { image: background } : foregroundShot(tab, signal);
+  if (background) return { image: background };
+  return showTab ? foregroundShot(tab, signal) : undefined;
 }
 
 // The tab's viewport, captured where it is. Undefined when the browser
@@ -228,6 +242,7 @@ type Viewport = { width: number; height: number };
 async function croppedShot(
   tab: Tab,
   input: Record<string, unknown>,
+  showTab: boolean,
   signal?: AbortSignal,
 ): Promise<ToolResult> {
   const ref = typeof input.ref === "string" ? input.ref.trim() : "";
@@ -264,12 +279,9 @@ async function croppedShot(
       return fail(
         "This browser can't crop screenshots. Take a plain screenshot of the visible part.",
       );
-    image = await cropCapture(
-      (await visibleShot(tab, signal)).image,
-      box,
-      value.viewport.width,
-      zoom,
-    );
+    const capture = await visibleShot(tab, showTab, signal);
+    if (!capture) return fail(NO_BACKGROUND_CAPTURE);
+    image = await cropCapture(capture.image, box, value.viewport.width, zoom);
   }
   // What one CSS pixel became, read from the image itself.
   const scale = Math.round(((await imageWidth(image)) / box.width) * 100) / 100;
