@@ -1,4 +1,4 @@
-import { hasToolGroup, resolveAgent } from "../shared/agents";
+import { hasToolGroup, mayActUnattended, resolveAgent } from "../shared/agents";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
 import { respondWith } from "../shared/runtime-messages";
@@ -19,6 +19,7 @@ import { resolveHelperModel, resolveModel } from "./model-resolver";
 import { runPiAgent, type RunSetup } from "./pi-runtime";
 import {
   createRunTab,
+  handedRunTab,
   startRunTab,
   withWorkingTab,
   workingTabNote,
@@ -27,7 +28,13 @@ import {
 import type { StreamSession } from "./stream-sessions";
 import { createSystemPrompt } from "./system-prompt";
 import { createToolSet } from "./tools/registry";
-import type { ToolDefinition } from "./tools/types";
+import type { ToolDefinition, UnattendedRun } from "./tools/types";
+
+// A run nobody watches. `readOnly`: already limited to reading (a read-only
+// run's sub-agent); otherwise the agent's own permission decides.
+export type UnattendedRequest = Omit<UnattendedRun, "readOnly"> & {
+  readOnly?: boolean;
+};
 
 type RunRequest = {
   agentId?: string;
@@ -38,7 +45,19 @@ type RunRequest = {
   parentChatId?: string;
   // The tab a parent run hands to its sub-agent.
   tabId?: number;
+  unattended?: UnattendedRequest;
 };
+
+function unattendedRun(
+  request: UnattendedRequest | undefined,
+  agent: Agent,
+): UnattendedRun | undefined {
+  if (!request) return undefined;
+  return {
+    ...request,
+    readOnly: request.readOnly === true || !mayActUnattended(agent),
+  };
+}
 
 // What a run of an agent is set up with, resolved from storage: the side
 // panel only names the agent, so chats and background sub-agents are set up
@@ -92,6 +111,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     depth,
     parentChatId: request.parentChatId,
     tab,
+    unattended: unattendedRun(request.unattended, agent),
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     isLocalExecutionBridgeTested,
@@ -131,11 +151,9 @@ export async function runChat(
 ) {
   // Chosen before anything slow, while the user is still on the tab they
   // sent the message from.
-  const { tab, start, earlier } = await startRunTab(
-    session.chatId,
-    request.messages.at(-1),
-    request.tabId,
-  );
+  const { tab, start, earlier } = request.unattended
+    ? await handedRunTab(session.chatId, request.tabId)
+    : await startRunTab(session.chatId, request.messages.at(-1), request.tabId);
   const prepared = await prepareRun(request, tab);
   session.abortController.signal.throwIfAborted();
   const usesPages =

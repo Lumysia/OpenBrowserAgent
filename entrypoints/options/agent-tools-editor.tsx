@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import {
   DEBUGGER_TOOL_GROUPS,
+  mayActUnattended,
   TOOL_GROUPS,
   type ToolGroup,
 } from "../../src/shared/agents";
@@ -51,6 +52,13 @@ export function AgentToolsEditor({
       description: t.options.agentWorkspaceToggleDescription,
       checked: agent.workspace,
       onChange: (checked: boolean) => onChange({ workspace: checked }),
+    },
+    {
+      id: "act-unattended",
+      label: t.tasks.agentPermission.label,
+      description: t.tasks.agentPermission.description,
+      checked: mayActUnattended(agent),
+      onChange: (checked: boolean) => onChange({ actUnattended: checked }),
     },
   ];
   return (

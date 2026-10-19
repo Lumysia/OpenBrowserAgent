@@ -10,6 +10,7 @@ import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
 import { settingsEnUS } from "./settings/en-US";
 import { setupEnUS } from "./setup/en-US";
+import { tasksEnUS } from "./tasks/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
@@ -604,6 +605,7 @@ export const enUS = {
   pageTools: pageToolsEnUS,
   settings: settingsEnUS,
   setup: setupEnUS,
+  tasks: tasksEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

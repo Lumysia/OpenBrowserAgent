@@ -41,6 +41,7 @@ type CaptureTab = (
 
 export const screenshotTool: ToolDefinition = {
   name: TOOL_NAME.screenshot,
+  effects: "read",
   group: "pages",
   summary: "Image of a tab",
   description:

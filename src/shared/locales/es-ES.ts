@@ -10,6 +10,7 @@ import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
 import { settingsEsES } from "./settings/es-ES";
 import { setupEsES } from "./setup/es-ES";
+import { tasksEsES } from "./tasks/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
@@ -641,4 +642,5 @@ export const esES: LocaleMessages = {
   pageTools: pageToolsEsES,
   settings: settingsEsES,
   setup: setupEsES,
+  tasks: tasksEsES,
 };

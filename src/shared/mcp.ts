@@ -24,6 +24,10 @@ export type McpToolConfig = {
   name: string;
   description?: string;
   inputSchema?: Record<string, unknown>;
+  // The server's `annotations.readOnlyHint`: the tool does not change its
+  // environment. Missing (not reported, or tested before 0.3.0) counts as
+  // acting.
+  readOnlyHint?: boolean;
   enabled: boolean;
 };
 
@@ -147,6 +151,7 @@ function normalizeMcpTools(value: unknown): McpToolConfig[] {
       name,
       description: trimmedString(item.description),
       inputSchema: isRecord(item.inputSchema) ? item.inputSchema : undefined,
+      ...(item.readOnlyHint === true ? { readOnlyHint: true } : {}),
       enabled: item.enabled !== false,
     });
   }

@@ -16,6 +16,7 @@ function pageTool(pageMs: number): ToolDefinition {
   return {
     name: "fixturePage",
     group: "pages",
+    effects: "read",
     timeoutMs: LIMIT_MS,
     summary: "",
     description: "",
@@ -98,6 +99,7 @@ test("stopping the run stops a pending helper request", async () => {
 test("Cite as names sources the chat already has, with their ids", async () => {
   const tool: ToolDefinition = {
     name: "fixtureRead",
+    effects: "read",
     summary: "",
     description: "",
     parameters: {},

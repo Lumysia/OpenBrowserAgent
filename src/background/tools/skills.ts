@@ -23,6 +23,7 @@ const TOO_LARGE = `A skill's files may hold ${SKILL_MAX_CHARS} characters togeth
 // Creating and editing skills. Reading goes through read "skill:NAME".
 export const skillsTool: ToolDefinition = {
   name: TOOL_NAME.skills,
+  effects: "act",
   group: "skills",
   onDemand: true,
   summary: "Create or edit skills (reusable instructions)",

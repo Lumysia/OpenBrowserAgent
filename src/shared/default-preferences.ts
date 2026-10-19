@@ -28,6 +28,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   smartBar: DEFAULT_SMART_BAR_SETTINGS,
   contextMenu: DEFAULT_CONTEXT_MENU_SETTINGS,
   pageTranslate: DEFAULT_PAGE_TRANSLATE_SETTINGS,
+  tasksPaused: false,
 };
 
 export function mergePreferences(value: Partial<Preferences>): Preferences {

@@ -25,6 +25,7 @@ const minutes = (ms: number) => ms / 60_000;
 
 export const localCommandTool: ToolDefinition = {
   name: TOOL_NAME.localCommand,
+  effects: "act",
   group: "localExecution",
   onDemand: true,
   summary: "Run shell commands on the user's computer through a local bridge",
@@ -120,6 +121,7 @@ function taskResult(value: unknown, offset: number): ToolResult {
 
 export const localBridgesTool: ToolDefinition = {
   name: TOOL_NAME.localBridges,
+  effects: "act",
   group: "localExecution",
   onDemand: true,
   summary: "Set up and test local execution bridges",

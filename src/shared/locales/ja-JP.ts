@@ -10,6 +10,7 @@ import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
 import { settingsJaJP } from "./settings/ja-JP";
 import { setupJaJP } from "./setup/ja-JP";
+import { tasksJaJP } from "./tasks/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -603,4 +604,5 @@ export const jaJP: LocaleMessages = {
   pageTools: pageToolsJaJP,
   settings: settingsJaJP,
   setup: setupJaJP,
+  tasks: tasksJaJP,
 };

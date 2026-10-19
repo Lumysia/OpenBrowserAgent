@@ -133,6 +133,30 @@
     updateOverlay(hovered.getBoundingClientRect());
   }
 
+  // A path to the element by tags and their places among siblings only, so
+  // it finds the same part of the page after a reload (a watch reads it).
+  function structuralPath(element) {
+    const steps = [];
+    let node = element;
+    while (
+      node &&
+      node !== document.body &&
+      node !== document.documentElement
+    ) {
+      const parent = node.parentElement;
+      if (!parent) break;
+      const tag = node.tagName.toLowerCase();
+      const same = Array.from(parent.children).filter(
+        (child) => child.tagName === node.tagName,
+      );
+      steps.unshift(
+        same.length > 1 ? `${tag}:nth-of-type(${same.indexOf(node) + 1})` : tag,
+      );
+      node = parent;
+    }
+    return ["body", ...steps].join(" > ");
+  }
+
   async function onClick(event) {
     const target = event.target;
     if (!isSelectableTarget(target)) return;
@@ -156,6 +180,8 @@
       innerText: target.innerText || "",
       outerHTML: target.outerHTML,
       tagName: target.tagName.toLowerCase(),
+      path: structuralPath(target),
+      pageUrl: location.href,
       value: "value" in target ? target.value : undefined,
       imageSrc: image?.currentSrc || image?.src || undefined,
       imageAlt: image?.alt || undefined,

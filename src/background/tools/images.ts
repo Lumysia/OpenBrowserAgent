@@ -6,6 +6,7 @@ import { fail, schema, type ToolDefinition } from "./types";
 
 export const generateImageTool: ToolDefinition = {
   name: TOOL_NAME.generateImage,
+  effects: "read",
   group: "images",
   onDemand: true,
   // On once an image model is chosen in Settings.

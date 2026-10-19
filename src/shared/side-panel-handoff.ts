@@ -14,6 +14,10 @@ export const SIDE_PANEL_TASK = {
   // About the selected text when there is some, otherwise about the page.
   searchWeb: "searchWeb",
   summarizeLink: "summarizeLink",
+  // A scheduled task's run (a notification click): open its chat.
+  openChat: "openChat",
+  // Open the task list.
+  openTasks: "openTasks",
 } as const;
 
 export type SidePanelTask =
@@ -28,7 +32,9 @@ export type SidePanelHandoffRequest =
     }
   | { task: typeof SIDE_PANEL_TASK.summarizePage }
   | { task: typeof SIDE_PANEL_TASK.searchWeb; text?: string }
-  | { task: typeof SIDE_PANEL_TASK.summarizeLink; linkUrl: string };
+  | { task: typeof SIDE_PANEL_TASK.summarizeLink; linkUrl: string }
+  | { task: typeof SIDE_PANEL_TASK.openChat; chatId: string }
+  | { task: typeof SIDE_PANEL_TASK.openTasks };
 
 export type SidePanelHandoff = SidePanelHandoffRequest & {
   id: string;
@@ -81,6 +87,11 @@ export function readSidePanelHandoff(
   if (
     handoff.task === SIDE_PANEL_TASK.summarizeLink &&
     typeof handoff.linkUrl !== "string"
+  )
+    return undefined;
+  if (
+    handoff.task === SIDE_PANEL_TASK.openChat &&
+    typeof handoff.chatId !== "string"
   )
     return undefined;
   return handoff as SidePanelHandoff;

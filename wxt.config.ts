@@ -18,7 +18,8 @@ const permissions = [
   "storage",
   "downloads",
   "unlimitedStorage",
-  // Sync checks once a minute while an extension page is visible.
+  // Sync checks once a minute while an extension page is visible;
+  // scheduled tasks and watches run on their own alarms.
   "alarms",
   // Removes the Origin header from requests to MCP servers that reject
   // browser requests (mcp-origin-rules); host access comes from <all_urls>.
@@ -29,7 +30,13 @@ const permissions = [
   // take the user's tab (the browser names the active tab as the opener).
   "webNavigation",
 ] as const;
-const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
+const chromiumAndFirefoxPermissions = [
+  "nativeMessaging",
+  "search",
+  // Scheduled task and watch results (Safari has no notifications API; it
+  // shows them on the toolbar button and in the task list).
+  "notifications",
+] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
 const require = createRequire(import.meta.url);
 const extensionPagesCsp =

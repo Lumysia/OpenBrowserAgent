@@ -448,3 +448,26 @@
   width: 62%;
   justify-self: end;
 }
+
+/* Task list: rows reuse the history list; the form fits the panel. */
+.task-form {
+  padding: var(--space-3);
+}
+.task-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-2);
+}
+.task-form-access {
+  display: block;
+  margin-top: var(--space-1);
+}
+.tasks-button {
+  position: relative;
+}
+.tasks-button .history-unread-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}

@@ -33,6 +33,12 @@ import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
 import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
 import { resolveLanguage } from "./ui-languages";
 import { normalizeWorkspaces } from "./workspace";
+import {
+  normalizeTaskDevices,
+  normalizeTasks,
+  normalizeTaskStates,
+} from "./tasks/normalize";
+import type { ScheduledTask, TaskDevice, TaskStates } from "./tasks/types";
 import type {
   Agent,
   AgentWorkspace,
@@ -275,6 +281,19 @@ export const storage = {
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
     () => false,
   ),
+  tasks: createSyncedItem<ScheduledTask[]>(STORAGE_KEYS.tasks, () => [], {
+    normalize: normalizeTasks,
+  }),
+  taskDevices: createSyncedItem<TaskDevice[]>(
+    STORAGE_KEYS.taskDevices,
+    () => [],
+    { normalize: normalizeTaskDevices },
+  ),
+  // This device's id among taskDevices; empty until the background sets it.
+  taskDeviceId: createItem<string>(STORAGE_KEYS.taskDeviceId, () => ""),
+  taskStates: createItem<TaskStates>(STORAGE_KEYS.taskStates, () => ({}), {
+    normalize: normalizeTaskStates,
+  }),
   learnedModelLimits: createItem<LearnedModelLimits>(
     STORAGE_KEYS.learnedModelLimits,
     () => ({}),

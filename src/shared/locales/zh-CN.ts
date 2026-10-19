@@ -10,6 +10,7 @@ import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
 import { settingsZhCN } from "./settings/zh-CN";
 import { setupZhCN } from "./setup/zh-CN";
+import { tasksZhCN } from "./tasks/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -535,4 +536,5 @@ export const zhCN: LocaleMessages = {
   pageTools: pageToolsZhCN,
   settings: settingsZhCN,
   setup: setupZhCN,
+  tasks: tasksZhCN,
 };

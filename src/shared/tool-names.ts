@@ -24,6 +24,8 @@ export const TOOL_NAME = {
   runScript: "runScript",
   runCode: "runCode",
   devtools: "devtools",
+  scheduleTask: "scheduleTask",
+  taskResult: "taskResult",
 } as const;
 
 export const MCP_TOOL_PREFIX = "mcp__";

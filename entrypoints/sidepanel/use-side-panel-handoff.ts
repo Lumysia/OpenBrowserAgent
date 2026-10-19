@@ -33,6 +33,8 @@ type HandoffSend = {
 // once in a new chat.
 export function useSidePanelHandoff({
   ready,
+  openChat,
+  showTasks,
   importChat,
   createChat,
   attachTab,
@@ -43,6 +45,8 @@ export function useSidePanelHandoff({
   composerRef,
 }: {
   ready: boolean;
+  openChat: (chatId: string) => void;
+  showTasks: () => void;
   importChat: (chat: Chat) => void;
   createChat: () => Chat;
   attachTab: (tab: AttachmentTab) => void;
@@ -100,6 +104,10 @@ export function useSidePanelHandoff({
           composer.value.length,
         );
       });
+    // A notification of a task: its run's chat, or the task list.
+    if (handoff.task === SIDE_PANEL_TASK.openChat)
+      return openChat(handoff.chatId);
+    if (handoff.task === SIDE_PANEL_TASK.openTasks) return showTasks();
     if (handoff.task === SIDE_PANEL_TASK.continue) {
       importChat(continuedChat(handoff, t));
       focusComposer();
@@ -133,7 +141,9 @@ export function useSidePanelHandoff({
     handoff,
     importChat,
     language,
+    openChat,
     ready,
+    showTasks,
     t,
   ]);
 

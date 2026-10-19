@@ -10,6 +10,7 @@ import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
 import { settingsPtBR } from "./settings/pt-BR";
 import { setupPtBR } from "./setup/pt-BR";
+import { tasksPtBR } from "./tasks/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -632,4 +633,5 @@ export const ptBR: LocaleMessages = {
   pageTools: pageToolsPtBR,
   settings: settingsPtBR,
   setup: setupPtBR,
+  tasks: tasksPtBR,
 };

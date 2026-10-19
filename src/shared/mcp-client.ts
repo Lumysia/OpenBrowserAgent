@@ -1,3 +1,4 @@
+import { isRecord } from "./values";
 import { PRODUCT_NAME } from "./config";
 import type { McpServerConfig, McpToolConfig } from "./mcp";
 import { prepareMcpRequest } from "./mcp-origin-rules";
@@ -234,6 +235,9 @@ function normalizeRemoteTool(value: unknown): McpToolConfig | null {
       !Array.isArray(tool.inputSchema)
         ? (tool.inputSchema as Record<string, unknown>)
         : undefined,
+    ...(isRecord(tool.annotations) && tool.annotations.readOnlyHint === true
+      ? { readOnlyHint: true }
+      : {}),
     enabled: true,
   };
 }

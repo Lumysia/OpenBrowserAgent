@@ -339,6 +339,7 @@ function normalizeChat(value: unknown, index = 0): Chat {
     parentMessageId: optionalString(chat.parentMessageId),
     parentToolCallId: optionalString(chat.parentToolCallId),
     childChatIds: stringArray(chat.childChatIds),
+    taskId: optionalString(chat.taskId),
     imageGenerationJobs: Array.isArray(chat.imageGenerationJobs)
       ? chat.imageGenerationJobs
       : undefined,

@@ -10,6 +10,7 @@ import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
 import { settingsZhTW } from "./settings/zh-TW";
 import { setupZhTW } from "./setup/zh-TW";
+import { tasksZhTW } from "./tasks/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -535,4 +536,5 @@ export const zhTW: LocaleMessages = {
   pageTools: pageToolsZhTW,
   settings: settingsZhTW,
   setup: setupZhTW,
+  tasks: tasksZhTW,
 };

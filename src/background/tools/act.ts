@@ -45,6 +45,7 @@ const pageUrl = (url: string) => url.split("#")[0];
 
 export const actTool: ToolDefinition = {
   name: TOOL_NAME.act,
+  effects: "act",
   group: "browser",
   timeoutMs: 120_000,
   summary: "Click, type, select, press keys, scroll on a page",

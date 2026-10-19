@@ -1,4 +1,4 @@
-import { Check, Copy, Pencil, RotateCcw } from "lucide-react";
+import { CalendarPlus, Check, Copy, Pencil, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../src/shared/config";
 import type { ChatMessage, UploadedAttachment } from "../../src/shared/types";
@@ -16,6 +16,10 @@ import { FileIcon } from "./attachment-file-icon";
 import { formatBytes } from "../../src/shared/format";
 import { formatMessageTime } from "./format";
 import { useLocale, useMessages } from "../../src/ui/messages";
+import { chatDisplayTitle } from "../../src/ui/agent-display";
+import { useNavigation } from "./sidepanel-navigation";
+import { useChat } from "./sidepanel-providers";
+import { taskDraftFromMessage } from "./tasks/task-from-chat";
 
 export function UserMessageActions({
   message,
@@ -39,6 +43,8 @@ export function UserMessageActions({
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const hasMissingAttachments = missingAttachments.length > 0;
+  const navigation = useNavigation();
+  const chat = useChat();
 
   useEffect(() => {
     if (!copied) return undefined;
@@ -96,6 +102,25 @@ export function UserMessageActions({
           onClick={() => onEdit?.(message, availableAttachments)}
         >
           <Pencil />
+        </Button>
+      </IconTooltip>
+      <IconTooltip label={t.tasks.makeTask}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="copy-message"
+          aria-label={t.tasks.makeTask}
+          onClick={() =>
+            navigation.showTasks(
+              taskDraftFromMessage(
+                message,
+                chat.currentChat?.agentId ?? chat.agent.id,
+                chatDisplayTitle(chat.currentChat, t),
+              ),
+            )
+          }
+        >
+          <CalendarPlus />
         </Button>
       </IconTooltip>
       <Popover

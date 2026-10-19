@@ -21,6 +21,7 @@ import { findWorkspaceFile } from "./workspace-source";
 // no DOM, no extension APIs; workspace files go in and out as text.
 export const runCodeTool: ToolDefinition = {
   name: TOOL_NAME.runCode,
+  effects: "read",
   onDemand: true,
   summary:
     "Run JavaScript in a sandbox to compute, parse CSV/JSON or transform data",

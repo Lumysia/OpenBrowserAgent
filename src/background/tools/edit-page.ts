@@ -22,6 +22,7 @@ type Edit = Record<string, unknown> & { op: string };
 
 export const editPageTool: ToolDefinition = {
   name: TOOL_NAME.editPage,
+  effects: "act",
   group: "browser",
   compactArgs: true,
   summary: "Change page content and style",

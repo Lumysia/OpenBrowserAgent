@@ -62,6 +62,13 @@ export const STORAGE_KEYS = {
   // A selection handed from a page to the side panel (session storage where
   // there is one); the name is the one the smart bar's handoff always used.
   sidePanelHandoff: "smart-bar-handoff",
+  // Scheduled tasks and page watches (synced definitions), the devices that
+  // can run them (synced), this device's id among them, and what each task
+  // learned on this device (see tasks/types.ts).
+  tasks: "tasks",
+  taskDevices: "task-devices",
+  taskDeviceId: "task-device-id",
+  taskStates: "task-states",
 } as const;
 
 // What syncs besides settings, one switch per group: API keys and MCP

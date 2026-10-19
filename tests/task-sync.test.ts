@@ -1,0 +1,98 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { SYNC_COLLECTIONS } from "../src/shared/sync/collections";
+import { decodeRoot } from "../src/shared/sync/root";
+import { plannedRunAt } from "../src/shared/tasks/lifecycle";
+import { normalizeTasks } from "../src/shared/tasks/normalize";
+import { ALL_ON, device, memoryServer, memoryTransport } from "./sync-fixtures";
+
+function setup() {
+  const clock = { now: 1_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  return { clock, server, a, b };
+}
+
+const WATCH = {
+  id: "watch-1",
+  title: "Price",
+  prompt: "Tell me when the price drops",
+  agentId: "buyer",
+  trigger: { kind: "watch", url: "https://shop.test/", everyMinutes: 5 },
+  deviceId: "taskdev-a",
+  enabled: true,
+  createdAt: 10,
+  updatedAt: 10,
+};
+
+test("task definitions and agent permissions sync; what a device learned stays there", async () => {
+  const { a, b } = setup();
+  await a.set(STORAGE_KEYS.agents, [
+    { id: "buyer", name: "Buyer", toolGroups: ["pages"], actUnattended: true },
+  ]);
+  await a.set(STORAGE_KEYS.tasks, [WATCH]);
+  await a.set(STORAGE_KEYS.taskDevices, [
+    { id: "taskdev-a", name: "Linux · AAAA", seenAt: 1 },
+  ]);
+  await a.set(STORAGE_KEYS.taskStates, {
+    "watch-1": { failures: 2, baseline: { hash: "h", text: "t", at: 1 } },
+  });
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(b.get(STORAGE_KEYS.tasks), [WATCH]);
+  assert.equal(
+    b.get<Array<{ actUnattended?: boolean }>>(STORAGE_KEYS.agents)[0]
+      .actUnattended,
+    true,
+  );
+  assert.equal(b.get<unknown[]>(STORAGE_KEYS.taskDevices).length, 1);
+  assert.equal(b.get(STORAGE_KEYS.taskStates), undefined);
+});
+
+test("each task runs only on the device that owns it; changing the owner moves it", async () => {
+  const { clock, a, b } = setup();
+  await a.set(STORAGE_KEYS.tasks, [WATCH]);
+  await a.sync("edit");
+  await b.sync();
+  const onA = { deviceId: "taskdev-a", allPaused: false };
+  const onB = { deviceId: "taskdev-b", allPaused: false };
+  const [taskOnB] = normalizeTasks(b.get(STORAGE_KEYS.tasks));
+  assert.equal(plannedRunAt(taskOnB, { failures: 0 }, onB), undefined);
+  assert.notEqual(plannedRunAt(taskOnB, { failures: 0 }, onA), undefined);
+  clock.now += 1000;
+  await b.set(STORAGE_KEYS.tasks, [
+    { ...WATCH, deviceId: "taskdev-b", updatedAt: 20 },
+  ]);
+  await b.sync("edit");
+  await a.sync();
+  const [taskOnA] = normalizeTasks(a.get(STORAGE_KEYS.tasks));
+  assert.equal(plannedRunAt(taskOnA, { failures: 0 }, onA), undefined);
+  assert.notEqual(plannedRunAt(taskOnA, { failures: 0 }, onB), undefined);
+});
+
+test("a 0.2.0 device, which has no task collections, leaves tasks in the sync data", async () => {
+  const { clock, server, a, b } = setup();
+  await a.set(STORAGE_KEYS.tasks, [WATCH]);
+  await a.sync("edit");
+  // The last release does not know the task collections.
+  const removed = SYNC_COLLECTIONS.filter((collection) =>
+    collection.name.startsWith("task"),
+  );
+  const kept = SYNC_COLLECTIONS.filter(
+    (collection) => !removed.includes(collection),
+  );
+  SYNC_COLLECTIONS.splice(0, SYNC_COLLECTIONS.length, ...kept);
+  try {
+    clock.now += 1000;
+    await b.set(STORAGE_KEYS.preferences, { autoScroll: false });
+    await b.sync("edit");
+  } finally {
+    SYNC_COLLECTIONS.splice(0, SYNC_COLLECTIONS.length, ...kept, ...removed);
+  }
+  const root = await decodeRoot(server.root!);
+  assert.ok(root.records["tasks/watch-1"], "the task record is still there");
+  await a.sync();
+  assert.deepEqual(a.get(STORAGE_KEYS.tasks), [WATCH]);
+});

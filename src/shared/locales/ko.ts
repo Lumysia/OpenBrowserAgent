@@ -10,6 +10,7 @@ import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
 import { settingsKo } from "./settings/ko";
 import { setupKo } from "./setup/ko";
+import { tasksKo } from "./tasks/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -565,4 +566,5 @@ export const ko: LocaleMessages = {
   pageTools: pageToolsKo,
   settings: settingsKo,
   setup: setupKo,
+  tasks: tasksKo,
 };

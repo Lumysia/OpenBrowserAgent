@@ -367,6 +367,13 @@
   border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));
   background: color-mix(in oklab, var(--secondary) 78%, var(--accent-softer));
 }
+/* Status tones a badge can take (data-tone). */
+.ui-badge[data-tone="running"] {
+  border-color: color-mix(in oklab, var(--accent-strong) 30%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.ui-badge[data-tone="attention"],
 .ui-badge.status-error-badge {
   border-color: color-mix(in oklab, var(--destructive) 24%, transparent);
   background: color-mix(in oklab, var(--destructive) 10%, var(--card));

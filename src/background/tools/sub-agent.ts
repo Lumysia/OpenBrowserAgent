@@ -14,6 +14,7 @@ const SUMMARY_SYSTEM =
 
 export const subAgentTool: ToolDefinition = {
   name: TOOL_NAME.subAgent,
+  effects: "read",
   group: "subAgents",
   onDemand: true,
   parallel: true,
@@ -66,6 +67,11 @@ export const subAgentTool: ToolDefinition = {
         messageId,
         toolCallId,
         tabId: run.tab.id,
+      },
+      // A sub-agent of a run nobody watches runs the same way.
+      unattended: run.unattended && {
+        readOnly: run.unattended.readOnly,
+        needsUser: run.unattended.needsUser,
       },
       onStart: (chatId) => {
         childChatId = chatId;

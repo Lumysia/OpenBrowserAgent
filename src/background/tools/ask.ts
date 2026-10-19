@@ -8,6 +8,7 @@ import { fail, ok, schema, type ToolDefinition } from "./types";
 
 export const askTool: ToolDefinition = {
   name: TOOL_NAME.ask,
+  effects: "read",
   summary: "Ask the user",
   description:
     "Ask the user 1-6 questions with choices, before doing the work, when a missing detail would change what you do or recommend. Offer the likely answers as options. Not for minor preferences: pick a default and say so.",
@@ -48,6 +49,16 @@ export const askTool: ToolDefinition = {
     const questions = normalizeQuestions(input.questions);
     if (!questions.length)
       return fail("Give 1-6 questions, each with at least one option.");
+    // Nobody is there to answer: the task waits for the user instead.
+    if (run.unattended) {
+      run.unattended.needsUser(
+        questions.map((item) => item.question).join(" "),
+      );
+      return ok(
+        "Nobody can answer now: this run works on its own. The user will be told that the task needs them. Stop here and, in your final reply, say what you need from them and why.",
+        { answers: [], unattended: true },
+      );
+    }
     const answers = await waitForAnswer(
       run.session,
       toolCallId,

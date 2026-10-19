@@ -10,6 +10,7 @@ import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
 import { settingsFrFR } from "./settings/fr-FR";
 import { setupFrFR } from "./setup/fr-FR";
+import { tasksFrFR } from "./tasks/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
@@ -636,4 +637,5 @@ export const frFR: LocaleMessages = {
   pageTools: pageToolsFrFR,
   settings: settingsFrFR,
   setup: setupFrFR,
+  tasks: tasksFrFR,
 };

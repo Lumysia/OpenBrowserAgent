@@ -24,6 +24,7 @@ const available = () => areCdpAvailable();
 
 export const runScriptTool: ToolDefinition = {
   name: TOOL_NAME.runScript,
+  effects: "act",
   group: "scripts",
   onDemand: true,
   boundedOutput: true,
@@ -68,6 +69,14 @@ const DEVTOOLS_ACTIONS = [...CAPTURE_ACTIONS, "resources", "emulate", "reset"];
 
 export const devtoolsTool: ToolDefinition = {
   name: TOOL_NAME.devtools,
+  effects: {
+    byAction: {
+      ...Object.fromEntries(CAPTURE_ACTIONS.map((action) => [action, "read"])),
+      resources: "read",
+      emulate: "act",
+      reset: "act",
+    },
+  },
   group: "devtools",
   onDemand: true,
   available,

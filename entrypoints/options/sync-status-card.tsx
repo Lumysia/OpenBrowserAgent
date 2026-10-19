@@ -165,6 +165,8 @@ function syncCollectionLabels(t: Messages): Record<string, string> {
     skills: t.options.skills,
     "skill-settings": t.options.skills,
     "mcp-servers": t.options.mcpServers,
+    tasks: t.tasks.title,
+    "task-devices": t.tasks.title,
     chats: t.sidepanel.chatHistory,
     attachments: t.sync.groupFiles,
   };

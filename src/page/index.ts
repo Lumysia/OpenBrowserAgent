@@ -121,6 +121,16 @@ const methods: Record<string, (args: Args) => unknown> = {
   }),
   // The page's main content with whole links, for copying.
   mainMarkdown: () => ({ text: mainMarkdown(document, "") }),
+  // What a watch compares: the text of the element at `selector` (null
+  // when the page has none), else the page's main content.
+  watchedText: (args) => {
+    const selector = String(args.selector || "");
+    if (!selector) return { text: mainMarkdown(document, "") };
+    const element = document.querySelector(selector);
+    return {
+      text: element ? pageMarkdown(element, "") : null,
+    };
+  },
   step: async (args) => {
     const result = await runStep(args.step as ActStep);
     const notes = takeRefNotes();

@@ -152,6 +152,16 @@ export async function startRunTab(
   return { tab, start, earlier };
 }
 
+// The first tab of a run nobody watches: only the one it was handed (a
+// watch's page). It never starts on the tab the user has open.
+export async function handedRunTab(chatId: string, handed?: number) {
+  const id = tabIdArg(handed);
+  const start = id === undefined ? undefined : await getTab(id);
+  const tab = createRunTab(chatId, start);
+  if (start) tab.use(start);
+  return { tab, start, earlier: undefined };
+}
+
 function tabText(tab: chrome.tabs.Tab) {
   return `tab ${tab.id} (${tab.title || "untitled"} | ${tab.url || ""})`;
 }

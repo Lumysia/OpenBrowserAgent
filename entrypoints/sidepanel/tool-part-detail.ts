@@ -37,7 +37,8 @@ export function toolJsonDetail(name: string, part: ChatPart) {
 }
 
 export function toolLabel(name: string, t: Messages, done = true) {
-  const text = t.sidepanel.tool[name as keyof typeof t.sidepanel.tool];
+  const labels = { ...t.sidepanel.tool, ...t.tasks.tool };
+  const text = labels[name as keyof typeof labels];
   if (text) return done ? text.done : text.running;
   return isMcpToolName(name) ? name.split("__").slice(1).join(" · ") : name;
 }
@@ -145,6 +146,18 @@ const DETAILS: Record<
         : "",
     ]),
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
+  // What was created, and whether its runs may act: the agent never turns
+  // that on, and the user sees it here.
+  [TOOL_NAME.scheduleTask]: (input, output, t) =>
+    compactJoin([
+      stringValue(output.title) || stringValue(input.title),
+      output.success === true
+        ? output.mayAct === true
+          ? t.tasks.agentPermission.label
+          : t.tasks.form.looksOnly
+        : "",
+    ]),
+  [TOOL_NAME.taskResult]: (input) => stringValue(input.summary),
 };
 
 // Tools whose title says what came of the step; the others show their
