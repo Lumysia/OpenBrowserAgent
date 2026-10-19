@@ -141,6 +141,11 @@ test("a tool whose actions all act is dropped; one that only reads is kept as is
   assert.equal(readingTool(read), read);
   const act = BUILTIN_TOOLS.find((tool) => tool.name === TOOL_NAME.act)!;
   assert.equal(readingTool(act), undefined);
+  // Calls a paid outside service and saves the image.
+  const image = BUILTIN_TOOLS.find(
+    (tool) => tool.name === TOOL_NAME.generateImage,
+  )!;
+  assert.equal(readingTool(image), undefined);
 });
 
 test("MCP tools read only when the server says so (readOnlyHint)", () => {
