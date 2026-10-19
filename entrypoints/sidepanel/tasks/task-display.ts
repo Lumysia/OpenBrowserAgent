@@ -71,6 +71,8 @@ export function scheduleText(t: Messages, trigger: TaskTrigger) {
       return formatCount(s.watch, trigger.everyMinutes, {
         page: pageText(trigger.url),
       });
+    case "unknown":
+      return s.unknown;
   }
 }
 
@@ -91,6 +93,8 @@ export function taskStatus(
   const s = t.tasks.status;
   if (state.running) return { label: s.running, tone: "running" };
   const reason = idleReason(task, state, context);
+  if (reason === "unsupported")
+    return { label: s.unsupported, tone: "attention" };
   if (reason === TASK_PAUSE.needsUser)
     return { label: s.needsUser, tone: "attention" };
   if (reason === TASK_PAUSE.failures)

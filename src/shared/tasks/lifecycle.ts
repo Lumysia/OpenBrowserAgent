@@ -3,9 +3,10 @@ import {
   TASK_LIMITS,
   TASK_PAUSE,
   TASK_RESULT,
+  UNKNOWN_TRIGGER,
+  isVerdict,
   type ScheduledTask,
   type TaskResult,
-  isVerdict,
   type TaskState,
   type WatchBaseline,
 } from "./types";
@@ -32,6 +33,7 @@ export function idleReason(
   state: TaskState,
   context: RunContext,
 ) {
+  if (task.trigger.kind === UNKNOWN_TRIGGER) return "unsupported" as const;
   if (!task.deviceId || task.deviceId !== context.deviceId)
     return "otherDevice" as const;
   if (!task.enabled) return "disabled" as const;

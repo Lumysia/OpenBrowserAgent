@@ -62,6 +62,7 @@ export const tasksPtBR: TasksLocaleMessages = {
     invalidAt: "Escolha uma data e uma hora.",
   },
   schedule: {
+    unknown: "Agendamento de uma versão mais recente",
     once: "Uma vez, {time}",
     every: "A cada {amount}",
     daily: "Todo dia às {time}",
@@ -69,6 +70,7 @@ export const tasksPtBR: TasksLocaleMessages = {
     watch: plural({ other: "Monitora {page} a cada {count} min" }),
   },
   status: {
+    unsupported: "Precisa de uma versão mais recente",
     running: "Em execução",
     paused: "Pausada",
     pausedFailures: "Pausada após falhas repetidas",

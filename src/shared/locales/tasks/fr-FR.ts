@@ -62,6 +62,7 @@ export const tasksFrFR: TasksLocaleMessages = {
     invalidAt: "Choisissez une date et une heure.",
   },
   schedule: {
+    unknown: "Planification d’une version plus récente",
     once: "Une fois, {time}",
     every: "Tous les {amount}",
     daily: "Chaque jour à {time}",
@@ -69,6 +70,7 @@ export const tasksFrFR: TasksLocaleMessages = {
     watch: plural({ other: "Surveille {page} toutes les {count} min" }),
   },
   status: {
+    unsupported: "Nécessite une version plus récente",
     running: "En cours",
     paused: "En pause",
     pausedFailures: "En pause après des échecs répétés",

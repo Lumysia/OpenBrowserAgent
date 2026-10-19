@@ -1,7 +1,7 @@
 import { mayActUnattended } from "../../shared/agents";
 import { createTask, describeTrigger } from "../../shared/tasks/edit";
 import { normalizeTrigger } from "../../shared/tasks/normalize";
-import { TASK_LIMITS } from "../../shared/tasks/types";
+import { TASK_LIMITS, TRIGGER_FIELDS } from "../../shared/tasks/types";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { trimmedString } from "../../shared/values";
 import { fail, json, ok, schema, type ToolDefinition } from "./types";
@@ -72,7 +72,12 @@ export const scheduleTaskTool: ToolDefinition = {
       input.kind === "once" ? Date.parse(trimmedString(input.at)) : undefined;
     if (input.kind === "once" && !Number.isFinite(at))
       return fail("at must be a local date and time such as 2026-05-01T09:00.");
-    const trigger = normalizeTrigger({ ...input, at });
+    const trigger = normalizeTrigger({
+      ...Object.fromEntries(
+        TRIGGER_FIELDS.map((field) => [field, input[field]]),
+      ),
+      at,
+    });
     if (!trigger)
       return fail(
         input.kind === "watch"

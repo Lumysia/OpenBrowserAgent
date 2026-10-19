@@ -57,6 +57,7 @@ export const tasksZhTW: TasksLocaleMessages = {
     invalidAt: "請選擇日期和時間。",
   },
   schedule: {
+    unknown: "來自較新版本的排程",
     once: "一次，{time}",
     every: "每 {amount}",
     daily: "每天 {time}",
@@ -64,6 +65,7 @@ export const tasksZhTW: TasksLocaleMessages = {
     watch: plural({ other: "每 {count} 分鐘監看 {page}" }),
   },
   status: {
+    unsupported: "需要較新版本",
     running: "執行中",
     paused: "已暫停",
     pausedFailures: "多次失敗後已暫停",

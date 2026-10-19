@@ -61,6 +61,7 @@ export const tasksKo: TasksLocaleMessages = {
     invalidAt: "날짜와 시간을 선택하세요.",
   },
   schedule: {
+    unknown: "최신 버전의 일정",
     once: "한 번, {time}",
     every: "{amount}마다",
     daily: "매일 {time}",
@@ -68,6 +69,7 @@ export const tasksKo: TasksLocaleMessages = {
     watch: plural({ other: "{count}분마다 {page} 감시" }),
   },
   status: {
+    unsupported: "최신 버전 필요",
     running: "실행 중",
     paused: "일시 중지됨",
     pausedFailures: "실패가 반복되어 일시 중지됨",

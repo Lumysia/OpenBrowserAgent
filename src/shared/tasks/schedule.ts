@@ -72,6 +72,8 @@ export function nextRunAt(
     case "watch":
       // A new watch reads its page at once to take a baseline.
       return ran ? from + trigger.everyMinutes * MINUTE_MS : from;
+    case "unknown":
+      return undefined;
   }
 }
 

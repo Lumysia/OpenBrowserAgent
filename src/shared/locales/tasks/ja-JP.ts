@@ -61,6 +61,7 @@ export const tasksJaJP: TasksLocaleMessages = {
     invalidAt: "日時を選んでください。",
   },
   schedule: {
+    unknown: "新しいバージョンのスケジュール",
     once: "1回、{time}",
     every: "{amount}ごと",
     daily: "毎日 {time}",
@@ -68,6 +69,7 @@ export const tasksJaJP: TasksLocaleMessages = {
     watch: plural({ other: "{page} を{count}分ごとに監視" }),
   },
   status: {
+    unsupported: "新しいバージョンが必要",
     running: "実行中",
     paused: "一時停止中",
     pausedFailures: "失敗が続いたため一時停止中",

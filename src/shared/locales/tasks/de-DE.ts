@@ -62,6 +62,7 @@ export const tasksDeDE: TasksLocaleMessages = {
     invalidAt: "Wählen Sie Datum und Uhrzeit.",
   },
   schedule: {
+    unknown: "Zeitplan aus einer neueren Version",
     once: "Einmal, {time}",
     every: "Alle {amount}",
     daily: "Täglich um {time}",
@@ -69,6 +70,7 @@ export const tasksDeDE: TasksLocaleMessages = {
     watch: plural({ other: "Beobachtet {page} alle {count} Min." }),
   },
   status: {
+    unsupported: "Braucht eine neuere Version",
     running: "Läuft",
     paused: "Pausiert",
     pausedFailures: "Nach wiederholten Fehlern pausiert",

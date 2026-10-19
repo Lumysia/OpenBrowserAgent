@@ -2,6 +2,7 @@ import { Pause, Pencil, Play, Trash2, Zap } from "lucide-react";
 import type { RunContext } from "../../../src/shared/tasks/lifecycle";
 import {
   TASK_RESULT,
+  isKnownTrigger,
   type ScheduledTask,
   type TaskDevice,
   type TaskState,
@@ -47,6 +48,8 @@ export function TaskItem({
   const result = state.lastResult;
   const paused = !task.enabled || !!state.pausedBy;
   const mine = task.deviceId === context.deviceId;
+  // A schedule from a newer version: kept and shown, not run or edited.
+  const known = isKnownTrigger(task.trigger);
   const chatId = state.running?.chatId || result?.chatId;
   const resultLine = result
     ? `${t.tasks.results[result.status]} · ${formatRelativeTime(t, result.at)}${
@@ -74,6 +77,7 @@ export function TaskItem({
       <Button
         variant="ghost"
         className="history-select"
+        disabled={!chatId && !known}
         onClick={() => (chatId ? onOpenChat(chatId) : onEdit())}
       >
         <span className="history-title-row">
@@ -98,7 +102,7 @@ export function TaskItem({
             size="icon"
             className="history-item-action"
             aria-label={t.tasks.actions.runNow}
-            disabled={!mine || !!state.running}
+            disabled={!mine || !known || !!state.running}
             onClick={onRunNow}
           >
             <Zap size={13} />
@@ -124,6 +128,7 @@ export function TaskItem({
             size="icon"
             className="history-item-action"
             aria-label={t.tasks.actions.edit}
+            disabled={!known}
             onClick={onEdit}
           >
             <Pencil size={13} />

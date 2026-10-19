@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
 import { storage } from "../src/shared/storage";
 import { createTask, updateTask } from "../src/shared/tasks/edit";
-import { plannedRunAt } from "../src/shared/tasks/lifecycle";
+import { idleReason, plannedRunAt } from "../src/shared/tasks/lifecycle";
 import { observation } from "../src/shared/tasks/watch-text";
-import type { ScheduledTask } from "../src/shared/tasks/types";
+import { UNKNOWN_TRIGGER, type ScheduledTask } from "../src/shared/tasks/types";
 import { installChrome } from "./fake-chrome";
 
 // Editing a task starts it over only when what it does or when it runs
@@ -108,4 +108,55 @@ test("an edit that makes no valid task is refused and stores nothing", async () 
   assert.equal(refused, undefined);
   assert.deepEqual((await stored(task.id)).task.trigger, task.trigger);
   assert.equal(await updateTask("missing", { title: "x" }), undefined);
+});
+
+test("a trigger kind or field from a newer version is kept, shown and not run", async () => {
+  const { local } = installChrome();
+  await storage.taskDeviceId.set("me");
+  const base = {
+    title: "Later",
+    prompt: "p",
+    agentId: "custom",
+    deviceId: "me",
+    enabled: true,
+    createdAt: 1,
+    updatedAt: 1,
+  };
+  const stored = [
+    {
+      ...base,
+      id: "w",
+      trigger: {
+        kind: "watch",
+        url: "https://a.test/",
+        everyMinutes: 5,
+        mode: "visual",
+      },
+    },
+    { ...base, id: "c", trigger: { kind: "cron", expr: "0 9 * * 1" } },
+  ];
+  await local.set({ tasks: stored });
+  const [watch, cron] = await storage.tasks.get();
+  assert.equal((watch.trigger as Record<string, unknown>).mode, "visual");
+  assert.deepEqual(cron.trigger, {
+    kind: UNKNOWN_TRIGGER,
+    storedKind: "cron",
+    expr: "0 9 * * 1",
+  });
+  assert.equal(idleReason(cron, { failures: 0 }, here), "unsupported");
+  assert.equal(plannedRunAt(cron, { failures: 0 }, here), undefined);
+  // Edits elsewhere and of the task itself keep the stored form.
+  await updateTask("w", { title: "Renamed" });
+  await updateTask("c", { title: "Renamed too" });
+  const raw = (await local.get("tasks")).tasks as typeof stored;
+  assert.equal(raw[0].trigger.mode, "visual");
+  assert.deepEqual(raw[1].trigger, stored[1].trigger);
+  assert.equal(raw[1].title, "Renamed too");
+  // A new schedule must be one this version runs.
+  assert.equal(
+    await updateTask("w", {
+      trigger: { kind: UNKNOWN_TRIGGER, storedKind: "cron" },
+    }),
+    undefined,
+  );
 });

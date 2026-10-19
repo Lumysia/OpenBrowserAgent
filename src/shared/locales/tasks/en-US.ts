@@ -62,6 +62,7 @@ export const tasksEnUS = {
     invalidAt: "Pick a date and time.",
   },
   schedule: {
+    unknown: "Schedule from a newer version",
     once: "Once, {time}",
     every: "Every {amount}",
     daily: "Daily at {time}",
@@ -72,6 +73,7 @@ export const tasksEnUS = {
     }),
   },
   status: {
+    unsupported: "Needs a newer version",
     running: "Running",
     paused: "Paused",
     pausedFailures: "Paused after repeated failures",

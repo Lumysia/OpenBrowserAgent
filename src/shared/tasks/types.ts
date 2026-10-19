@@ -34,7 +34,29 @@ export const TRIGGER_KINDS = [
 ] as const;
 export type TriggerKind = (typeof TRIGGER_KINDS)[number];
 
-export type TaskTrigger =
+// The fields of every kind of trigger this version knows; others a newer
+// version added are kept as they are.
+export const TRIGGER_FIELDS = [
+  "kind",
+  "at",
+  "every",
+  "unit",
+  "time",
+  "days",
+  "url",
+  "selector",
+  "everyMinutes",
+] as const;
+
+// A trigger of a kind a newer version added (`storedKind`): the task is
+// kept and synced as it is, shown, and never run here.
+export const UNKNOWN_TRIGGER = "unknown";
+export type UnknownTrigger = {
+  kind: typeof UNKNOWN_TRIGGER;
+  storedKind: string;
+};
+
+export type KnownTrigger =
   | { kind: "once"; at: number }
   | { kind: "interval"; every: number; unit: IntervalUnit }
   // `time` is "HH:MM" in the user's local time zone.
@@ -44,6 +66,12 @@ export type TaskTrigger =
   // `selector`: the part of the page to watch (a structural CSS path);
   // none watches the page's main readable text.
   | { kind: "watch"; url: string; selector?: string; everyMinutes: number };
+
+export type TaskTrigger = KnownTrigger | UnknownTrigger;
+
+export function isKnownTrigger(trigger: TaskTrigger): trigger is KnownTrigger {
+  return trigger.kind !== UNKNOWN_TRIGGER;
+}
 
 export type ScheduledTask = {
   id: string;

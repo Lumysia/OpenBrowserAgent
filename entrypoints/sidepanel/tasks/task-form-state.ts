@@ -5,6 +5,7 @@ import {
 } from "../../../src/shared/tasks/normalize";
 import {
   TASK_LIMITS,
+  isKnownTrigger,
   type IntervalUnit,
   type ScheduledTask,
   type TriggerKind,
@@ -53,7 +54,7 @@ export function formFor(
   return {
     title: source?.title ?? "",
     prompt: source?.prompt ?? "",
-    kind: trigger?.kind ?? "daily",
+    kind: trigger && isKnownTrigger(trigger) ? trigger.kind : "daily",
     at: localDateTime(
       trigger?.kind === "once" ? trigger.at : nextHour(defaults.now),
     ),

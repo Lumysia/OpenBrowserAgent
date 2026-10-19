@@ -1,7 +1,12 @@
 import { storage, removeById, updateById } from "../storage";
 import { sameJson } from "../sync/codec";
 import { normalizeTask } from "./normalize";
-import type { ScheduledTask, TaskState, TaskTrigger } from "./types";
+import {
+  isKnownTrigger,
+  type ScheduledTask,
+  type TaskState,
+  type TaskTrigger,
+} from "./types";
 
 // What the task form and the agent's scheduleTask tool give to create a task.
 export type TaskDraft = Pick<
@@ -23,7 +28,8 @@ export async function createTask(draft: TaskDraft) {
     createdAt: now,
     updatedAt: now,
   });
-  if (!task) return undefined;
+  // Only a schedule this version can run makes a new task.
+  if (!task || !isKnownTrigger(task.trigger)) return undefined;
   await storage.tasks.update((tasks) => [...tasks, task]);
   return task;
 }
@@ -50,6 +56,8 @@ export function editedTask(
     updatedAt: task.updatedAt,
   });
   if (!next) return undefined;
+  // A new schedule must be one this version runs.
+  if (patch.trigger && !isKnownTrigger(next.trigger)) return undefined;
   const restart =
     next.prompt !== task.prompt || !sameJson(next.trigger, task.trigger);
   const changed = !sameJson(next, task);
@@ -123,6 +131,8 @@ export function describeTrigger(trigger: TaskTrigger) {
       return `every day at ${trigger.time} local time`;
     case "weekly":
       return `every week on days ${trigger.days.join(", ")} (0 = Sunday) at ${trigger.time} local time`;
+    case "unknown":
+      return `a schedule of kind "${trigger.storedKind}" from a newer version of the extension; it does not run here`;
     case "watch":
       return `watch ${trigger.url}${trigger.selector ? ` (part ${trigger.selector})` : ""} every ${trigger.everyMinutes} minutes`;
   }

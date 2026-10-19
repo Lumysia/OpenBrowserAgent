@@ -66,7 +66,7 @@ test("normalization clamps intervals and drops tasks without a usable trigger", 
     normalizeTrigger({ kind: "watch", url: "file:///etc" }),
     undefined,
   );
-  assert.equal(normalizeTrigger({ kind: "cron" }), undefined);
+  assert.equal(normalizeTrigger({ kind: "" }), undefined);
   assert.deepEqual(
     normalizeTrigger({ kind: "weekly", time: "7:5", days: [9, 2, 2] }),
     {

@@ -136,7 +136,12 @@ async function runnable(taskId: string, manual: boolean) {
   if (!task) return undefined;
   const state = taskState(await storage.taskStates.get(), taskId);
   const reason = idleReason(task, state, await runContext());
-  if (reason === "otherDevice" || (reason && !manual)) return undefined;
+  if (
+    reason === "otherDevice" ||
+    reason === "unsupported" ||
+    (reason && !manual)
+  )
+    return undefined;
   return { task, state };
 }
 

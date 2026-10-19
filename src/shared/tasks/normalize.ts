@@ -12,8 +12,12 @@ import {
   TASK_LIMITS,
   TASK_PAUSE,
   TASK_RESULT,
+  TRIGGER_FIELDS,
   TRIGGER_KINDS,
+  UNKNOWN_TRIGGER,
+  type KnownTrigger,
   type ScheduledTask,
+  type TriggerKind,
   type TaskDevice,
   type TaskResultStatus,
   type TaskState,
@@ -44,10 +48,35 @@ export function watchableUrl(value: unknown) {
   }
 }
 
+// A stored trigger in today's form, keeping fields a newer version added;
+// undefined when it is unusable. A kind this version does not know reads
+// as UNKNOWN_TRIGGER (kept, never run).
 export function normalizeTrigger(value: unknown): TaskTrigger | undefined {
   if (!isRecord(value)) return undefined;
+  const extra = Object.fromEntries(
+    Object.entries(value).filter(
+      ([key]) => !(TRIGGER_FIELDS as readonly string[]).includes(key),
+    ),
+  );
   const kind = oneOf(TRIGGER_KINDS, value.kind, "once");
-  if (value.kind !== kind) return undefined;
+  if (value.kind !== kind) {
+    // Read again (an update reads what it writes): stays as it was.
+    const storedKind =
+      value.kind === UNKNOWN_TRIGGER
+        ? trimmedString(value.storedKind) || UNKNOWN_TRIGGER
+        : trimmedString(value.kind);
+    return storedKind
+      ? { ...extra, kind: UNKNOWN_TRIGGER, storedKind }
+      : undefined;
+  }
+  const known = knownTrigger(kind, value);
+  return known && ({ ...extra, ...known } as TaskTrigger);
+}
+
+function knownTrigger(
+  kind: TriggerKind,
+  value: Record<string, unknown>,
+): KnownTrigger | undefined {
   const count = (fallback: number, min: number) =>
     clampInt(value.every, {
       fallback,
