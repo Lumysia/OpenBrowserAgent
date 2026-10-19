@@ -28,6 +28,19 @@ export async function openTaskTab(taskId: string, url: string) {
   return tab.id;
 }
 
+// The browser is offline, or the tab's page did not load at all (its main
+// frame shows the browser's error page): a run that needs the page is
+// skipped, not failed.
+export async function pageUnreachable(tabId?: number) {
+  if (globalThis.navigator?.onLine === false) return true;
+  const navigation = getBrowserApi().webNavigation;
+  if (tabId === undefined || !navigation?.getFrame) return false;
+  const frame = await Promise.resolve()
+    .then(() => navigation.getFrame({ tabId, frameId: 0 }))
+    .catch(() => undefined);
+  return frame?.errorOccurred === true;
+}
+
 export async function closeTaskTab(tabId: number | undefined) {
   if (tabId === undefined) return;
   await getBrowserApi()

@@ -20,6 +20,7 @@ import { timeTaskInstruction, watchInstruction } from "./run-prompt";
 import {
   closeTaskTab,
   openTaskTab,
+  pageUnreachable,
   readWatchedText,
   taskTabOwner,
 } from "./watch-page";
@@ -33,6 +34,8 @@ export type RunOutcome = {
   baseline?: WatchBaseline;
   // A run failed (it counts towards pausing the task).
   failed: boolean;
+  // It could not reach its page or the network (see RunEnd).
+  skipped?: boolean;
 };
 
 export type RunHooks = {
@@ -95,6 +98,8 @@ async function runAgent(
         summary: firstLine(run.answer) || firstLine(question),
       },
     };
+  if (run.error && !run.answer && (await pageUnreachable(tabId)))
+    return skippedRun();
   if (run.error && !run.answer)
     return {
       failed: true,
@@ -130,7 +135,17 @@ export const taskRunner = {
   ) => runWatch(task, baseline, hooks),
 };
 
-export function runTimeTask(task: ScheduledTask, hooks: RunHooks) {
+// A run that could not reach the page or the network: not a failure.
+function skippedRun(): RunOutcome {
+  return {
+    failed: false,
+    skipped: true,
+    result: { status: TASK_RESULT.unchanged, at: Date.now() },
+  };
+}
+
+export async function runTimeTask(task: ScheduledTask, hooks: RunHooks) {
+  if (await pageUnreachable()) return skippedRun();
   return runAgent(
     task,
     (readOnly) => timeTaskInstruction(task, readOnly),
@@ -149,7 +164,14 @@ export async function runWatch(
   try {
     tabId = await openTaskTab(task.id, trigger.url);
     hooks.onTab(tabId);
-    const text = await readWatchedText(tabId, trigger);
+    if (await pageUnreachable(tabId)) return skippedRun();
+    const text = await readWatchedText(tabId, trigger).catch(
+      async (error: unknown) => {
+        if (await pageUnreachable(tabId)) return undefined;
+        throw error;
+      },
+    );
+    if (text === undefined) return skippedRun();
     return await judgeWatch(task, baseline, text, tabId, hooks);
   } finally {
     await closeTaskTab(tabId);

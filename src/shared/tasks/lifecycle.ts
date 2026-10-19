@@ -61,6 +61,9 @@ export type RunEnd = {
   failed: boolean;
   // What a watch saw; it becomes the baseline only after a verdict.
   baseline?: WatchBaseline;
+  // The run could not reach its page (offline, load error): it is no
+  // failure and changes nothing but the next run's time.
+  skipped?: boolean;
 };
 
 export type Notice = "result" | "met" | "needsUser" | "paused";
@@ -72,6 +75,19 @@ export function afterRun(
   end: RunEnd,
   now: number,
 ): { state: TaskState; notice: Notice | null } {
+  if (end.skipped)
+    return {
+      notice: null,
+      state: {
+        ...state,
+        running: undefined,
+        retrying: undefined,
+        nextRunAt:
+          task.trigger.kind === "once"
+            ? now + ONCE_RETRY_MS
+            : nextRunAt(task.trigger, { from: now, ran: true }),
+      },
+    };
   const failures = end.failed ? state.failures + 1 : 0;
   const pausedBy =
     failures >= TASK_LIMITS.failuresToPause

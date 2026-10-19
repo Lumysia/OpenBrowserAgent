@@ -323,3 +323,35 @@ test("the baseline advances only after a verdict", () => {
   );
   assert.deepEqual(judged.state.baseline, seen);
 });
+
+test("a run that could not reach its page is no failure and changes nothing", () => {
+  const baseline = { hash: "a", text: "old", at: 1 };
+  const state: TaskState = {
+    ...fresh,
+    failures: 2,
+    baseline,
+    lastResult: { status: TASK_RESULT.notMet, at: 1 },
+    running: { startedAt: NOW, attempt: 1 },
+  };
+  const skipped = {
+    failed: false,
+    skipped: true,
+    result: { status: TASK_RESULT.unchanged, at: NOW },
+  };
+  const next = afterRun(task(), state, skipped, NOW);
+  assert.equal(next.notice, null);
+  assert.equal(next.state.failures, 2);
+  assert.equal(next.state.pausedBy, undefined);
+  assert.deepEqual(next.state.baseline, baseline);
+  assert.equal(next.state.lastResult?.status, TASK_RESULT.notMet);
+  assert.equal(next.state.running, undefined);
+  assert.equal(next.state.nextRunAt, NOW + 5 * MINUTE);
+  // A one-time task tries again later.
+  const once = afterRun(
+    task({ trigger: { kind: "once", at: NOW } }),
+    fresh,
+    skipped,
+    NOW,
+  );
+  assert.ok(once.state.nextRunAt! > NOW);
+});

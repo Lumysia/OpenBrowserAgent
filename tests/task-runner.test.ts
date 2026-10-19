@@ -7,6 +7,7 @@ import { observation } from "../src/shared/tasks/watch-text";
 import { TASK_RESULT, type ScheduledTask } from "../src/shared/tasks/types";
 import { adoptAgentTab } from "../src/background/agent-tabs";
 import { judgeWatch, runTimeTask } from "../src/background/tasks/runner";
+import { pageUnreachable } from "../src/background/tasks/watch-page";
 import * as sessions from "../src/background/stream-sessions";
 import { installPiRuntimeBrowser } from "./pi-runtime-helpers";
 import { providerFixture, reply, type FixtureReply } from "./provider-fixtures";
@@ -133,4 +134,34 @@ test("tabs a task run opened close when it ends; the user's tabs stay", async ()
   const left = (await chrome.tabs.query({})).map((tab) => tab.id);
   assert.ok(opened !== undefined);
   assert.deepEqual(left, [42]);
+});
+
+test("offline, a time task is skipped without a model run", async () => {
+  const online = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  Object.defineProperty(globalThis, "navigator", {
+    value: { onLine: false },
+    configurable: true,
+  });
+  try {
+    const { value, requests } = await withModel([{ text: "x" }], () =>
+      runTimeTask(HOURLY, hooks),
+    );
+    assert.equal(requests, 0);
+    assert.equal(value.skipped, true);
+    assert.equal(value.failed, false);
+  } finally {
+    if (online) Object.defineProperty(globalThis, "navigator", online);
+  }
+});
+
+test("a page that did not load is told by its frame, not by error text", async () => {
+  Object.assign(chrome, {
+    webNavigation: {
+      getFrame: async ({ tabId }: { tabId: number }) => ({
+        errorOccurred: tabId === 7,
+      }),
+    },
+  });
+  assert.equal(await pageUnreachable(7), true);
+  assert.equal(await pageUnreachable(8), false);
 });
