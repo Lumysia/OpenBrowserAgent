@@ -161,7 +161,8 @@ test(
       });
       assert.equal(tasks[0].title, "Evening news");
       assert.deepEqual(tasks[0].trigger, { kind: "daily", time: "18:00" });
-      assert.equal((await taskStates(options)).old, undefined);
+      // The task goes first and its local state right after it.
+      await poll(async () => !("old" in (await taskStates(options))));
       // What the model read: both tasks listed with their ids.
       const results = fixture.requests
         .flatMap((request) => request.body.messages || [])
