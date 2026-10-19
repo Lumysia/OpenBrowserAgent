@@ -98,6 +98,7 @@ export function TaskFormView({
       <Label>
         {f.title}
         <Input
+          name="title"
           value={form.title}
           maxLength={TASK_LIMITS.titleChars}
           onChange={(event) => set({ title: event.target.value })}
@@ -106,6 +107,7 @@ export function TaskFormView({
       <Label>
         {form.kind === "watch" ? f.watchPrompt : f.prompt}
         <Textarea
+          name="prompt"
           rows={3}
           value={form.prompt}
           maxLength={TASK_LIMITS.promptChars}
@@ -139,6 +141,7 @@ export function TaskFormView({
         <Label>
           {f.at}
           <Input
+            name="at"
             type="datetime-local"
             value={form.at}
             onChange={(event) => set({ at: event.target.value })}
@@ -150,6 +153,7 @@ export function TaskFormView({
           <Label>
             {f.every}
             <Input
+              name="every"
               type="number"
               min={1}
               max={TASK_LIMITS.maxIntervalCount}
@@ -181,6 +185,7 @@ export function TaskFormView({
         <Label>
           {f.time}
           <Input
+            name="time"
             type="time"
             value={form.time}
             onChange={(event) => set({ time: event.target.value })}
@@ -210,6 +215,7 @@ export function TaskFormView({
           <Label>
             {f.url}
             <Input
+              name="url"
               type="url"
               value={form.url}
               placeholder="https://"
@@ -255,6 +261,7 @@ export function TaskFormView({
           <Label>
             {f.checkEvery}
             <Input
+              name="everyMinutes"
               type="number"
               min={TASK_LIMITS.minWatchMinutes}
               value={form.everyMinutes}

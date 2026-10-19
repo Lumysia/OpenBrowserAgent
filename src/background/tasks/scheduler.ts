@@ -65,24 +65,7 @@ export async function armTasks() {
     const at = plannedRunAt(task, taskState(states, task.id), context);
     if (at !== undefined) planned.set(task.id, at);
   }
-  const alarms = await api.alarms.getAll();
-  await Promise.all(
-    alarms
-      .filter(
-        (alarm) =>
-          alarm.name.startsWith(TASK_ALARM_PREFIX) &&
-          !planned.has(alarm.name.slice(TASK_ALARM_PREFIX.length)),
-      )
-      .map((alarm) => api.alarms.clear(alarm.name)),
-  );
-  for (const [taskId, at] of planned) {
-    const existing = alarms.find((alarm) => alarm.name === alarmName(taskId));
-    if (existing && Math.abs(existing.scheduledTime - at) < 1_000) continue;
-    await api.alarms.create(alarmName(taskId), {
-      when: Math.max(at, Date.now()),
-    });
-  }
-  // Keep what the list shows in step with the alarms.
+  // What the list shows as the next run (before any run below changes it).
   const changed = [...planned].filter(
     ([taskId, at]) => taskState(states, taskId).nextRunAt !== at,
   );
@@ -93,6 +76,36 @@ export async function armTasks() {
         next[taskId] = { ...taskState(current, taskId), nextRunAt: at };
       return next;
     });
+  // Due now (new, missed while the browser was closed, or a retry): run
+  // at once rather than wait for the browser's least alarm delay.
+  const now = Date.now();
+  const due = [...planned]
+    .filter(([, at]) => at <= now)
+    .map(([taskId]) => taskId);
+  const alarms = await api.alarms.getAll();
+  await Promise.all(
+    alarms
+      .filter((alarm) => {
+        const taskId = alarm.name.slice(TASK_ALARM_PREFIX.length);
+        return (
+          alarm.name.startsWith(TASK_ALARM_PREFIX) &&
+          (!planned.has(taskId) || due.includes(taskId))
+        );
+      })
+      .map((alarm) => api.alarms.clear(alarm.name)),
+  );
+  for (const taskId of due)
+    void runTask(taskId).catch((error: unknown) =>
+      console.warn("Scheduled task failed", error),
+    );
+  for (const [taskId, at] of planned) {
+    if (due.includes(taskId)) continue;
+    const existing = alarms.find((alarm) => alarm.name === alarmName(taskId));
+    if (existing && Math.abs(existing.scheduledTime - at) < 1_000) continue;
+    await api.alarms.create(alarmName(taskId), {
+      when: Math.max(at, Date.now()),
+    });
+  }
 }
 
 // Runs a task now, whatever its schedule (an alarm, or the user's "run
