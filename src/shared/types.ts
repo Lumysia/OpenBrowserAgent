@@ -140,6 +140,10 @@ export type SkillSettings = Record<string, { invoke: SkillInvokeMode }>;
 // starts.
 export type PickedSkill = Pick<Skill, "id" | "name" | "description">;
 
+// SKILL.md frontmatter `metadata` (Agent Skills: a string map), such as a
+// recorded skill's source and status (see shared/teach/skill-files.ts).
+export type SkillMetadata = Record<string, string>;
+
 export type SkillFileKind = "markdown" | "text" | "asset" | "script";
 
 export type SkillFile = {
@@ -211,7 +215,7 @@ export type SelectedElement = {
   innerText?: string;
   outerHTML?: string;
   tagName?: string;
-  // Where it is on the page by structure (see element-selector.js), and the
+  // Where it is on the page by structure (see page/structural-path.ts), and the
   // page's address: what a watch of this element reads.
   path?: string;
   pageUrl?: string;

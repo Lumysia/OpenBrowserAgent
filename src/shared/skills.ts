@@ -5,7 +5,13 @@ import {
 } from "./config";
 import { finiteNumber, stringOf } from "./values";
 import { readId, readPath } from "./read-ids";
-import type { PickedSkill, Skill, SkillFile, SkillFileKind } from "./types";
+import type {
+  PickedSkill,
+  Skill,
+  SkillFile,
+  SkillFileKind,
+  SkillMetadata,
+} from "./types";
 
 export const SKILL_ENTRY_PATH = "SKILL.md";
 
@@ -60,22 +66,26 @@ export function createSkillFile(
   description: string,
   body: string,
   updatedAt = Date.now(),
+  metadata: SkillMetadata = {},
 ): SkillFile {
   return {
     path: SKILL_ENTRY_PATH,
     kind: "markdown",
-    content: renderSkillMarkdown(name, description, body),
+    content: renderSkillMarkdown(name, description, body, metadata),
     updatedAt,
   };
 }
 
+// A new SKILL.md with this name, description and body; its frontmatter
+// `metadata` stays unless `metadata` replaces it.
 export function replaceSkillEntryFile(
   skill: Skill,
   name: string,
   description: string,
   body: string,
+  metadata = getSkillMetadata(skill),
 ) {
-  const entry = createSkillFile(name, description, body);
+  const entry = createSkillFile(name, description, body, Date.now(), metadata);
   const files =
     skill.files?.filter((file) => file.path !== SKILL_ENTRY_PATH) || [];
   return [entry, ...files];
@@ -91,6 +101,37 @@ export function getSkillInstruction(skill: Skill) {
 
 export function getSkillBody(skill: Skill) {
   return stripSkillFrontmatter(getSkillInstruction(skill));
+}
+
+export function getSkillMetadata(skill: Skill): SkillMetadata {
+  return parseSkillMetadata(getSkillInstruction(skill));
+}
+
+// The skill with its SKILL.md frontmatter `metadata` changed by `patch`
+// (an empty value removes a key); name, description and body stay.
+export function withSkillMetadata(
+  skill: Skill,
+  patch: SkillMetadata,
+  now = Date.now(),
+): Skill {
+  const metadata = Object.fromEntries(
+    Object.entries({ ...getSkillMetadata(skill), ...patch }).filter(
+      ([, value]) => value,
+    ),
+  );
+  return {
+    ...skill,
+    files: replaceSkillEntryFile(
+      skill,
+      skill.name,
+      skill.description,
+      getSkillBody(skill),
+      metadata,
+    ).map((file) =>
+      file.path === SKILL_ENTRY_PATH ? { ...file, updatedAt: now } : file,
+    ),
+    updatedAt: now,
+  };
 }
 
 export function toPickedSkill(skill: PickedSkill): PickedSkill {
@@ -241,27 +282,35 @@ export function skillPackageBytes(skill: Skill) {
   return new TextEncoder().encode(JSON.stringify(normalizeSkill(skill))).length;
 }
 
+// Agent Skills names: lowercase letters, digits and single hyphens, at
+// most SKILL_NAME_MAX_LENGTH characters, no hyphen at either end.
 export function normalizeSkillName(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, SKILL_NAME_MAX_LENGTH);
+    .slice(0, SKILL_NAME_MAX_LENGTH)
+    .replace(/-+$/, "");
 }
 
-function uniqueSkillName(base: string, existingNames: string[]) {
+// `base`, or `base-2`, `base-3`… the first one no skill has; the suffix
+// replaces the end of a name at the length limit.
+export function uniqueSkillName(base: string, existingNames: string[]) {
   const normalized = normalizeSkillName(base) || "skill";
-  if (!existingNames.includes(normalized)) return normalized;
+  const taken = new Set(existingNames.map(normalizeSkillName));
+  if (!taken.has(normalized)) return normalized;
   for (let index = 2; ; index += 1) {
-    const candidate = normalizeSkillName(`${normalized}-${index}`);
-    if (!existingNames.includes(candidate)) return candidate;
+    const suffix = `-${index}`;
+    const candidate = `${normalizeSkillName(
+      normalized.slice(0, SKILL_NAME_MAX_LENGTH - suffix.length),
+    )}${suffix}`;
+    if (!taken.has(candidate)) return candidate;
   }
 }
 
 export function parseSkillFrontmatter(value: string) {
-  const match = value.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!match) return { name: "", description: "" };
-  const frontmatter = match[1];
+  const frontmatter = frontmatterOf(value);
+  if (frontmatter === undefined) return { name: "", description: "" };
   return {
     name: readFrontmatterValue(frontmatter, "name"),
     description: readFrontmatterValue(frontmatter, "description"),
@@ -275,8 +324,54 @@ export function skillFileKind(path: string): SkillFileKind {
   return "text";
 }
 
-function renderSkillMarkdown(name: string, description: string, body: string) {
-  return `---\nname: ${yamlScalar(normalizeSkillName(name) || "skill")}\ndescription: ${yamlScalar(description.trim())}\n---\n\n${body.trim()}\n`;
+function frontmatterOf(value: string) {
+  return value.match(/^---\n([\s\S]*?)\n---\n?/)?.[1];
+}
+
+// The frontmatter's `metadata` map (Agent Skills: string keys and values),
+// one indented `key: value` line each.
+export function parseSkillMetadata(value: string): SkillMetadata {
+  const lines = (frontmatterOf(value) || "").split("\n");
+  const start = lines.findIndex((line) => /^metadata:\s*$/.test(line));
+  if (start < 0) return {};
+  const metadata: SkillMetadata = {};
+  for (const line of lines.slice(start + 1)) {
+    const match = line.match(/^\s+([A-Za-z0-9_.-]+):\s*(.*)$/);
+    if (!match) break;
+    metadata[match[1]] = readScalar(match[2]);
+  }
+  return metadata;
+}
+
+// A SKILL.md written whole (by the agent or an import) keeps the earlier
+// version's `metadata` when it sets none itself.
+export function keepSkillMetadata(previous: string, next: string) {
+  const metadata = parseSkillMetadata(previous);
+  if (!Object.keys(metadata).length) return next;
+  if (Object.keys(parseSkillMetadata(next)).length) return next;
+  if (frontmatterOf(next) === undefined) return next;
+  const { name, description } = parseSkillFrontmatter(next);
+  return renderSkillMarkdown(
+    name,
+    description,
+    stripSkillFrontmatter(next),
+    metadata,
+  );
+}
+
+function renderSkillMarkdown(
+  name: string,
+  description: string,
+  body: string,
+  metadata: SkillMetadata = {},
+) {
+  const entries = Object.entries(metadata).filter(
+    ([key, value]) => /^[A-Za-z0-9_.-]+$/.test(key) && value,
+  );
+  const metadataLines = entries.length
+    ? `metadata:\n${entries.map(([key, value]) => `  ${key}: ${yamlScalar(value)}`).join("\n")}\n`
+    : "";
+  return `---\nname: ${yamlScalar(normalizeSkillName(name) || "skill")}\ndescription: ${yamlScalar(description.trim())}\n${metadataLines}---\n\n${body.trim()}\n`;
 }
 
 function stripSkillFrontmatter(value: string) {
@@ -287,12 +382,17 @@ function yamlScalar(value: string) {
   return JSON.stringify(value);
 }
 
+// A top-level key (nested `metadata` lines are indented).
 function readFrontmatterValue(frontmatter: string, key: string) {
   const line = frontmatter
     .split("\n")
-    .find((item) => item.trimStart().startsWith(`${key}:`));
+    .find((item) => item.startsWith(`${key}:`));
   if (!line) return "";
-  const raw = line.slice(line.indexOf(":") + 1).trim();
+  return readScalar(line.slice(line.indexOf(":") + 1));
+}
+
+function readScalar(value: string) {
+  const raw = value.trim();
   try {
     const parsed = JSON.parse(raw);
     return typeof parsed === "string" ? parsed.trim() : String(parsed).trim();

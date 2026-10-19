@@ -8,6 +8,7 @@ import { storage, updateById } from "../../shared/storage";
 import {
   SKILL_ENTRY_PATH,
   createSkillPackage,
+  keepSkillMetadata,
   normalizeSkillName,
   parseSkillFrontmatter,
   skillFileKind,
@@ -92,6 +93,8 @@ export const skillsTool: ToolDefinition = {
       content = file.content.replace(find, () => content);
     } else if (action !== "write")
       return fail('action must be "create", "write" or "patch".');
+    if (file && path === SKILL_ENTRY_PATH)
+      content = keepSkillMetadata(file.content, content);
     const now = Date.now();
     const meta = parseSkillFrontmatter(
       path === SKILL_ENTRY_PATH ? content : "",
