@@ -170,6 +170,11 @@ export function readingTool(tool: ToolDefinition): ToolDefinition | undefined {
   const { effects } = tool;
   if (typeof effects === "string")
     return effects === TOOL_EFFECT.read ? tool : undefined;
+  if ("byRun" in effects)
+    return {
+      ...tool,
+      description: `${tool.description}\n${effects.byRun.readOnlyNote}`,
+    };
   const reading = Object.keys(effects.byAction).filter(
     (action) => effects.byAction[action] === TOOL_EFFECT.read,
   );

@@ -15,6 +15,7 @@ import {
 import { WORKSPACE_ERROR_TEXT } from "../src/shared/workspace-errors";
 import {
   CODE_LANGUAGE,
+  CODE_READ_ONLY_WRITE_ERROR,
   CODE_SANDBOX_MESSAGE,
   codeRunTimeout,
   type CodeRunRequest,
@@ -92,6 +93,15 @@ test("writeFile returns files to the host, only with a workspace", () => {
   const denied = run(`writeFile("a.txt", "x")`);
   assert.match(denied.error || "", /writeFile needs an agent workspace/);
   assert.deepEqual(denied.files, []);
+  const readOnly = run(`writeFile("MEMORY.md", "x")`, {
+    workspaceFiles: {},
+    readOnly: true,
+  });
+  assert.equal(
+    readOnly.error?.split("\n")[0],
+    `Error: ${CODE_READ_ONLY_WRITE_ERROR}`,
+  );
+  assert.deepEqual(readOnly.files, []);
 });
 
 test("the guest has no host functions, network, timers or extension APIs", () => {

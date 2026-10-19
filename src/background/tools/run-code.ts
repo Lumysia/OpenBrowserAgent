@@ -14,14 +14,21 @@ import { upsertWorkspaceFile } from "../../shared/workspace";
 import { mutateWorkspace } from "../../shared/workspace-storage";
 import { runSandboxedCode } from "../code-sandbox";
 import { runCodeText, type SavedFiles } from "./run-code-text";
-import { fail, ok, schema, type ToolDefinition } from "./types";
+import { fail, mayChange, ok, schema, type ToolDefinition } from "./types";
 import { findWorkspaceFile } from "./workspace-source";
 
 // Model-written JavaScript in the bundled QuickJS interpreter: no network,
 // no DOM, no extension APIs; workspace files go in and out as text.
 export const runCodeTool: ToolDefinition = {
   name: TOOL_NAME.runCode,
-  effects: "read",
+  // Saving written files changes the workspace (MEMORY.md, USER.md): only
+  // in runs that may act.
+  effects: {
+    byRun: {
+      readOnlyNote:
+        "In this run writeFile is not available: it runs on its own and may only read. Print results instead.",
+    },
+  },
   onDemand: true,
   summary:
     "Run JavaScript in a sandbox to compute, parse CSV/JSON or transform data",
@@ -49,6 +56,7 @@ export const runCodeTool: ToolDefinition = {
   async execute(input, { run, toolCallId, signal }) {
     const code = typeof input.code === "string" ? input.code : "";
     if (!code.trim()) return fail("code is required.");
+    const readOnly = !mayChange(run);
     const files = readFiles(run.workspace, input.files);
     if (!files.ok) return fail(files.error);
     const result = await runSandboxedCode(
@@ -68,12 +76,16 @@ export const runCodeTool: ToolDefinition = {
               ),
             }
           : {}),
+        ...(readOnly ? { readOnly } : {}),
         timeoutMs: codeRunTimeout(input.timeoutMs),
       },
       signal,
     );
     signal?.throwIfAborted();
-    const saved = await saveFiles(run.workspace, result.files);
+    const saved = await saveFiles(
+      readOnly ? undefined : run.workspace,
+      result.files,
+    );
     const text = runCodeText(result, saved);
     const details = {
       language: CODE_LANGUAGE.javascript,

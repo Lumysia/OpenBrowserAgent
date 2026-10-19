@@ -118,9 +118,21 @@ type JsonSchema = Record<string, unknown>;
 export const TOOL_EFFECT = { read: "read", act: "act" } as const;
 export type ToolEffect = (typeof TOOL_EFFECT)[keyof typeof TOOL_EFFECT];
 
-// One effect for the tool, or one per value of its `action` parameter
-// (actions not listed act).
-export type ToolEffects = ToolEffect | { byAction: Record<string, ToolEffect> };
+// One effect for the tool; one per value of its `action` parameter
+// (actions not listed act); or `byRun`: the tool reads, and what else it
+// can change (runCode's saved files) it changes only in runs that may act
+// (see mayChange). A read-only run gets it with `readOnlyNote` added to its
+// description.
+export type ToolEffects =
+  | ToolEffect
+  | { byAction: Record<string, ToolEffect> }
+  | { byRun: { readOnlyNote: string } };
+
+// Whether this run may change anything beyond itself: false in unattended
+// runs whose agent may not act on its own.
+export function mayChange(run: Pick<RunContext, "unattended">) {
+  return !run.unattended?.readOnly;
+}
 
 export type ToolDefinition = {
   name: string;
