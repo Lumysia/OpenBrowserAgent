@@ -1,3 +1,4 @@
+import { taskApproved } from "./approval";
 import { isRecurring, nextRunAt } from "./schedule";
 import {
   TASK_LIMITS,
@@ -25,6 +26,9 @@ export type RunContext = {
   deviceId: string;
   // The global switch in settings.
   allPaused: boolean;
+  // Agents that may act on their own by their synced settings, but were not
+  // allowed to on this device (see approval.ts).
+  agentsAwaitingOk?: string[];
 };
 
 // Why a task is not scheduled here, or undefined when it is.
@@ -37,6 +41,11 @@ export function idleReason(
   if (!task.deviceId || task.deviceId !== context.deviceId)
     return "otherDevice" as const;
   if (!task.enabled) return "disabled" as const;
+  if (
+    !taskApproved(task, state) ||
+    context.agentsAwaitingOk?.includes(task.agentId)
+  )
+    return "needsOk" as const;
   if (state.pausedBy) return state.pausedBy;
   if (context.allPaused) return "allPaused" as const;
   return undefined;
@@ -68,7 +77,7 @@ export type RunEnd = {
   skipped?: boolean;
 };
 
-export type Notice = "result" | "met" | "needsUser" | "paused";
+export type Notice = "result" | "met" | "needsUser" | "paused" | "needsOk";
 
 // The task's state after a run, and what to tell the user.
 export function afterRun(

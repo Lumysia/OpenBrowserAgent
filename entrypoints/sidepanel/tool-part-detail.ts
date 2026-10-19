@@ -146,17 +146,26 @@ const DETAILS: Record<
         : "",
     ]),
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
-  // What was created, and whether its runs may act: the agent never turns
-  // that on, and the user sees it here.
-  [TOOL_NAME.scheduleTask]: (input, output, t) =>
-    compactJoin([
-      stringValue(output.title) || stringValue(input.title),
-      output.success === true
-        ? output.mayAct === true
-          ? t.tasks.agentPermission.label
-          : t.tasks.form.looksOnly
-        : "",
-    ]),
+  // Which task, and for one created or changed whether its runs may act
+  // (the agent never turns that on) and that it waits for the user's OK.
+  [TOOL_NAME.tasks]: (input, output, t) =>
+    input.action === "list"
+      ? compactJoin([
+          actionLabel(input.action, t),
+          countLabel(t.tasks.count, output.count),
+        ])
+      : compactJoin([
+          actionLabel(input.action, t),
+          stringValue(output.title) || stringValue(input.title),
+          output.waitingForOk === true
+            ? compactJoin([
+                output.mayAct === true
+                  ? t.tasks.agentPermission.label
+                  : t.tasks.form.looksOnly,
+                t.tasks.approval.waits,
+              ])
+            : "",
+        ]),
   [TOOL_NAME.taskResult]: (input) => stringValue(input.summary),
 };
 

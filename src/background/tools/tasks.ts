@@ -1,9 +1,16 @@
-import { mayActUnattended } from "../../shared/agents";
-import { createTask, describeTrigger } from "../../shared/tasks/edit";
-import { normalizeTrigger } from "../../shared/tasks/normalize";
-import { TASK_LIMITS, TRIGGER_FIELDS } from "../../shared/tasks/types";
+import { TASK_LIMITS } from "../../shared/tasks/types";
+import type { Agent } from "../../shared/types";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { trimmedString } from "../../shared/values";
+import {
+  createTaskAction,
+  deleteTaskAction,
+  getTask,
+  listTasks,
+  runTaskNow,
+  setTaskPaused,
+  updateTaskAction,
+} from "./task-actions";
 import { fail, json, ok, schema, type ToolDefinition } from "./types";
 
 const OUTCOMES = ["report", "nothing", "met", "notMet"] as const;
@@ -36,21 +43,41 @@ export const taskResultTool: ToolDefinition = {
   },
 };
 
-// Creates a task when the user asks for one in words. The task runs with
-// this chat's agent, so it can act on its own only if the user gave that
-// agent the permission; this tool never changes it.
-export const scheduleTaskTool: ToolDefinition = {
-  name: TOOL_NAME.scheduleTask,
-  effects: "act",
+const ACTIONS = [
+  "list",
+  "get",
+  "create",
+  "update",
+  "delete",
+  "runNow",
+  "pause",
+  "resume",
+] as const;
+
+// The agent manages the user's scheduled tasks when asked in words ("check
+// this page every hour…", "stop the price watch"). What it creates,
+// changes or turns on waits for the user's OK on this device; it never
+// changes what an agent may do. Not in runs nobody watches.
+export const tasksTool: ToolDefinition = {
+  name: TOOL_NAME.tasks,
+  group: "tasks",
+  effects: { byAction: { list: "read", get: "read" } },
   onDemand: true,
   available: (setup) => setup.depth === 0 && !setup.unattended,
   summary:
-    "Schedule a task for later or repeatedly, or watch a page for a change",
-  description: `Create a scheduled task or a page watch when the user asks for one ("every morning…", "in an hour…", "tell me when this page…"). The task runs later with your agent, on its own, and the user gets a notification with the result. kind: once (at: local date and time, ISO 8601 such as 2026-05-01T09:00), interval (every, unit: minutes|hours|days), daily (time HH:MM), weekly (time, days: 0=Sunday..6), watch (url, everyMinutes >= ${TASK_LIMITS.minWatchMinutes}, default ${TASK_LIMITS.defaultWatchMinutes}; checks the page cheaply and runs you only when it changed). prompt: what to do each run, or for a watch the condition and what to report. Tell the user what you created; they can change it in the task list.`,
+    "List, create, change, run, pause or delete scheduled tasks and page watches",
+  description: `Manage the user's scheduled tasks and page watches when they ask ("every morning…", "in an hour…", "tell me when this page…", "stop that watch"). A task runs later on its own with an agent, and the user gets a notification with the result.
+action: list (every task with its id, schedule, agent, device, state, last result and next run); get (one task by id, with its prompt and recent runs' chat ids); create; update (id and the fields to change); delete (id); runNow (id; only tasks of this device that are allowed); pause / resume (id).
+Schedule fields: kind: once (at: local date and time, ISO 8601 such as 2026-05-01T09:00), interval (every, unit: minutes|hours|days), daily (time HH:MM), weekly (time, days: 0=Sunday..6), watch (url, everyMinutes >= ${TASK_LIMITS.minWatchMinutes}, default ${TASK_LIMITS.defaultWatchMinutes}; checks the page cheaply and runs the agent only when it changed). In update, give kind for a new schedule or only the fields to change.
+prompt: what to do each run, or for a watch the condition and what to report. create runs with your agent; update may name another agent (agent: its name). What you create, change or turn on waits for the user's OK before it runs: say so. Tell the user what you did.`,
   parameters: schema(
     {
+      action: { type: "string", enum: [...ACTIONS] },
+      id: { type: "string", description: "The task's id (from list)." },
       title: { type: "string" },
       prompt: { type: "string" },
+      agent: { type: "string" },
+      enabled: { type: "boolean" },
       kind: {
         type: "string",
         enum: ["once", "interval", "daily", "weekly", "watch"],
@@ -63,45 +90,29 @@ export const scheduleTaskTool: ToolDefinition = {
       url: { type: "string" },
       everyMinutes: { type: "number" },
     },
-    ["title", "prompt", "kind"],
+    ["action"],
   ),
   async execute(input, { run }) {
-    const prompt = trimmedString(input.prompt);
-    if (!prompt) return fail("prompt is required.");
-    const at =
-      input.kind === "once" ? Date.parse(trimmedString(input.at)) : undefined;
-    if (input.kind === "once" && !Number.isFinite(at))
-      return fail("at must be a local date and time such as 2026-05-01T09:00.");
-    const trigger = normalizeTrigger({
-      ...Object.fromEntries(
-        TRIGGER_FIELDS.map((field) => [field, input[field]]),
-      ),
-      at,
-    });
-    if (!trigger)
-      return fail(
-        input.kind === "watch"
-          ? "url must be an http(s) page address."
-          : "Give a valid schedule.",
-      );
-    const task = await createTask({
-      title: trimmedString(input.title) || prompt.slice(0, 60),
-      prompt,
-      agentId: run.agent.id,
-      trigger,
-    });
-    if (!task) return fail("The task could not be created.");
-    const acts = mayActUnattended(run.agent);
-    return json({
-      success: true,
-      taskId: task.id,
-      title: task.title,
-      schedule: describeTrigger(task.trigger),
-      agent: run.agent.name,
-      mayAct: acts,
-      note: acts
-        ? "This agent may act on its own, so runs can use its acting tools."
-        : "Runs only look (read, search, report); they cannot click, type or change anything.",
-    });
+    const action = ACTIONS.find((item) => item === input.action);
+    if (!action) return fail(`action must be one of ${ACTIONS.join(", ")}.`);
+    const outcome = await TASK_ACTIONS[action](input, run.agent);
+    return json({ action, ...outcome });
   },
+};
+
+const TASK_ACTIONS: Record<
+  (typeof ACTIONS)[number],
+  (
+    input: Record<string, unknown>,
+    agent: Agent,
+  ) => Promise<Record<string, unknown>>
+> = {
+  list: () => listTasks(),
+  get: (input) => getTask(input),
+  create: (input, agent) => createTaskAction(input, agent),
+  update: (input) => updateTaskAction(input),
+  delete: (input) => deleteTaskAction(input),
+  runNow: (input) => runTaskNow(input),
+  pause: (input) => setTaskPaused(input, true),
+  resume: (input) => setTaskPaused(input, false),
 };

@@ -138,6 +138,15 @@ export type WatchBaseline = {
   at: number;
 };
 
+// What the user allowed of a task on this device (see approval.ts).
+export type TaskApproval = {
+  prompt: string;
+  trigger: TaskTrigger;
+  agentId: string;
+  enabled: boolean;
+  at: number;
+};
+
 export type TaskState = {
   nextRunAt?: number;
   lastRunAt?: number;
@@ -154,6 +163,10 @@ export type TaskState = {
   // A watch's condition held at its last verdict: a met check notifies
   // only when it did not (no repeat while it keeps holding).
   conditionMet?: boolean;
+  // The task as the user allowed it here; it runs only as allowed.
+  approved?: TaskApproval;
+  // The version waiting for the user's OK that was notified (approvalKey).
+  okNotified?: string;
   // The helper tab a run reads its page in, closed when the run ends (or
   // at the next start, after a run was cut off).
   tabId?: number;

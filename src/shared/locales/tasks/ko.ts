@@ -69,6 +69,7 @@ export const tasksKo: TasksLocaleMessages = {
     watch: plural({ other: "{count}분마다 {page} 감시" }),
   },
   status: {
+    needsOk: "허용 필요",
     unsupported: "최신 버전 필요",
     running: "실행 중",
     paused: "일시 중지됨",
@@ -100,7 +101,9 @@ export const tasksKo: TasksLocaleMessages = {
     openResult: "결과 열기",
   },
   notify: {
+    needsOk: "작업 목록에서 허용하기 전까지 이 기기에서 실행되지 않습니다.",
     titlePrefix: {
+      needsOk: "작업에 허용이 필요합니다",
       result: "작업 결과",
       met: "감시",
       needsUser: "작업 확인 필요",
@@ -111,7 +114,15 @@ export const tasksKo: TasksLocaleMessages = {
     needsUser: "계속하려면 답변이 필요합니다.",
     paused: "작업이 연속으로 실패하여 일시 중지되었습니다.",
   },
+  approval: {
+    allow: "허용",
+    discard: "취소",
+    waits: "이 기기에서 실행되기 전에 허용을 기다립니다.",
+  },
   agentPermission: {
+    pendingHere:
+      "다른 기기에서 켜졌습니다. 허용하기 전까지 여기서는 스스로 작업하지 않습니다.",
+    allowHere: "이 기기에서 허용",
     label: "스스로 작업 수행",
     description:
       "예약 작업과 감시에서 클릭, 입력, 제출, 변경을 하는 도구를 사용할 수 있습니다. 끄면 이런 실행은 보기만 합니다.",
@@ -127,7 +138,7 @@ export const tasksKo: TasksLocaleMessages = {
       "이 브라우저에는 시스템 알림이 없습니다. 결과는 툴바 버튼과 작업 목록에 표시됩니다.",
   },
   tool: {
-    scheduleTask: { running: "작업 만드는 중", done: "작업을 만들었습니다" },
+    tasks: { running: "작업 관리 중", done: "작업을 관리했어요" },
     taskResult: { running: "결과 보고 중", done: "결과를 보고했습니다" },
   },
 };

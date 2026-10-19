@@ -3,7 +3,16 @@ import test from "node:test";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { SYNC_COLLECTIONS } from "../src/shared/sync/collections";
 import { decodeRoot } from "../src/shared/sync/root";
-import { plannedRunAt } from "../src/shared/tasks/lifecycle";
+import { createAgentDraft } from "../src/shared/agents";
+import {
+  agentActApproval,
+  approvalOf,
+  mayActHere,
+  type AgentActApprovals,
+} from "../src/shared/tasks/approval";
+import { idleReason, plannedRunAt } from "../src/shared/tasks/lifecycle";
+import { runContextFrom } from "../src/shared/tasks/run-context";
+import type { ScheduledTask } from "../src/shared/tasks/types";
 import { normalizeTasks } from "../src/shared/tasks/normalize";
 import { ALL_ON, device, memoryServer, memoryTransport } from "./sync-fixtures";
 
@@ -26,6 +35,12 @@ const WATCH = {
   createdAt: 10,
   updatedAt: 10,
 };
+
+// The task's state on a device where the user allowed it.
+const allowed = (task: ScheduledTask) => ({
+  failures: 0,
+  approved: approvalOf(task, 0),
+});
 
 test("task definitions and agent permissions sync; what a device learned stays there", async () => {
   const { a, b } = setup();
@@ -59,8 +74,8 @@ test("each task runs only on the device that owns it; changing the owner moves i
   const onA = { deviceId: "taskdev-a", allPaused: false };
   const onB = { deviceId: "taskdev-b", allPaused: false };
   const [taskOnB] = normalizeTasks(b.get(STORAGE_KEYS.tasks));
-  assert.equal(plannedRunAt(taskOnB, { failures: 0 }, onB), undefined);
-  assert.notEqual(plannedRunAt(taskOnB, { failures: 0 }, onA), undefined);
+  assert.equal(plannedRunAt(taskOnB, allowed(taskOnB), onB), undefined);
+  assert.notEqual(plannedRunAt(taskOnB, allowed(taskOnB), onA), undefined);
   clock.now += 1000;
   await b.set(STORAGE_KEYS.tasks, [
     { ...WATCH, deviceId: "taskdev-b", updatedAt: 20 },
@@ -68,8 +83,63 @@ test("each task runs only on the device that owns it; changing the owner moves i
   await b.sync("edit");
   await a.sync();
   const [taskOnA] = normalizeTasks(a.get(STORAGE_KEYS.tasks));
-  assert.equal(plannedRunAt(taskOnA, { failures: 0 }, onA), undefined);
-  assert.notEqual(plannedRunAt(taskOnA, { failures: 0 }, onB), undefined);
+  assert.equal(plannedRunAt(taskOnA, allowed(taskOnA), onA), undefined);
+  assert.notEqual(plannedRunAt(taskOnA, allowed(taskOnA), onB), undefined);
+});
+
+test("a task that comes by sync does not run here until the user allows it here", async () => {
+  const { clock, a, b } = setup();
+  // Created on A for B to run.
+  const forB = { ...WATCH, deviceId: "taskdev-b" };
+  await a.set(STORAGE_KEYS.tasks, [forB]);
+  await a.sync("edit");
+  await b.sync();
+  const onB = { deviceId: "taskdev-b", allPaused: false };
+  let [task] = normalizeTasks(b.get(STORAGE_KEYS.tasks));
+  assert.equal(idleReason(task, { failures: 0 }, onB), "needsOk");
+  assert.equal(plannedRunAt(task, { failures: 0 }, onB), undefined);
+  // Allowed on B (local state only).
+  const state = allowed(task);
+  assert.notEqual(plannedRunAt(task, state, onB), undefined);
+  assert.equal(b.get(STORAGE_KEYS.taskStates), undefined, "not synced");
+  // A renames it: still allowed. A changes what it does: asks again.
+  for (const [change, waits] of [
+    [{ title: "Price watch" }, false],
+    [{ prompt: "Tell me when the price is below 40" }, true],
+  ] as const) {
+    clock.now += 1000;
+    await a.set(STORAGE_KEYS.tasks, [
+      { ...forB, ...change, updatedAt: clock.now },
+    ]);
+    await a.sync("edit");
+    await b.sync();
+    [task] = normalizeTasks(b.get(STORAGE_KEYS.tasks));
+    assert.equal(idleReason(task, state, onB) === "needsOk", waits);
+  }
+});
+
+test("acting turned on by sync does not act here until allowed here", () => {
+  const agent = {
+    ...createAgentDraft("Buyer"),
+    id: "buyer",
+    actUnattended: true,
+  };
+  const task = normalizeTasks([{ ...WATCH, deviceId: "taskdev-b" }])[0];
+  const onB = (approvals: AgentActApprovals) =>
+    runContextFrom({
+      deviceId: "taskdev-b",
+      preferences: { tasksPaused: false },
+      agents: [agent],
+      approvals,
+    });
+  assert.equal(mayActHere(agent, {}), false);
+  assert.equal(idleReason(task, allowed(task), onB({})), "needsOk");
+  const here = { buyer: agentActApproval(agent) };
+  assert.equal(mayActHere(agent, here), true);
+  assert.equal(idleReason(task, allowed(task), onB(here)), undefined);
+  // Its tool groups changed by sync: asks again.
+  const wider = { ...agent, toolGroups: [...agent.toolGroups, "scripts"] };
+  assert.equal(mayActHere(wider as typeof agent, here), false);
 });
 
 test("a 0.2.0 device, which has no task collections, leaves tasks in the sync data", async () => {

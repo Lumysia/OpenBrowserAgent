@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { approvalOf } from "../src/shared/tasks/approval";
 import {
   afterRun,
   idleReason,
@@ -39,7 +40,8 @@ function task(patch: Partial<ScheduledTask> = {}): ScheduledTask {
 }
 
 const here = { deviceId: "me", allPaused: false };
-const fresh: TaskState = { failures: 0 };
+// A task the user allowed on this device (see approval.ts).
+const fresh: TaskState = { failures: 0, approved: approvalOf(task(), 0) };
 const failedRun = {
   failed: true,
   result: { status: TASK_RESULT.failed, at: NOW },

@@ -33,7 +33,9 @@ import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
 import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
 import { resolveLanguage } from "./ui-languages";
 import { normalizeWorkspaces } from "./workspace";
+import type { AgentActApprovals } from "./tasks/approval";
 import {
+  normalizeAgentActApprovals,
   normalizeTaskDevices,
   normalizeTasks,
   normalizeTaskStates,
@@ -292,6 +294,11 @@ export const storage = {
   // This device's id among taskDevices; empty until the background sets it.
   taskDeviceId: createItem<string>(STORAGE_KEYS.taskDeviceId, () => ""),
   taskDeviceSyncId: createItem<string>(STORAGE_KEYS.taskDeviceSyncId, () => ""),
+  agentActApprovals: createItem<AgentActApprovals>(
+    STORAGE_KEYS.agentActApprovals,
+    () => ({}),
+    { normalize: normalizeAgentActApprovals },
+  ),
   // Written only by sync (src/shared/sync/device.ts); read here.
   syncDeviceId: createItem<string>(STORAGE_KEYS.syncDeviceId, () => ""),
   taskStates: createItem<TaskStates>(STORAGE_KEYS.taskStates, () => ({}), {

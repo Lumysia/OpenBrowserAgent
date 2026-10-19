@@ -72,6 +72,9 @@ export const STORAGE_KEYS = {
   // gives this install a new id (a copied profile), so does tasks.
   taskDeviceSyncId: "task-device-sync-id",
   taskStates: "task-states",
+  // Agents whose permission to act on their own the user allowed on this
+  // device (local only; see tasks/approval.ts).
+  agentActApprovals: "agent-act-approvals",
 } as const;
 
 // What syncs besides settings, one switch per group: API keys and MCP

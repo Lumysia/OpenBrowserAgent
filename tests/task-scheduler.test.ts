@@ -11,6 +11,8 @@ import {
 } from "../src/background/tasks/scheduler";
 import { reported, schedulerEnv, settle, task } from "./task-scheduler-env";
 
+const USER = { approve: true };
+
 afterEach(() => mock.restoreAll());
 
 function send(message: unknown) {
@@ -70,12 +72,15 @@ test("a copied profile takes a new task device id when sync gives it a new id", 
   await storage.syncDeviceId.set("sync-1");
   const first = await ensureTaskDevice();
   assert.equal(await ensureTaskDevice(), first, "stable while sync's is");
-  await createTask({
-    title: "Mine",
-    prompt: "p",
-    agentId: "custom",
-    trigger: { kind: "interval", every: 1, unit: "hours" },
-  });
+  await createTask(
+    {
+      title: "Mine",
+      prompt: "p",
+      agentId: "custom",
+      trigger: { kind: "interval", every: 1, unit: "hours" },
+    },
+    USER,
+  );
   // Sync found a copy of this profile and rotated its id.
   await storage.syncDeviceId.set("sync-2");
   const second = await ensureTaskDevice();

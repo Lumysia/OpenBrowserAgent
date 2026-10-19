@@ -24,7 +24,7 @@ export const TOOL_NAME = {
   runScript: "runScript",
   runCode: "runCode",
   devtools: "devtools",
-  scheduleTask: "scheduleTask",
+  tasks: "tasks",
   taskResult: "taskResult",
 } as const;
 

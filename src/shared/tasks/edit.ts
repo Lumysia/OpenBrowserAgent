@@ -1,23 +1,31 @@
 import { storage, removeById, updateById } from "../storage";
 import { sameJson } from "../sync/codec";
+import { mayActUnattended } from "../agents";
+import type { Agent } from "../types";
+import { agentActApproval, approvalOf } from "./approval";
 import { normalizeTask } from "./normalize";
 import {
   isKnownTrigger,
   type ScheduledTask,
+  type TaskApproval,
   type TaskState,
   type TaskTrigger,
 } from "./types";
 
-// What the task form and the agent's scheduleTask tool give to create a task.
+// What the task form and the agent's task tool give to create a task.
 export type TaskDraft = Pick<
   ScheduledTask,
   "title" | "prompt" | "agentId" | "trigger"
 > &
   Partial<Pick<ScheduledTask, "deviceId" | "enabled">>;
 
+// Who makes an edit: the user in the task list on this device (`approve`:
+// it runs as edited), or the agent (it waits for the user's OK).
+export type EditSource = { approve: boolean };
+
 // A new task from a draft, run by this device unless the draft names
 // another; undefined when the draft cannot be one (no usable trigger).
-export async function createTask(draft: TaskDraft) {
+export async function createTask(draft: TaskDraft, { approve }: EditSource) {
   const now = Date.now();
   const deviceId = draft.deviceId || (await storage.taskDeviceId.get());
   const task = normalizeTask({
@@ -30,6 +38,12 @@ export async function createTask(draft: TaskDraft) {
   });
   // Only a schedule this version can run makes a new task.
   if (!task || !isKnownTrigger(task.trigger)) return undefined;
+  // The approval first: the scheduler sees the task allowed when it comes.
+  if (approve)
+    await updateTaskState(task.id, (state) => ({
+      ...state,
+      approved: approvalOf(task, now),
+    }));
   await storage.tasks.update((tasks) => [...tasks, task]);
   return task;
 }
@@ -70,27 +84,110 @@ export function editedTask(
 
 // Changes a task's definition. Returns the task as stored after it, or
 // undefined when there is no such task or the change makes no valid one.
-export async function updateTask(id: string, patch: TaskPatch) {
+// The user's edit is allowed as made; the agent's waits for the user's OK,
+// turning a task on included.
+export async function updateTask(
+  id: string,
+  patch: TaskPatch,
+  { approve }: EditSource,
+) {
   const current = (await storage.tasks.get()).find((task) => task.id === id);
   if (!current) return undefined;
-  const edit = editedTask(current, patch, Date.now());
-  if (!edit) return undefined;
-  if (!edit.changed) return current;
   const now = Date.now();
-  const saved = await updateById(
+  const edit = editedTask(current, patch, now);
+  if (!edit) return undefined;
+  const turnedOn = edit.task.enabled && !current.enabled;
+  if (!edit.changed && !approve) return current;
+  // The state first: the scheduler sees the edit allowed (or not) when
+  // the task changes.
+  await updateTaskState(id, (state) => ({
+    ...state,
+    ...(edit.restart ? RESTART : {}),
+    approved: approve
+      ? approvalOf(edit.task, now)
+      : turnedOn
+        ? withheld(state.approved)
+        : state.approved,
+  }));
+  if (!edit.changed) return current;
+  return updateById(
     storage.tasks,
     id,
     (task) => editedTask(task, patch, now)?.task ?? task,
   );
-  if (saved && edit.restart)
-    await updateTaskState(id, (state) => ({
-      ...state,
-      nextRunAt: undefined,
-      lastRunAt: undefined,
-      baseline: undefined,
-      conditionMet: undefined,
-    }));
-  return saved;
+}
+
+// What a changed trigger or prompt starts over.
+const RESTART = {
+  nextRunAt: undefined,
+  lastRunAt: undefined,
+  baseline: undefined,
+  conditionMet: undefined,
+} satisfies Partial<TaskState>;
+
+// The approval of a task the agent turns on: as allowed, but off, so the
+// task waits for the user's OK.
+function withheld(approved: TaskApproval | undefined) {
+  return approved && { ...approved, enabled: false };
+}
+
+// The agent resumes a task the scheduler paused (failures, or it needed
+// the user): it waits for the user's OK before it runs again.
+export function withholdResume(state: TaskState): TaskState {
+  return { ...state, approved: withheld(state.approved) };
+}
+
+// The user set an agent's tools or its permission to act on its own on
+// this device: what it may do on its own is allowed here as set.
+export function allowAgentHere(agent: Agent) {
+  return storage.agentActApprovals.update((approvals) => {
+    const next = { ...approvals };
+    if (mayActUnattended(agent)) next[agent.id] = agentActApproval(agent);
+    else delete next[agent.id];
+    return sameJson(next, approvals) ? approvals : next;
+  });
+}
+
+// The user's OK on this device for the task as it is now, and for its
+// agent acting on its own when that is what it waits for.
+export async function approveTask(id: string) {
+  const task = (await storage.tasks.get()).find((item) => item.id === id);
+  if (!task) return false;
+  const agent = (await storage.agents.get()).find(
+    (item) => item.id === task.agentId,
+  );
+  if (agent && mayActUnattended(agent)) await allowAgentHere(agent);
+  await updateTaskState(id, (state) => ({
+    ...state,
+    approved: approvalOf(task, Date.now()),
+    okNotified: undefined,
+  }));
+  return true;
+}
+
+// The user declines what waits for the OK: a task never allowed is
+// deleted, a changed one goes back to what was allowed, and one that
+// waits only for its agent's permission is paused.
+export async function discardTask(id: string) {
+  const task = (await storage.tasks.get()).find((item) => item.id === id);
+  if (!task) return false;
+  const { approved } = (await storage.taskStates.get())[id] ?? {};
+  if (!approved) return deleteTask(id);
+  const definition = {
+    prompt: approved.prompt,
+    trigger: approved.trigger,
+    agentId: approved.agentId,
+  };
+  const same = sameJson(definition, {
+    prompt: task.prompt,
+    trigger: task.trigger,
+    agentId: task.agentId,
+  });
+  return !!(await updateTask(
+    id,
+    same ? { enabled: false } : { ...definition, enabled: approved.enabled },
+    { approve: true },
+  ));
 }
 
 export async function deleteTask(id: string) {

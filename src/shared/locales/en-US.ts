@@ -304,6 +304,7 @@ export const enUS = {
       localExecution: "Local commands",
       scripts: "Page JavaScript",
       devtools: "Developer diagnostics",
+      tasks: "Scheduled tasks",
     },
     agentToolGroupDescriptions: {
       pages: "Snapshot, find, read and extract page content; screenshots.",
@@ -320,6 +321,8 @@ export const enUS = {
       scripts: "Run custom JavaScript in pages. Off by default.",
       devtools:
         "Network and console recording, network resources and device emulation.",
+      tasks:
+        "Create, change, run, pause and delete scheduled tasks and page watches. What the agent sets up waits for your OK.",
     },
     deleteAgent: "Delete agent",
     agentWorkspace: "Agent workspace",

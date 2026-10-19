@@ -73,6 +73,7 @@ export const tasksEnUS = {
     }),
   },
   status: {
+    needsOk: "Needs your OK",
     unsupported: "Needs a newer version",
     running: "Running",
     paused: "Paused",
@@ -104,7 +105,10 @@ export const tasksEnUS = {
     openResult: "Open result",
   },
   notify: {
+    needsOk:
+      "It does not run on this device until you allow it in the task list.",
     titlePrefix: {
+      needsOk: "Task needs your OK",
       result: "Task result",
       met: "Watch",
       needsUser: "Task needs you",
@@ -115,7 +119,15 @@ export const tasksEnUS = {
     needsUser: "The task needs your answer to go on.",
     paused: "The task failed several times in a row and is paused.",
   },
+  approval: {
+    allow: "Allow",
+    discard: "Discard",
+    waits: "Waits for your OK before it runs on this device.",
+  },
   agentPermission: {
+    pendingHere:
+      "Turned on on another device: it acts here only after you allow it.",
+    allowHere: "Allow on this device",
     label: "Act on its own",
     description:
       "In scheduled tasks and watches, may use its tools that click, type, submit or change things. Off: those runs only look.",
@@ -131,7 +143,7 @@ export const tasksEnUS = {
       "This browser has no system notifications: results show on the toolbar button and in the task list.",
   },
   tool: {
-    scheduleTask: { running: "Scheduling a task", done: "Scheduled a task" },
+    tasks: { running: "Managing tasks", done: "Managed tasks" },
     taskResult: {
       running: "Reporting the outcome",
       done: "Reported the outcome",

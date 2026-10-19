@@ -70,6 +70,7 @@ export const tasksDeDE: TasksLocaleMessages = {
     watch: plural({ other: "Beobachtet {page} alle {count} Min." }),
   },
   status: {
+    needsOk: "Braucht Ihr OK",
     unsupported: "Braucht eine neuere Version",
     running: "Läuft",
     paused: "Pausiert",
@@ -102,7 +103,10 @@ export const tasksDeDE: TasksLocaleMessages = {
     openResult: "Ergebnis öffnen",
   },
   notify: {
+    needsOk:
+      "Sie läuft auf diesem Gerät erst, wenn Sie sie in der Aufgabenliste erlauben.",
     titlePrefix: {
+      needsOk: "Aufgabe braucht Ihr OK",
       result: "Aufgabenergebnis",
       met: "Beobachtung",
       needsUser: "Aufgabe braucht Sie",
@@ -115,7 +119,15 @@ export const tasksDeDE: TasksLocaleMessages = {
     paused:
       "Die Aufgabe ist mehrmals nacheinander fehlgeschlagen und pausiert.",
   },
+  approval: {
+    allow: "Erlauben",
+    discard: "Verwerfen",
+    waits: "Wartet auf Ihr OK, bevor sie auf diesem Gerät läuft.",
+  },
   agentPermission: {
+    pendingHere:
+      "Auf einem anderen Gerät eingeschaltet: Hier handelt der Agent erst, wenn Sie es erlauben.",
+    allowHere: "Auf diesem Gerät erlauben",
     label: "Selbstständig handeln",
     description:
       "Darf in geplanten Aufgaben und Beobachtungen seine Werkzeuge nutzen, die klicken, tippen, absenden oder etwas ändern. Aus: Diese Läufe sehen nur nach.",
@@ -131,7 +143,7 @@ export const tasksDeDE: TasksLocaleMessages = {
       "Dieser Browser hat keine Systembenachrichtigungen: Ergebnisse erscheinen an der Symbolleisten-Schaltfläche und in der Aufgabenliste.",
   },
   tool: {
-    scheduleTask: { running: "Plane eine Aufgabe", done: "Aufgabe geplant" },
+    tasks: { running: "Verwalte Aufgaben", done: "Aufgaben verwaltet" },
     taskResult: { running: "Melde das Ergebnis", done: "Ergebnis gemeldet" },
   },
 };

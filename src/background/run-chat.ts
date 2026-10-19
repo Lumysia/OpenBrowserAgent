@@ -1,4 +1,5 @@
-import { hasToolGroup, mayActUnattended, resolveAgent } from "../shared/agents";
+import { hasToolGroup, resolveAgent } from "../shared/agents";
+import { mayActHere, type AgentActApprovals } from "../shared/tasks/approval";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
 import { respondWith } from "../shared/runtime-messages";
@@ -48,14 +49,17 @@ type RunRequest = {
   unattended?: UnattendedRequest;
 };
 
+// An agent acts on its own only where the user allowed it (approval.ts):
+// one whose permission came by sync runs read-only until then.
 function unattendedRun(
   request: UnattendedRequest | undefined,
   agent: Agent,
+  approvals: AgentActApprovals,
 ): UnattendedRun | undefined {
   if (!request) return undefined;
   return {
     ...request,
-    readOnly: request.readOnly === true || !mayActUnattended(agent),
+    readOnly: request.readOnly === true || !mayActHere(agent, approvals),
   };
 }
 
@@ -71,6 +75,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     skillSettings,
     mcpServers,
     bridges,
+    approvals,
   ] = await Promise.all([
     storage.agents.get(),
     storage.preferences.get(),
@@ -79,6 +84,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     storage.skillSettings.get(),
     storage.mcpServers.get(),
     storage.localExecutionBridges.get(),
+    storage.agentActApprovals.get(),
   ]);
   const depth = request.depth || 0;
   const resolved = resolveAgent(agents, request.agentId);
@@ -111,7 +117,8 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     depth,
     parentChatId: request.parentChatId,
     tab,
-    unattended: unattendedRun(request.unattended, agent),
+    // The agent as stored: a sub-agent's narrower groups are not a change.
+    unattended: unattendedRun(request.unattended, resolved, approvals),
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     isLocalExecutionBridgeTested,

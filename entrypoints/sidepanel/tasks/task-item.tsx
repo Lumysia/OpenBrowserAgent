@@ -1,5 +1,8 @@
 import { Pause, Pencil, Play, Trash2, Zap } from "lucide-react";
-import type { RunContext } from "../../../src/shared/tasks/lifecycle";
+import {
+  idleReason,
+  type RunContext,
+} from "../../../src/shared/tasks/lifecycle";
 import {
   TASK_RESULT,
   isKnownTrigger,
@@ -18,6 +21,7 @@ import { useLocale, useMessages } from "../../../src/ui/messages";
 import { cn } from "../../../src/ui/utils";
 import { formatRelativeTime } from "../format";
 import { scheduleText, taskStatus } from "./task-display";
+import { TaskApprovalActions } from "./task-approval";
 
 // One task in the list: its title, schedule and state, its last result
 // (opening its chat) and next run, and its actions.
@@ -50,6 +54,7 @@ export function TaskItem({
   const mine = task.deviceId === context.deviceId;
   // A schedule from a newer version: kept and shown, not run or edited.
   const known = isKnownTrigger(task.trigger);
+  const waiting = idleReason(task, state, context) === "needsOk";
   const chatId = state.running?.chatId || result?.chatId;
   const resultLine = result
     ? `${t.tasks.results[result.status]} · ${formatRelativeTime(t, result.at)}${
@@ -96,6 +101,7 @@ export function TaskItem({
         {resultLine && <small className="task-result">{resultLine}</small>}
         {nextLine && <small>{nextLine}</small>}
       </Button>
+      {waiting && <TaskApprovalActions taskId={task.id} />}
       <div className="history-item-actions">
         <IconTooltip label={t.tasks.actions.runNow}>
           <Button
@@ -103,7 +109,7 @@ export function TaskItem({
             size="icon"
             className="history-item-action"
             aria-label={t.tasks.actions.runNow}
-            disabled={!mine || !known || !!state.running}
+            disabled={!mine || !known || waiting || !!state.running}
             onClick={onRunNow}
           >
             <Zap size={13} />

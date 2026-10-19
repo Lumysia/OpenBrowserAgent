@@ -6,17 +6,22 @@ import {
   type ToolGroup,
 } from "../../src/shared/agents";
 import { areCdpAvailable } from "../../src/shared/runtime-capabilities";
+import { storage } from "../../src/shared/storage";
+import { mayActHere } from "../../src/shared/tasks/approval";
+import { allowAgentHere } from "../../src/shared/tasks/edit";
 import type { Agent } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Button,
   Label,
   Switch,
   SettingsSummary,
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
+import { useStoredState } from "../../src/ui/useStoredState";
 
 // The tool groups an agent may use, plus its private workspace.
 export function AgentToolsEditor({
@@ -29,6 +34,13 @@ export function AgentToolsEditor({
   onChange: (patch: Partial<Agent>) => void;
 }) {
   const t = useMessages();
+  const [approvals] = useStoredState(storage.agentActApprovals);
+  // Turned on on another device (it synced) and not allowed here yet.
+  const pendingHere =
+    !readOnly &&
+    !!approvals &&
+    mayActUnattended(agent) &&
+    !mayActHere(agent, approvals);
   const groups = TOOL_GROUPS.filter(
     (group) => areCdpAvailable() || !DEBUGGER_TOOL_GROUPS.includes(group),
   );
@@ -95,6 +107,18 @@ export function AgentToolsEditor({
               </div>
             ))}
           </div>
+          {pendingHere && (
+            <div className="agent-tool-pending">
+              <small>{t.tasks.agentPermission.pendingHere}</small>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void allowAgentHere(agent).catch(console.warn)}
+              >
+                {t.tasks.agentPermission.allowHere}
+              </Button>
+            </div>
+          )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>

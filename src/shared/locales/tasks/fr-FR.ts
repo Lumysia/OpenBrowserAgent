@@ -70,6 +70,7 @@ export const tasksFrFR: TasksLocaleMessages = {
     watch: plural({ other: "Surveille {page} toutes les {count} min" }),
   },
   status: {
+    needsOk: "Attend votre accord",
     unsupported: "Nécessite une version plus récente",
     running: "En cours",
     paused: "En pause",
@@ -102,7 +103,10 @@ export const tasksFrFR: TasksLocaleMessages = {
     openResult: "Ouvrir le résultat",
   },
   notify: {
+    needsOk:
+      "Elle ne s’exécute pas sur cet appareil tant que vous ne l’autorisez pas dans la liste des tâches.",
     titlePrefix: {
+      needsOk: "Une tâche attend votre accord",
       result: "Résultat de tâche",
       met: "Surveillance",
       needsUser: "Une tâche vous attend",
@@ -113,7 +117,15 @@ export const tasksFrFR: TasksLocaleMessages = {
     needsUser: "La tâche a besoin de votre réponse pour continuer.",
     paused: "La tâche a échoué plusieurs fois de suite et a été mise en pause.",
   },
+  approval: {
+    allow: "Autoriser",
+    discard: "Annuler",
+    waits: "Attend votre accord avant de s’exécuter sur cet appareil.",
+  },
   agentPermission: {
+    pendingHere:
+      "Activé sur un autre appareil : l’agent n’agit ici qu’une fois que vous l’autorisez.",
+    allowHere: "Autoriser sur cet appareil",
     label: "Agir seul",
     description:
       "Dans les tâches planifiées et les surveillances, peut utiliser ses outils qui cliquent, saisissent, envoient ou modifient. Désactivé : ces exécutions se contentent de regarder.",
@@ -129,10 +141,7 @@ export const tasksFrFR: TasksLocaleMessages = {
       "Ce navigateur n’a pas de notifications système : les résultats s’affichent sur le bouton de la barre d’outils et dans la liste des tâches.",
   },
   tool: {
-    scheduleTask: {
-      running: "Planification d’une tâche",
-      done: "Tâche planifiée",
-    },
+    tasks: { running: "Gestion des tâches", done: "Gestion des tâches" },
     taskResult: {
       running: "Signalement du résultat",
       done: "Résultat signalé",

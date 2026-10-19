@@ -17,6 +17,7 @@ export const TOOL_GROUPS = [
   "localExecution",
   "scripts",
   "devtools",
+  "tasks",
 ] as const;
 
 export type ToolGroup = (typeof TOOL_GROUPS)[number];
@@ -49,6 +50,7 @@ export const DEFAULT_AGENT: Agent = {
     "mcpServers",
     "localExecution",
     "devtools",
+    "tasks",
   ],
   workspace: false,
   actUnattended: false,

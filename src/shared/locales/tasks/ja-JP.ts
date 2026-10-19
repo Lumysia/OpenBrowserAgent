@@ -69,6 +69,7 @@ export const tasksJaJP: TasksLocaleMessages = {
     watch: plural({ other: "{page} を{count}分ごとに監視" }),
   },
   status: {
+    needsOk: "許可が必要",
     unsupported: "新しいバージョンが必要",
     running: "実行中",
     paused: "一時停止中",
@@ -101,7 +102,9 @@ export const tasksJaJP: TasksLocaleMessages = {
     openResult: "結果を開く",
   },
   notify: {
+    needsOk: "タスク一覧で許可するまで、このデバイスでは実行されません。",
     titlePrefix: {
+      needsOk: "タスクに許可が必要",
       result: "タスクの結果",
       met: "監視",
       needsUser: "タスクに対応が必要",
@@ -112,7 +115,15 @@ export const tasksJaJP: TasksLocaleMessages = {
     needsUser: "続けるにはあなたの回答が必要です。",
     paused: "タスクが続けて失敗したため一時停止しました。",
   },
+  approval: {
+    allow: "許可",
+    discard: "取り消す",
+    waits: "このデバイスで実行する前にあなたの許可を待ちます。",
+  },
   agentPermission: {
+    pendingHere:
+      "別のデバイスでオンにされました。許可するまで、ここでは自律操作しません。",
+    allowHere: "このデバイスで許可",
     label: "自律操作",
     description:
       "スケジュールされたタスクと監視で、クリック、入力、送信、変更を行うツールを使えます。オフの場合、これらの実行は見るだけです。",
@@ -128,7 +139,7 @@ export const tasksJaJP: TasksLocaleMessages = {
       "このブラウザーにはシステム通知がありません。結果はツールバーのボタンとタスク一覧に表示されます。",
   },
   tool: {
-    scheduleTask: { running: "タスクを作成中", done: "タスクを作成しました" },
+    tasks: { running: "タスクを管理中", done: "タスクを管理しました" },
     taskResult: { running: "結果を報告中", done: "結果を報告しました" },
   },
 };

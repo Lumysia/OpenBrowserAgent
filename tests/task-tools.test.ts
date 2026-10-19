@@ -19,6 +19,7 @@ import {
   readingTool,
 } from "../src/background/tools/registry";
 import { runBackgroundChat } from "../src/background/sub-agent-run";
+import { agentActApproval } from "../src/shared/tasks/approval";
 import * as sessions from "../src/background/stream-sessions";
 import type { ToolSetup } from "../src/background/tools/types";
 import { installPiRuntimeBrowser } from "./pi-runtime-helpers";
@@ -41,6 +42,7 @@ const ALL_GROUPS_AGENT: Agent = {
     "mcpServers",
     "localExecution",
     "devtools",
+    "tasks",
   ],
 };
 
@@ -94,7 +96,7 @@ test("a read-only run does not see acting tools or acting actions", async () => 
     TOOL_NAME.localCommand,
     TOOL_NAME.skills,
     TOOL_NAME.mcpServers,
-    TOOL_NAME.scheduleTask,
+    TOOL_NAME.tasks,
     "mcp__Notes__write",
   ])
     assert.ok(!offered.includes(acting), `${acting} is not offered`);
@@ -132,7 +134,7 @@ test("an agent that may act gets its acting tools, still within its groups", () 
   // Outside task runs, nothing changes, and the task result tool is absent.
   const chat = names(createToolSet(setup(undefined)));
   assert.ok(chat.includes(TOOL_NAME.act));
-  assert.ok(chat.includes(TOOL_NAME.scheduleTask));
+  assert.ok(chat.includes(TOOL_NAME.tasks));
   assert.ok(!chat.includes(TOOL_NAME.taskResult));
 });
 
@@ -202,7 +204,7 @@ test("an agent this version stores keeps its permission through a 0.2.0 read and
   assert.equal((edited as Agent[])[0].actUnattended, true);
 });
 
-async function offeredInTaskRun(agent: Agent) {
+async function offeredInTaskRun(agent: Agent, allowedHere = true) {
   const fixture = await providerFixture((request, response) =>
     reply(response, request.protocol, { text: "done" }),
   );
@@ -215,6 +217,9 @@ async function offeredInTaskRun(agent: Agent) {
     },
   }));
   mock.method(storage.agents, "get", async () => [agent]);
+  mock.method(storage.agentActApprovals, "get", async () =>
+    allowedHere ? { [agent.id]: agentActApproval(agent) } : {},
+  );
   try {
     const run = await runBackgroundChat({
       agent,
@@ -250,4 +255,11 @@ test("a task run of an agent without the permission is not offered act; with it,
     actUnattended: true,
   });
   assert.ok(acting.includes(TOOL_NAME.act));
+  // Turned on on another device and not allowed here yet: it only looks.
+  const synced = await offeredInTaskRun(
+    { ...ALL_GROUPS_AGENT, actUnattended: true },
+    false,
+  );
+  assert.ok(synced.includes(TOOL_NAME.read));
+  assert.ok(!synced.includes(TOOL_NAME.act));
 });

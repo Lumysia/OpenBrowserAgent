@@ -7,6 +7,7 @@ import {
   isBuiltinAgentId,
 } from "../../src/shared/agents";
 import { storage } from "../../src/shared/storage";
+import { allowAgentHere } from "../../src/shared/tasks/edit";
 import type { Agent } from "../../src/shared/types";
 import { createWorkspace } from "../../src/shared/workspace";
 import { storeAgentWorkspaces } from "../../src/shared/workspace-storage";
@@ -65,6 +66,10 @@ export function AgentsPage() {
   }, [agentIds, agentsRef]);
 
   function updateAgent(agentId: string, patch: Partial<Agent>) {
+    // Tools or acting set here are allowed here (tasks/approval.ts).
+    const edited = items.find((agent) => agent.id === agentId);
+    if (edited && ("toolGroups" in patch || "actUnattended" in patch))
+      allowAgentHere({ ...edited, ...patch }).catch(console.warn);
     setAgents((current) =>
       current.map((agent) =>
         agent.id === agentId

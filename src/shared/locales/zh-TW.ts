@@ -261,6 +261,7 @@ export const zhTW: LocaleMessages = {
       localExecution: "本機命令",
       scripts: "頁面 JavaScript",
       devtools: "開發者診斷",
+      tasks: "排程任務",
     },
     agentToolGroupDescriptions: {
       pages: "取得頁面結構、尋找、讀取與擷取頁面內容；截圖。",
@@ -275,6 +276,8 @@ export const zhTW: LocaleMessages = {
       localExecution: "透過執行橋在本機執行命令。",
       scripts: "在頁面中執行自訂 JavaScript。預設關閉。",
       devtools: "網路與主控台記錄、網路資源與裝置模擬。",
+      tasks:
+        "建立、修改、執行、暫停和刪除排程任務與網頁監看。智慧體設定的內容需等你允許。",
     },
     deleteAgent: "刪除智慧體",
     agentWorkspace: "智慧體工作區",

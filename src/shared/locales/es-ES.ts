@@ -335,6 +335,7 @@ export const esES: LocaleMessages = {
       localExecution: "Comandos locales",
       scripts: "JavaScript de página",
       devtools: "Diagnóstico para desarrolladores",
+      tasks: "Tareas programadas",
     },
     agentToolGroupDescriptions: {
       pages:
@@ -356,6 +357,8 @@ export const esES: LocaleMessages = {
         "Ejecutar JavaScript personalizado en las páginas. Desactivado de forma predeterminada.",
       devtools:
         "Registro de red y consola, recursos de red y emulación de dispositivos.",
+      tasks:
+        "Crear, cambiar, ejecutar, pausar y eliminar tareas programadas y vigilancias de páginas. Lo que configura el agente espera tu aprobación.",
     },
     deleteAgent: "Eliminar agente",
     agentWorkspace: "Espacio de trabajo del agente",

@@ -128,6 +128,10 @@ export const displayPtBR: DisplayMessages = {
       run: "Execução",
       start: "Início",
       cancel: "Cancelamento",
+      get: "Consulta",
+      runNow: "Execução iniciada",
+      pause: "Pausa",
+      resume: "Retomada",
     },
     commandStates: {
       running: "Em execução",

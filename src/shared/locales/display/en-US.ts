@@ -134,6 +134,10 @@ export const displayEnUS = {
       run: "Ran",
       start: "Started",
       cancel: "Canceled",
+      get: "Looked up",
+      runNow: "Started a run",
+      pause: "Paused",
+      resume: "Resumed",
     },
     commandStates: {
       running: "Running",

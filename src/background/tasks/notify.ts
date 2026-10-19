@@ -7,7 +7,13 @@ import type {
   TaskResult,
   TaskStates,
 } from "../../shared/tasks/types";
-import type { Notice } from "../../shared/tasks/lifecycle";
+import {
+  idleReason,
+  type Notice,
+  type RunContext,
+} from "../../shared/tasks/lifecycle";
+import { taskState } from "../../shared/tasks/normalize";
+import { loadRunContext } from "../../shared/tasks/run-context";
 import { notificationsApi } from "../../shared/tasks/notifications";
 import { handOffToSidePanel } from "../side-panel-handoff";
 
@@ -61,12 +67,14 @@ export async function notifyTask(
   const t = getMessages(await storage.language.get()).tasks;
   const title = task.title || t.untitled;
   const message =
-    notice === "paused"
-      ? t.notify.paused
-      : notice === "needsUser"
-        ? result.summary || t.notify.needsUser
-        : result.summary ||
-          (notice === "met" ? t.notify.conditionMet : t.notify.finished);
+    notice === "needsOk"
+      ? t.notify.needsOk
+      : notice === "paused"
+        ? t.notify.paused
+        : notice === "needsUser"
+          ? result.summary || t.notify.needsUser
+          : result.summary ||
+            (notice === "met" ? t.notify.conditionMet : t.notify.finished);
   const windowId = await lastFocusedWindowId();
   await api
     .create(notificationId(task.id, result.chatId, windowId), {
@@ -118,16 +126,29 @@ export function setupTaskNotificationClicks() {
   });
 }
 
-// The number of tasks whose result the user has not seen in the task list.
-export function unseenCount(states: TaskStates) {
-  return Object.values(states).filter((state) => state.unseen).length;
+// The number of tasks whose result the user has not seen in the task list,
+// or that wait for the user's OK on this device.
+export function badgeCount(
+  tasks: ScheduledTask[],
+  states: TaskStates,
+  context: RunContext,
+) {
+  return tasks.filter((task) => {
+    const state = taskState(states, task.id);
+    return state.unseen || idleReason(task, state, context) === "needsOk";
+  }).length;
 }
 
-export async function updateTaskBadge(states: TaskStates) {
+export async function updateTaskBadge() {
   const api = getBrowserApi();
   const action = api.action ?? api.browserAction;
   if (!action?.setBadgeText) return;
-  const count = unseenCount(states);
+  const [tasks, states, context] = await Promise.all([
+    storage.tasks.get(),
+    storage.taskStates.get(),
+    loadRunContext(),
+  ]);
+  const count = badgeCount(tasks, states, context);
   await action
     .setBadgeText({ text: count ? String(Math.min(count, BADGE_MAX)) : "" })
     .catch(() => undefined);

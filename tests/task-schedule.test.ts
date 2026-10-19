@@ -4,6 +4,7 @@ process.env.TZ = "America/New_York";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { nextRunAt, parseClockTime } from "../src/shared/tasks/schedule";
+import { approvalOf } from "../src/shared/tasks/approval";
 import { plannedRunAt } from "../src/shared/tasks/lifecycle";
 import type { ScheduledTask, TaskTrigger } from "../src/shared/tasks/types";
 
@@ -128,7 +129,11 @@ test("runs missed while the browser was closed make one run, not a backlog", () 
   // Last ran on the 1st; the browser was closed for a week: one run is due
   // (in the past, so at once), and the next one counts from that run.
   const lastRunAt = local(2026, 10, 1, 9);
-  const due = plannedRunAt(task, { failures: 0, lastRunAt }, context)!;
+  const due = plannedRunAt(
+    task,
+    { failures: 0, lastRunAt, approved: approvalOf(task, 0) },
+    context,
+  )!;
   assert.equal(due, local(2026, 10, 2, 9));
   const ranLate = local(2026, 10, 8, 12);
   assert.equal(

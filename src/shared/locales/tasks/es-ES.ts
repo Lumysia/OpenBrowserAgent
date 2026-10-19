@@ -70,6 +70,7 @@ export const tasksEsES: TasksLocaleMessages = {
     watch: plural({ other: "Vigila {page} cada {count} min" }),
   },
   status: {
+    needsOk: "Necesita tu aprobación",
     unsupported: "Necesita una versión más reciente",
     running: "En curso",
     paused: "En pausa",
@@ -102,7 +103,10 @@ export const tasksEsES: TasksLocaleMessages = {
     openResult: "Abrir resultado",
   },
   notify: {
+    needsOk:
+      "No se ejecuta en este dispositivo hasta que la permitas en la lista de tareas.",
     titlePrefix: {
+      needsOk: "La tarea necesita tu aprobación",
       result: "Resultado de tarea",
       met: "Vigilancia",
       needsUser: "Una tarea te necesita",
@@ -113,7 +117,15 @@ export const tasksEsES: TasksLocaleMessages = {
     needsUser: "La tarea necesita tu respuesta para continuar.",
     paused: "La tarea falló varias veces seguidas y se ha pausado.",
   },
+  approval: {
+    allow: "Permitir",
+    discard: "Descartar",
+    waits: "Espera tu aprobación antes de ejecutarse en este dispositivo.",
+  },
   agentPermission: {
+    pendingHere:
+      "Activado en otro dispositivo: aquí solo actúa cuando lo permitas.",
+    allowHere: "Permitir en este dispositivo",
     label: "Actuar por su cuenta",
     description:
       "En tareas programadas y vigilancias, puede usar sus herramientas que hacen clic, escriben, envían o cambian cosas. Desactivado: esas ejecuciones solo miran.",
@@ -129,10 +141,7 @@ export const tasksEsES: TasksLocaleMessages = {
       "Este navegador no tiene notificaciones del sistema: los resultados se muestran en el botón de la barra de herramientas y en la lista de tareas.",
   },
   tool: {
-    scheduleTask: {
-      running: "Programando una tarea",
-      done: "Tarea programada",
-    },
+    tasks: { running: "Gestionando tareas", done: "Gestión de tareas" },
     taskResult: {
       running: "Informando del resultado",
       done: "Resultado informado",

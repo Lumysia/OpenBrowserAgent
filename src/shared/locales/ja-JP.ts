@@ -308,6 +308,7 @@ export const jaJP: LocaleMessages = {
       localExecution: "ローカルコマンド",
       scripts: "ページ JavaScript",
       devtools: "開発者診断",
+      tasks: "スケジュールタスク",
     },
     agentToolGroupDescriptions: {
       pages: "ページ構造の取得、検索、読み取り、抽出、スクリーンショット。",
@@ -325,6 +326,8 @@ export const jaJP: LocaleMessages = {
       scripts: "ページで任意の JavaScript を実行します。既定ではオフ。",
       devtools:
         "ネットワークとコンソールの記録、ネットワークリソース、デバイスエミュレーション。",
+      tasks:
+        "スケジュールタスクとページの監視を作成、変更、実行、一時停止、削除します。エージェントが設定したものはあなたの許可を待ちます。",
     },
     deleteAgent: "エージェントを削除",
     agentWorkspace: "エージェントワークスペース",

@@ -7,6 +7,7 @@ import {
   type TaskStates,
 } from "../src/shared/tasks/types";
 import { taskRunner, type RunHooks } from "../src/background/tasks/runner";
+import { approvalOf } from "../src/shared/tasks/approval";
 import { eventListeners, fakeTabs, installChrome } from "./fake-chrome";
 
 // The scheduler's browser in memory: alarms, notifications, the badge and
@@ -41,6 +42,8 @@ export async function schedulerEnv({
   states = {} as TaskStates,
   run = (async () => reported()) as Run,
   tabs = [] as Array<{ id: number; windowId?: number }>,
+  // The tasks were allowed on this device (made in its task list).
+  allowed = true,
 } = {}) {
   const alarms = new Map<string, { name: string; scheduledTime: number }>();
   const onAlarm = eventListeners<(alarm: { name: string }) => void>();
@@ -84,7 +87,20 @@ export async function schedulerEnv({
   });
   await storage.taskDeviceId.set(DEVICE);
   await storage.tasks.replace(tasks);
-  await storage.taskStates.set(states);
+  await storage.taskStates.set(
+    allowed
+      ? Object.fromEntries([
+          ...Object.entries(states),
+          ...tasks.map((item) => [
+            item.id,
+            {
+              approved: approvalOf(item, 0),
+              ...(states[item.id] ?? { failures: 0 }),
+            },
+          ]),
+        ])
+      : states,
+  );
   const runs: Array<{ task: ScheduledTask; hooks: RunHooks }> = [];
   const runner = async (task: ScheduledTask, hooks: RunHooks) => {
     runs.push({ task, hooks });

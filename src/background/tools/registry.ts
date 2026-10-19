@@ -16,7 +16,7 @@ import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
 import { screenshotTool } from "./screenshot";
 import { tabsTool, webSearchTool } from "./tabs";
-import { scheduleTaskTool, taskResultTool } from "./tasks";
+import { taskResultTool, tasksTool } from "./tasks";
 import {
   fail,
   schema,
@@ -49,7 +49,7 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   generateImageTool,
   runScriptTool,
   devtoolsTool,
-  scheduleTaskTool,
+  tasksTool,
   taskResultTool,
 ];
 

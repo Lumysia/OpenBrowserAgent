@@ -1,4 +1,5 @@
-import { mayActUnattended, resolveAgent } from "../../shared/agents";
+import { resolveAgent } from "../../shared/agents";
+import { mayActHere } from "../../shared/tasks/approval";
 import { storage } from "../../shared/storage";
 import {
   TASK_RESULT,
@@ -66,7 +67,7 @@ async function runAgent(
   tabId?: number,
 ): Promise<RunOutcome> {
   const agent = resolveAgent(await storage.agents.get(), task.agentId);
-  const readOnly = !mayActUnattended(agent);
+  const readOnly = !mayActHere(agent, await storage.agentActApprovals.get());
   let reported: TaskOutcome | undefined;
   let question: string | undefined;
   const run = await runBackgroundChat({

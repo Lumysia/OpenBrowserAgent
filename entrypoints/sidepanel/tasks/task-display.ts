@@ -95,6 +95,7 @@ export function taskStatus(
   const reason = idleReason(task, state, context);
   if (reason === "unsupported")
     return { label: s.unsupported, tone: "attention" };
+  if (reason === "needsOk") return { label: s.needsOk, tone: "attention" };
   if (reason === TASK_PAUSE.needsUser)
     return { label: s.needsUser, tone: "attention" };
   if (reason === TASK_PAUSE.failures)

@@ -65,6 +65,7 @@ export const tasksZhCN: TasksLocaleMessages = {
     watch: plural({ other: "每 {count} 分钟监视 {page}" }),
   },
   status: {
+    needsOk: "需要你允许",
     unsupported: "需要更新版本",
     running: "运行中",
     paused: "已暂停",
@@ -96,7 +97,9 @@ export const tasksZhCN: TasksLocaleMessages = {
     openResult: "打开结果",
   },
   notify: {
+    needsOk: "在任务列表中允许之前，它不会在此设备上运行。",
     titlePrefix: {
+      needsOk: "任务需要你允许",
       result: "任务结果",
       met: "监视",
       needsUser: "任务需要你处理",
@@ -107,7 +110,14 @@ export const tasksZhCN: TasksLocaleMessages = {
     needsUser: "任务需要你的回答才能继续。",
     paused: "任务连续多次失败，已暂停。",
   },
+  approval: {
+    allow: "允许",
+    discard: "放弃",
+    waits: "需等你允许后才会在此设备上运行。",
+  },
   agentPermission: {
+    pendingHere: "已在另一台设备上开启：你允许之前，它不会在这里自主操作。",
+    allowHere: "在此设备上允许",
     label: "自主操作",
     description:
       "在定时任务和监视中，可使用会点击、输入、提交或更改内容的工具。关闭时，这些运行只查看。",
@@ -121,7 +131,7 @@ export const tasksZhCN: TasksLocaleMessages = {
       "此浏览器没有系统通知：结果会显示在工具栏按钮和任务列表中。",
   },
   tool: {
-    scheduleTask: { running: "正在创建任务", done: "已创建任务" },
+    tasks: { running: "正在管理任务", done: "已管理任务" },
     taskResult: { running: "正在报告结果", done: "已报告结果" },
   },
 };

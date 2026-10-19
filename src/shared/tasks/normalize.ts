@@ -6,6 +6,7 @@ import {
   oneOf,
   trimmedString,
 } from "../values";
+import type { AgentActApprovals } from "./approval";
 import { parseClockTime } from "./schedule";
 import {
   INTERVAL_UNITS,
@@ -18,6 +19,7 @@ import {
   type KnownTrigger,
   type ScheduledTask,
   type TriggerKind,
+  type TaskApproval,
   type TaskDevice,
   type TaskResultStatus,
   type TaskState,
@@ -230,8 +232,34 @@ function normalizeState(value: unknown): TaskState {
           }
         : undefined,
     conditionMet: item.conditionMet === true || undefined,
+    approved: normalizeApproval(item.approved),
+    okNotified: trimmedString(item.okNotified) || undefined,
     tabId: finiteNumber(item.tabId),
   };
+}
+
+function normalizeApproval(value: unknown): TaskApproval | undefined {
+  if (!isRecord(value)) return undefined;
+  const trigger = normalizeTrigger(value.trigger);
+  if (!trigger || typeof value.prompt !== "string") return undefined;
+  return {
+    prompt: value.prompt,
+    trigger,
+    agentId: trimmedString(value.agentId),
+    enabled: value.enabled === true,
+    at: finiteNumber(value.at, 0),
+  };
+}
+
+export function normalizeAgentActApprovals(value: unknown): AgentActApprovals {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([id, approval]) =>
+      isRecord(approval) && Array.isArray(approval.toolGroups)
+        ? [[id, { toolGroups: approval.toolGroups.map(String) }]]
+        : [],
+    ),
+  );
 }
 
 export function normalizeTaskStates(value: unknown): TaskStates {
