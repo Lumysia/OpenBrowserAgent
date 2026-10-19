@@ -5,6 +5,7 @@ import { storage } from "../src/shared/storage";
 import { TOOL_NAME } from "../src/shared/tool-names";
 import { observation } from "../src/shared/tasks/watch-text";
 import { TASK_RESULT, type ScheduledTask } from "../src/shared/tasks/types";
+import { adoptAgentTab } from "../src/background/agent-tabs";
 import { judgeWatch, runTimeTask } from "../src/background/tasks/runner";
 import * as sessions from "../src/background/stream-sessions";
 import { installPiRuntimeBrowser } from "./pi-runtime-helpers";
@@ -109,4 +110,27 @@ test("a time task that reports has a verdict", async () => {
   sessions.abortSession(value.result.chatId!);
   assert.equal(value.result.status, TASK_RESULT.reported);
   assert.equal(value.result.summary, "Two new posts.");
+});
+
+test("tabs a task run opened close when it ends; the user's tabs stay", async () => {
+  let opened: number | undefined;
+  const { value } = await withModel(
+    [report("nothing", "Nothing new."), { text: "Nothing." }],
+    () =>
+      runTimeTask(HOURLY, {
+        ...hooks,
+        // As `tabs open` does in the run: a tab of the run's chat.
+        onChat: (chatId) =>
+          void chrome.tabs
+            .create({ url: "https://news.test/", active: false })
+            .then((tab) => {
+              opened = tab.id;
+              return adoptAgentTab({ chatId }, tab);
+            }),
+      }),
+  );
+  sessions.abortSession(value.result.chatId!);
+  const left = (await chrome.tabs.query({})).map((tab) => tab.id);
+  assert.ok(opened !== undefined);
+  assert.deepEqual(left, [42]);
 });

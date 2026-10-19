@@ -13,10 +13,16 @@ import {
   normalizeWatchedText,
   observation,
 } from "../../shared/tasks/watch-text";
+import { closeAgentTabs } from "../agent-tabs";
 import { runBackgroundChat } from "../sub-agent-run";
 import type { TaskOutcome } from "../tools/types";
 import { timeTaskInstruction, watchInstruction } from "./run-prompt";
-import { closeTaskTab, openTaskTab, readWatchedText } from "./watch-page";
+import {
+  closeTaskTab,
+  openTaskTab,
+  readWatchedText,
+  taskTabOwner,
+} from "./watch-page";
 
 // One run of a task: for a watch, a cheap read of the page first and a
 // model run only when it changed (or for the first look); for a time task,
@@ -75,6 +81,9 @@ async function runAgent(
     messageMetadata: { taskId: task.id },
     onStart: hooks.onChat,
   });
+  // Tabs the run opened (pages it browsed) close with it: nobody is there
+  // to look at them, and the result is in the chat.
+  await closeAgentTabs({ chatId: run.chatId });
   const at = Date.now();
   if (question !== undefined)
     return {
@@ -144,6 +153,7 @@ export async function runWatch(
     return await judgeWatch(task, baseline, text, tabId, hooks);
   } finally {
     await closeTaskTab(tabId);
+    await closeAgentTabs(taskTabOwner(task.id));
     hooks.onTab(undefined);
   }
 }

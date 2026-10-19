@@ -27,6 +27,7 @@ import {
   updateTaskBadge,
 } from "./notify";
 import { taskRunner } from "./runner";
+import { closeAgentTabs } from "../agent-tabs";
 import { closeTaskTab } from "./watch-page";
 
 // Runs the tasks this device owns, on chrome.alarms (one alarm per task,
@@ -207,19 +208,24 @@ async function recoverTasks() {
   const now = Date.now();
   const notices: Array<[ScheduledTask, Notice]> = [];
   const tabs: number[] = [];
+  const chats: string[] = [];
   await storage.taskStates.update((states) => {
     const next = { ...states };
     for (const task of tasks) {
       const state = taskState(states, task.id);
       if (!state.running || active.has(task.id)) continue;
       if (state.tabId !== undefined) tabs.push(state.tabId);
+      if (state.running.chatId) chats.push(state.running.chatId);
       const recovered = recoverInterrupted(task, state, now);
       next[task.id] = { ...recovered.state, tabId: undefined };
       if (recovered.notice) notices.push([task, recovered.notice]);
     }
     return next;
   });
-  await Promise.all(tabs.map(closeTaskTab));
+  await Promise.all([
+    ...tabs.map(closeTaskTab),
+    ...chats.map((chatId) => closeAgentTabs({ chatId })),
+  ]);
   for (const [task, notice] of notices)
     await notifyTask(task, notice, {
       status: TASK_RESULT.failed,
