@@ -1,4 +1,5 @@
 import { storage, removeById, updateById } from "../storage";
+import { sameJson } from "../sync/codec";
 import { normalizeTask } from "./normalize";
 import type { ScheduledTask, TaskState, TaskTrigger } from "./types";
 
@@ -27,25 +28,60 @@ export async function createTask(draft: TaskDraft) {
   return task;
 }
 
-// Changes a task's definition. A changed trigger or prompt starts over: the
-// schedule counts from now and a watch takes a new baseline.
-export async function updateTask(
-  id: string,
-  patch: Partial<Omit<ScheduledTask, "id" | "createdAt">>,
-) {
-  const changed = await updateById(storage.tasks, id, (task) => ({
+export type TaskPatch = Partial<
+  Omit<ScheduledTask, "id" | "createdAt" | "updatedAt">
+>;
+
+// The task with `patch` applied, read as stored tasks are (same limits and
+// checks as a new one); undefined when that is no task (an unusable
+// trigger). `restart`: the trigger or prompt really changed, so the
+// schedule counts from now and a watch takes a new baseline. Saving the
+// same values again (the form saves every field) changes nothing.
+export function editedTask(
+  task: ScheduledTask,
+  patch: TaskPatch,
+  now: number,
+): { task: ScheduledTask; changed: boolean; restart: boolean } | undefined {
+  const next = normalizeTask({
     ...task,
     ...patch,
-    updatedAt: Date.now(),
-  }));
-  if (changed && ("trigger" in patch || "prompt" in patch))
+    id: task.id,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+  });
+  if (!next) return undefined;
+  const restart =
+    next.prompt !== task.prompt || !sameJson(next.trigger, task.trigger);
+  const changed = !sameJson(next, task);
+  return {
+    task: changed ? { ...next, updatedAt: now } : task,
+    changed,
+    restart,
+  };
+}
+
+// Changes a task's definition. Returns the task as stored after it, or
+// undefined when there is no such task or the change makes no valid one.
+export async function updateTask(id: string, patch: TaskPatch) {
+  const current = (await storage.tasks.get()).find((task) => task.id === id);
+  if (!current) return undefined;
+  const edit = editedTask(current, patch, Date.now());
+  if (!edit) return undefined;
+  if (!edit.changed) return current;
+  const now = Date.now();
+  const saved = await updateById(
+    storage.tasks,
+    id,
+    (task) => editedTask(task, patch, now)?.task ?? task,
+  );
+  if (saved && edit.restart)
     await updateTaskState(id, (state) => ({
       ...state,
       nextRunAt: undefined,
       lastRunAt: undefined,
       baseline: undefined,
     }));
-  return changed;
+  return saved;
 }
 
 export async function deleteTask(id: string) {
