@@ -191,6 +191,12 @@ function normalizeState(value: unknown): TaskState {
               0,
               TASK_LIMITS.baselineChars,
             ),
+            ...(typeof baseline.tail === "string"
+              ? { tail: baseline.tail.slice(-TASK_LIMITS.baselineChars) }
+              : {}),
+            ...(typeof baseline.lines === "string"
+              ? { lines: baseline.lines }
+              : {}),
             at: finiteNumber(baseline.at, 0),
           }
         : undefined,

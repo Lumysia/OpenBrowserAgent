@@ -10,6 +10,7 @@ import {
 } from "../../shared/tasks/types";
 import {
   compareWithBaseline,
+  normalizeWatchedText,
   observation,
 } from "../../shared/tasks/watch-text";
 import { runBackgroundChat } from "../sub-agent-run";
@@ -148,7 +149,11 @@ export async function judgeWatch(
   const { trigger } = task;
   if (trigger.kind !== "watch") throw new Error("Not a watch.");
   const current = await observation(text, Date.now());
-  const check = compareWithBaseline(baseline, current);
+  const check = compareWithBaseline(
+    baseline,
+    current,
+    normalizeWatchedText(text),
+  );
   if (check.kind === "unchanged")
     return {
       failed: false,

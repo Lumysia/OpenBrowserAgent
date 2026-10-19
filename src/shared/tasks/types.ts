@@ -13,6 +13,8 @@ export const TASK_LIMITS = {
   failuresToPause: 3,
   // What a watch keeps of the page to show the model what changed.
   baselineChars: 20_000,
+  // Lines a baseline keeps a key for; the rest share the last key.
+  baselineLines: 50_000,
   // How much of each side of a change the model gets.
   changeChars: 8_000,
   // Lines of unchanged text kept around a change.
@@ -96,7 +98,17 @@ export const TASK_PAUSE = {
 } as const;
 export type TaskPause = (typeof TASK_PAUSE)[keyof typeof TASK_PAUSE];
 
-export type WatchBaseline = { hash: string; text: string; at: number };
+// What a watch keeps of the page it saw: the hash of the whole text, a
+// short key per line (where a change is, however long the page), and the
+// text of its first and last lines within baselineChars (`text`, `tail`)
+// to show the model what was there before.
+export type WatchBaseline = {
+  hash: string;
+  text: string;
+  tail?: string;
+  lines?: string;
+  at: number;
+};
 
 export type TaskState = {
   nextRunAt?: number;

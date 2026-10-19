@@ -69,8 +69,47 @@ test("the hash covers the whole text; the stored copy is bounded", async () => {
   const one = await observation(`${head}\nend one`, 1);
   const two = await observation(`${head}\nend two`, 1);
   assert.notEqual(one.hash, two.hash);
-  assert.equal(one.text.length, TASK_LIMITS.baselineChars);
+  assert.ok(
+    one.text.length + (one.tail?.length ?? 0) <= TASK_LIMITS.baselineChars,
+  );
   assert.equal((await hashText("x")).length, 64);
+});
+
+test("a change past the kept copy reaches the model as the actual change", async () => {
+  const rows = (count: number) =>
+    Array.from({ length: count }, (_, index) => `Row ${index} item text`);
+  const filler = rows(3000);
+  assert.ok(filler.join("\n").length > TASK_LIMITS.baselineChars * 2);
+  const page = (price: string, middle: string) =>
+    [
+      ...filler.slice(0, 1500),
+      middle,
+      ...filler.slice(1500),
+      `Price: ${price}`,
+    ].join("\n");
+  // Near the end: the kept tail shows both sides.
+  const before = await observation(page("60", "Note: none"), 1);
+  const text = normalizeWatchedText(page("40", "Note: none"));
+  const after = await observation(text, 2);
+  const end = compareWithBaseline(before, after, text);
+  assert.equal(end.kind, "changed");
+  if (end.kind !== "changed") return;
+  assert.match(end.before, /Price: 60/);
+  assert.match(end.after, /Price: 40/);
+  assert.doesNotMatch(end.after, /Row 0 /);
+  // In the middle, past both kept parts: the new lines come from the
+  // whole text; the old ones are named as not kept.
+  const middle = normalizeWatchedText(page("60", "Note: sale today"));
+  const check = compareWithBaseline(
+    before,
+    await observation(middle, 3),
+    middle,
+  );
+  assert.equal(check.kind, "changed");
+  if (check.kind !== "changed") return;
+  assert.match(check.after, /Note: sale today/);
+  assert.match(check.before, /lines not kept/);
+  assert.ok(check.after.length < 1_000);
 });
 
 test("page text reaches the model as untrusted data, escaped", () => {
