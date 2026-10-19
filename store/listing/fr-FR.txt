@@ -1,40 +1,32 @@
 OpenBrowserAgent intègre un agent IA dans le panneau latéral de votre navigateur. Posez des questions sur la page affichée, lancez une recherche sur le Web ou confiez-lui une tâche dans le navigateur. L’agent lit les pages, clique, saisit du texte et passe d’un onglet à l’autre, et vous suivez chaque étape.
 
-Vous choisissez votre propre modèle. OpenBrowserAgent ne demande aucun compte et n’a pas de serveur à lui : vos messages sont envoyés uniquement aux fournisseurs de modèles, aux serveurs MCP et au stockage de synchronisation que vous avez configurés. Avant qu’un fournisseur sur un autre serveur reçoive votre contenu pour la première fois, vous l’acceptez pour ce fournisseur ; les modèles locaux n’ont pas besoin d’autorisation.
+Vous apportez votre propre modèle : un fournisseur d’IA dans le cloud avec votre propre clé API, ou un modèle qui tourne sur votre ordinateur. OpenBrowserAgent ne demande aucun compte et n’a pas de serveur à lui. Votre contenu va uniquement aux services que vous configurez, et un fournisseur d’IA sur un autre serveur ne reçoit rien tant que vous ne l’avez pas accepté pour ce fournisseur. Les modèles sur votre ordinateur ou votre réseau local n’ont pas besoin d’autorisation.
 
 CE QUE VOUS POUVEZ FAIRE
 
-• Poser des questions sur la page actuelle ou sur plusieurs onglets : résumés, comparaisons, explications, traductions.
-• Faire une recherche sur le Web et obtenir une réponse accompagnée de sources cliquables.
-• Confier le travail de navigation à l’agent : remplir des formulaires, comparer des produits, rassembler des informations sur plusieurs pages, ranger et regrouper vos onglets.
-• Modifier une page directement, par exemple pour la traduire, et prendre des captures d’écran ou télécharger des fichiers.
-• Sélectionner du texte sur n’importe quelle page pour lancer des actions rapides (expliquer, traduire, améliorer la formulation, lire à voix haute). Cette fonction reste désactivée tant que vous ne l’activez pas, et vous pouvez la limiter aux sites de votre choix.
-• Faire un clic droit sur une page, un lien ou du texte sélectionné pour poser une question, résumer, rechercher sur le web ou copier la page en Markdown. Vous pouvez désactiver le menu ou chacun de ses éléments.
-• Traduire le contenu d’une page avec le bouton sur le bord de la page, le menu du bouton de la barre d’outils, un raccourci clavier ou le menu contextuel, à côté de l’original ou à sa place, sans changer la mise en page, puis revenir avec « Afficher l’original ». Les pages suivantes ouvertes dans cet onglet sont aussi traduites, jusqu’à ce que vous le rechargiez. Avec votre modèle d’IA, le traducteur intégré du navigateur s’il en a un, ou la traduction gratuite de Google ou de Microsoft (le texte de la page leur est alors envoyé).
+• Poser des questions sur une page ou plusieurs onglets : résumés, comparaisons, explications et réponses avec des sources cliquables.
+• Confier du travail dans le navigateur à l’agent, comme remplir des formulaires, rassembler des informations de plusieurs pages ou ranger vos onglets. Il peut aussi faire des captures d’écran et enregistrer des fichiers pour vous.
+• Traduire des pages web sans casser leur mise en page, à côté de l’original ou à sa place, et traduire les sous-titres d’une vidéo pendant que vous la regardez. Vous choisissez le moteur : votre modèle d’IA, le traducteur intégré du navigateur s’il en a un, ou un service de traduction en ligne gratuit.
+• Sélectionner du texte sur une page pour des actions rapides, comme l’expliquer, le traduire ou chercher un mot avec le sens qu’il a sur cette page. Vous décidez sur quels sites cela apparaît.
+• Partir de la page elle-même : le menu contextuel du navigateur et le bouton de l’extension dans la barre d’outils mènent à l’agent et aux outils de la page.
 
-AGENTS ET COMPÉTENCES
+AGENTS, COMPÉTENCES ET OUTILS
 
-• Les agents Naviguer et Demander sont inclus. Vous pouvez créer les vôtres, avec leurs propres instructions, outils, modèle et notes privées.
-• Les agents peuvent confier une partie du travail à des sous-agents qui s’exécutent en arrière-plan.
-• Les compétences sont des instructions réutilisables. Les compétences intégrées couvrent le remplissage de formulaires, le rangement des onglets, l’aide sur l’extension et la rédaction de nouvelles compétences. Choisissez une compétence avec « / », ou laissez l’agent en utiliser une lorsqu’elle correspond à la demande. Les compétences peuvent être importées et exportées.
-
-VOS MODÈLES, VOS OUTILS
-
-• Connectez des services compatibles OpenAI ou Anthropic, ou un modèle local, avec vos propres clés API et URL de base.
-• Utilisez un modèle auxiliaire moins coûteux pour lire les pages longues.
-• Connectez des serveurs MCP distants (Streamable HTTP) pour disposer d’outils supplémentaires. Des serveurs de recherche Web sans clé API sont recommandés et s’ajoutent en un clic ; à l’ajout, chacun est testé puis activé.
-• Des chiffres exacts : l’agent peut exécuter le code JavaScript qu’il écrit dans un bac à sable sur votre appareil, sans accès à Internet, pour calculer, analyser des tableaux et transformer des données.
-• Pont d’exécution local facultatif : il permet à un agent d’exécuter des commandes sur votre ordinateur, uniquement après que vous l’avez installé et activé.
+• Créez des agents avec leurs propres instructions, outils et modèle. Les agents peuvent confier du travail à des sous-agents qui s’exécutent en arrière-plan.
+• Les compétences sont des instructions réutilisables : choisissez-en une vous-même, ou laissez l’agent l’utiliser quand une demande s’y prête. Écrivez les vôtres, importez-les ou exportez-les.
+• Connectez des serveurs MCP pour donner à l’agent davantage d’outils, comme la recherche sur le Web.
+• Pour des chiffres exacts, l’agent peut écrire du code et l’exécuter dans un bac à sable sur votre appareil, sans accès à Internet.
+• Un pont local facultatif permet à un agent d’exécuter des commandes sur votre ordinateur, seulement après que vous l’avez installé et activé.
 
 SYNCHRONISATION ENTRE APPAREILS
 
-• Synchronisez vos paramètres, agents et compétences via le compte de votre navigateur ou votre propre stockage WebDAV ; si vous le souhaitez, aussi vos clés API (chiffrées sur votre appareil avec votre propre phrase secrète), vos discussions et vos fichiers.
-• Les modifications sont fusionnées élément par élément : les changements faits sur deux appareils ne s’écrasent pas, et les suppressions importantes vous sont d’abord soumises pour confirmation.
+• Synchronisez paramètres, agents et compétences via le compte de votre navigateur ou votre propre stockage WebDAV. Si vous le souhaitez, synchronisez aussi vos discussions, fichiers et clés API ; les clés sont chiffrées sur votre appareil avec votre propre phrase secrète.
+• Les modifications sont fusionnées élément par élément, si bien que les changements faits sur deux appareils ne s’écrasent pas.
 
 VOUS GARDEZ LE CONTRÔLE
 
-• Chaque étape d’outil s’affiche pendant son exécution, avec ses détails consultables.
-• En cas de doute, l’agent vous demande avant de soumettre, d’acheter, d’envoyer ou de supprimer quoi que ce soit.
-• Interface disponible en English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 et 繁體中文, avec thèmes clair et sombre.
+• Chaque étape de l’agent s’affiche pendant son exécution, avec ses détails.
+• En cas de doute, l’agent demande avant de soumettre, d’acheter, d’envoyer ou de supprimer quoi que ce soit.
+• L’interface est disponible dans de nombreuses langues, avec des thèmes clair et sombre.
 
 OpenBrowserAgent est open source. Code source, documentation et suivi des problèmes : https://github.com/Lumysia/OpenBrowserAgent

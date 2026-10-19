@@ -1,91 +1,91 @@
-OpenBrowserAgent 0.1.0: Chrome Web Store "Privacy practices" tab
-================================================================
+OpenBrowserAgent: Chrome Web Store "Privacy practices" tab
+==========================================================
 
 SINGLE PURPOSE
 --------------
-OpenBrowserAgent is an AI assistant in the browser's side panel. The user connects their own AI model provider, then asks questions about the pages they have open or asks the agent to carry out tasks in the browser (reading pages, filling in forms, managing tabs), watching every step as it runs.
+OpenBrowserAgent is an AI assistant in the browser's side panel. The user connects their own AI model, then asks questions about the pages they have open or asks the agent to carry out tasks in the browser (reading pages, filling in forms, managing tabs), watching every step as it runs. The same assistant helps them read pages: it translates pages and video subtitles, and explains, translates or looks up text they select.
 
 
 PERMISSION JUSTIFICATIONS (same order as the store page; each under 1000 characters)
 
 == scripting justification ==
-Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, show a page translation the user asked for (and, while it is on in Settings, a small translate button on the page's edge that does nothing until clicked), and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
+Runs the extension's own bundled scripts in pages the user asks it to read, act on or translate: reading the page or the element the user picks, the clicks, typing and scrolling of a task the user gave the agent, translating a page or a video's subtitles, and the page features the user keeps on for a site (such as quick actions on selected text). A page feature acts only when the user uses it or has turned it on (such as automatic subtitle translation), and the user can turn page features off or limit them to chosen sites. When the user opens the toolbar menu, a script checks which page tools fit the current page. What a script reads goes only to the AI provider or translation engine the user chose. No code is fetched from a server.
 
 == tabs justification ==
-The agent lists, opens, reloads, navigates and closes tabs when the user asks it to work across pages (in the background, so the user keeps their own tab; it brings a tab to the front only when the user asks), and the user can attach open tabs (title and URL) to a chat as context.
+Lets the agent find, open, navigate, reload and close tabs when the user asks it to work across pages, and lets the user attach open tabs (title and URL) to a chat as context. The current tab's address is read to show the page tools for that site. Tab information is used only for the user's request.
 
 == storage justification ==
-Saves the user's settings, model providers, agents, skills and chats on the device. With sync on, settings (without API keys) go to the user's own browser account sync or WebDAV storage; API keys and MCP headers only if the user turns that on, encrypted on the device with a passphrase the user sets; chats and files only if turned on. Local execution bridges are never synced.
+Saves the extension's data on the user's device: settings, AI providers, agents, skills, chats, and saved page translations so translated pages load again quickly. When the user turns on sync, the data they chose to sync goes to their own browser account sync or their own WebDAV storage. Secrets such as API keys are synced only if the user turns that on, encrypted on the device with a passphrase the user sets. Local execution bridges are never synced.
 
 == downloads justification ==
-Saves what the user asks for to the browser's Downloads folder: chat exports as Markdown, generated images, diagrams, files the agent downloads from a link, and text or files the agent prepared. The agent reads the state of downloads (finished, failed, where the file was saved) so it can tell the user where the file is, and can cancel or retry the downloads it started. It never opens downloaded files or deletes them.
+Saves files the user asks for to the browser's Downloads folder, such as chat exports and files the agent creates or downloads during a task the user gave it. The agent reads the state of the downloads it started (finished, failed, where the file was saved) to tell the user where a file is, and can cancel or resume them. It never opens or deletes downloaded files.
 
 == unlimitedStorage justification ==
-Chats with image and file attachments can exceed the default extension storage quota. They are kept only on the user's device.
+Chats with image and file attachments, and saved page translations, can exceed the default extension storage quota. They are kept only on the user's device.
 
 == alarms justification ==
-While an extension page is open, checks the user's own sync storage for changes once a minute.
+Keeps sync with the user's own storage running when the background service worker has stopped: checks for changes regularly while an extension page is open, syncs a local change shortly after it is made, and tries again after a pause when the storage failed or asked it to wait.
 
 == declarativeNetRequestWithHostAccess justification ==
-Removes the Origin header from the extension's own requests to an MCP server, only when the user turns on "Send without browser Origin" for that server, because some servers reject browser-origin requests. Each rule matches only that server's URL and only this extension's requests. Other sites and requests are never modified.
+Removes the browser's Origin header from the extension's own requests to a server the user added (such as an MCP server), only when the user turns that on for that server, because some servers reject requests from browsers. Each rule matches only that server's URL and only this extension's requests. Other sites and requests are never modified.
 
 == contextMenus justification ==
-Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, translate the page (and show the original again), search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel, translate the page or copy to the clipboard when the user picks them.
+Adds an OpenBrowserAgent submenu to the right-click menu for the page, a link, a video or the selected text: for example to ask the agent about it, translate it, search the web about it or copy the page. An item does something only when the user picks it, and the user can turn the menu or single items off.
 
 == webNavigation justification ==
-While the agent clicks on a page in the background, tells which tabs that page opened (a link that opens a new tab), so the extension can put the user's own tab back in front instead of leaving them on the new tab. After the user translates a page, tells when a new page loads in that same tab (to translate it too) and when the tab is reloaded (to stop). Navigation events of other tabs are ignored; only the IDs of tabs in translate mode are kept, in session memory, and nothing is sent.
+Follows navigation only in tabs the extension is working in: while the agent works on a page in the background, it tells which tabs that page opened, so the extension can put the user's own tab back in front; after the user translates a page, it tells when that tab, or a tab it opened, loads a new page (to translate it too) and when the tab is reloaded (to stop). Navigation in other tabs is ignored; only the IDs of the tabs involved are kept, in session storage, and nothing is sent.
 
 == nativeMessaging justification ==
 Optional local execution bridge: connects to a separately installed helper on the user's computer, only after the user installs it and enables it for an agent.
 
 == search justification ==
-Runs web searches through the browser's default search engine (the one the user chose) when the agent needs to look something up.
+Runs web searches through the browser's default search engine (the one the user chose) when the agent needs to look something up for the user's request.
 
 == tabGroups justification ==
-When the user asks the agent to tidy tabs, it groups them and names and colors the groups, and it shows group names in tab lists.
+When the user asks the agent to organize tabs, it groups them and names and colors the groups, and it shows group names in tab lists.
 
 == sidePanel justification ==
-The extension's whole interface (chat, agent steps, composer) lives in the browser side panel.
+The extension's main interface (chat, agent steps, composer) lives in the browser side panel. The user opens it from the extension's toolbar button, its right-click menu items or a keyboard shortcut.
 
 == debugger justification ==
-Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, and developer diagnostics. It is detached right after the call, except while the agent emulates a device (until it resets the emulation) or records a tab's network requests and console messages to debug a page (until the agent's reply ends); Chrome shows its "being debugged" bar meanwhile. A recording stays in memory and is discarded when the tab closes; cookies, authorization headers, and password and token fields are removed from it before the AI model sees it.
+Attached to a tab only for the duration of an action that needs it, or of a recording the agent starts during the user's task, and detached right after. Actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, device emulation (until the agent resets it), the optional page script tool (off by default), and developer diagnostics. A recording of a tab's network requests and console messages, made to debug a page, ends with the agent's reply. Chrome shows its "being debugged" bar meanwhile. A recording stays in memory and is discarded when the tab closes; cookies, authorization headers, passwords, tokens and other credentials are removed from it before the AI model sees it.
 
 == offscreen justification ==
-Does DOM work the background service worker cannot: converts fetched web page HTML into Markdown with the browser's DOM parser, holds the files the agent saves to the user's downloads, and hosts the extension's sandboxed page (code-sandbox.html) in which the agent's code tool runs a bundled JavaScript interpreter in a Worker. The offscreen document shows nothing and loads nothing from servers.
+Does DOM work the background service worker cannot: converts fetched web pages into Markdown with the browser's DOM parser, holds the files the agent saves to the user's downloads, and hosts the extension's sandboxed page in which the agent's code tool runs a bundled JavaScript interpreter in a Worker. The offscreen document shows nothing and loads nothing from servers.
 
 == Host permission justification ==
-The user can ask the agent to read or act on any site they visit, translate any page, and connect any model provider, MCP server or WebDAV sync server by URL. These cannot be known in advance, so access to all URLs is needed. The extension acts on a page only when the user starts a task, attaches the page or translates it.
+The user can ask the agent to read or act on any site they visit, translate any page or the subtitles of a video on any site (reading the caption files its player loads), use page features on the sites they choose, and connect any AI provider, MCP server or sync server by its URL; the free online translation services, when the user picks one, are reached from the extension too. These cannot be known in advance, so access to all URLs is needed. The extension reads or acts on a page only when the user starts a task, attaches or translates the page, or uses or turns on a page feature for it.
 
 
 REMOTE CODE
 -----------
 Answer: Yes, I am using remote code.
 Justification: The optional code tool runs JavaScript that the user's own AI model writes during a task (to calculate, parse a table or reshape data). It runs only in QuickJS, a JavaScript interpreter compiled to WebAssembly that is bundled in the package, inside a Worker created by a sandboxed extension page (manifest sandbox.pages: opaque origin, no extension APIs; its CSP is default-src 'none', so it has no network access). The code sees only the text the agent passes in and returns text. All of the extension's own JavaScript and WebAssembly is in the package; no script or module is ever downloaded, and nothing uses eval or new Function.
-(Note: the agent's optional "run page JavaScript" tool is off by default. When the user enables it, it runs model-written snippets in the web page, not in the extension.)
+(Note: the agent's optional tool that runs scripts in the web page is off by default. When the user enables it, it runs model-written snippets in the web page, not in the extension.)
 
 
 DATA USAGE: what to tick
 ------------------------
-OpenBrowserAgent has no server of its own, but it does send these kinds of data off the device to services the user configures (their AI provider, MCP servers, sync storage, and the translation engine they pick for page translation). Google counts reading or capturing page content as "handling" user data, so declare these four:
+OpenBrowserAgent has no server of its own, but it does send these kinds of data off the device to services the user configures (their AI provider, MCP servers, sync storage, and the translation engine they pick for page and subtitle translation). Google counts reading or capturing page content as "handling" user data, so declare these four:
 
 [ ] Personally identifiable information: left unticked; the extension never asks for it (only incidental if the user types it)
 [ ] Health information
 [ ] Financial and payment information
-[x] Authentication information: the user's API keys are sent to the provider they belong to; if the user turns on key sync, they are also stored in the user's own sync storage, encrypted on the device with the user's sync passphrase
+[x] Authentication information: the user's API keys are sent to the service they belong to; if the user turns on key sync, they are also stored in the user's own sync storage, encrypted on the device with the user's sync passphrase
 [x] Personal communications: the user's chat messages to the AI
 [ ] Location
 [x] Web history: titles and URLs of tabs the user attaches or the agent works in
 [ ] User activity: left unticked; the extension doesn't monitor the user's clicks or keystrokes (the agent's own actions are not user activity)
-[x] Website content: page text, screenshots and selected elements sent to the user's AI provider; the text of pages the user translates, sent to the translation engine they selected (by default the browser's on-device translator, which sends nothing, and their AI provider where the browser can't translate the page; their AI provider if they pick it; or Google's or Microsoft's free translation service if they pick one; when the picked one fails on a page, the other one translates the rest of that page)
+[x] Website content: page text, screenshots, selected elements and selected text, sent to the user's AI provider; the text of pages and the subtitles of videos the user translates, sent only to the translation engine the user picked: the browser's on-device translator sends nothing; their AI provider receives it if they pick their AI model; Google's or Microsoft's free translation service receives it if they pick one, and when the picked one fails on a page, the other one translates the rest of that page
 
-Consent: before content goes to an AI provider on another server for the first time, the extension names the provider's host (for example api.openai.com) and asks the user to agree, in the provider form or before the first message. Nothing is sent until they agree; the permission can be withdrawn in Settings > AI providers & models. Local providers (localhost, private network) need none.
+Consent: before content goes to an AI provider on another server for the first time, the extension names the provider's host (for example api.openai.com) and asks the user to agree, when they add the provider or before their first message to it. Nothing is sent until they agree. The permission applies to that host only, and the user can withdraw it in the extension's settings. Providers on the user's device or local network need none.
 
 Certify all three:
 [x] I do not sell or transfer user data to third parties, outside of the approved use cases
 [x] I do not use or transfer user data for purposes that are unrelated to my item's single purpose
 [x] I do not use or transfer user data to determine creditworthiness or for lending purposes
 
-Limited Use: the privacy policy states that the use of information received complies with the Chrome Web Store User Data Policy, including the Limited Use requirements; page text sent to Google or Microsoft for translation is only used to provide the translation the user asked for.
+Limited Use: the privacy policy states that the use of information received complies with the Chrome Web Store User Data Policy, including the Limited Use requirements; page text and subtitles sent to Google or Microsoft for translation are only used to provide the translation the user asked for.
 
 Privacy policy URL:
 https://github.com/Lumysia/OpenBrowserAgent/blob/main/PRIVACY.md
