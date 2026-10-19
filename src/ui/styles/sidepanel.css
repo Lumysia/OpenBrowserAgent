@@ -449,7 +449,14 @@
   justify-self: end;
 }
 
-/* Task list: rows reuse the history list; the form fits the panel. */
+/* Task list: rows reuse the history list with up to three detail lines;
+   the form fits the panel. */
+.history-item.task-item {
+  max-height: none;
+}
+.task-item .history-select {
+  height: auto;
+}
 .task-form {
   padding: var(--space-3);
 }
