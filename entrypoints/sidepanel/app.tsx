@@ -36,6 +36,7 @@ import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useSendMessage } from "./use-send-message";
 import { useSidePanelHandoff } from "./use-side-panel-handoff";
+import { NavigationProvider, useNavigationState } from "./sidepanel-navigation";
 import { useChatAttachments } from "./use-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -209,8 +210,14 @@ function SidepanelRoot() {
     startStream: streams.startStream,
   });
 
+  const navigation = useNavigationState();
   useSidePanelHandoff({
     ready: !!chats,
+    openChat: (chatId) => {
+      selectChat(chatId);
+      navigation.showChat();
+    },
+    showTasks: () => navigation.showTasks(),
     importChat,
     createChat,
     attachTab: pageContext.attachTab,
@@ -329,10 +336,12 @@ function SidepanelRoot() {
         stop: streams.stopCurrentStream,
       }}
     >
-      <SidepanelView
-        modelCount={configuredModels.length}
-        messagesRef={messagesRef}
-      />
+      <NavigationProvider value={navigation}>
+        <SidepanelView
+          modelCount={configuredModels.length}
+          messagesRef={messagesRef}
+        />
+      </NavigationProvider>
     </SidepanelProviders>
   );
 }

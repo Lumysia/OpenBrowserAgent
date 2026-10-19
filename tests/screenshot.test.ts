@@ -142,3 +142,16 @@ test("without the debugger, ref and region crops come from the visible capture",
   );
   assert.deepEqual(state.activated, []);
 });
+
+test("a run nobody watches never brings a tab to the front for a capture", async () => {
+  const state = browser();
+  const unattended = context();
+  Object.assign(unattended.run, {
+    unattended: { readOnly: true, needsUser() {} },
+  });
+  const result = await screenshotTool.execute({}, unattended);
+  assert.equal(result.isError, true);
+  assert.match(result.text, /never brings a tab to the front/);
+  assert.deepEqual(state.activated, []);
+  assert.deepEqual(state.captured, []);
+});

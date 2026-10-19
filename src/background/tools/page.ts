@@ -28,6 +28,7 @@ export function pageSource(tab: PageTab): SourceInput {
 
 export const snapshotTool: ToolDefinition = {
   name: TOOL_NAME.snapshot,
+  effects: "read",
   group: "pages",
   readOnly: true,
   summary: "Page structure with refs",
@@ -90,6 +91,7 @@ export const snapshotTool: ToolDefinition = {
 
 export const findTool: ToolDefinition = {
   name: TOOL_NAME.find,
+  effects: "read",
   group: "pages",
   readOnly: true,
   summary: "Search the current page",
@@ -142,6 +144,7 @@ export const EXTRACT_SYSTEM =
 
 export const extractTool: ToolDefinition = {
   name: TOOL_NAME.extract,
+  effects: "read",
   group: "pages",
   readOnly: true,
   summary: "Answer a question about a page",

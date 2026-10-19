@@ -27,6 +27,21 @@ export type ToolResult = {
   isError?: boolean;
 };
 
+// A run nobody watches: a scheduled task or a watch. `readOnly`: it may
+// only use tools that look (see ToolEffects); set unless its agent may act
+// on its own. `needsUser` records a question nobody is there to answer.
+export type UnattendedRun = {
+  readOnly: boolean;
+  needsUser(question: string): void;
+  // The task's own run (not its sub-agents') reports its outcome.
+  report?(outcome: TaskOutcome): void;
+};
+
+export type TaskOutcome = {
+  outcome: "report" | "nothing" | "met" | "notMet";
+  summary: string;
+};
+
 // Everything a run knows that tools may need. Built once per run.
 export type RunContext = {
   chatId: string;
@@ -44,6 +59,8 @@ export type RunContext = {
   parentChatId?: string;
   // The tab page tools work on when a call names none.
   tab: RunTab;
+  // Set for scheduled task and watch runs.
+  unattended?: UnattendedRun;
   storeArtifact(label: string, text: string): Promise<string>;
   readArtifact(
     handle: string,
@@ -67,7 +84,13 @@ export type RunContext = {
 // listed without a running chat.
 export type ToolSetup = Pick<
   RunContext,
-  "agent" | "mcpServers" | "preferences" | "providers" | "depth" | "workspace"
+  | "agent"
+  | "mcpServers"
+  | "preferences"
+  | "providers"
+  | "depth"
+  | "workspace"
+  | "unattended"
 >;
 
 // The chat a run's tabs and downloads belong to: a sub-agent's are its
@@ -87,6 +110,30 @@ export type ToolContext = {
 
 type JsonSchema = Record<string, unknown>;
 
+// What a call does beyond the run. "read" only looks: reads pages and files,
+// searches, captures, computes, opens a background tab of its own. "act"
+// changes something: clicks or types on a page, edits it, navigates or
+// closes a tab, downloads, writes stored data, runs local commands, or
+// calls a service with effects. Unattended read-only runs get only "read".
+export const TOOL_EFFECT = { read: "read", act: "act" } as const;
+export type ToolEffect = (typeof TOOL_EFFECT)[keyof typeof TOOL_EFFECT];
+
+// One effect for the tool; one per value of its `action` parameter
+// (actions not listed act); or `byRun`: the tool reads, and what else it
+// can change (runCode's saved files) it changes only in runs that may act
+// (see mayChange). A read-only run gets it with `readOnlyNote` added to its
+// description.
+export type ToolEffects =
+  | ToolEffect
+  | { byAction: Record<string, ToolEffect> }
+  | { byRun: { readOnlyNote: string } };
+
+// Whether this run may change anything beyond itself: false in unattended
+// runs whose agent may not act on its own.
+export function mayChange(run: Pick<RunContext, "unattended">) {
+  return !run.unattended?.readOnly;
+}
+
 export type ToolDefinition = {
   name: string;
   // Tools without a group are available to every agent.
@@ -97,6 +144,8 @@ export type ToolDefinition = {
   summary: string;
   description: string;
   parameters: JsonSchema;
+  // What its calls change (see ToolEffects); every tool declares it.
+  effects: ToolEffects;
   // Read-only calls run in parallel and an identical repeat is answered
   // with a reference to the earlier output.
   readOnly?: boolean;

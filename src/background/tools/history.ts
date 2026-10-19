@@ -4,6 +4,7 @@ import { json, schema, type ToolDefinition } from "./types";
 
 export const chatHistoryTool: ToolDefinition = {
   name: TOOL_NAME.chatHistory,
+  effects: { byAction: { search: "read", read: "read", delete: "act" } },
   group: "history",
   onDemand: true,
   summary: "Search, read or delete saved chats",

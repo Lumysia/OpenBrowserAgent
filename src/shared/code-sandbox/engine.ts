@@ -14,6 +14,7 @@ import { errorMessage } from "../error-message";
 import { readPath } from "../read-ids";
 import { WORKSPACE_ERROR_TEXT } from "../workspace-errors";
 import {
+  CODE_READ_ONLY_WRITE_ERROR,
   CODE_RUN_STOP,
   type CodeRunRequest,
   type CodeRunResult,
@@ -229,6 +230,7 @@ function saveFile(
   pathHandle: QuickJSHandle,
   textHandle: QuickJSHandle,
 ) {
+  if (request.readOnly) return CODE_READ_ONLY_WRITE_ERROR;
   const existing = request.workspaceFiles;
   if (!existing)
     return "writeFile needs an agent workspace; this agent has none. Print the result instead.";

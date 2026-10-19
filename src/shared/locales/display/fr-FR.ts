@@ -128,6 +128,10 @@ export const displayFrFR: DisplayMessages = {
       run: "Exécution",
       start: "Démarrage",
       cancel: "Annulation",
+      get: "Consultation",
+      runNow: "Exécution lancée",
+      pause: "Mise en pause",
+      resume: "Reprise",
     },
     commandStates: {
       running: "En cours",

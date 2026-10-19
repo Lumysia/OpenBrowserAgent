@@ -26,8 +26,13 @@ export type CodeRunRequest = {
   // now: writes are held to the workspace's limits during the run. Absent:
   // the agent has no workspace and `writeFile` fails.
   workspaceFiles?: Record<string, number>;
+  // The run may only look (an unattended read-only run): `writeFile` fails.
+  readOnly?: boolean;
   timeoutMs: number;
 };
+
+export const CODE_READ_ONLY_WRITE_ERROR =
+  "writeFile is not available: this run runs on its own and may only read. Print the result instead.";
 
 // Why a run ended early.
 export const CODE_RUN_STOP = {

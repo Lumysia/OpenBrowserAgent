@@ -106,6 +106,10 @@ export const displayZhCN: DisplayMessages = {
       run: "已运行",
       start: "已启动",
       cancel: "已取消",
+      get: "已查看",
+      runNow: "已开始运行",
+      pause: "已暂停",
+      resume: "已恢复",
     },
     commandStates: {
       running: "运行中",

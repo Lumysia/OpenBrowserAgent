@@ -59,6 +59,8 @@ export type Preferences = {
   smartBar?: SmartBarSettings;
   contextMenu?: ContextMenuSettings;
   pageTranslate?: PageTranslateSettings;
+  // Pauses every scheduled task and watch (on every device).
+  tasksPaused?: boolean;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";
@@ -93,6 +95,9 @@ export type Agent = {
   modelId?: string;
   // Private files (memory, user notes) that persist across chats.
   workspace: boolean;
+  // May use acting tools (click, type, downloads, …) when it runs on its own
+  // for a scheduled task or a watch. Missing (agents of 0.2.0) reads as off.
+  actUnattended?: boolean;
   builtin?: boolean;
   createdAt: number;
   updatedAt: number;
@@ -206,6 +211,10 @@ export type SelectedElement = {
   innerText?: string;
   outerHTML?: string;
   tagName?: string;
+  // Where it is on the page by structure (see element-selector.js), and the
+  // page's address: what a watch of this element reads.
+  path?: string;
+  pageUrl?: string;
   value?: string;
   imageSrc?: string;
   imageAlt?: string;

@@ -3,7 +3,7 @@ OpenBrowserAgent: Chrome Web Store "Privacy practices" tab
 
 SINGLE PURPOSE
 --------------
-OpenBrowserAgent is an AI assistant in the browser's side panel. The user connects their own AI model, then asks questions about the pages they have open or asks the agent to carry out tasks in the browser (reading pages, filling in forms, managing tabs), watching every step as it runs. The same assistant helps them read pages: it translates pages and video subtitles, and explains, translates or looks up text they select.
+OpenBrowserAgent is an AI assistant in the browser's side panel. The user connects their own AI model, then asks questions about the pages they have open or asks the agent to carry out tasks in the browser (reading pages, filling in forms, managing tabs), watching every step as it runs, or has it do such a task later, on a schedule or when a page changes. The same assistant helps them read pages: it translates pages and video subtitles, and explains, translates or looks up text they select.
 
 
 PERMISSION JUSTIFICATIONS (same order as the store page; each under 1000 characters)
@@ -24,7 +24,7 @@ Saves files the user asks for to the browser's Downloads folder, such as chat ex
 Chats with image and file attachments, and saved page translations, can exceed the default extension storage quota. They are kept only on the user's device.
 
 == alarms justification ==
-Keeps sync with the user's own storage running when the background service worker has stopped: checks for changes regularly while an extension page is open, syncs a local change shortly after it is made, and tries again after a pause when the storage failed or asked it to wait.
+Keeps sync with the user's own storage running when the background service worker has stopped: checks for changes regularly while an extension page is open, syncs a local change shortly after it is made, and tries again after a pause when the storage failed or asked it to wait. Also starts the tasks the user scheduled and the page watches the user set up at the times they chose, while the browser is open.
 
 == declarativeNetRequestWithHostAccess justification ==
 Removes the browser's Origin header from the extension's own requests to a server the user added (such as an MCP server), only when the user turns that on for that server, because some servers reject requests from browsers. Each rule matches only that server's URL and only this extension's requests. Other sites and requests are never modified.
@@ -40,6 +40,9 @@ Optional local execution bridge: connects to a separately installed helper on th
 
 == search justification ==
 Runs web searches through the browser's default search engine (the one the user chose) when the agent needs to look something up for the user's request.
+
+== notifications justification ==
+Tells the user when a task they scheduled or a page watch they set up has a result, when the condition they described is met, when a task needs their answer, or when a task was paused after failing repeatedly. Clicking the notification opens that result in the side panel. Notifications appear only for tasks the user created.
 
 == tabGroups justification ==
 When the user asks the agent to organize tabs, it groups them and names and colors the groups, and it shows group names in tab lists.

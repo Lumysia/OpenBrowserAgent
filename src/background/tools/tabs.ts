@@ -188,6 +188,11 @@ const TAB_ACTIONS = [
 
 export const tabsTool: ToolDefinition = {
   name: TOOL_NAME.tabs,
+  effects: {
+    // Opening a background tab of its own only looks; navigating or
+    // focusing a tab may take one the user is on.
+    byAction: { list: "read", open: "read" },
+  },
   group: "browser",
   summary: "List, open, switch, close and navigate tabs",
   description:
@@ -224,7 +229,8 @@ export const tabsTool: ToolDefinition = {
       if (!url) return fail("url is required to open a tab.");
       const { tab: created, group } = await openAgentTab(run, {
         url,
-        active: input.show === true,
+        // Nobody watches an unattended run: its tabs never take focus.
+        active: input.show === true && !run.unattended,
       });
       run.tab.use(created);
       if (created.id !== undefined) await waitTabComplete(created.id, signal);
@@ -296,6 +302,7 @@ export const tabsTool: ToolDefinition = {
 
 export const webSearchTool: ToolDefinition = {
   name: TOOL_NAME.webSearch,
+  effects: "read",
   group: "web",
   readOnly: true,
   summary: "Search the web",

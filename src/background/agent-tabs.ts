@@ -102,3 +102,25 @@ async function groupTitle(chatId: string) {
     ? `${title.slice(0, GROUP_TITLE_MAX_CHARS - 1)}…`
     : title;
 }
+
+// Closes the tabs the agent opened for this chat (never the user's: only
+// tabs recorded here) and forgets them, as a run nobody watches ends.
+export async function closeAgentTabs(
+  run: Pick<RunContext, "chatId" | "parentChatId">,
+) {
+  const chatId = ownerChat(run);
+  let tabs: number[] = [];
+  await agentTabs.update(async (record) => {
+    tabs = record[chatId]?.tabs || [];
+    delete record[chatId];
+    return record;
+  });
+  await Promise.all(
+    tabs.map((tabId) =>
+      getBrowserApi()
+        .tabs.remove(tabId)
+        .catch(() => undefined),
+    ),
+  );
+  return tabs;
+}

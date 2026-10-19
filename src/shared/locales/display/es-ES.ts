@@ -131,6 +131,10 @@ export const displayEsES: DisplayMessages = {
       run: "Ejecución",
       start: "Inicio",
       cancel: "Cancelación",
+      get: "Consulta",
+      runNow: "Ejecución iniciada",
+      pause: "Pausa",
+      resume: "Reanudación",
     },
     commandStates: {
       running: "En curso",

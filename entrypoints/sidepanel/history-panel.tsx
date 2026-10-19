@@ -15,12 +15,10 @@ import {
   EmptyState,
   Badge,
   Button,
+  ConfirmIconButton,
   Feedback,
   IconTooltip,
   Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   ScrollArea,
 } from "../../src/ui/components";
 import {
@@ -444,46 +442,16 @@ function ClearAllChatsButton({
   onConfirm: () => void;
 }) {
   const t = useMessages();
-  const [open, setOpen] = useState(false);
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <IconTooltip label={t.sidepanel.clearAllChats}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="history-danger-action"
-            aria-label={t.sidepanel.clearAllChats}
-            disabled={disabled}
-          >
-            <Trash2 size={18} />
-          </Button>
-        </PopoverTrigger>
-      </IconTooltip>
-      <PopoverContent className="settings-popover-content" align="end">
-        <div className="settings-popover-menu" role="alertdialog">
-          <p>{t.sidepanel.clearAllChatsConfirm}</p>
-          <div className="row">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                setOpen(false);
-                onConfirm();
-              }}
-            >
-              {t.sidepanel.clearAllChatsAction}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setOpen(false)}
-            >
-              {t.common.cancel}
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <ConfirmIconButton
+      icon={<Trash2 size={18} />}
+      label={t.sidepanel.clearAllChats}
+      question={t.sidepanel.clearAllChatsConfirm}
+      confirmLabel={t.sidepanel.clearAllChatsAction}
+      cancelLabel={t.common.cancel}
+      className="history-danger-action"
+      disabled={disabled}
+      onConfirm={onConfirm}
+    />
   );
 }

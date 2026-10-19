@@ -6,6 +6,7 @@ QUÉ PUEDES HACER
 
 • Pregunta sobre una página o varias pestañas: resúmenes, comparaciones, explicaciones y respuestas con fuentes en las que puedes hacer clic.
 • Deja que el agente haga trabajo en el navegador por ti, como rellenar formularios, reunir información de varias páginas u ordenar tus pestañas. También puede hacer capturas de pantalla y guardar archivos.
+• Haz que el agente haga una tarea más tarde o según un horario, o que vigile una página y te avise con una notificación cuando ocurra el cambio que describes.
 • Traduce páginas web sin romper su diseño, junto al original o en su lugar, y traduce los subtítulos de un vídeo mientras lo ves. Tú eliges el motor: tu modelo de IA, el traductor integrado del navegador si lo tiene, o un servicio de traducción en línea gratuito.
 • Selecciona texto en una página para usar acciones rápidas, como explicarlo, traducirlo o buscar una palabra con el significado que tiene en esa página. Tú decides en qué sitios aparece.
 • Empieza desde la propia página: el menú contextual del navegador y el botón de la extensión en la barra de herramientas llevan al agente y a las herramientas de la página.
@@ -27,6 +28,7 @@ TÚ TIENES EL CONTROL
 
 • Cada paso del agente se muestra mientras se ejecuta, con sus detalles.
 • Cuando no está seguro, el agente pregunta antes de enviar un formulario, comprar, mandar o eliminar algo.
+• Las tareas que se ejecutan solas solo leen e informan, salvo que permitas a un agente actuar por su cuenta.
 • La interfaz está disponible en muchos idiomas, con temas claro y oscuro.
 
 OpenBrowserAgent es de código abierto. Código fuente, documentación y seguimiento de incidencias: https://github.com/Lumysia/OpenBrowserAgent

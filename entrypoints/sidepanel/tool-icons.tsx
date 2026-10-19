@@ -1,12 +1,14 @@
 import {
   Bot,
   Braces,
+  CalendarClock,
   Camera,
   Code2,
   Download,
   ExternalLink,
   FileSearch,
   FileText,
+  Flag,
   FolderOpen,
   Gauge,
   History,
@@ -52,6 +54,8 @@ const ICONS: Record<string, Icon> = {
   [TOOL_NAME.runScript]: Code2,
   [TOOL_NAME.runCode]: Braces,
   [TOOL_NAME.devtools]: Gauge,
+  [TOOL_NAME.tasks]: CalendarClock,
+  [TOOL_NAME.taskResult]: Flag,
 };
 
 export function toolIcon(name: string, input: Record<string, unknown> = {}) {

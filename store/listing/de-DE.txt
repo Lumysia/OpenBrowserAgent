@@ -6,6 +6,7 @@ WAS SIE DAMIT TUN KÖNNEN
 
 • Fragen zu einer Seite oder zu mehreren Tabs stellen: Zusammenfassungen, Vergleiche, Erklärungen und Antworten mit anklickbaren Quellen.
 • Browserarbeit an den Agenten abgeben, etwa Formulare ausfüllen, Informationen von mehreren Seiten sammeln oder Tabs aufräumen. Er kann auch Screenshots aufnehmen und Dateien für Sie speichern.
+• Lassen Sie den Agenten eine Aufgabe später oder nach Zeitplan erledigen oder eine Seite beobachten, und erhalten Sie eine Benachrichtigung, wenn die beschriebene Änderung eintritt.
 • Webseiten übersetzen, ohne ihr Layout zu zerstören, neben dem Original oder an seiner Stelle, und Video-Untertitel beim Ansehen übersetzen. Sie wählen die Übersetzung: Ihr KI-Modell, den integrierten Übersetzer des Browsers, wo vorhanden, oder einen kostenlosen Online-Übersetzungsdienst.
 • Text auf einer Seite markieren und Schnellaktionen nutzen, etwa ihn erklären, übersetzen oder ein Wort mit der Bedeutung nachschlagen, die es auf dieser Seite hat. Sie legen fest, auf welchen Websites das erscheint.
 • Direkt von der Seite aus starten: Das Kontextmenü des Browsers und die Symbolleisten-Schaltfläche der Erweiterung führen zum Agenten und zu den Seitenwerkzeugen.
@@ -27,6 +28,7 @@ SIE BEHALTEN DIE KONTROLLE
 
 • Jeder Schritt des Agenten wird angezeigt, während er läuft, mit seinen Details.
 • Ist sich der Agent unsicher, fragt er nach, bevor er etwas absendet, kauft, verschickt oder löscht.
+• Aufgaben, die selbstständig laufen, lesen und berichten nur, es sei denn, Sie erlauben einem Agenten, selbstständig zu handeln.
 • Die Oberfläche gibt es in vielen Sprachen, mit hellem und dunklem Design.
 
 OpenBrowserAgent ist Open Source. Quellcode, Dokumentation und Issue-Tracker: https://github.com/Lumysia/OpenBrowserAgent

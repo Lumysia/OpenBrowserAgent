@@ -17,7 +17,7 @@ import type {
   Chat,
   ChatMessage,
 } from "../shared/types";
-import { runChat } from "./run-chat";
+import { runChat, type UnattendedRequest } from "./run-chat";
 import type { UsageMetrics } from "./run-usage";
 import * as sessions from "./stream-sessions";
 
@@ -25,42 +25,47 @@ const PERSIST_INTERVAL_MS = 2_000;
 
 type SubAgentProgress = { toolName: string; state?: string };
 
-// A sub-agent chat run by the service worker, whether or not the side panel
-// is open. The chat is stored like any other (linked to its parent), and its
-// stream session lets an open side panel follow it live.
-export async function runSubAgentChat(options: {
+type ChatLink = Pick<
+  Chat,
+  "kind" | "parentChatId" | "parentMessageId" | "parentToolCallId" | "taskId"
+>;
+
+// A chat run by the service worker, whether or not the side panel is open:
+// a sub-agent's (linked to its parent) or a scheduled task's. The chat is
+// stored like any other, and its stream session lets an open side panel
+// follow it live.
+export async function runBackgroundChat(options: {
   agent: Agent;
-  task: string;
+  // What the chat shows as the user's message.
+  content: string;
+  // What the agent gets instead, when it differs (a task's instructions).
+  instruction?: string;
   title: string;
-  parent: {
-    chatId: string;
-    messageId?: string;
-    toolCallId: string;
-    // The parent's tab, where the sub-agent starts.
-    tabId?: number;
-  };
+  link: ChatLink;
+  // The tab the run starts on.
+  tabId?: number;
+  depth: number;
+  unattended?: UnattendedRequest;
+  messageMetadata?: Record<string, unknown>;
   onStart(chatId: string): void;
-  onProgress(progress: SubAgentProgress[]): void;
+  onProgress?(progress: SubAgentProgress[]): void;
   signal?: AbortSignal;
 }) {
-  const { agent, task, parent } = options;
+  const { agent } = options;
   const now = Date.now();
   const assistantId = crypto.randomUUID();
   const user: ChatMessage = {
     id: crypto.randomUUID(),
     role: "user",
-    content: task,
+    content: options.content,
     createdAt: now,
-    metadata: { subAgent: true, parentChatId: parent.chatId },
+    metadata: options.messageMetadata,
   };
   let chat: Chat = {
     id: crypto.randomUUID(),
     title: options.title,
     agentId: agent.id,
-    kind: "subagent",
-    parentChatId: parent.chatId,
-    parentMessageId: parent.messageId,
-    parentToolCallId: parent.toolCallId,
+    ...options.link,
     messages: [
       user,
       {
@@ -86,14 +91,14 @@ export async function runSubAgentChat(options: {
     if (!dirty) return;
     dirty = false;
     persist(chat).catch((error) =>
-      console.warn("Failed to store sub-agent chat", error),
+      console.warn("Failed to store background chat", error),
     );
   }, PERSIST_INTERVAL_MS);
   session.observers.add((event: AiStreamResponse) => {
     if (event.type === "chunk") {
       const { delta, part } = streamPartFromChunk(event.chunk);
       chat = appendAssistantPart(chat, { messageId: assistantId, delta, part });
-      if (part?.toolName) {
+      if (part?.toolName && options.onProgress) {
         const existing = progress.find(
           (item) =>
             item.toolName === part.toolName &&
@@ -117,21 +122,22 @@ export async function runSubAgentChat(options: {
   let error: string | undefined;
   let end: { stopReason?: RunStopReason; error?: string } = {};
   try {
+    const instruction = options.instruction ?? options.content;
     await runChat(session, {
       agentId: agent.id,
-      messages: [user],
+      messages: [{ ...user, content: instruction }],
       messageId: assistantId,
-      depth: 1,
-      parentChatId: parent.chatId,
-      tabId: parent.tabId,
+      depth: options.depth,
+      parentChatId: options.link.parentChatId,
+      tabId: options.tabId,
+      unattended: options.unattended,
     });
     sessions.postToSession(session, { type: "end" });
   } catch (cause) {
     const stopped = session.abortController.signal.aborted;
-    // The parent model gets `error`; the sub-agent's chat shows it in the UI
-    // language.
+    // The caller gets `error`; the chat shows it in the UI language.
     error = stopped
-      ? "The sub-agent was stopped."
+      ? "The run was stopped."
       : cause instanceof Error
         ? cause.message
         : String(cause);
@@ -158,6 +164,44 @@ export async function runSubAgentChat(options: {
   return { chatId: chat.id, answer, error, usage };
 }
 
+// A sub-agent's chat, linked to the tool call that started it.
+export function runSubAgentChat(options: {
+  agent: Agent;
+  task: string;
+  title: string;
+  parent: {
+    chatId: string;
+    messageId?: string;
+    toolCallId: string;
+    // The parent's tab, where the sub-agent starts.
+    tabId?: number;
+  };
+  unattended?: UnattendedRequest;
+  onStart(chatId: string): void;
+  onProgress(progress: SubAgentProgress[]): void;
+  signal?: AbortSignal;
+}) {
+  const { parent } = options;
+  return runBackgroundChat({
+    agent: options.agent,
+    content: options.task,
+    title: options.title,
+    link: {
+      kind: "subagent",
+      parentChatId: parent.chatId,
+      parentMessageId: parent.messageId,
+      parentToolCallId: parent.toolCallId,
+    },
+    tabId: parent.tabId,
+    depth: 1,
+    unattended: options.unattended,
+    messageMetadata: { subAgent: true, parentChatId: parent.chatId },
+    onStart: options.onStart,
+    onProgress: options.onProgress,
+    signal: options.signal,
+  });
+}
+
 // Stores the chat's content and its list entry; a new chat is also linked
 // from its parent.
 async function persist(chat: Chat, created = false) {
@@ -168,7 +212,7 @@ async function persist(chat: Chat, created = false) {
     const next = listed
       ? items.map((item) => (item.id === chat.id ? summary : item))
       : [...items, summary];
-    return created
+    return created && chat.parentChatId
       ? next.map((item) =>
           item.id === chat.parentChatId
             ? {

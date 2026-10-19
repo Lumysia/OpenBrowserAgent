@@ -83,6 +83,7 @@ function textResult(
 
 export const readTool: ToolDefinition = {
   name: TOOL_NAME.read,
+  effects: "read",
   readOnly: true,
   boundedOutput: true,
   timeoutMs: 60_000,

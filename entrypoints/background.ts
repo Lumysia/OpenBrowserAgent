@@ -5,6 +5,10 @@ import { handleDescribeRunMessage } from "../src/background/run-chat";
 import { handleProviderRequestMessage } from "../src/background/provider-requests";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { setupSync } from "../src/background/sync/scheduler";
+import {
+  handleTaskMessage,
+  setupTasks,
+} from "../src/background/tasks/scheduler";
 import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
 import { handleChatStreamControlMessage } from "../src/background/stream-sessions";
 import { connectStreamPort } from "../src/background/chat-stream-port";
@@ -51,6 +55,7 @@ export default defineBackground(() => {
   registerPageButton();
   setupVideoSubtitles();
   setupSync();
+  setupTasks();
   setupMcpOriginRules();
 
   chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -71,6 +76,7 @@ export default defineBackground(() => {
       handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse) ||
+      handleTaskMessage(message, sendResponse) ||
       handleProviderRequestMessage(message, sender, sendResponse),
   );
 

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: October 18, 2026
+Last updated: October 19, 2026
 
 This policy covers the OpenBrowserAgent browser extension ("the extension"). The extension is open source; its code is at https://github.com/Lumysia/OpenBrowserAgent.
 
@@ -17,6 +17,7 @@ To work, the extension handles:
 - **Text you select** and use with the quick actions on pages (for example to explain or translate it, or to look up a word), with the page title and some of the text around it.
 - **The text of pages you translate**, and the subtitles of videos you translate: the video's own subtitle tracks, the caption files its player loads, or the captions it shows.
 - **A tab's network requests and console messages**, only while the agent records them to debug a page for you (for example a login that fails). The recording stays in memory, ends with the agent's reply, and is discarded when the tab closes. Cookies, authorization headers, passwords, tokens and other credentials are removed before your model provider sees it.
+- **Scheduled tasks and page watches** you set up: their instructions, schedule and the address of a watched page. To notice a change, a watch keeps a fingerprint (hash) and a limited copy of the watched text in your browser; the agent and your AI provider get the text only when it changed.
 - **Browsing activity needed for a task**: the list of open tabs, and the pages the agent opens, reads, or interacts with.
 - **Settings and credentials** you enter: AI provider settings and API keys, agents, skills, MCP server settings, sync settings, and local execution bridge settings.
 
@@ -28,7 +29,7 @@ It sends data only to services you configure and turn on:
 
 - **AI providers** you add: cloud services or model servers on your own computer or network. They receive your messages, chat history, and the page content, selected text and tool results needed to answer. Their own privacy policies apply. Before a provider on another server receives any of your content for the first time, the extension names the server it would go to (for example api.openai.com) and asks for your permission: when you add the provider, or before your first message to it. Nothing is sent to it until you agree. The permission is stored with the provider (and synced with it when sync is on) and applies only to that server; if you change the provider's address to another server, you are asked again. Providers on your own device or local network (such as localhost or a private network address) need no permission.
 - **MCP servers** you add or turn on, including any recommended ones you choose to add. They receive the tool requests the agent sends them, such as search queries.
-- **Sync storage**, if you turn sync on: your browser account's sync storage, or a WebDAV server you choose. It receives your settings (preferences, AI providers and MCP servers without their keys, agents and their notes, skills) and the groups you turn on: keys, chats and files. API keys and MCP request headers are encrypted on your device with your sync passphrase before they are sent, so the sync storage cannot read them. Local execution bridges are never synced.
+- **Sync storage**, if you turn sync on: your browser account's sync storage, or a WebDAV server you choose. It receives your settings (preferences, AI providers and MCP servers without their keys, agents and their notes, skills, scheduled tasks) and the groups you turn on: keys, chats and files. API keys and MCP request headers are encrypted on your device with your sync passphrase before they are sent, so the sync storage cannot read them. Local execution bridges are never synced.
 - **Your browser's default search engine**, when the agent searches the web through it.
 - **A local execution bridge**, only if you install one on your computer and enable it.
 - **The translation engine you select** for page and subtitle translation (see below).

@@ -17,6 +17,7 @@ export const TOOL_GROUPS = [
   "localExecution",
   "scripts",
   "devtools",
+  "tasks",
 ] as const;
 
 export type ToolGroup = (typeof TOOL_GROUPS)[number];
@@ -49,8 +50,10 @@ export const DEFAULT_AGENT: Agent = {
     "mcpServers",
     "localExecution",
     "devtools",
+    "tasks",
   ],
   workspace: false,
+  actUnattended: false,
   builtin: true,
   createdAt: 0,
   updatedAt: 0,
@@ -65,6 +68,7 @@ export const ASK_AGENT: Agent = {
     "Answer questions about the pages, files and text the user shares. Read pages, but do not operate the browser or change pages.",
   toolGroups: ["pages", "web", "images", "skills"],
   workspace: false,
+  actUnattended: false,
   builtin: true,
   createdAt: 0,
   updatedAt: 0,
@@ -86,6 +90,7 @@ export function createAgentDraft(name: string): Agent {
     prompt: "",
     toolGroups: [...CUSTOM_AGENT_TOOL_GROUPS],
     workspace: true,
+    actUnattended: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -123,6 +128,7 @@ function normalizeAgent(agent: Agent): Agent {
       : [...CUSTOM_AGENT_TOOL_GROUPS],
     modelId: agent.modelId || undefined,
     workspace: agent.workspace !== false,
+    actUnattended: agent.actUnattended === true,
     createdAt: agent.createdAt || 0,
     updatedAt: agent.updatedAt || agent.createdAt || 0,
   };
@@ -139,6 +145,12 @@ export function resolveAgent(agents: Agent[] | undefined, agentId?: string) {
 
 export function isBuiltinAgentId(agentId: string) {
   return BUILTIN_AGENTS.some((agent) => agent.id === agentId);
+}
+
+// Whether a run of this agent nobody watches (a scheduled task or a watch)
+// may use acting tools. Built-in agents never may.
+export function mayActUnattended(agent: Agent) {
+  return !agent.builtin && agent.actUnattended === true;
 }
 
 export function hasToolGroup(agent: Agent, group: ToolGroup) {

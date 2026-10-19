@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import { TooltipProvider } from "../../src/ui/components";
 import { cn } from "../../src/ui/utils";
@@ -18,6 +18,8 @@ import { useChat, useComposer } from "./sidepanel-providers";
 import { UploadFileInput } from "./uploaded-attachment-card";
 import { useDeferredPresence } from "./use-deferred-remove";
 import { ChatContentStatus } from "./chat-content-status";
+import { useNavigation } from "./sidepanel-navigation";
+import { TasksPanel } from "./tasks/tasks-panel";
 
 export function SidepanelView({
   modelCount,
@@ -26,10 +28,30 @@ export function SidepanelView({
   modelCount: number;
   messagesRef: RefObject<HTMLDivElement | null>;
 }) {
-  const [showHistory, setShowHistory] = useState(false);
+  const navigation = useNavigation();
+  const { view } = navigation;
   const chat = useChat();
+  const composer = useComposer();
   if (modelCount === 0) return <NoModelState />;
-  if (showHistory)
+  if (view.name === "tasks")
+    return (
+      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+        <div className="sidepanel history-mode">
+          <TasksPanel
+            agents={composer.agents}
+            defaultAgentId={chat.agent.id}
+            pageUrl={composer.attachedTabs[0]?.url}
+            draft={view.draft}
+            onOpenChat={(chatId) => {
+              chat.selectChat(chatId);
+              navigation.showChat();
+            }}
+            onBack={navigation.showChat}
+          />
+        </div>
+      </TooltipProvider>
+    );
+  if (view.name === "history")
     return (
       <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
         <div className="sidepanel history-mode">
@@ -41,10 +63,10 @@ export function SidepanelView({
             onSetChats={chat.setChats}
             onLoadChat={chat.loadChat}
             onImportChat={chat.importChat}
-            onBack={() => setShowHistory(false)}
+            onBack={navigation.showChat}
             onSelect={(chatId) => {
               chat.selectChat(chatId);
-              setShowHistory(false);
+              navigation.showChat();
             }}
             onClose={chat.closeChat}
           />
@@ -53,10 +75,7 @@ export function SidepanelView({
     );
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-      <ChatView
-        messagesRef={messagesRef}
-        onShowHistory={() => setShowHistory(true)}
-      />
+      <ChatView messagesRef={messagesRef} />
     </TooltipProvider>
   );
 }
@@ -72,11 +91,10 @@ function currentMeta({
 
 function ChatView({
   messagesRef,
-  onShowHistory,
 }: {
   messagesRef: RefObject<HTMLDivElement | null>;
-  onShowHistory: () => void;
 }) {
+  const navigation = useNavigation();
   const chat = useChat();
   const composer = useComposer();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -98,7 +116,8 @@ function ChatView({
         currentChat={meta}
         parentChat={parentChat}
         onCreateChat={chat.createChat}
-        onShowHistory={onShowHistory}
+        onShowHistory={navigation.showHistory}
+        onShowTasks={() => navigation.showTasks()}
         onSelectChat={chat.selectChat}
       />
       {editingMessageId && (

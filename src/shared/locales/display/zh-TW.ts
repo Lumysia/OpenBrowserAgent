@@ -106,6 +106,10 @@ export const displayZhTW: DisplayMessages = {
       run: "已執行",
       start: "已啟動",
       cancel: "已取消",
+      get: "已檢視",
+      runNow: "已開始執行",
+      pause: "已暫停",
+      resume: "已繼續",
     },
     commandStates: {
       running: "執行中",

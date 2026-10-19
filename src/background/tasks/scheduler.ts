@@ -1,0 +1,381 @@
+import { getBrowserApi } from "../../shared/browser-api";
+import { storage } from "../../shared/storage";
+import {
+  dropTaskStates,
+  updateTaskState,
+  withholdResume,
+  type EditSource,
+} from "../../shared/tasks/edit";
+import {
+  afterRun,
+  idleReason,
+  nextAttempt,
+  plannedRunAt,
+  recoverInterrupted,
+  type Notice,
+  type RunContext,
+  type RunEnd,
+} from "../../shared/tasks/lifecycle";
+import { taskState } from "../../shared/tasks/normalize";
+import { loadRunContext } from "../../shared/tasks/run-context";
+import { TASK_RESULT, type ScheduledTask } from "../../shared/tasks/types";
+import { errorMessage } from "../../shared/error-message";
+import { respondWith } from "../../shared/runtime-messages";
+import {
+  isTaskMessage,
+  TASK_MESSAGE,
+  type TaskMessage,
+} from "../../shared/tasks/messages";
+import { ensureTaskDevice } from "./device";
+import {
+  notifyTask,
+  setupTaskNotificationClicks,
+  updateTaskBadge,
+} from "./notify";
+import {
+  approvalsOf,
+  goneStates,
+  noticeTasksAwaitingOk,
+  pruneAgentApprovals,
+} from "./approvals";
+import { taskRunner } from "./runner";
+import { closeAgentTabs } from "../agent-tabs";
+import { closeTaskTab } from "./watch-page";
+
+// Runs the tasks this device owns, on chrome.alarms (one alarm per task,
+// named apart from sync's), so they survive the service worker stopping.
+// Alarms are set again whenever the worker starts or tasks change.
+
+export const TASK_ALARM_PREFIX = "task:";
+
+const alarmName = (taskId: string) => `${TASK_ALARM_PREFIX}${taskId}`;
+
+// Tasks running in this worker; a task never runs twice at once.
+const active = new Set<string>();
+// Runs go one at a time: several tasks due together wait their turn.
+let queue: Promise<unknown> = Promise.resolve();
+
+async function findTask(taskId: string) {
+  return (await storage.tasks.get()).find((task) => task.id === taskId);
+}
+
+// Sets one alarm per task due on this device and clears the others; the
+// planned time is kept in the task's state for the task list.
+export async function armTasks() {
+  const api = getBrowserApi();
+  if (!api.alarms) return;
+  const [tasks, states, context] = await Promise.all([
+    storage.tasks.get(),
+    storage.taskStates.get(),
+    loadRunContext(),
+  ]);
+  // States of tasks deleted here or on another device go with them.
+  await dropTaskStates(goneStates(tasks, states, (id) => active.has(id)));
+  await noticeTasksAwaitingOk(tasks, states, context);
+  const planned = new Map<string, number>();
+  for (const task of tasks) {
+    const at = plannedRunAt(task, taskState(states, task.id), context);
+    if (at !== undefined) planned.set(task.id, at);
+  }
+  // What the list shows as the next run (before any run below changes it).
+  const changed = [...planned].filter(
+    ([taskId, at]) => taskState(states, taskId).nextRunAt !== at,
+  );
+  if (changed.length)
+    await storage.taskStates.update((current) => {
+      const next = { ...current };
+      for (const [taskId, at] of changed)
+        next[taskId] = { ...taskState(current, taskId), nextRunAt: at };
+      return next;
+    });
+  // Due now (new, missed while the browser was closed, or a retry): run
+  // at once rather than wait for the browser's least alarm delay.
+  const now = Date.now();
+  const due = [...planned]
+    .filter(([, at]) => at <= now)
+    .map(([taskId]) => taskId);
+  const alarms = await api.alarms.getAll();
+  await Promise.all(
+    alarms
+      .filter((alarm) => {
+        const taskId = alarm.name.slice(TASK_ALARM_PREFIX.length);
+        return (
+          alarm.name.startsWith(TASK_ALARM_PREFIX) &&
+          (!planned.has(taskId) || due.includes(taskId))
+        );
+      })
+      .map((alarm) => api.alarms.clear(alarm.name)),
+  );
+  for (const taskId of due)
+    void runTask(taskId).catch((error: unknown) =>
+      console.warn("Scheduled task failed", error),
+    );
+  for (const [taskId, at] of planned) {
+    if (due.includes(taskId)) continue;
+    const existing = alarms.find((alarm) => alarm.name === alarmName(taskId));
+    if (existing && Math.abs(existing.scheduledTime - at) < 1_000) continue;
+    await api.alarms.create(alarmName(taskId), {
+      when: Math.max(at, Date.now()),
+    });
+  }
+}
+
+// Runs a task now, whatever its schedule (an alarm, or the user's "run
+// now"). Does nothing when it is running already or is not this device's
+// to run; "run now" also runs a paused task.
+export function runTask(taskId: string, { manual = false } = {}) {
+  if (active.has(taskId)) return Promise.resolve(false);
+  active.add(taskId);
+  const run = queue.then(() => runQueued(taskId, manual));
+  queue = run.catch(() => undefined);
+  return run.finally(() => active.delete(taskId));
+}
+
+// The task when it may run now: this device's, allowed here as it is, and
+// (unless the user asked for this run) not paused.
+async function runnable(taskId: string, manual: boolean) {
+  const task = await findTask(taskId);
+  if (!task) return undefined;
+  const state = taskState(await storage.taskStates.get(), taskId);
+  const reason = idleReason(task, state, await loadRunContext());
+  if (
+    reason === "otherDevice" ||
+    reason === "unsupported" ||
+    reason === "needsOk" ||
+    (reason && !manual)
+  )
+    return undefined;
+  return { task, state };
+}
+
+async function runQueued(taskId: string, manual: boolean) {
+  const found = await runnable(taskId, manual);
+  if (!found) return false;
+  const { task, state } = found;
+  const attempt = nextAttempt(state);
+  await updateTaskState(taskId, (current) => ({
+    ...current,
+    retrying: undefined,
+    running: { startedAt: Date.now(), attempt },
+  }));
+  const hooks = {
+    onChat: (chatId: string) =>
+      void updateTaskState(taskId, (current) => ({
+        ...current,
+        running: current.running && { ...current.running, chatId },
+      })),
+    onTab: (tabId: number | undefined) =>
+      void updateTaskState(taskId, (current) => ({ ...current, tabId })),
+  };
+  let end: RunEnd;
+  try {
+    end =
+      task.trigger.kind === "watch"
+        ? await taskRunner.runWatch(task, state.baseline, hooks)
+        : await taskRunner.runTimeTask(task, hooks);
+  } catch (error) {
+    end = {
+      failed: true,
+      result: {
+        status: TASK_RESULT.failed,
+        at: Date.now(),
+        summary: errorMessage(error),
+      },
+    };
+  }
+  await finishRun(task, end, manual);
+  return true;
+}
+
+async function finishRun(task: ScheduledTask, end: RunEnd, manual: boolean) {
+  // Deleted while it ran: nothing to record or tell.
+  if (!(await findTask(task.id))) {
+    await dropTaskStates([task.id]);
+    return;
+  }
+  let notice: Notice | null = null;
+  await storage.taskStates.update((states) => {
+    const current = taskState(states, task.id);
+    const next = afterRun(task, current, end, Date.now());
+    notice = next.notice;
+    // Running a paused task by hand leaves it paused by the user.
+    const state =
+      manual && !task.enabled
+        ? { ...next.state, nextRunAt: undefined }
+        : next.state;
+    return { ...states, [task.id]: state };
+  });
+  if (notice) await notifyTask(task, notice, end.result);
+  await armTasks();
+}
+
+// After the worker (re)starts: runs cut off by a stop are retried once, and
+// their helper tabs closed.
+async function recoverTasks() {
+  const tasks = await storage.tasks.get();
+  const now = Date.now();
+  const notices: Array<[ScheduledTask, Notice]> = [];
+  const tabs: number[] = [];
+  const chats: string[] = [];
+  await storage.taskStates.update((states) => {
+    const next = { ...states };
+    for (const task of tasks) {
+      const state = taskState(states, task.id);
+      if (!state.running || active.has(task.id)) continue;
+      if (state.tabId !== undefined) tabs.push(state.tabId);
+      if (state.running.chatId) chats.push(state.running.chatId);
+      const recovered = recoverInterrupted(task, state, now);
+      next[task.id] = { ...recovered.state, tabId: undefined };
+      if (recovered.notice) notices.push([task, recovered.notice]);
+    }
+    return next;
+  });
+  await Promise.all([
+    ...tabs.map(closeTaskTab),
+    ...chats.map((chatId) => closeAgentTabs({ chatId })),
+  ]);
+  for (const [task, notice] of notices)
+    await notifyTask(task, notice, {
+      status: TASK_RESULT.failed,
+      at: now,
+    });
+}
+
+// The badge counts results the user has not seen in the task list.
+export async function markTasksSeen() {
+  await storage.taskStates.update((states) =>
+    Object.values(states).some((state) => state.unseen)
+      ? Object.fromEntries(
+          Object.entries(states).map(([id, state]) => [
+            id,
+            { ...state, unseen: undefined },
+          ]),
+        )
+      : states,
+  );
+}
+
+// A task the scheduler paused starts over: no failures, the schedule
+// counted from now. Resumed by the agent, it waits for the user's OK.
+export async function resumeTask(taskId: string, { approve }: EditSource) {
+  await updateTaskState(taskId, (current) => ({
+    ...(approve ? current : withholdResume(current)),
+    pausedBy: undefined,
+    failures: 0,
+    nextRunAt: undefined,
+    lastRunAt: current.lastRunAt === undefined ? undefined : Date.now(),
+  }));
+  await armTasks();
+  return true;
+}
+
+export function handleTaskMessage(
+  message: unknown,
+  sendResponse: (reply: unknown) => void,
+) {
+  if (!isTaskMessage(message)) return false;
+  return respondWith(
+    tasksReady().then(() => answerTaskMessage(message)),
+    sendResponse,
+  );
+}
+
+async function answerTaskMessage(message: TaskMessage) {
+  if (message.type === TASK_MESSAGE.seen) {
+    await markTasksSeen();
+    return true;
+  }
+  // The task list's resume is the user's.
+  if (message.type === TASK_MESSAGE.resume)
+    return resumeTask(message.taskId, { approve: true });
+  return startTaskRun(message.taskId);
+}
+
+// "Run now": starts a run of the task when it may run here, and answers
+// whether it started, without waiting for it to end.
+export async function startTaskRun(taskId: string) {
+  await tasksReady();
+  const starts = !active.has(taskId) && !!(await runnable(taskId, true));
+  if (starts)
+    void runTask(taskId, { manual: true }).catch((error: unknown) =>
+      console.warn("Task run failed", error),
+    );
+  return starts;
+}
+
+let ready: Promise<void> | undefined;
+
+// The worker's start: this device's id, then runs cut off by a stop
+// recovered. Alarms, messages and re-arming wait for it, so nothing starts
+// a task before its interrupted run is counted and its tab closed.
+export function tasksReady() {
+  ready ??= (async () => {
+    await ensureTaskDevice();
+    await recoverTasks();
+  })().catch((error: unknown) =>
+    console.warn("Failed to recover tasks", error),
+  );
+  return ready;
+}
+
+export function setupTasks() {
+  const api = getBrowserApi();
+  setupTaskNotificationClicks();
+  api.alarms?.onAlarm.addListener((alarm) => {
+    if (!alarm.name.startsWith(TASK_ALARM_PREFIX)) return;
+    void tasksReady()
+      .then(() => runTask(alarm.name.slice(TASK_ALARM_PREFIX.length)))
+      .catch((error: unknown) => console.warn("Scheduled task failed", error));
+  });
+  const rearm = () =>
+    void tasksReady()
+      .then(armTasks)
+      .catch((error: unknown) =>
+        console.warn("Failed to schedule tasks", error),
+      );
+  storage.tasks.watch(rearm);
+  storage.taskDeviceId.watch(rearm);
+  // Sync gave this install a new id (a copied profile): a new task id too.
+  storage.syncDeviceId.watch(
+    () =>
+      void tasksReady()
+        .then(() => ensureTaskDevice())
+        .catch((error: unknown) =>
+          console.warn("Failed to update the task device", error),
+        ),
+  );
+  storage.preferences.watch((next, previous) => {
+    if (next.tasksPaused !== previous.tasksPaused) rearm();
+  });
+  // The user's OK for a task or an agent: it may run now, or no longer.
+  storage.taskStates.watch((next, previous) => {
+    if (approvalsOf(next) !== approvalsOf(previous)) rearm();
+  });
+  storage.agentActApprovals.watch(rearm);
+  storage.agents.watch(
+    () =>
+      void pruneAgentApprovals()
+        .then(rearm)
+        .catch((error: unknown) =>
+          console.warn("Failed to update agent approvals", error),
+        ),
+  );
+  const badge = () =>
+    void updateTaskBadge().catch((error: unknown) =>
+      console.warn("Failed to update the task badge", error),
+    );
+  for (const item of [
+    storage.taskStates,
+    storage.tasks,
+    storage.agents,
+    storage.agentActApprovals,
+    storage.taskDeviceId,
+  ] as const)
+    item.watch(badge);
+  void (async () => {
+    await tasksReady();
+    await pruneAgentApprovals();
+    await armTasks();
+    await updateTaskBadge();
+  })().catch((error: unknown) => console.warn("Failed to start tasks", error));
+}

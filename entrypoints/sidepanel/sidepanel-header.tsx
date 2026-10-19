@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  CalendarClock,
   Cloud,
   CloudAlert,
   CloudCheck,
@@ -27,17 +28,23 @@ export function SidepanelHeader({
   parentChat,
   onCreateChat,
   onShowHistory,
+  onShowTasks,
   onSelectChat,
 }: {
   currentChat?: ChatMeta;
   parentChat?: ChatMeta;
   onCreateChat: () => void;
   onShowHistory: () => void;
+  onShowTasks: () => void;
   onSelectChat: (chatId: string) => void;
 }) {
   const t = useMessages();
   const [syncStatus] = useStoredState(storage.syncStatus);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
+  const [taskStates] = useStoredState(storage.taskStates);
+  const unseenTasks = Object.values(taskStates || {}).some(
+    (state) => state.unseen,
+  );
   const syncOn =
     !!activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID;
   const cloudStatus = cloudSyncStatus(t, syncStatus, syncOn);
@@ -98,6 +105,20 @@ export function SidepanelHeader({
           )}
         </div>
         <div className="topbar-actions">
+          <IconTooltip label={t.tasks.title}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="tasks-button"
+              aria-label={t.tasks.title}
+              onClick={onShowTasks}
+            >
+              <CalendarClock size={18} />
+              {unseenTasks && (
+                <span className="history-unread-dot" aria-hidden="true" />
+              )}
+            </Button>
+          </IconTooltip>
           <IconTooltip label={t.sidepanel.chatHistory}>
             <Button
               variant="ghost"

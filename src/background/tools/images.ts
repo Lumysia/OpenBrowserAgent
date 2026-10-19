@@ -6,6 +6,8 @@ import { fail, schema, type ToolDefinition } from "./types";
 
 export const generateImageTool: ToolDefinition = {
   name: TOOL_NAME.generateImage,
+  // A paid outside service, and the image is saved: it acts.
+  effects: "act",
   group: "images",
   onDemand: true,
   // On once an image model is chosen in Settings.

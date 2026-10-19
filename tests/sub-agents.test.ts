@@ -40,7 +40,7 @@ test("a parent stopped while the sub-agent chat is created stops the child", asy
     });
     sessions.abortSession(result.chatId);
     assert.equal(fixture.requests.length, 0);
-    assert.equal(result.error, "The sub-agent was stopped.");
+    assert.equal(result.error, "The run was stopped.");
   } finally {
     await fixture.close();
   }

@@ -10,6 +10,7 @@ import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
 import { settingsDeDE } from "./settings/de-DE";
 import { setupDeDE } from "./setup/de-DE";
+import { tasksDeDE } from "./tasks/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -326,6 +327,7 @@ export const deDE: LocaleMessages = {
       localExecution: "Lokale Befehle",
       scripts: "Seiten-JavaScript",
       devtools: "Entwicklerdiagnose",
+      tasks: "Geplante Aufgaben",
     },
     agentToolGroupDescriptions: {
       pages: "Seitenstruktur, Suche, Lesen und Extrahieren; Screenshots.",
@@ -344,6 +346,8 @@ export const deDE: LocaleMessages = {
       scripts: "Eigenes JavaScript in Seiten ausführen. Standardmäßig aus.",
       devtools:
         "Netzwerk- und Konsolenaufzeichnung, Netzwerkressourcen und Geräteemulation.",
+      tasks:
+        "Geplante Aufgaben und Beobachtungen von Seiten erstellen, ändern, ausführen, pausieren und löschen. Was der Agent einrichtet, wartet auf Ihr OK.",
     },
     deleteAgent: "Agent löschen",
     agentWorkspace: "Arbeitsbereich des Agenten",
@@ -640,4 +644,5 @@ export const deDE: LocaleMessages = {
   pageTools: pageToolsDeDE,
   settings: settingsDeDE,
   setup: setupDeDE,
+  tasks: tasksDeDE,
 };

@@ -6,6 +6,7 @@ WHAT YOU CAN DO
 
 • Ask about one page or several tabs: summaries, comparisons, explanations, and answers with clickable sources.
 • Let the agent do browser work for you, such as filling in forms, collecting information from several pages or tidying your tabs. It can also take screenshots and save files for you.
+• Have the agent do a task later or on a schedule, or watch a page and get a notification when the change you describe happens.
 • Translate web pages without breaking their layout, next to the original or in its place, and translate video subtitles while you watch. You choose the engine: your AI model, the browser's on-device translator where available, or a free online translation service.
 • Select text on a page for quick actions, such as explaining it, translating it or looking up a word with the meaning it has on that page. You decide on which sites this appears.
 • Start from the page itself: the browser's right-click menu and the extension's toolbar button lead to the agent and the page tools.
@@ -27,6 +28,7 @@ YOU STAY IN CONTROL
 
 • Every step the agent takes is shown as it runs, with its details.
 • When it's unsure, the agent asks before submitting, buying, sending or deleting anything.
+• Tasks that run on their own only read and report, unless you allow an agent to act on its own.
 • The interface is available in many languages, with light and dark themes.
 
 OpenBrowserAgent is open source. Source code, documentation and issue tracker: https://github.com/Lumysia/OpenBrowserAgent

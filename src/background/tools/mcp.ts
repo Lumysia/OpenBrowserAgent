@@ -13,6 +13,7 @@ import { json, schema, type ToolDefinition } from "./types";
 
 export const mcpServersTool: ToolDefinition = {
   name: TOOL_NAME.mcpServers,
+  effects: "act",
   group: "mcpServers",
   onDemand: true,
   summary: "Add, test and manage MCP servers",
@@ -58,6 +59,7 @@ export function mcpToolDefinitions(
           return {
             name: mcpToolName(server, tool.name),
             group: "mcp",
+            effects: tool.readOnlyHint ? "read" : "act",
             onDemand: true,
             summary: `${server.name}: ${description.split("\n")[0].slice(0, 120)}`,
             description: `${description} (MCP server ${server.name})`,

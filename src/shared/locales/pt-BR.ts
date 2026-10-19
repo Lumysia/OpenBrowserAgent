@@ -10,6 +10,7 @@ import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
 import { settingsPtBR } from "./settings/pt-BR";
 import { setupPtBR } from "./setup/pt-BR";
+import { tasksPtBR } from "./tasks/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -330,6 +331,7 @@ export const ptBR: LocaleMessages = {
       localExecution: "Comandos locais",
       scripts: "JavaScript da página",
       devtools: "Diagnóstico de desenvolvedor",
+      tasks: "Tarefas programadas",
     },
     agentToolGroupDescriptions: {
       pages:
@@ -349,6 +351,8 @@ export const ptBR: LocaleMessages = {
         "Executar JavaScript personalizado nas páginas. Desativado por padrão.",
       devtools:
         "Registro de rede e console, recursos de rede e emulação de dispositivo.",
+      tasks:
+        "Criar, alterar, executar, pausar e excluir tarefas programadas e monitoramentos de páginas. O que o agente configura aguarda sua aprovação.",
     },
     deleteAgent: "Excluir agente",
     agentWorkspace: "Espaço de trabalho do agente",
@@ -632,4 +636,5 @@ export const ptBR: LocaleMessages = {
   pageTools: pageToolsPtBR,
   settings: settingsPtBR,
   setup: setupPtBR,
+  tasks: tasksPtBR,
 };

@@ -111,6 +111,10 @@ export const displayKo: DisplayMessages = {
       run: "실행했어요",
       start: "시작했어요",
       cancel: "취소했어요",
+      get: "가져왔어요",
+      runNow: "실행을 시작했어요",
+      pause: "일시 중지했어요",
+      resume: "재개했어요",
     },
     commandStates: {
       running: "실행 중",

@@ -62,6 +62,19 @@ export const STORAGE_KEYS = {
   // A selection handed from a page to the side panel (session storage where
   // there is one); the name is the one the smart bar's handoff always used.
   sidePanelHandoff: "smart-bar-handoff",
+  // Scheduled tasks and page watches (synced definitions), the devices that
+  // can run them (synced), this device's id among them, and what each task
+  // learned on this device (see tasks/types.ts).
+  tasks: "tasks",
+  taskDevices: "task-devices",
+  taskDeviceId: "task-device-id",
+  // The sync device id this device's task id was paired with: when sync
+  // gives this install a new id (a copied profile), so does tasks.
+  taskDeviceSyncId: "task-device-sync-id",
+  taskStates: "task-states",
+  // Agents whose permission to act on their own the user allowed on this
+  // device (local only; see tasks/approval.ts).
+  agentActApprovals: "agent-act-approvals",
 } as const;
 
 // What syncs besides settings, one switch per group: API keys and MCP

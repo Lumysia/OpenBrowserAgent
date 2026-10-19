@@ -16,7 +16,14 @@ import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
 import { screenshotTool } from "./screenshot";
 import { tabsTool, webSearchTool } from "./tabs";
-import { schema, type ToolSetup, type ToolDefinition } from "./types";
+import { taskResultTool, tasksTool } from "./tasks";
+import {
+  fail,
+  schema,
+  TOOL_EFFECT,
+  type ToolSetup,
+  type ToolDefinition,
+} from "./types";
 import { workspaceTool } from "./workspace";
 
 export const BUILTIN_TOOLS: ToolDefinition[] = [
@@ -42,6 +49,8 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   generateImageTool,
   runScriptTool,
   devtoolsTool,
+  tasksTool,
+  taskResultTool,
 ];
 
 // The tools of one run. Core tools are declared from the first request;
@@ -53,7 +62,12 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
 export function createToolSet(setup: ToolSetup, loaded: string[] = []) {
   const allowed = [...BUILTIN_TOOLS, ...mcpToolDefinitions(setup.mcpServers)]
     .filter((tool) => !tool.group || hasToolGroup(setup.agent, tool.group))
-    .filter((tool) => tool.available?.(setup) ?? true);
+    .filter((tool) => tool.available?.(setup) ?? true)
+    .flatMap((tool) => {
+      if (!setup.unattended?.readOnly) return [tool];
+      const reading = readingTool(tool);
+      return reading ? [reading] : [];
+    });
   const core = allowed.filter((tool) => !tool.onDemand);
   const onDemand = allowed.filter((tool) => tool.onDemand);
   const loadedTools: ToolDefinition[] = [];
@@ -74,6 +88,7 @@ export function createToolSet(setup: ToolSetup, loaded: string[] = []) {
   const loadable = onDemand.filter((tool) => !loadedTools.includes(tool));
   const toolSearch: ToolDefinition = {
     name: TOOL_NAME.toolSearch,
+    effects: "read",
     readOnly: true,
     summary: "Load more tools",
     description: loadable.length
@@ -145,6 +160,49 @@ export function createToolSet(setup: ToolSetup, loaded: string[] = []) {
       base.find((tool) => tool.name === name) ||
       loadedTools.find((tool) => tool.name === name),
     onDemand,
+  };
+}
+
+// The tool as a read-only run gets it: as it is when it only reads, none
+// when it acts, and for a tool with per-action effects one that declares
+// and accepts only its reading actions.
+export function readingTool(tool: ToolDefinition): ToolDefinition | undefined {
+  const { effects } = tool;
+  if (typeof effects === "string")
+    return effects === TOOL_EFFECT.read ? tool : undefined;
+  if ("byRun" in effects)
+    return {
+      ...tool,
+      description: `${tool.description}\n${effects.byRun.readOnlyNote}`,
+    };
+  const reading = Object.keys(effects.byAction).filter(
+    (action) => effects.byAction[action] === TOOL_EFFECT.read,
+  );
+  if (!reading.length) return undefined;
+  const properties = (tool.parameters.properties || {}) as Record<
+    string,
+    Record<string, unknown>
+  >;
+  return {
+    ...tool,
+    description: `${tool.description}\nIn this run only these actions are available: ${reading.join(", ")}.`,
+    parameters: {
+      ...tool.parameters,
+      properties: {
+        ...properties,
+        action: { ...properties.action, enum: reading },
+      },
+    },
+    execute(input, context) {
+      const action = String(input.action ?? "");
+      if (!reading.includes(action))
+        return Promise.resolve(
+          fail(
+            `"${action}" is not available in this run: it runs on its own and may only read. Use ${reading.join(", ")}.`,
+          ),
+        );
+      return tool.execute(input, context);
+    },
   };
 }
 

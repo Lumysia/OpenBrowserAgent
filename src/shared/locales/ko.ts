@@ -10,6 +10,7 @@ import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
 import { settingsKo } from "./settings/ko";
 import { setupKo } from "./setup/ko";
+import { tasksKo } from "./tasks/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -277,6 +278,7 @@ export const ko: LocaleMessages = {
       localExecution: "로컬 명령",
       scripts: "페이지 JavaScript",
       devtools: "개발자 진단",
+      tasks: "예약 작업",
     },
     agentToolGroupDescriptions: {
       pages: "페이지 스냅샷, 찾기, 읽기, 콘텐츠 추출, 스크린샷.",
@@ -292,6 +294,8 @@ export const ko: LocaleMessages = {
       scripts:
         "페이지에서 사용자 지정 JavaScript를 실행합니다. 기본적으로 꺼져 있습니다.",
       devtools: "네트워크와 콘솔 기록, 네트워크 리소스, 기기 에뮬레이션.",
+      tasks:
+        "예약 작업과 페이지 감시를 만들고, 바꾸고, 실행하고, 일시 중지하고, 삭제합니다. 에이전트가 설정한 것은 사용자의 허용을 기다립니다.",
     },
     deleteAgent: "에이전트 삭제",
     agentWorkspace: "에이전트 워크스페이스",
@@ -565,4 +569,5 @@ export const ko: LocaleMessages = {
   pageTools: pageToolsKo,
   settings: settingsKo,
   setup: setupKo,
+  tasks: tasksKo,
 };

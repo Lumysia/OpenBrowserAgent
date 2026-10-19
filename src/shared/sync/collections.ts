@@ -121,6 +121,10 @@ export const SYNC_COLLECTIONS: Collection[] = [
     part: fieldsPart(MCP_KEY_FIELDS, false),
     ...keys,
   }),
+  // Task definitions; what a task learned on a device (task-states) stays
+  // there, and each task runs only on its device (deviceId).
+  list({ name: "tasks", key: STORAGE_KEYS.tasks }),
+  list({ name: "task-devices", key: STORAGE_KEYS.taskDevices }),
   chatsCollection,
   attachmentsCollection,
 ];

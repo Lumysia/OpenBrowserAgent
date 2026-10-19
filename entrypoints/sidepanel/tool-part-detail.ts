@@ -37,7 +37,8 @@ export function toolJsonDetail(name: string, part: ChatPart) {
 }
 
 export function toolLabel(name: string, t: Messages, done = true) {
-  const text = t.sidepanel.tool[name as keyof typeof t.sidepanel.tool];
+  const labels = { ...t.sidepanel.tool, ...t.tasks.tool };
+  const text = labels[name as keyof typeof labels];
   if (text) return done ? text.done : text.running;
   return isMcpToolName(name) ? name.split("__").slice(1).join(" · ") : name;
 }
@@ -145,6 +146,27 @@ const DETAILS: Record<
         : "",
     ]),
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
+  // Which task, and for one created or changed whether its runs may act
+  // (the agent never turns that on) and that it waits for the user's OK.
+  [TOOL_NAME.tasks]: (input, output, t) =>
+    input.action === "list"
+      ? compactJoin([
+          actionLabel(input.action, t),
+          countLabel(t.tasks.count, output.count),
+        ])
+      : compactJoin([
+          actionLabel(input.action, t),
+          stringValue(output.title) || stringValue(input.title),
+          output.waitingForOk === true
+            ? compactJoin([
+                output.mayAct === true
+                  ? t.tasks.agentPermission.label
+                  : t.tasks.approval.onlyLooks,
+                t.tasks.status.needsOk,
+              ])
+            : "",
+        ]),
+  [TOOL_NAME.taskResult]: (input) => stringValue(input.summary),
 };
 
 // Tools whose title says what came of the step; the others show their

@@ -125,6 +125,10 @@ export const displayDeDE: DisplayMessages = {
       run: "Ausgeführt",
       start: "Gestartet",
       cancel: "Abgebrochen",
+      get: "Abgerufen",
+      runNow: "Lauf gestartet",
+      pause: "Pausiert",
+      resume: "Fortgesetzt",
     },
     commandStates: {
       running: "Läuft",

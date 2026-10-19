@@ -305,6 +305,7 @@ const ACTIONS: Record<
 
 export const downloadsTool: ToolDefinition = {
   name: TOOL_NAME.downloads,
+  effects: "act",
   group: "browser",
   onDemand: true,
   timeoutMs: (MAX_WAIT_SECONDS + 60) * 1000,

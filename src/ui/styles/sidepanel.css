@@ -275,6 +275,14 @@
 .history-item:nth-child(4) {
   --item-index: 3;
 }
+/* A row with more detail lines than a chat's (a task's schedule, result
+   and next run): it grows to them. */
+.history-item.multiline {
+  max-height: none;
+}
+.history-item.multiline .history-select {
+  height: auto;
+}
 .history-item[data-state="removing"] {
   pointer-events: none;
   animation: collapse var(--duration-remove) var(--ease-standard) both;
@@ -447,4 +455,43 @@
 .chat-content-skeleton.short {
   width: 62%;
   justify-self: end;
+}
+
+/* Task list: rows are multi-line history rows; the form fits the panel. */
+/* Allow / Discard for a task waiting for the user's OK, under its row in
+   the list and on the task tool's step card. */
+.task-approval-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: 0 var(--space-2) var(--space-2);
+}
+.tool-detail-content .task-approval-actions {
+  padding: var(--space-1) 0 0;
+}
+.task-approval-actions small {
+  flex-basis: 100%;
+  color: var(--muted-foreground);
+}
+.task-form {
+  padding: var(--space-3);
+}
+.task-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-2);
+}
+.task-form-access {
+  display: block;
+  margin-top: var(--space-1);
+}
+.tasks-button {
+  position: relative;
+}
+.tasks-button .history-unread-dot {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
 }

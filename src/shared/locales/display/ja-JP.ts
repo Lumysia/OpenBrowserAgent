@@ -111,6 +111,10 @@ export const displayJaJP: DisplayMessages = {
       run: "実行しました",
       start: "開始しました",
       cancel: "キャンセルしました",
+      get: "取得しました",
+      runNow: "実行を開始しました",
+      pause: "一時停止しました",
+      resume: "再開しました",
     },
     commandStates: {
       running: "実行中",

@@ -1,4 +1,6 @@
 import {
+  CalendarClock,
+  CirclePause,
   MessagesSquare,
   MonitorCog,
   Palette,
@@ -13,6 +15,7 @@ import { DEFAULT_MAX_TOOL_STEPS, OPTIONS_HASH } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { restartSetup } from "../../src/shared/setup-progress";
 import { storage } from "../../src/shared/storage";
+import { notificationsAvailable } from "../../src/shared/tasks/notifications";
 import {
   Accordion,
   Button,
@@ -98,6 +101,31 @@ export function GeneralPage() {
         />
       </SettingsSection>
       <ShortcutsSection />
+      <SettingsSection
+        icon={<CalendarClock />}
+        title={t.tasks.settings.title}
+        description={t.tasks.settings.description}
+      >
+        <div className="settings-toggle-list">
+          <SettingToggleRow
+            icon={<CirclePause size={18} />}
+            title={t.tasks.settings.pauseAll}
+            description={t.tasks.settings.pauseAllDescription}
+            value={preferences.tasksPaused === true}
+            onChange={(checked) =>
+              setPreferences((previous) => ({
+                ...previous,
+                tasksPaused: checked,
+              }))
+            }
+          />
+        </div>
+        {!notificationsAvailable() && (
+          <small className="muted">
+            {t.tasks.settings.notificationsUnavailable}
+          </small>
+        )}
+      </SettingsSection>
       <Accordion type="single" collapsible>
         <SettingsAccordionItem
           value="chat-behavior"

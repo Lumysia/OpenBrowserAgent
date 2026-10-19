@@ -10,6 +10,8 @@ export type ChatMeta = {
   parentMessageId?: string;
   parentToolCallId?: string;
   childChatIds?: string[];
+  // The scheduled task this chat is a run of.
+  taskId?: string;
   pinnedAt?: number;
   createdAt: number;
   updatedAt: number;
