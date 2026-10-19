@@ -18,6 +18,7 @@ import {
   visibleBox,
   type ClippingAncestor,
 } from "./placement";
+import { markOwnUi } from "../shared/page-ui";
 import type { SubtitleStyle } from "../shared/video-subtitles/style";
 import {
   applySubtitleStyle,
@@ -71,6 +72,7 @@ export function createOverlay(
 ) {
   const host = document.createElement("div");
   host.setAttribute(OWN_ATTRIBUTE, "");
+  markOwnUi(host);
   host.setAttribute("translate", "no");
   for (const [name, value] of Object.entries(HOST_STYLE))
     host.style.setProperty(name, value, "important");
