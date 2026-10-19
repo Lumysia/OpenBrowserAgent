@@ -82,6 +82,7 @@ export const tasksJaJP: TasksLocaleMessages = {
     met: "条件を満たしました",
     notMet: "条件を満たしていません",
     unchanged: "変化なし",
+    answered: "回答のみ",
     needsUser: "対応が必要",
     failed: "失敗",
   },

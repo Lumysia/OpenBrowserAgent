@@ -83,6 +83,7 @@ export const tasksPtBR: TasksLocaleMessages = {
     met: "Condição atendida",
     notMet: "Condição não atendida",
     unchanged: "Sem mudança",
+    answered: "Respondeu",
     needsUser: "Precisa de você",
     failed: "Falhou",
   },

@@ -5,6 +5,7 @@ import {
   TASK_RESULT,
   type ScheduledTask,
   type TaskResult,
+  isVerdict,
   type TaskState,
   type WatchBaseline,
 } from "./types";
@@ -58,6 +59,7 @@ export function plannedRunAt(
 export type RunEnd = {
   result: TaskResult;
   failed: boolean;
+  // What a watch saw; it becomes the baseline only after a verdict.
   baseline?: WatchBaseline;
 };
 
@@ -83,14 +85,16 @@ export function afterRun(
     : end.failed && task.trigger.kind === "once"
       ? now + ONCE_RETRY_MS * failures
       : nextRunAt(task.trigger, ran);
+  const { status } = end.result;
+  const verdict = !end.failed && isVerdict(status);
   const notice: Notice | null =
     pausedBy === TASK_PAUSE.failures
       ? "paused"
-      : end.result.status === TASK_RESULT.reported
+      : status === TASK_RESULT.reported
         ? "result"
-        : end.result.status === TASK_RESULT.met
+        : status === TASK_RESULT.met && !state.conditionMet
           ? "met"
-          : end.result.status === TASK_RESULT.needsUser
+          : status === TASK_RESULT.needsUser
             ? "needsUser"
             : null;
   return {
@@ -109,8 +113,15 @@ export function afterRun(
       unseen: notice ? true : state.unseen,
       failures,
       pausedBy,
-      // A failed check never replaces the baseline.
-      baseline: end.failed ? state.baseline : (end.baseline ?? state.baseline),
+      // Only a verdict replaces the baseline: after a failed check, a
+      // question or a run that never judged, the change is judged again.
+      baseline: verdict ? (end.baseline ?? state.baseline) : state.baseline,
+      conditionMet:
+        status === TASK_RESULT.met
+          ? true
+          : status === TASK_RESULT.notMet
+            ? false
+            : state.conditionMet,
     },
   };
 }

@@ -86,6 +86,7 @@ export const tasksEnUS = {
     met: "Condition met",
     notMet: "Condition not met",
     unchanged: "No change",
+    answered: "Answered",
     needsUser: "Needs you",
     failed: "Failed",
   },

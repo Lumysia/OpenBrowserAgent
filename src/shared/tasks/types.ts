@@ -73,6 +73,10 @@ export const TASK_RESULT = {
   notMet: "notMet",
   // A watch whose page did not change: no model run.
   unchanged: "unchanged",
+  // A run that ended without its verdict (no taskResult call, or an
+  // error after a partial answer): shown, but not notified and a watch
+  // keeps its baseline.
+  answered: "answered",
   needsUser: "needsUser",
   failed: "failed",
 } as const;
@@ -107,12 +111,27 @@ export type TaskState = {
   failures: number;
   pausedBy?: TaskPause;
   baseline?: WatchBaseline;
+  // A watch's condition held at its last verdict: a met check notifies
+  // only when it did not (no repeat while it keeps holding).
+  conditionMet?: boolean;
   // The helper tab a run reads its page in, closed when the run ends (or
   // at the next start, after a run was cut off).
   tabId?: number;
 };
 
 export type TaskStates = Record<string, TaskState>;
+
+// Results that judged what the run was for: only after one does a watch
+// take the page it saw as its new baseline.
+export function isVerdict(status: TaskResultStatus) {
+  return (
+    status === TASK_RESULT.reported ||
+    status === TASK_RESULT.nothing ||
+    status === TASK_RESULT.met ||
+    status === TASK_RESULT.notMet ||
+    status === TASK_RESULT.unchanged
+  );
+}
 
 // Results that are worth telling the user (notification, badge).
 export function isNotableResult(status: TaskResultStatus | undefined) {

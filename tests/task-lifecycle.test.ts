@@ -248,3 +248,78 @@ test("stored states read back in today's form", () => {
   assert.equal(states.t1.lastResult?.status, TASK_RESULT.met);
   assert.equal(states.t1.baseline?.text.length, TASK_LIMITS.baselineChars);
 });
+
+test("a watch notifies when its condition comes to hold, not again while it holds", () => {
+  const met = (at: number) => ({
+    failed: false,
+    result: { status: TASK_RESULT.met, at },
+  });
+  const notMet = {
+    failed: false,
+    result: { status: TASK_RESULT.notMet, at: NOW },
+  };
+  let state = fresh;
+  const notices: Array<string | null> = [];
+  for (const end of [met(1), met(2), notMet, met(3), met(4)]) {
+    const next = afterRun(task(), state, end, NOW);
+    notices.push(next.notice);
+    state = next.state;
+  }
+  assert.deepEqual(notices, ["met", null, null, "met", null]);
+  // Unchanged, failed and unjudged checks do not reset it.
+  for (const end of [
+    { failed: false, result: { status: TASK_RESULT.unchanged, at: NOW } },
+    failedRun,
+    { failed: false, result: { status: TASK_RESULT.answered, at: NOW } },
+  ])
+    state = afterRun(task(), state, end, NOW).state;
+  assert.equal(afterRun(task(), state, met(5), NOW).notice, null);
+});
+
+test("a run without its outcome is shown but never notified", () => {
+  const timeTask = task({
+    trigger: { kind: "interval", every: 1, unit: "minutes" },
+  });
+  let state = fresh;
+  for (let run = 0; run < 3; run++) {
+    const next = afterRun(
+      timeTask,
+      state,
+      {
+        failed: false,
+        result: { status: TASK_RESULT.answered, at: NOW, summary: "text" },
+      },
+      NOW,
+    );
+    assert.equal(next.notice, null);
+    assert.equal(next.state.unseen, undefined);
+    assert.equal(next.state.lastResult?.status, TASK_RESULT.answered);
+    state = next.state;
+  }
+});
+
+test("the baseline advances only after a verdict", () => {
+  const baseline = { hash: "a", text: "old", at: 1 };
+  const seen = { hash: "b", text: "new", at: 2 };
+  const state: TaskState = { ...fresh, baseline };
+  for (const status of [TASK_RESULT.needsUser, TASK_RESULT.answered]) {
+    const next = afterRun(
+      task(),
+      state,
+      { failed: false, baseline: seen, result: { status, at: NOW } },
+      NOW,
+    );
+    assert.deepEqual(next.state.baseline, baseline, status);
+  }
+  const judged = afterRun(
+    task(),
+    state,
+    {
+      failed: false,
+      baseline: seen,
+      result: { status: TASK_RESULT.notMet, at: NOW },
+    },
+    NOW,
+  );
+  assert.deepEqual(judged.state.baseline, seen);
+});

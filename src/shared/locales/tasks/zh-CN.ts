@@ -78,6 +78,7 @@ export const tasksZhCN: TasksLocaleMessages = {
     met: "条件已满足",
     notMet: "条件未满足",
     unchanged: "没有变化",
+    answered: "仅回答",
     needsUser: "需要你处理",
     failed: "失败",
   },

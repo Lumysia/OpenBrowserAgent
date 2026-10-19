@@ -80,6 +80,7 @@ export async function updateTask(id: string, patch: TaskPatch) {
       nextRunAt: undefined,
       lastRunAt: undefined,
       baseline: undefined,
+      conditionMet: undefined,
     }));
   return saved;
 }

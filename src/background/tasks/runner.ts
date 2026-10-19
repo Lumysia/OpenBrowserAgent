@@ -22,7 +22,7 @@ import { closeTaskTab, openTaskTab, readWatchedText } from "./watch-page";
 // the model run. Returns what came of it; the scheduler stores it.
 export type RunOutcome = {
   result: TaskResult;
-  // A watch's new baseline, only after a check that succeeded.
+  // What a watch saw (the scheduler keeps it only after a verdict).
   baseline?: WatchBaseline;
   // A run failed (it counts towards pausing the task).
   failed: boolean;
@@ -52,7 +52,6 @@ function firstLine(text: string) {
 async function runAgent(
   task: ScheduledTask,
   instruction: (readOnly: boolean) => string,
-  defaultOutcome: TaskOutcome["outcome"],
   hooks: RunHooks,
   tabId?: number,
 ): Promise<RunOutcome> {
@@ -96,24 +95,24 @@ async function runAgent(
         summary: firstLine(run.error),
       },
     };
-  const outcome = reported?.outcome ?? defaultOutcome;
+  // Without its outcome (never reported, or the run broke off after a
+  // partial answer) the run judged nothing: it is shown, not notified.
+  const verdict = reported && !run.error ? reported : undefined;
   return {
     failed: false,
     result: {
-      status: OUTCOME_STATUS[outcome],
+      status: verdict ? OUTCOME_STATUS[verdict.outcome] : TASK_RESULT.answered,
       at,
       chatId: run.chatId,
-      summary: reported?.summary || firstLine(run.answer),
+      summary: verdict?.summary || firstLine(run.answer),
     },
   };
 }
 
 export function runTimeTask(task: ScheduledTask, hooks: RunHooks) {
-  // A run that ends without saying is a report: it has an answer to show.
   return runAgent(
     task,
     (readOnly) => timeTaskInstruction(task, readOnly),
-    "report",
     hooks,
   );
 }
@@ -130,26 +129,38 @@ export async function runWatch(
     tabId = await openTaskTab(task.id, trigger.url);
     hooks.onTab(tabId);
     const text = await readWatchedText(tabId, trigger);
-    const current = await observation(text, Date.now());
-    const check = compareWithBaseline(baseline, current);
-    if (check.kind === "unchanged")
-      return {
-        failed: false,
-        baseline,
-        result: { status: TASK_RESULT.unchanged, at: Date.now() },
-      };
-    const outcome = await runAgent(
-      task,
-      (readOnly) =>
-        watchInstruction(task, readOnly, trigger.url, check, current.text),
-      // A check that does not say found no match.
-      "notMet",
-      hooks,
-      tabId,
-    );
-    return outcome.failed ? outcome : { ...outcome, baseline: current };
+    return await judgeWatch(task, baseline, text, tabId, hooks);
   } finally {
     await closeTaskTab(tabId);
     hooks.onTab(undefined);
   }
+}
+
+// What a watch makes of the text it read in `tabId`: nothing more when it
+// is unchanged (no model run), else the agent judges the change.
+export async function judgeWatch(
+  task: ScheduledTask,
+  baseline: WatchBaseline | undefined,
+  text: string,
+  tabId: number,
+  hooks: RunHooks,
+): Promise<RunOutcome> {
+  const { trigger } = task;
+  if (trigger.kind !== "watch") throw new Error("Not a watch.");
+  const current = await observation(text, Date.now());
+  const check = compareWithBaseline(baseline, current);
+  if (check.kind === "unchanged")
+    return {
+      failed: false,
+      baseline,
+      result: { status: TASK_RESULT.unchanged, at: Date.now() },
+    };
+  const outcome = await runAgent(
+    task,
+    (readOnly) =>
+      watchInstruction(task, readOnly, trigger.url, check, current.text),
+    hooks,
+    tabId,
+  );
+  return outcome.failed ? outcome : { ...outcome, baseline: current };
 }

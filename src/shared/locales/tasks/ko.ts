@@ -82,6 +82,7 @@ export const tasksKo: TasksLocaleMessages = {
     met: "조건 충족",
     notMet: "조건 미충족",
     unchanged: "변경 없음",
+    answered: "답변만 함",
     needsUser: "확인 필요",
     failed: "실패",
   },

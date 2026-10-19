@@ -83,6 +83,7 @@ export const tasksEsES: TasksLocaleMessages = {
     met: "Condición cumplida",
     notMet: "Condición no cumplida",
     unchanged: "Sin cambios",
+    answered: "Respondió",
     needsUser: "Te necesita",
     failed: "Falló",
   },

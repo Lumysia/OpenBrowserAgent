@@ -83,6 +83,7 @@ export const tasksDeDE: TasksLocaleMessages = {
     met: "Bedingung erfüllt",
     notMet: "Bedingung nicht erfüllt",
     unchanged: "Keine Änderung",
+    answered: "Beantwortet",
     needsUser: "Braucht Sie",
     failed: "Fehlgeschlagen",
   },

@@ -83,6 +83,7 @@ export const tasksFrFR: TasksLocaleMessages = {
     met: "Condition remplie",
     notMet: "Condition non remplie",
     unchanged: "Aucun changement",
+    answered: "Répondu",
     needsUser: "Vous attend",
     failed: "Échec",
   },

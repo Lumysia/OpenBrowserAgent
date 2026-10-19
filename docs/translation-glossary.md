@@ -137,7 +137,7 @@ Settings that few people change sit under **Advanced** (高级 / 進階 / 詳細
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 
-Scheduled tasks are **tasks** in the side panel's task list; a task that checks a page is a **watch** (监视 / 監看 / 監視 / 감시 / surveillance / Beobachtung / vigilancia / monitoramento). The agent permission **Act on its own** is about runs nobody watches; its off state is described as runs that "only look" (只查看 / 只查看 / 見るだけ / 보기만 / se contentent de regarder / sehen nur nach / solo miran / só observam).
+Scheduled tasks are **tasks** in the side panel's task list; a task that checks a page is a **watch** (监视 / 監看 / 監視 / 감시 / surveillance / Beobachtung / vigilancia / monitoramento). The agent permission **Act on its own** is about runs nobody watches; its off state is described as runs that "only look" (只查看 / 只查看 / 見るだけ / 보기만 / se contentent de regarder / sehen nur nach / solo miran / só observam). A run's result **Answered** (仅回答 / 僅回答 / 回答のみ / 답변만 함 / Répondu / Beantwortet / Respondió / Respondeu) is a run that gave an answer without saying whether it has something to report: it is shown in the list, never notified.
 
 ## Themes and holiday touches
 

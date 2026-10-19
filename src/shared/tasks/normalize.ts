@@ -194,6 +194,7 @@ function normalizeState(value: unknown): TaskState {
             at: finiteNumber(baseline.at, 0),
           }
         : undefined,
+    conditionMet: item.conditionMet === true || undefined,
     tabId: finiteNumber(item.tabId),
   };
 }
