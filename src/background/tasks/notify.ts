@@ -19,15 +19,36 @@ const NOTIFICATION_PREFIX = "oba-task:";
 const ICON_PATH = "/icons/128.png";
 const BADGE_MAX = 99;
 
-// The id carries the chat to open when the notification is clicked.
-export function notificationId(taskId: string, chatId?: string) {
-  return `${NOTIFICATION_PREFIX}${taskId}:${chatId || ""}`;
+// The id carries what a click needs, since the worker that showed the
+// notification may have stopped by then: the chat to open and the window
+// to open the side panel in (the last focused one when it was shown).
+export function notificationId(
+  taskId: string,
+  chatId?: string,
+  windowId?: number,
+) {
+  return `${NOTIFICATION_PREFIX}${taskId}:${chatId || ""}:${windowId ?? ""}`;
 }
 
 export function parseNotificationId(id: string) {
   if (!id.startsWith(NOTIFICATION_PREFIX)) return undefined;
-  const [taskId, chatId] = id.slice(NOTIFICATION_PREFIX.length).split(":");
-  return { taskId, chatId: chatId || undefined };
+  const [taskId, chatId, windowText] = id
+    .slice(NOTIFICATION_PREFIX.length)
+    .split(":");
+  const windowId = windowText ? Number(windowText) : undefined;
+  return {
+    taskId,
+    chatId: chatId || undefined,
+    windowId: Number.isInteger(windowId) ? windowId : undefined,
+  };
+}
+
+async function lastFocusedWindowId() {
+  return (
+    await Promise.resolve()
+      .then(() => getBrowserApi().windows?.getLastFocused())
+      .catch(() => undefined)
+  )?.id;
 }
 
 export async function notifyTask(
@@ -46,8 +67,9 @@ export async function notifyTask(
         ? result.summary || t.notify.needsUser
         : result.summary ||
           (notice === "met" ? t.notify.conditionMet : t.notify.finished);
+  const windowId = await lastFocusedWindowId();
   await api
-    .create(notificationId(task.id, result.chatId), {
+    .create(notificationId(task.id, result.chatId, windowId), {
       type: "basic",
       iconUrl: getBrowserApi().runtime.getURL(ICON_PATH),
       title: `${t.notify.titlePrefix[notice]} · ${title}`,
@@ -59,7 +81,10 @@ export async function notifyTask(
 }
 
 // The panel opens only during the click's gesture, before any await, in a
-// known window: the last focused one is kept at hand.
+// known window: the notification's own, else the last focused one this
+// worker saw. Without either, the panel opens where the browser can
+// without a window (Firefox's sidebar; elsewhere the panel page in a tab,
+// reusing an open one).
 let focusedWindowId: number | undefined;
 
 function trackFocusedWindow() {
@@ -85,7 +110,7 @@ export function setupTaskNotificationClicks() {
     if (!parsed) return;
     void api.clear(id).catch(() => undefined);
     handOffToSidePanel(
-      { windowId: focusedWindowId } as chrome.tabs.Tab,
+      { windowId: parsed.windowId ?? focusedWindowId } as chrome.tabs.Tab,
       parsed.chatId
         ? { task: SIDE_PANEL_TASK.openChat, chatId: parsed.chatId }
         : { task: SIDE_PANEL_TASK.openTasks },
