@@ -14,7 +14,7 @@ CE QUE VOUS POUVEZ FAIRE
 AGENTS, COMPÉTENCES ET OUTILS
 
 • Créez des agents avec leurs propres instructions, outils et modèle. Les agents peuvent confier du travail à des sous-agents qui s’exécutent en arrière-plan.
-• Les compétences sont des instructions réutilisables : choisissez-en une vous-même, ou laissez l’agent l’utiliser quand une demande s’y prête. Écrivez les vôtres, importez-les ou exportez-les.
+• Les compétences sont des instructions réutilisables : choisissez-en une vous-même, ou laissez l’agent l’utiliser quand une demande s’y prête. Écrivez les vôtres, importez-les ou exportez-les. Ou faites une tâche une fois pendant l’enregistrement, et l’agent en fait une compétence, sans garder ce que vous tapez.
 • Connectez des serveurs MCP pour donner à l’agent davantage d’outils, comme la recherche sur le Web.
 • Pour des chiffres exacts, l’agent peut écrire du code et l’exécuter dans un bac à sable sur votre appareil, sans accès à Internet.
 • Un pont local facultatif permet à un agent d’exécuter des commandes sur votre ordinateur, seulement après que vous l’avez installé et activé.

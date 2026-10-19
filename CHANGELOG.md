@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Record a skill**: show the agent a browser task once. Choose **+ → Record a skill** in the side panel, do the task, and press **Stop**. The agent writes a skill with a name, inputs and steps, runs it once in a new tab to check it (asking you before the final submit), and saves it; you can let the agent use it automatically once the check passed. Steps show up in the side panel while you record, where you can delete them or mark what changes each time.
+- Recording never keeps what you type, only which field you used; passwords, codes and card numbers are never stored, not even as an example. The agent does not work in a tab while you record it.
 - **Scheduled tasks and page watches**: have the agent do something later, every few minutes, hours or days, or daily or weekly at a set time, or watch a page and tell you when the change you describe happens. Results arrive as system notifications (Chrome, Firefox) and a count on the toolbar button, and each run is a chat you can open. Manage tasks in the new task list in the side panel: run now, pause, resume, edit or delete.
 - Turn a request from a chat into a task with **Make this a task**, or ask the agent in words: it can list your tasks and create, change, run, pause, resume or delete them ("check this page every hour and tell me when the price drops", "move my news task to the evening"). The Ask agent cannot.
 - Nothing runs on a device that you did not allow there: what the agent creates or changes, and tasks or agent permissions that arrive by sync from another device, wait for your **Allow** in the task list (or on the agent's step in the chat).

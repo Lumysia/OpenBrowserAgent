@@ -51,6 +51,18 @@ Tasks run an agent later, on a schedule, or when a watched page changes, while t
 - **Where data lives.** Task definitions (title, instructions, schedule, watched address, agent and the device that runs it) sync with the settings when sync is on; each task runs only on its device. What a device learned while running a task (last run, last result, the watched text, failure count) stays on that device. Each run is an ordinary chat in chat history.
 - **Control.** Every task can be paused, run now, edited or deleted in the side panel's task list; three failed runs in a row pause a task; one setting pauses every task.
 
+## Teach mode (recording)
+
+**+ → Record a skill** records a task the user shows once, in the tab where it started and the tabs it opens, until the user stops it, the tab closes or 15 minutes pass without a step.
+
+- **What it captures.** Only trusted user input (`isTrusted`) in the page's top frame, read in the capture phase through shadow DOM: clicks, choices in selects, checkboxes and radios, fields once committed (on leaving the field or pressing Enter), Enter, Escape and shortcut keys, and from the browser the pages the tab goes to, tabs it opens, and the site of another tab the user switches to. Each step keeps what its element means: role and accessible name (as the agent's snapshot names it), label, placeholder, the `name` and `id` attributes (ids that look generated are dropped), where a link goes, the surrounding container and nearest heading, a tag path as a last-resort hint, and the page title. Pages are kept as origin and path, with record ids replaced by `*`.
+- **What it never captures.** What the user types: a field step records only which field, its input type and the length of the entry. No query strings, fragments or credentials of URLs, no coordinates, no screenshots, and nothing from the extension's own page UI (marked with `data-oba-ui`).
+- **Secret fields.** A field is secret when it is or was a password field (also after a show-password toggle), its `autocomplete` is `current-password`, `new-password`, `one-time-code` or a `cc-*` token, or its id, name, label or placeholder names a password, passcode, PIN, one-time or verification code, 2FA, security code, card number, CVV, SSN, API key, token or secret. Secret fields are marked sensitive; their choice in a select is not kept either.
+- **Example values.** The value of a non-secret field stays in the recorder inside the page, for that page only. It leaves the page only when the user ticks "keep as an example" on that step, and then it becomes part of the skill (and syncs with it).
+- **Where it lives.** While recording and until saved, the steps are in `storage.session` (gone when the browser closes). On **Stop** the steps go once to the chat model as text, with «value withheld» markers, to write the skill. Saving stores an ordinary skill: `SKILL.md` and `references/demonstration.json`, which syncs like other skills.
+- **The check run** is a normal chat run with the usual tools in a new tab. The agent asks for inputs in the chat but never for a secret one: the user fills it on the page or the browser fills it. It asks before a final submit, purchase, send or delete.
+- **The agent does not work in a tab that is being recorded**: runs that would start there, and page tools aimed at it, are refused.
+
 ## Code sandbox
 
 The on-demand `runCode` tool lets the agent run JavaScript it writes, for exact calculations, parsing CSV or JSON and reshaping data. The code runs on the user's device and never in the extension's own JavaScript engine:
@@ -158,7 +170,8 @@ Stored data includes:
 - Preferences and UI language.
 - Provider configs, including API keys, base URLs, and the user's permission to send content to the endpoint's host.
 - Agents and agent workspaces.
-- Skills and skill files.
+- Skills and skill files, including recorded skills (instructions and recorded steps, never typed values).
+- Recordings in progress and how check runs of recorded skills went (session storage, gone when the browser closes).
 - MCP server definitions and headers.
 - Local execution bridge configurations and secrets.
 - Chats and chat tabs. A chat keeps, for each tool call, the text the model received (page snapshots and extracted text included, up to the tool output size limit), so later turns and chat exports can show what the agent saw. Longer outputs are also kept in local IndexedDB under artifact handles; those are never synced.
