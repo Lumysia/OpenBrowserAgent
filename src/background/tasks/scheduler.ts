@@ -1,6 +1,6 @@
 import { getBrowserApi } from "../../shared/browser-api";
 import { storage } from "../../shared/storage";
-import { updateTaskState } from "../../shared/tasks/edit";
+import { dropTaskStates, updateTaskState } from "../../shared/tasks/edit";
 import {
   afterRun,
   idleReason,
@@ -15,14 +15,18 @@ import { taskState } from "../../shared/tasks/normalize";
 import { TASK_RESULT, type ScheduledTask } from "../../shared/tasks/types";
 import { errorMessage } from "../../shared/error-message";
 import { respondWith } from "../../shared/runtime-messages";
-import { isTaskMessage, TASK_MESSAGE } from "../../shared/tasks/messages";
+import {
+  isTaskMessage,
+  TASK_MESSAGE,
+  type TaskMessage,
+} from "../../shared/tasks/messages";
 import { ensureTaskDevice } from "./device";
 import {
   notifyTask,
   setupTaskNotificationClicks,
   updateTaskBadge,
 } from "./notify";
-import { runTimeTask, runWatch } from "./runner";
+import { taskRunner } from "./runner";
 import { closeTaskTab } from "./watch-page";
 
 // Runs the tasks this device owns, on chrome.alarms (one alarm per task,
@@ -60,6 +64,11 @@ export async function armTasks() {
     storage.taskStates.get(),
     runContext(),
   ]);
+  // States of tasks deleted here or on another device go with them.
+  const ids = new Set(tasks.map((task) => task.id));
+  await dropTaskStates(
+    Object.keys(states).filter((id) => !ids.has(id) && !active.has(id)),
+  );
   const planned = new Map<string, number>();
   for (const task of tasks) {
     const at = plannedRunAt(task, taskState(states, task.id), context);
@@ -119,13 +128,21 @@ export function runTask(taskId: string, { manual = false } = {}) {
   return run.finally(() => active.delete(taskId));
 }
 
-async function runQueued(taskId: string, manual: boolean) {
+// The task when it may run now: this device's, and (unless the user asked
+// for this run) not paused.
+async function runnable(taskId: string, manual: boolean) {
   const task = await findTask(taskId);
-  if (!task) return false;
-  const context = await runContext();
+  if (!task) return undefined;
   const state = taskState(await storage.taskStates.get(), taskId);
-  const reason = idleReason(task, state, context);
-  if (reason === "otherDevice" || (reason && !manual)) return false;
+  const reason = idleReason(task, state, await runContext());
+  if (reason === "otherDevice" || (reason && !manual)) return undefined;
+  return { task, state };
+}
+
+async function runQueued(taskId: string, manual: boolean) {
+  const found = await runnable(taskId, manual);
+  if (!found) return false;
+  const { task, state } = found;
   const attempt = nextAttempt(state);
   await updateTaskState(taskId, (current) => ({
     ...current,
@@ -145,8 +162,8 @@ async function runQueued(taskId: string, manual: boolean) {
   try {
     end =
       task.trigger.kind === "watch"
-        ? await runWatch(task, state.baseline, hooks)
-        : await runTimeTask(task, hooks);
+        ? await taskRunner.runWatch(task, state.baseline, hooks)
+        : await taskRunner.runTimeTask(task, hooks);
   } catch (error) {
     end = {
       failed: true,
@@ -162,6 +179,11 @@ async function runQueued(taskId: string, manual: boolean) {
 }
 
 async function finishRun(task: ScheduledTask, end: RunEnd, manual: boolean) {
+  // Deleted while it ran: nothing to record or tell.
+  if (!(await findTask(task.id))) {
+    await dropTaskStates([task.id]);
+    return;
+  }
   let notice: Notice | null = null;
   await storage.taskStates.update((states) => {
     const current = taskState(states, task.id);
@@ -238,20 +260,41 @@ export function handleTaskMessage(
   sendResponse: (reply: unknown) => void,
 ) {
   if (!isTaskMessage(message)) return false;
-  if (message.type === TASK_MESSAGE.seen)
-    return respondWith(
-      markTasksSeen().then(() => true),
-      sendResponse,
-    );
-  if (message.type === TASK_MESSAGE.resume)
-    return respondWith(resumeTask(message.taskId), sendResponse);
+  return respondWith(
+    tasksReady().then(() => answerTaskMessage(message)),
+    sendResponse,
+  );
+}
+
+async function answerTaskMessage(message: TaskMessage) {
+  if (message.type === TASK_MESSAGE.seen) {
+    await markTasksSeen();
+    return true;
+  }
+  if (message.type === TASK_MESSAGE.resume) return resumeTask(message.taskId);
   // Answers whether a run starts, without waiting for it to end.
-  const starts = !active.has(message.taskId);
+  const starts =
+    !active.has(message.taskId) && !!(await runnable(message.taskId, true));
   if (starts)
     void runTask(message.taskId, { manual: true }).catch((error: unknown) =>
       console.warn("Task run failed", error),
     );
-  return respondWith(Promise.resolve(starts), sendResponse);
+  return starts;
+}
+
+let ready: Promise<void> | undefined;
+
+// The worker's start: this device's id, then runs cut off by a stop
+// recovered. Alarms, messages and re-arming wait for it, so nothing starts
+// a task before its interrupted run is counted and its tab closed.
+export function tasksReady() {
+  ready ??= (async () => {
+    await ensureTaskDevice();
+    await recoverTasks();
+  })().catch((error: unknown) =>
+    console.warn("Failed to recover tasks", error),
+  );
+  return ready;
 }
 
 export function setupTasks() {
@@ -259,14 +302,16 @@ export function setupTasks() {
   setupTaskNotificationClicks();
   api.alarms?.onAlarm.addListener((alarm) => {
     if (!alarm.name.startsWith(TASK_ALARM_PREFIX)) return;
-    void runTask(alarm.name.slice(TASK_ALARM_PREFIX.length)).catch(
-      (error: unknown) => console.warn("Scheduled task failed", error),
-    );
+    void tasksReady()
+      .then(() => runTask(alarm.name.slice(TASK_ALARM_PREFIX.length)))
+      .catch((error: unknown) => console.warn("Scheduled task failed", error));
   });
   const rearm = () =>
-    void armTasks().catch((error: unknown) =>
-      console.warn("Failed to schedule tasks", error),
-    );
+    void tasksReady()
+      .then(armTasks)
+      .catch((error: unknown) =>
+        console.warn("Failed to schedule tasks", error),
+      );
   storage.tasks.watch(rearm);
   storage.taskDeviceId.watch(rearm);
   storage.preferences.watch((next, previous) => {
@@ -274,8 +319,7 @@ export function setupTasks() {
   });
   storage.taskStates.watch((states) => void updateTaskBadge(states));
   void (async () => {
-    await ensureTaskDevice();
-    await recoverTasks();
+    await tasksReady();
     await armTasks();
     await updateTaskBadge(await storage.taskStates.get());
   })().catch((error: unknown) => console.warn("Failed to start tasks", error));

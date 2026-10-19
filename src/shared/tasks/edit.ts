@@ -87,13 +87,19 @@ export async function updateTask(id: string, patch: TaskPatch) {
 
 export async function deleteTask(id: string) {
   const removed = await removeById(storage.tasks, id);
-  await storage.taskStates.update((states) => {
-    if (!(id in states)) return states;
-    const next = { ...states };
-    delete next[id];
-    return next;
-  });
+  await dropTaskStates([id]);
   return removed;
+}
+
+// Forgets what this device learned of these tasks.
+export function dropTaskStates(ids: string[]) {
+  return storage.taskStates.update((states) =>
+    ids.some((id) => id in states)
+      ? Object.fromEntries(
+          Object.entries(states).filter(([id]) => !ids.includes(id)),
+        )
+      : states,
+  );
 }
 
 export function updateTaskState(

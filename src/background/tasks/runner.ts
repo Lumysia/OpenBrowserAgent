@@ -110,6 +110,17 @@ async function runAgent(
   };
 }
 
+// The scheduler runs tasks through this object.
+export const taskRunner = {
+  runTimeTask: (task: ScheduledTask, hooks: RunHooks) =>
+    runTimeTask(task, hooks),
+  runWatch: (
+    task: ScheduledTask,
+    baseline: WatchBaseline | undefined,
+    hooks: RunHooks,
+  ) => runWatch(task, baseline, hooks),
+};
+
 export function runTimeTask(task: ScheduledTask, hooks: RunHooks) {
   return runAgent(
     task,
