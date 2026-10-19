@@ -275,6 +275,14 @@
 .history-item:nth-child(4) {
   --item-index: 3;
 }
+/* A row with more detail lines than a chat's (a task's schedule, result
+   and next run): it grows to them. */
+.history-item.multiline {
+  max-height: none;
+}
+.history-item.multiline .history-select {
+  height: auto;
+}
 .history-item[data-state="removing"] {
   pointer-events: none;
   animation: collapse var(--duration-remove) var(--ease-standard) both;
@@ -449,14 +457,7 @@
   justify-self: end;
 }
 
-/* Task list: rows reuse the history list with up to three detail lines;
-   the form fits the panel. */
-.history-item.task-item {
-  max-height: none;
-}
-.task-item .history-select {
-  height: auto;
-}
+/* Task list: rows are multi-line history rows; the form fits the panel. */
 .task-form {
   padding: var(--space-3);
 }
@@ -475,6 +476,6 @@
 }
 .tasks-button .history-unread-dot {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: var(--space-1);
+  right: var(--space-1);
 }

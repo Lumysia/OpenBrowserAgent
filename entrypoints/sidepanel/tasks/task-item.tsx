@@ -69,6 +69,7 @@ export function TaskItem({
     <div
       className={cn(
         "history-item",
+        "multiline",
         "task-item",
         state.unseen && "unread-complete",
       )}
