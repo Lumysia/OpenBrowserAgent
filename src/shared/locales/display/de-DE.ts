@@ -59,6 +59,9 @@ export const displayDeDE: DisplayMessages = {
     bridgeTimeout: "Die Ausführungs-Bridge hat nicht rechtzeitig geantwortet.",
     syncKeysLocked:
       "Ihre API-Schlüssel sind synchronisiert, aber gesperrt. Geben Sie Ihre Sync-Passphrase unter Einstellungen → Synchronisierung ein.",
+    teachUnscriptable: "Diese Seite kann nicht aufgezeichnet werden.",
+    tabRecording:
+      "Dieser Tab wird gerade aufgezeichnet. Beenden Sie die Aufzeichnung, bevor der Agent darin arbeitet.",
   },
   toolSteps: {
     failed: "Fehlgeschlagen",

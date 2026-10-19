@@ -1,3 +1,4 @@
+import { useTeach } from "./teach/use-teach";
 import { useEffect, useRef, useState } from "react";
 import { resolveAgent } from "../../src/shared/agents";
 import { availableSkills } from "../../src/shared/skill-catalog";
@@ -210,6 +211,16 @@ function SidepanelRoot() {
     startStream: streams.startStream,
   });
 
+  const teach = useTeach({
+    send: ({ content, ...request }) =>
+      void send(content, undefined, { request }),
+    createChat,
+    currentChatId: currentChat?.id,
+    canSend: currentChatStatus === "ready" && !streaming,
+    confirmConsent: consent.confirmSend,
+    skills,
+  });
+
   const navigation = useNavigationState();
   useSidePanelHandoff({
     ready: !!chats,
@@ -332,6 +343,7 @@ function SidepanelRoot() {
         deleteQueuedMessage: queue.deleteQueuedMessage,
         editQueuedMessage: queue.editQueuedMessage,
         consentPrompt: consent.prompt,
+        teach,
         send: () => void send(),
         stop: streams.stopCurrentStream,
       }}

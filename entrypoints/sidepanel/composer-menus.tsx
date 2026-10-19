@@ -1,4 +1,5 @@
 import {
+  CircleDot,
   ExternalLink,
   FileText,
   Layers,
@@ -46,6 +47,10 @@ export function AddContextMenu({
   };
   const onAttachTab = async () => {
     await composer.attachActiveTab();
+    setOpenMenu(null);
+  };
+  const onRecordSkill = async () => {
+    await composer.teach.openStart();
     setOpenMenu(null);
   };
   const onSelectElement = async () => {
@@ -101,6 +106,12 @@ export function AddContextMenu({
             title={t.sidepanel.selectElement}
             onClick={onSelectElement}
             disabled={!activeTabAttachable}
+          />
+          <ActionListItem
+            icon={<CircleDot size={17} />}
+            title={t.teach.menu.title}
+            hint={t.teach.menu.hint}
+            onClick={onRecordSkill}
           />
         </div>
       );

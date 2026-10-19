@@ -11,6 +11,7 @@ import { themesJaJP } from "./themes/ja-JP";
 import { settingsJaJP } from "./settings/ja-JP";
 import { setupJaJP } from "./setup/ja-JP";
 import { tasksJaJP } from "./tasks/ja-JP";
+import { teachJaJP } from "./teach/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -608,4 +609,5 @@ export const jaJP: LocaleMessages = {
   settings: settingsJaJP,
   setup: setupJaJP,
   tasks: tasksJaJP,
+  teach: teachJaJP,
 };

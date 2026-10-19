@@ -11,6 +11,7 @@ import { themesDeDE } from "./themes/de-DE";
 import { settingsDeDE } from "./settings/de-DE";
 import { setupDeDE } from "./setup/de-DE";
 import { tasksDeDE } from "./tasks/de-DE";
+import { teachDeDE } from "./teach/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -645,4 +646,5 @@ export const deDE: LocaleMessages = {
   settings: settingsDeDE,
   setup: setupDeDE,
   tasks: tasksDeDE,
+  teach: teachDeDE,
 };

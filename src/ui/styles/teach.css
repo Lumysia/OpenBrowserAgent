@@ -1,0 +1,95 @@
+/* Teach mode's cards above the composer (see sidepanel/teach): the step
+   list while recording, the start and save forms. They are composer
+   cards; this adds only what they hold. */
+.teach-card .composer-card-header strong {
+  min-width: 0;
+}
+.teach-count {
+  margin-left: auto;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+.teach-recording-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--destructive);
+  animation: teach-pulse 1.6s var(--ease-standard) infinite;
+}
+.teach-writing {
+  animation: teach-pulse 1.6s var(--ease-standard) infinite;
+}
+@keyframes teach-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.teach-steps {
+  display: grid;
+  gap: 2px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  counter-reset: teach-step;
+}
+.teach-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 4px 4px 8px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--card) 78%, var(--accent-softer));
+  counter-increment: teach-step;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.teach-step-text {
+  min-width: 0;
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.teach-step-text::before {
+  content: counter(teach-step) ". ";
+  color: var(--muted-foreground);
+}
+.teach-step-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: var(--space-2);
+  color: var(--muted-foreground);
+}
+.teach-step-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.teach-step-actions .ui-button-icon {
+  width: 26px;
+  height: 26px;
+}
+.teach-step-actions .teach-step-toggled {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.teach-fields {
+  display: grid;
+  gap: var(--space-1);
+}
+.teach-note {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teach-recording-dot,
+  .teach-writing {
+    animation: none;
+  }
+}

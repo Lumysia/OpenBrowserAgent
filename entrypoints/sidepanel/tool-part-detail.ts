@@ -37,7 +37,7 @@ export function toolJsonDetail(name: string, part: ChatPart) {
 }
 
 export function toolLabel(name: string, t: Messages, done = true) {
-  const labels = { ...t.sidepanel.tool, ...t.tasks.tool };
+  const labels = { ...t.sidepanel.tool, ...t.tasks.tool, ...t.teach.tool };
   const text = labels[name as keyof typeof labels];
   if (text) return done ? text.done : text.running;
   return isMcpToolName(name) ? name.split("__").slice(1).join(" · ") : name;
@@ -167,6 +167,7 @@ const DETAILS: Record<
             : "",
         ]),
   [TOOL_NAME.taskResult]: (input) => stringValue(input.summary),
+  [TOOL_NAME.skillCheck]: (input) => stringValue(input.summary),
 };
 
 // Tools whose title says what came of the step; the others show their

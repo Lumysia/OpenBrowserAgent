@@ -62,6 +62,9 @@ export const displayEsES: DisplayMessages = {
     bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
     syncKeysLocked:
       "Tus claves API están sincronizadas pero bloqueadas. Introduce tu frase de contraseña de sincronización en Configuración → Sincronización.",
+    teachUnscriptable: "Esta página no se puede grabar.",
+    tabRecording:
+      "Esta pestaña se está grabando. Detén la grabación antes de que el agente trabaje en ella.",
   },
   toolSteps: {
     failed: "Error",

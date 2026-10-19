@@ -53,6 +53,8 @@ export const displayZhTW: DisplayMessages = {
     bridgeTimeout: "執行橋沒有及時回應。",
     syncKeysLocked:
       "你的 API Key 已同步但處於鎖定狀態。請在「設定 → 同步」中輸入同步密語。",
+    teachUnscriptable: "此頁面無法錄製。",
+    tabRecording: "這個分頁正在錄製。請先停止錄製，再讓智慧體操作。",
   },
   toolSteps: {
     failed: "失敗",

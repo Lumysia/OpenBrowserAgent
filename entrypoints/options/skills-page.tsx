@@ -1,3 +1,4 @@
+import { recordedSkillInfo } from "../../src/shared/teach/skill-files";
 import { useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -128,7 +129,7 @@ export function SkillsPage() {
       <SettingsPageHeader
         icon={<FileText />}
         title={t.options.skills}
-        description={t.options.skillsDescription}
+        description={`${t.options.skillsDescription} ${t.teach.skillsHint}`}
         actions={
           <>
             <input
@@ -246,6 +247,7 @@ function SkillItem({
   const locale = useLocale();
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
+  const recorded = recordedSkillInfo(draft);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
   // A skill whose files did not sync to this device is not broken.
   const checks =
@@ -272,6 +274,11 @@ function SkillItem({
                   {source === "builtin"
                     ? t.options.builtinSkillBadge
                     : t.options.overrideSkillBadge}
+                </Badge>
+              )}
+              {recorded && (
+                <Badge>
+                  {t.teach.status.recorded} · {t.teach.status[recorded.status]}
                 </Badge>
               )}
               {source !== "builtin" && (

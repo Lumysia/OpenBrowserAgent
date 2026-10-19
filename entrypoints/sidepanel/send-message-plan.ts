@@ -23,6 +23,7 @@ import {
 } from "./edit-message";
 import { selectedElementImageAttachments } from "./selected-element-attachment";
 import { generateLocalTitle } from "./sidepanel-context";
+import type { SkillCheckMetadata } from "../../src/shared/teach/check";
 
 // A request from the context menu or the smart bar: the tabs and selected
 // text it is about, and how the agent should carry it out (see
@@ -31,6 +32,9 @@ export type SendRequest = {
   instruction: string;
   tabs: AttachmentTab[];
   selectedTexts?: SelectedText[];
+  // Skills the request picks (a recorded skill's check run).
+  skills?: PickedSkill[];
+  skillCheck?: SkillCheckMetadata;
 };
 
 // The instruction a request's message carries, kept for a resend.
@@ -52,6 +56,7 @@ export function createSendMessagePlan({
   assistantModel,
   skills,
   instruction,
+  skillCheck,
 }: {
   chat: Chat;
   text: string;
@@ -65,6 +70,7 @@ export function createSendMessagePlan({
   assistantModel?: { provider: string; name: string };
   skills?: PickedSkill[];
   instruction?: string;
+  skillCheck?: SkillCheckMetadata;
 }) {
   const selectedSkills = skills?.filter(Boolean) || [];
   const userMessage: ChatMessage = {
@@ -89,6 +95,7 @@ export function createSendMessagePlan({
         : {}),
       ...(selectedSkills.length ? { skills: selectedSkills } : {}),
       ...(instruction ? { instruction } : {}),
+      ...(skillCheck ? { skillCheck } : {}),
     },
   };
   const assistantMessage: ChatMessage = {
@@ -164,7 +171,7 @@ export function pickSendInputs({
       sentTabs: request.tabs,
       sentElements: [],
       sentTexts: request.selectedTexts || [],
-      sentSkills: [],
+      sentSkills: request.skills || [],
       sentAttachments: [],
       activeAttachments: [],
     };

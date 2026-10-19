@@ -5,6 +5,7 @@ import { sessionRecord } from "../shared/session-record";
 import { STORAGE_KEYS } from "../shared/storage-keys";
 import type { AttachmentTab, ChatMessage } from "../shared/types";
 import { xmlTag } from "../shared/xml";
+import { refuseRecordingTab } from "./teach/guard";
 
 // The tab a run works on. Page tools that name no tab use the run's tab,
 // never whatever tab is active when the call runs: the user may switch tabs
@@ -91,6 +92,7 @@ export function createRunTab(
           throw new Error(
             `Tab ${named} does not exist. Use tabs (action list) to see open tabs.`,
           );
+        await refuseRecordingTab(named);
         runTab.use(tab);
         return tab;
       }
@@ -103,6 +105,7 @@ export function createRunTab(
         throw new Error(
           `The tab you were working on (tab ${current.id}${current.title ? `: ${current.title}` : ""}) was closed. Use tabs (action list) and pass a tabId, or open the page again with tabs.`,
         );
+      await refuseRecordingTab(tab.id);
       current.title = tab.title;
       return tab;
     },

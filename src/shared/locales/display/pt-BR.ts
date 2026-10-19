@@ -62,6 +62,9 @@ export const displayPtBR: DisplayMessages = {
     bridgeTimeout: "A ponte de execução não respondeu a tempo.",
     syncKeysLocked:
       "Suas chaves de API estão sincronizadas, mas bloqueadas. Digite sua frase secreta de sincronização em Configurações → Sincronização.",
+    teachUnscriptable: "Esta página não pode ser gravada.",
+    tabRecording:
+      "Esta guia está sendo gravada. Pare a gravação antes de o agente trabalhar nela.",
   },
   toolSteps: {
     failed: "Falhou",

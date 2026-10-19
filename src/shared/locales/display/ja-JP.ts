@@ -58,6 +58,9 @@ export const displayJaJP: DisplayMessages = {
     bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
     syncKeysLocked:
       "API キーは同期されていますが、ロックされています。「設定 → 同期」で同期パスフレーズを入力してください。",
+    teachUnscriptable: "このページは記録できません。",
+    tabRecording:
+      "このタブは記録中です。記録を停止してからエージェントに操作させてください。",
   },
   toolSteps: {
     failed: "失敗",

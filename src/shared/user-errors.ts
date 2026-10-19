@@ -12,6 +12,10 @@ export const USER_ERROR_CODE = {
   bridgeHostRequired: "bridgeHostRequired",
   bridgeTimeout: "bridgeTimeout",
   syncKeysLocked: "syncKeysLocked",
+  // Teach mode: the page can't be recorded; the agent may not work in a
+  // tab while it is recorded.
+  teachUnscriptable: "teachUnscriptable",
+  tabRecording: "tabRecording",
 } as const;
 
 export type UserErrorCode =

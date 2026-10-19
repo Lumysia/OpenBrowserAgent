@@ -63,6 +63,9 @@ export const displayEnUS = {
     bridgeTimeout: "The execution bridge didn’t answer in time.",
     syncKeysLocked:
       "Your API keys are synced but locked. Enter your sync passphrase in Settings → Sync.",
+    teachUnscriptable: "This page can't be recorded.",
+    tabRecording:
+      "This tab is being recorded. Stop the recording before the agent works in it.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

@@ -62,6 +62,9 @@ export const displayFrFR: DisplayMessages = {
     bridgeTimeout: "Le pont d’exécution n’a pas répondu à temps.",
     syncKeysLocked:
       "Vos clés API sont synchronisées mais verrouillées. Saisissez votre phrase secrète de synchronisation dans Paramètres → Synchronisation.",
+    teachUnscriptable: "Cette page ne peut pas être enregistrée.",
+    tabRecording:
+      "Cet onglet est en cours d’enregistrement. Arrêtez l’enregistrement avant de laisser l’agent y travailler.",
   },
   toolSteps: {
     failed: "Échec",
