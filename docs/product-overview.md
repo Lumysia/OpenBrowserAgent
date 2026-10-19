@@ -12,6 +12,7 @@ It turns the browser into an AI working surface: users can chat with a selected 
 - Use the Ask agent for focused page Q&A: it reads pages but does not operate the browser.
 - Create custom agents with their own instructions, tool groups, model, icon, and an optional workspace with memory.
 - Create/import reusable skills for repeatable workflows.
+- Schedule tasks for later or on a schedule, and watch pages for a change you describe, with a notification when there is something to tell.
 - Configure model providers, chat models, image models, sync preferences, MCP servers, and UI settings.
 
 ## Key Features
@@ -53,6 +54,18 @@ Every agent starts with a small set of core tools; the rest load on demand throu
 Tool runs are shown as visible cards with status, summaries, references, generated media, and JSON detail popovers.
 
 The agent works next to the user, not in their way. Each run is bound to a tab: the one the message was sent from (the attached tab, or the page of a smart bar or context menu request), then the last tab the agent named, opened, navigated or switched to. Page tools that name no tab use it, never the tab the user has in front now, so switching tabs mid-task does not move the agent; if the tab is closed, the tool says so instead of using another tab. Sub-agents start on their parent's tab, and the next message of a chat names the tab the agent last worked on. Tabs open in the background, screenshots and real debugger input reach background tabs, and a tab a background page opens is put behind the user's tab again. The agent brings a tab to the front only when asked (`tabs` switch, or open with `show`). Safari can capture only the tab in front, so a screenshot there shows the tab for a moment and puts the user's tab back.
+
+### Scheduled Tasks and Watches
+
+A task runs an agent on its own while the browser is open: once at a time, every N minutes, hours or days, daily or weekly at a clock time in the user's time zone (a daily 09:00 stays 09:00 across daylight saving changes), or as a **watch** of a page. Each run is an ordinary chat in chat history, linked to its task, that the side panel can follow live or open later.
+
+- **Task list.** The calendar button in the side panel's header opens the task list next to chat history: each task's schedule, state (running, paused, needs you, runs on another device), last result and next run, with **Run now**, **Pause**/**Resume**, **Edit** and **Delete**. Clicking a task opens the chat of its last run. **New task** opens the form: title, what to do (for a watch, the condition and what to report), when, the agent, and with more than one device, which device runs it.
+- **From a chat.** **Make this a task** under a message of the user opens the form prefilled with that request and the chat's agent; a message sent with an element picked on a page prefills a watch of that element. The agent can also create a task when asked in words ("check this page every hour and tell me when the price drops") with the on-demand `scheduleTask` tool; the step shows what it created and whether its runs only look. It runs with the chat's agent and never changes what that agent may do.
+- **Watches.** A watch checks its page at most once a minute (every 5 minutes by default) in a background tab. Each check reads the watched part (the page's main content, or an element picked with **Pick on page**, found again by its place in the page structure) without a model and compares it with the last check. The agent runs only when the text changed, or for the first look, and gets the changed lines before and after as untrusted page content; it reports whether the condition holds. Unchanged pages cost no model request.
+- **Read-only by default.** Runs get only tools that read and report. An agent may use its acting tools (click, type, submit, edit pages, download, local commands, MCP tools without `readOnlyHint`) in task runs only when its **Act on its own** permission is on: off for every agent, never available for the built-in Browse and Ask, and not carried by agent archives. A run that wants to ask the user something stops, and the task waits as **Needs you**. See [Scheduled tasks and watches](permissions-and-privacy.md#scheduled-tasks-and-watches).
+- **Results.** A system notification (Chromium, Firefox) when a task has something to tell, a watch's condition is met, a task needs the user, or a task was paused; clicking it opens the run's chat in the side panel. The toolbar button shows a count of results not yet seen in the task list (the only signal on Safari, which has no notifications).
+- **Reliability.** Tasks are timed with `chrome.alarms` and armed again whenever the service worker starts. Runs go one at a time; a task never runs twice at once. A run cut off by a worker restart is retried once; runs missed while the browser was closed run once when it starts again, not once per missed time; three failed runs in a row pause the task. Settings → General → Scheduled tasks has one switch that pauses every task.
+- **Sync.** Task definitions sync with the settings; each task runs only on the device that created it (changeable in the form), so two computers never run the same task. What a device learned while running a task (last run, last result, the watched text, failures) stays on that device.
 
 ### MCP Servers
 

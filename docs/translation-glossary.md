@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/provider-consent/` (permission to send content to an AI provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/tasks/` (scheduled tasks and page watches), `src/shared/locales/provider-consent/` (permission to send content to an AI provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -70,6 +70,11 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | output limit (of a model)         | 输出上限           | 輸出上限           | 出力の上限                     | 출력 한도              |
 | Continue (a cut-off response)     | 继续               | 繼續               | 続ける                         | 계속하기               |
 | diagram (Mermaid)                 | 图表               | 圖表               | 図                             | 다이어그램             |
+| task (scheduled)                  | 任务（定时任务）   | 任務（排程任務）   | タスク                         | 작업(예약 작업)        |
+| watch (a page)                    | 监视               | 監看               | 監視                           | 감시                   |
+| act on its own (agent permission) | 自主操作           | 自主操作           | 自律操作                       | 스스로 작업 수행       |
+| needs you (task state)            | 需要你处理         | 需要你處理         | 対応が必要                     | 확인 필요              |
+| notification (system)             | 通知               | 通知               | 通知                           | 알림                   |
 
 | English                           | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
 | --------------------------------- | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
@@ -120,12 +125,19 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | output limit (of a model)         | limite de sortie                  | Ausgabelimit                | límite de salida                      | limite de saída                  |
 | Continue (a cut-off response)     | Continuer                         | Fortsetzen                  | Continuar                             | Continuar                        |
 | diagram (Mermaid)                 | diagramme                         | Diagramm                    | diagrama                              | diagrama                         |
+| task (scheduled)                  | tâche (planifiée)                 | Aufgabe (geplante)          | tarea (programada)                    | tarefa (programada)              |
+| watch (a page)                    | surveillance                      | Beobachtung                 | vigilancia                            | monitoramento                    |
+| act on its own (agent permission) | Agir seul                         | Selbstständig handeln       | Actuar por su cuenta                  | Agir sozinho                     |
+| needs you (task state)            | Vous attend                       | Braucht Sie                 | Te necesita                           | Precisa de você                  |
+| notification (system)             | notification                      | Benachrichtigung            | notificación                          | notificação                      |
 
 The settings pages are **General**, **AI providers & models** (AI 提供商和模型 / AI 提供者和模型 / AI プロバイダーとモデル / AI 제공업체 및 모델 / Fournisseurs d’IA et modèles / KI-Anbieter und Modelle / Proveedores de IA y modelos / Provedores de IA e modelos), **Agents & skills**, **On pages** (网页功能 / 網頁功能 / ページ上の機能 / 페이지 기능 / Sur les pages / Auf Webseiten / En las páginas / Nas páginas), **Sync** and **Advanced**, whose tabs include **Troubleshooting** (故障排除 / 疑難排解 / トラブルシューティング / 문제 해결 / Dépannage / Fehlerbehebung / Solución de problemas / Solução de problemas). The **Models** table names each feature by a short word (Chat, Helper, Smart bar, Translation, Images) using the terms above; its default is "Same model as the chat", except for Images, where no choice means "Off" (关闭 / 關閉 / オフ / 끔 / Désactivée / Aus / Desactivada / Desativada): choosing a model is what turns image generation on. Only the AI model engine uses the Translation model: with any other engine (the built-in translator, Google, Microsoft) the Translation row can't be changed; its tooltip names the engine by its in-sentence name (`engineNames`) and sends people to the **Page translation** settings by that page's heading.
 
 Settings that few people change sit under **Advanced** (高级 / 進階 / 詳細設定 / 고급 / Avancé / Erweitert / Avanzado / Avançado). A provider's **API style** (API 类型 / API 類型 / API の種類 / API 유형 / Type d’API / API-Art / Tipo de API / Tipo de API) keeps the API names Chat Completions and Responses untranslated.
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
+
+Scheduled tasks are **tasks** in the side panel's task list; a task that checks a page is a **watch** (监视 / 監看 / 監視 / 감시 / surveillance / Beobachtung / vigilancia / monitoramento). The agent permission **Act on its own** is about runs nobody watches; its off state is described as runs that "only look" (只查看 / 只查看 / 見るだけ / 보기만 / se contentent de regarder / sehen nur nach / solo miran / só observam).
 
 ## Themes and holiday touches
 

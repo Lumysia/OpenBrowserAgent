@@ -4,6 +4,14 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Scheduled tasks and page watches**: have the agent do something later, every few minutes, hours or days, or daily or weekly at a set time, or watch a page and tell you when the change you describe happens. Results arrive as system notifications (Chrome, Firefox) and a count on the toolbar button, and each run is a chat you can open. Manage tasks in the new task list in the side panel: run now, pause, resume, edit or delete.
+- Turn a request from a chat into a task with **Make this a task**, or ask the agent in words ("check this page every hour and tell me when the price drops").
+- Watches read the page without the model and only ask your model when the watched text changed, so an unchanged page costs nothing. Pick the part of the page to watch, or watch its main content.
+- Tasks only look by default: they read, search and report, and never click, type or change anything. A new agent permission, **Act on its own**, lets an agent you choose act in its tasks; it is off for every agent.
+- A task that needs your answer, or fails three times in a row, pauses and tells you. One setting pauses every task.
+- Task definitions sync with your settings, and each task runs only on the device that created it (you can change which).
+- New browser permission: notifications.
+
 ## 0.2.0 - 2026-10-18
 
 0.2.0 is the second public release of OpenBrowserAgent, after 25 test pre-releases. It adds page and video subtitle translation, a guided setup, a toolbar menu and a smart bar dictionary, makes the agent better at real pages, and reworks sync and settings. Each pre-release's own notes are in [CHANGELOG.md](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md).

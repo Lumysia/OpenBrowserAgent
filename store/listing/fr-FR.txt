@@ -6,6 +6,7 @@ CE QUE VOUS POUVEZ FAIRE
 
 • Poser des questions sur une page ou plusieurs onglets : résumés, comparaisons, explications et réponses avec des sources cliquables.
 • Confier du travail dans le navigateur à l’agent, comme remplir des formulaires, rassembler des informations de plusieurs pages ou ranger vos onglets. Il peut aussi faire des captures d’écran et enregistrer des fichiers pour vous.
+• Faites faire une tâche à l’agent plus tard ou selon un planning, ou faites-lui surveiller une page et recevez une notification quand le changement que vous décrivez se produit.
 • Traduire des pages web sans casser leur mise en page, à côté de l’original ou à sa place, et traduire les sous-titres d’une vidéo pendant que vous la regardez. Vous choisissez le moteur : votre modèle d’IA, le traducteur intégré du navigateur s’il en a un, ou un service de traduction en ligne gratuit.
 • Sélectionner du texte sur une page pour des actions rapides, comme l’expliquer, le traduire ou chercher un mot avec le sens qu’il a sur cette page. Vous décidez sur quels sites cela apparaît.
 • Partir de la page elle-même : le menu contextuel du navigateur et le bouton de l’extension dans la barre d’outils mènent à l’agent et aux outils de la page.
@@ -27,6 +28,7 @@ VOUS GARDEZ LE CONTRÔLE
 
 • Chaque étape de l’agent s’affiche pendant son exécution, avec ses détails.
 • En cas de doute, l’agent demande avant de soumettre, d’acheter, d’envoyer ou de supprimer quoi que ce soit.
+• Les tâches qui s’exécutent seules se contentent de lire et de signaler, sauf si vous autorisez un agent à agir seul.
 • L’interface est disponible dans de nombreuses langues, avec des thèmes clair et sombre.
 
 OpenBrowserAgent est open source. Code source, documentation et suivi des problèmes : https://github.com/Lumysia/OpenBrowserAgent
