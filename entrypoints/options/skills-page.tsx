@@ -47,6 +47,7 @@ import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
+import { guardSkillEdit } from "../../src/shared/teach/skill-files";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useLocale, useMessages } from "../../src/ui/messages";
@@ -80,7 +81,7 @@ export function SkillsPage() {
     setImporting(true);
     setImportError("");
     try {
-      addSkill(await importSkillZip(file));
+      addSkill(guardSkillEdit(undefined, await importSkillZip(file)));
     } catch (error) {
       setImportError(importErrorDetail(error, t));
     } finally {
@@ -98,7 +99,9 @@ export function SkillsPage() {
     // The header's checks say why.
     if (skillTooLarge(draft)) return;
     setSkills((items) =>
-      items.map((item) => (item.id === skill.id ? draft : item)),
+      items.map((item) =>
+        item.id === skill.id ? guardSkillEdit(item, draft) : item,
+      ),
     );
     showSaved(skill.id);
   }

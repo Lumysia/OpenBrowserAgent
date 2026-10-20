@@ -1,5 +1,6 @@
 import {
   createSkillFile,
+  getSkillBody,
   getSkillMetadata,
   normalizeSkillName,
   parseSkillFrontmatter,
@@ -56,6 +57,40 @@ export function recordedSkillInfo(skill: Skill): RecordedSkillInfo | undefined {
     origin: metadata.origin || "",
     recordedAt: metadata.recordedAt || "",
   };
+}
+
+// Keys of a skill's metadata that only code sets: whether it was recorded
+// and whether its check passed. Edits by the agent, in Settings or by an
+// import keep the earlier values whatever the new SKILL.md says.
+const CODE_OWNED_METADATA = ["source", "status"] as const;
+
+const demonstrationFileOf = (skill: Skill) =>
+  skill.files.find((file) => file.path === DEMONSTRATION_PATH)?.content;
+
+// `after`, an edit of `before` (undefined for a new or imported skill), with
+// the code-owned metadata of `before`. A new skill is never verified, and a
+// verified one whose instructions or demonstration changed is a draft
+// again: only a check run verifies.
+export function guardSkillEdit(
+  before: Skill | undefined,
+  after: Skill,
+  now = Date.now(),
+): Skill {
+  const incoming = getSkillMetadata(after);
+  const kept = before ? getSkillMetadata(before) : incoming;
+  const owned = Object.fromEntries(
+    CODE_OWNED_METADATA.map((key) => [key, kept[key] || ""]),
+  );
+  const stale = before
+    ? recordedSkillInfo(before)?.status === RECORDED_SKILL_STATUS.verified &&
+      (getSkillBody(before) !== getSkillBody(after) ||
+        demonstrationFileOf(before) !== demonstrationFileOf(after))
+    : owned.status === RECORDED_SKILL_STATUS.verified;
+  if (stale) owned.status = RECORDED_SKILL_STATUS.draft;
+  const unchanged = CODE_OWNED_METADATA.every(
+    (key) => (incoming[key] || "") === owned[key],
+  );
+  return unchanged ? after : withSkillMetadata(after, owned, now);
 }
 
 export function withRecordedStatus(

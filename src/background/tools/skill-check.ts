@@ -38,14 +38,18 @@ export const skillCheckTool: ToolDefinition = {
     const divergedAt =
       !passed && Number.isInteger(step) && step > 0 ? step : undefined;
     const summary = trimmedString(input.summary).slice(0, SUMMARY_CHARS);
-    if (passed) {
-      const updated = await updateById(storage.skills, skillId, (skill) =>
-        recordedSkillInfo(skill)
-          ? withRecordedStatus(skill, RECORDED_SKILL_STATUS.verified)
-          : skill,
-      );
-      if (!updated) return fail("The skill was deleted meanwhile.");
-    }
+    // A pass verifies the skill; anything else makes it a draft again.
+    const updated = await updateById(storage.skills, skillId, (skill) =>
+      recordedSkillInfo(skill)
+        ? withRecordedStatus(
+            skill,
+            passed
+              ? RECORDED_SKILL_STATUS.verified
+              : RECORDED_SKILL_STATUS.draft,
+          )
+        : skill,
+    );
+    if (!updated) return fail("The skill was deleted meanwhile.");
     await skillChecks.update((checks) => ({
       ...checks,
       [run.chatId]: {
