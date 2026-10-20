@@ -20,7 +20,10 @@ export function TeachCard() {
   const t = useMessages();
   const { session, starting, check } = teach;
   if (starting) return <TeachStartCard target={starting} teach={teach} />;
-  if (session?.state === TEACH_STATE.recording)
+  if (
+    session?.state === TEACH_STATE.recording ||
+    session?.state === TEACH_STATE.ended
+  )
     return <TeachRecordingCard session={session} teach={teach} />;
   if (session?.state === TEACH_STATE.review && session.draft)
     return (
@@ -59,6 +62,7 @@ function TeachStartCard({
   const id = useId();
   const [purpose, setPurpose] = useState("");
   const [varies, setVaries] = useState("");
+  const busy = target.busyTabId !== undefined;
   return (
     <form
       className="composer-card teach-card"
@@ -79,10 +83,14 @@ function TeachStartCard({
           {words.title}
         </strong>
         <small>
-          {target.scriptable ? words.description : words.unscriptable}
+          {busy
+            ? words.busy
+            : target.scriptable
+              ? words.description
+              : words.unscriptable}
         </small>
       </div>
-      {target.scriptable && (
+      {target.scriptable && !busy && (
         <div className="teach-fields">
           <Label htmlFor={`${id}-purpose`}>{words.purpose}</Label>
           <Input
@@ -112,9 +120,19 @@ function TeachStartCard({
         >
           {t.common.cancel}
         </Button>
-        <Button type="submit" size="sm" disabled={!target.scriptable}>
-          {words.start}
-        </Button>
+        {busy ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => teach.showRecording(target.busyTabId!)}
+          >
+            {words.showRecording}
+          </Button>
+        ) : (
+          <Button type="submit" size="sm" disabled={!target.scriptable}>
+            {words.start}
+          </Button>
+        )}
       </div>
     </form>
   );
@@ -177,10 +195,7 @@ function TeachFailedCard({
         >
           {t.teach.recording.discard}
         </Button>
-        <Button
-          size="sm"
-          onClick={() => teach.message({ type: TEACH_MESSAGE.rewrite, tabId })}
-        >
+        <Button size="sm" onClick={() => teach.write(tabId)}>
           {t.teach.failed.retry}
         </Button>
       </div>

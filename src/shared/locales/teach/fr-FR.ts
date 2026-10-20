@@ -24,6 +24,8 @@ export const teachFrFR: TeachLocaleMessages = {
     start: "Démarrer l’enregistrement",
     unscriptable:
       "Cette page ne peut pas être enregistrée. Ouvrez la page où la tâche commence.",
+    busy: "Un autre enregistrement est ouvert. Enregistrez-le ou supprimez-le avant d’en commencer un nouveau.",
+    showRecording: "Afficher l’enregistrement",
   },
   recording: {
     title: "Enregistrement",
@@ -64,6 +66,15 @@ export const teachFrFR: TeachLocaleMessages = {
     openTab: "Nouvel onglet : {url}",
     switchTab: "Passage à {site}",
     page: "la page",
+  },
+  ended: {
+    title: "Enregistrement terminé",
+    tabClosed:
+      "Son onglet a été fermé. Rien n’a encore été envoyé : écrivez la compétence à partir de ces étapes, ou supprimez-les.",
+    idle: "Rien ne s’est passé pendant un moment. Rien n’a encore été envoyé : écrivez la compétence à partir de ces étapes, ou supprimez-les.",
+    consent:
+      "Arrêté sur la page. Pour écrire la compétence, ces étapes sont envoyées à votre modèle.",
+    write: "Écrire la compétence",
   },
   writing: {
     title: "Rédaction de la compétence…",

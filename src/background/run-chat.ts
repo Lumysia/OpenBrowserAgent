@@ -22,6 +22,7 @@ import {
   createRunTab,
   handedRunTab,
   startRunTab,
+  whileWorking,
   withWorkingTab,
   workingTabNote,
   type RunTab,
@@ -180,20 +181,22 @@ export async function runChat(
   const usesPages =
     hasToolGroup(prepared.agent, "pages") ||
     hasToolGroup(prepared.agent, "browser");
-  await runPiAgent({
-    session,
-    model: prepared.model,
-    helperModel: prepared.helperModel,
-    system: prepared.system,
-    messages: usesPages
-      ? withWorkingTab(request.messages, workingTabNote(start, earlier))
-      : request.messages,
-    setup: prepared.setup,
-    maxToolSteps: prepared.maxToolSteps,
-    messageId: request.messageId,
-    attachmentRetryNotice: getMessages(request.language).sidepanel
-      .attachmentsUnsupportedRetry,
-  });
+  await whileWorking(tab, () =>
+    runPiAgent({
+      session,
+      model: prepared.model,
+      helperModel: prepared.helperModel,
+      system: prepared.system,
+      messages: usesPages
+        ? withWorkingTab(request.messages, workingTabNote(start, earlier))
+        : request.messages,
+      setup: prepared.setup,
+      maxToolSteps: prepared.maxToolSteps,
+      messageId: request.messageId,
+      attachmentRetryNotice: getMessages(request.language).sidepanel
+        .attachmentsUnsupportedRetry,
+    }),
+  );
   return prepared;
 }
 

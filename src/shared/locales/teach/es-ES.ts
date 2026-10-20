@@ -24,6 +24,8 @@ export const teachEsES: TeachLocaleMessages = {
     start: "Empezar a grabar",
     unscriptable:
       "Esta página no se puede grabar. Abre la página donde empieza la tarea.",
+    busy: "Hay otra grabación abierta. Guárdala o descártala antes de empezar una nueva.",
+    showRecording: "Mostrar la grabación",
   },
   recording: {
     title: "Grabando",
@@ -63,6 +65,15 @@ export const teachEsES: TeachLocaleMessages = {
     openTab: "Pestaña nueva: {url}",
     switchTab: "Cambio a {site}",
     page: "la página",
+  },
+  ended: {
+    title: "Grabación terminada",
+    tabClosed:
+      "Se cerró su pestaña. Aún no se ha enviado nada: escribe la habilidad con estos pasos o descártalos.",
+    idle: "No pasó nada durante un rato. Aún no se ha enviado nada: escribe la habilidad con estos pasos o descártalos.",
+    consent:
+      "Se detuvo en la página. Para escribir la habilidad, estos pasos se envían a tu modelo.",
+    write: "Escribir la habilidad",
   },
   writing: {
     title: "Escribiendo la habilidad…",

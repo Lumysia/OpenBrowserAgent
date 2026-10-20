@@ -67,6 +67,9 @@ export const displayJaJP: DisplayMessages = {
       "モデルが手順を書きませんでした。もう一度お試しください。",
     teachGone: "この記録はもうありません。",
     teachCheckTab: "確認用のタブを開けませんでした。",
+    teachBusy: "別の記録が開いています。先に保存するか破棄してください。",
+    teachTabBusy:
+      "エージェントがこのタブで作業中です。終わってから記録してください。",
   },
   toolSteps: {
     failed: "失敗",

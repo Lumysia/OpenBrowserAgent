@@ -115,12 +115,23 @@ export type TeachUnrecorded = { input: number; frames: number };
 
 export const TEACH_STATE = {
   recording: "recording",
+  // Stopped without the user (its tab closed, it went idle) or before they
+  // allowed the provider: waits for them to write it from the side panel.
+  ended: "ended",
   writing: "writing",
   review: "review",
   failed: "failed",
 } as const;
 
 export type TeachState = (typeof TEACH_STATE)[keyof typeof TEACH_STATE];
+
+export const TEACH_ENDED_BY = {
+  tabClosed: "tabClosed",
+  idle: "idle",
+  consent: "consent",
+} as const;
+
+export type TeachEndedBy = (typeof TEACH_ENDED_BY)[keyof typeof TEACH_ENDED_BY];
 
 // The skill the model wrote from a recording, before the user saves it.
 export type TeachDraft = {
@@ -149,6 +160,8 @@ export type TeachSession = {
   // Why writing the skill failed, as a runtime failure so the side panel
   // shows a known error in the UI language.
   failure?: RuntimeFailure;
+  // Why an ended recording ended.
+  endedBy?: TeachEndedBy;
   // A recording that redoes a skill from one of its steps on: the skill,
   // and the steps kept from its demonstration.
   redo?: { skillId: string; fromStep: number };

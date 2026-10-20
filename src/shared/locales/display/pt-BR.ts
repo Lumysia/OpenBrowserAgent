@@ -69,6 +69,10 @@ export const displayPtBR: DisplayMessages = {
     teachNoInstructions: "O modelo não escreveu instruções. Tente de novo.",
     teachGone: "Esta gravação não existe mais.",
     teachCheckTab: "Não foi possível abrir a guia para a verificação.",
+    teachBusy:
+      "Outra gravação está aberta. Salve ou descarte essa gravação primeiro.",
+    teachTabBusy:
+      "O agente está trabalhando nesta guia. Espere ele terminar e depois grave.",
   },
   toolSteps: {
     failed: "Falhou",

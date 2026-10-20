@@ -70,6 +70,9 @@ export const displayEnUS = {
     teachNoInstructions: "The model wrote no instructions. Try again.",
     teachGone: "This recording is no longer there.",
     teachCheckTab: "The tab for the check could not be opened.",
+    teachBusy: "Another recording is open. Save or discard it first.",
+    teachTabBusy:
+      "The agent is working in this tab. Wait until it is done, then record.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

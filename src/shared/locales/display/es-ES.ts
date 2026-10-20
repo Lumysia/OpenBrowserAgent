@@ -71,6 +71,9 @@ export const displayEsES: DisplayMessages = {
       "El modelo no escribió instrucciones. Inténtalo de nuevo.",
     teachGone: "Esta grabación ya no existe.",
     teachCheckTab: "No se pudo abrir la pestaña para la comprobación.",
+    teachBusy: "Hay otra grabación abierta. Guárdala o descártala primero.",
+    teachTabBusy:
+      "El agente está trabajando en esta pestaña. Espera a que termine y luego graba.",
   },
   toolSteps: {
     failed: "Error",

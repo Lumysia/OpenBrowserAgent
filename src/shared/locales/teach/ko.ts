@@ -24,6 +24,8 @@ export const teachKo: TeachLocaleMessages = {
     start: "기록 시작",
     unscriptable:
       "이 페이지는 기록할 수 없습니다. 작업이 시작되는 페이지를 여세요.",
+    busy: "다른 기록이 열려 있습니다. 새로 시작하기 전에 저장하거나 삭제하세요.",
+    showRecording: "기록 보기",
   },
   recording: {
     title: "기록 중",
@@ -61,6 +63,15 @@ export const teachKo: TeachLocaleMessages = {
     openTab: "새 탭: {url}",
     switchTab: "{site}(으)로 전환",
     page: "페이지",
+  },
+  ended: {
+    title: "기록이 끝났습니다",
+    tabClosed:
+      "탭이 닫혔습니다. 아직 아무것도 보내지 않았습니다. 이 단계로 스킬을 작성하거나 삭제하세요.",
+    idle: "한동안 아무 동작이 없었습니다. 아직 아무것도 보내지 않았습니다. 이 단계로 스킬을 작성하거나 삭제하세요.",
+    consent:
+      "페이지에서 중지했습니다. 스킬을 작성하면 이 단계가 모델로 전송됩니다.",
+    write: "스킬 작성",
   },
   writing: {
     title: "스킬 작성 중…",

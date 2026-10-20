@@ -3,7 +3,8 @@ import { isScriptableUrl } from "../../shared/browser";
 import { getMessages } from "../../shared/i18n";
 import { PAGE_SCRIPT } from "../../shared/page-scripts";
 import { storage } from "../../shared/storage";
-import { UserError } from "../../shared/user-errors";
+import { USER_ERROR_CODE, UserError } from "../../shared/user-errors";
+import { tabsInUse } from "../run-tab";
 import { TEACH_PAGE_MESSAGE } from "../../shared/teach/messages";
 import {
   TEACH_RECORDER_GLOBAL,
@@ -20,6 +21,8 @@ import {
   type TeachStart,
   type TeachStep,
   type TeachUnrecorded,
+  TEACH_ENDED_BY,
+  type TeachEndedBy,
 } from "../../shared/teach/types";
 import {
   mergeFingerprints,
@@ -129,8 +132,24 @@ export async function startRecording(
   const tab = await api.tabs.get(start.tabId);
   if (!isScriptableUrl(tab.url))
     throw new UserError("teachUnscriptable", "This page can't be recorded.");
-  const existing = sessionOfTab(await teachSessions.get(), start.tabId);
+  const sessions = await teachSessions.get();
+  const existing = sessionOfTab(sessions, start.tabId);
   if (existing?.state === TEACH_STATE.recording) return existing;
+  // One recording at a time, until it is saved or discarded: the side
+  // panel shows one, and a second would record the first one's tab as a
+  // tab switch.
+  if (Object.keys(sessions).length)
+    throw new UserError(
+      USER_ERROR_CODE.teachBusy,
+      "Another recording is open. Save or discard it first.",
+    );
+  // Input the agent sends to the page is trusted: it would pass for the
+  // user's steps.
+  if (tabsInUse().includes(start.tabId))
+    throw new UserError(
+      USER_ERROR_CODE.teachTabBusy,
+      "The agent is working in this tab.",
+    );
   const now = Date.now();
   const session: TeachSession = {
     id: crypto.randomUUID(),
@@ -148,12 +167,10 @@ export async function startRecording(
     typedKey: newFingerprintKey(),
     typed: [],
   };
-  await teachSessions.update((sessions) => {
-    const next = { ...sessions };
-    if (existing) delete next[String(existing.tabId)];
-    next[String(start.tabId)] = session;
-    return next;
-  });
+  await teachSessions.update((current) => ({
+    ...current,
+    [String(start.tabId)]: session,
+  }));
   if (!(await injectRecorder(start.tabId))) {
     await discardRecording(start.tabId);
     throw new UserError("teachUnscriptable", "This page can't be recorded.");
@@ -162,12 +179,22 @@ export async function startRecording(
   return session;
 }
 
-// Ends recording in the page; the session moves on to `state`.
-export async function endRecording(tabId: number) {
+// Ends recording in the page. The session is written next when the user
+// stopped it; when its tab closed or it went idle it waits, ended, for the
+// user to write it from the side panel: nothing goes to the model without
+// them.
+export async function endRecording(tabId: number, endedBy?: TeachEndedBy) {
   const session = await updateSession(tabId, (current) =>
-    current.state === TEACH_STATE.recording
-      ? { ...current, state: TEACH_STATE.writing, failure: undefined }
-      : current,
+    current.state !== TEACH_STATE.recording
+      ? current
+      : endedBy
+        ? { ...current, state: TEACH_STATE.ended, endedBy }
+        : {
+            ...current,
+            state: TEACH_STATE.writing,
+            failure: undefined,
+            endedBy: undefined,
+          },
   );
   if (session) await Promise.all(session.tabIds.map(endRecorder));
   return session;
@@ -348,7 +375,8 @@ export function setupTeachRecorder() {
         }));
         return;
       }
-      if (session.state === TEACH_STATE.recording) await finishRecording(tabId);
+      if (session.state === TEACH_STATE.recording)
+        await endRecording(tabId, TEACH_ENDED_BY.tabClosed);
     })().catch(warn);
   });
 
@@ -369,7 +397,8 @@ async function stopIdleRecordings() {
   }
   const idleBefore = Date.now() - TEACH_LIMITS.idleMinutes * 60_000;
   for (const session of recording)
-    if (session.lastEventAt < idleBefore) await finishRecording(session.tabId);
+    if (session.lastEventAt < idleBefore)
+      await endRecording(session.tabId, TEACH_ENDED_BY.idle);
 }
 
 // Set by the writer (writer.ts), which turns a stopped recording into a

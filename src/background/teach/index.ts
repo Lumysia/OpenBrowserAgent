@@ -103,10 +103,16 @@ async function keepExample(tabId: number, stepId: string, keep: boolean) {
   return !keep || value !== undefined;
 }
 
-async function rewrite(tabId: number) {
+// Writes a recording that failed or ended without the user, once they ask.
+async function write(tabId: number) {
   await updateSession(tabId, (session) =>
-    session.state === TEACH_STATE.failed
-      ? { ...session, state: TEACH_STATE.writing, failure: undefined }
+    session.state === TEACH_STATE.failed || session.state === TEACH_STATE.ended
+      ? {
+          ...session,
+          state: TEACH_STATE.writing,
+          failure: undefined,
+          endedBy: undefined,
+        }
       : session,
   );
   void writeDraft(tabId);
@@ -138,7 +144,7 @@ function fromPanel(message: TeachMessage) {
     case TEACH_MESSAGE.keepExample:
       return keepExample(message.tabId, message.stepId, message.keep);
     case TEACH_MESSAGE.rewrite:
-      return rewrite(message.tabId);
+      return write(message.tabId);
     case TEACH_MESSAGE.save:
       return saveRecording(message);
     case TEACH_MESSAGE.openCheckTab:

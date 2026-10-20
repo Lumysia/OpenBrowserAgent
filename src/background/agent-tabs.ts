@@ -4,6 +4,7 @@ import { sessionRecord } from "../shared/session-record";
 import { storage } from "../shared/storage";
 import { STORAGE_KEYS } from "../shared/storage-keys";
 import { ownerChat, type RunContext } from "./tools/types";
+import { notRecording } from "./teach/guard";
 
 // Tabs the agent opens stay in one tab group per chat, so they never mix
 // with the user's own tabs, and `tabs list` can tell them apart. A group
@@ -115,8 +116,9 @@ export async function closeAgentTabs(
     delete record[chatId];
     return record;
   });
+  // A tab the user went on to record stays theirs.
   await Promise.all(
-    tabs.map((tabId) =>
+    (await notRecording(tabs)).map((tabId) =>
       getBrowserApi()
         .tabs.remove(tabId)
         .catch(() => undefined),

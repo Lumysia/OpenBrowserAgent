@@ -23,6 +23,8 @@ export const teachZhTW: TeachLocaleMessages = {
       "不會錄製你輸入的內容，只記錄你用了哪個欄位。密碼和驗證碼一律不錄製。",
     start: "開始錄製",
     unscriptable: "此頁面無法錄製。請開啟任務開始的頁面。",
+    busy: "另一個錄製尚未完成。開始新的錄製前，請先儲存或捨棄它。",
+    showRecording: "顯示錄製",
   },
   recording: {
     title: "錄製中",
@@ -59,6 +61,14 @@ export const teachZhTW: TeachLocaleMessages = {
     openTab: "新分頁：{url}",
     switchTab: "切換到 {site}",
     page: "頁面",
+  },
+  ended: {
+    title: "錄製已結束",
+    tabClosed:
+      "它的分頁已關閉。尚未傳送任何內容：可以用這些步驟編寫技能，或捨棄它們。",
+    idle: "一段時間內沒有操作。尚未傳送任何內容：可以用這些步驟編寫技能，或捨棄它們。",
+    consent: "已在頁面上停止。編寫技能會把這些步驟傳送給你的模型。",
+    write: "編寫技能",
   },
   writing: {
     title: "正在撰寫技能…",

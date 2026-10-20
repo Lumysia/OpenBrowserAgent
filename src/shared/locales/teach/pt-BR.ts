@@ -24,6 +24,8 @@ export const teachPtBR: TeachLocaleMessages = {
     start: "Começar a gravar",
     unscriptable:
       "Esta página não pode ser gravada. Abra a página onde a tarefa começa.",
+    busy: "Outra gravação está aberta. Salve ou descarte essa gravação antes de começar uma nova.",
+    showRecording: "Mostrar a gravação",
   },
   recording: {
     title: "Gravando",
@@ -63,6 +65,15 @@ export const teachPtBR: TeachLocaleMessages = {
     openTab: "Nova guia: {url}",
     switchTab: "Mudança para {site}",
     page: "a página",
+  },
+  ended: {
+    title: "Gravação encerrada",
+    tabClosed:
+      "A guia dela foi fechada. Nada foi enviado ainda: escreva a habilidade a partir destas etapas ou descarte-as.",
+    idle: "Nada aconteceu por um tempo. Nada foi enviado ainda: escreva a habilidade a partir destas etapas ou descarte-as.",
+    consent:
+      "Parada na página. Para escrever a habilidade, estas etapas são enviadas ao seu modelo.",
+    write: "Escrever a habilidade",
   },
   writing: {
     title: "Escrevendo a habilidade…",

@@ -24,6 +24,8 @@ export const teachDeDE: TeachLocaleMessages = {
     start: "Aufzeichnung starten",
     unscriptable:
       "Diese Seite kann nicht aufgezeichnet werden. Öffnen Sie die Seite, auf der die Aufgabe beginnt.",
+    busy: "Eine andere Aufzeichnung ist noch offen. Speichern oder verwerfen Sie sie, bevor Sie eine neue starten.",
+    showRecording: "Aufzeichnung anzeigen",
   },
   recording: {
     title: "Aufzeichnung",
@@ -65,6 +67,15 @@ export const teachDeDE: TeachLocaleMessages = {
     openTab: "Neuer Tab: {url}",
     switchTab: "Zu {site} gewechselt",
     page: "die Seite",
+  },
+  ended: {
+    title: "Aufzeichnung beendet",
+    tabClosed:
+      "Ihr Tab wurde geschlossen. Noch wurde nichts gesendet: Schreiben Sie aus diesen Schritten den Skill oder verwerfen Sie sie.",
+    idle: "Eine Weile ist nichts passiert. Noch wurde nichts gesendet: Schreiben Sie aus diesen Schritten den Skill oder verwerfen Sie sie.",
+    consent:
+      "Auf der Seite beendet. Zum Schreiben des Skills werden diese Schritte an Ihr Modell gesendet.",
+    write: "Skill schreiben",
   },
   writing: {
     title: "Skill wird geschrieben…",

@@ -65,6 +65,8 @@ export const displayKo: DisplayMessages = {
     teachNoInstructions: "모델이 지침을 작성하지 않았습니다. 다시 시도하세요.",
     teachGone: "이 기록은 더 이상 없습니다.",
     teachCheckTab: "확인용 탭을 열 수 없습니다.",
+    teachBusy: "다른 기록이 열려 있습니다. 먼저 저장하거나 삭제하세요.",
+    teachTabBusy: "에이전트가 이 탭에서 작업 중입니다. 끝난 뒤 기록하세요.",
   },
   toolSteps: {
     failed: "실패",

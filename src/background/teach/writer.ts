@@ -3,11 +3,19 @@ import {
   skillCreator,
 } from "../../shared/builtin-skill-texts/skill-creator";
 import { failureReply } from "../../shared/runtime-messages";
-import { USER_ERROR_CODE, UserError } from "../../shared/user-errors";
+import {
+  ProviderConsentError,
+  USER_ERROR_CODE,
+  UserError,
+} from "../../shared/user-errors";
 import { teachSessions } from "../../shared/teach/records";
 import { parseDraft } from "../../shared/teach/skill-files";
 import { buildTranscript } from "../../shared/teach/transcript";
-import { TEACH_STATE, type TeachSession } from "../../shared/teach/types";
+import {
+  TEACH_ENDED_BY,
+  TEACH_STATE,
+  type TeachSession,
+} from "../../shared/teach/types";
 import { resolveModel } from "../model-resolver";
 import { requestText } from "../pi-provider";
 import { updateSession } from "./recorder";
@@ -52,14 +60,23 @@ export async function writeDraft(tabId: number) {
         : current,
     );
   } catch (error) {
+    // Stopped on the page before the user allowed the provider: the side
+    // panel asks them, then writes it.
+    const consent = error instanceof ProviderConsentError;
     await updateSession(tabId, (current) =>
-      current.id === session.id
-        ? {
-            ...current,
-            state: TEACH_STATE.failed,
-            failure: failureReply(error),
-          }
-        : current,
+      current.id !== session.id
+        ? current
+        : consent
+          ? {
+              ...current,
+              state: TEACH_STATE.ended,
+              endedBy: TEACH_ENDED_BY.consent,
+            }
+          : {
+              ...current,
+              state: TEACH_STATE.failed,
+              failure: failureReply(error),
+            },
     );
   }
 }

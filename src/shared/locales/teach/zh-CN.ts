@@ -23,6 +23,8 @@ export const teachZhCN: TeachLocaleMessages = {
       "不会录制你输入的内容，只记录你用了哪个字段。密码和验证码一律不录制。",
     start: "开始录制",
     unscriptable: "此页面无法录制。请打开任务开始的页面。",
+    busy: "另一个录制尚未完成。开始新的录制前，请先保存或丢弃它。",
+    showRecording: "显示录制",
   },
   recording: {
     title: "录制中",
@@ -59,6 +61,14 @@ export const teachZhCN: TeachLocaleMessages = {
     openTab: "新标签页：{url}",
     switchTab: "切换到 {site}",
     page: "页面",
+  },
+  ended: {
+    title: "录制已结束",
+    tabClosed:
+      "它的标签页已关闭。尚未发送任何内容：可以用这些步骤编写技能，或丢弃它们。",
+    idle: "一段时间内没有操作。尚未发送任何内容：可以用这些步骤编写技能，或丢弃它们。",
+    consent: "已在页面上停止。编写技能会把这些步骤发送给你的模型。",
+    write: "编写技能",
   },
   writing: {
     title: "正在编写技能…",

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getActiveTab, isScriptableUrl } from "../../../src/shared/browser";
 import { getBrowserApi } from "../../../src/shared/browser-api";
+import { focusTab } from "../../../src/shared/tab-navigation";
 import { setSkillInvokeMode } from "../../../src/shared/skill-catalog";
 import { storage } from "../../../src/shared/storage";
 import { STORAGE_KEYS } from "../../../src/shared/storage-keys";
@@ -39,7 +40,13 @@ const runTabs = sessionRecord<Record<string, number>>(
 
 const SKILL_CREATOR = "skill-creator";
 
-export type TeachStartTarget = { tabId: number; scriptable: boolean };
+// Where a recording would start; `busyTabId`: the tab of a recording that
+// is still open (one at a time).
+export type TeachStartTarget = {
+  tabId: number;
+  scriptable: boolean;
+  busyTabId?: number;
+};
 
 export function useTeach({
   send,
@@ -107,9 +114,21 @@ export function useTeach({
   const openStart = useCallback(async () => {
     const tab = await getActiveTab();
     if (tab?.id === undefined) return;
+    const open = Object.values(await teachSessions.get())[0];
     setError("");
-    setStarting({ tabId: tab.id, scriptable: isScriptableUrl(tab.url) });
+    setStarting({
+      tabId: tab.id,
+      scriptable: isScriptableUrl(tab.url),
+      ...(open ? { busyTabId: open.tabId } : {}),
+    });
   }, []);
+
+  // The open recording: its card, and its tab when it is still there.
+  const showRecording = (tabId: number) =>
+    run(async () => {
+      setStarting(undefined);
+      await focusTab(tabId).catch(() => undefined);
+    });
 
   const start = (
     target: TeachStartTarget,
@@ -206,11 +225,19 @@ export function useTeach({
       await dismissCheck(chatId);
     });
 
+  // Writing the skill sends the steps to the chat model: only once the
+  // user allowed the provider, whether they stop now, write a recording
+  // that ended without them, or try again.
   const stop = (tabId: number) =>
     run(async () => {
-      // Writing the skill sends the steps to the chat model.
       if (!(await confirmConsent(false))) return;
       await sendTeachMessage({ type: TEACH_MESSAGE.stop, tabId });
+    });
+
+  const write = (tabId: number) =>
+    run(async () => {
+      if (!(await confirmConsent(false))) return;
+      await sendTeachMessage({ type: TEACH_MESSAGE.rewrite, tabId });
     });
 
   const message = (value: Parameters<typeof sendTeachMessage>[0]) =>
@@ -241,7 +268,9 @@ export function useTeach({
     openStart,
     cancelStart: () => setStarting(undefined),
     start,
+    showRecording,
     stop,
+    write,
     message,
     keepExample,
     save,

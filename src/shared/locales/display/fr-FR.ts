@@ -70,6 +70,10 @@ export const displayFrFR: DisplayMessages = {
     teachNoInstructions: "Le modèle n’a écrit aucune instruction. Réessayez.",
     teachGone: "Cet enregistrement n’existe plus.",
     teachCheckTab: "L’onglet de la vérification n’a pas pu être ouvert.",
+    teachBusy:
+      "Un autre enregistrement est ouvert. Enregistrez-le ou supprimez-le d’abord.",
+    teachTabBusy:
+      "L’agent travaille dans cet onglet. Attendez qu’il ait fini, puis enregistrez.",
   },
   toolSteps: {
     failed: "Échec",

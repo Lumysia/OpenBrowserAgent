@@ -68,6 +68,10 @@ export const displayDeDE: DisplayMessages = {
       "Das Modell hat keine Anweisungen geschrieben. Versuchen Sie es erneut.",
     teachGone: "Diese Aufzeichnung gibt es nicht mehr.",
     teachCheckTab: "Der Tab für die Prüfung konnte nicht geöffnet werden.",
+    teachBusy:
+      "Eine andere Aufzeichnung ist noch offen. Speichern oder verwerfen Sie sie zuerst.",
+    teachTabBusy:
+      "Der Agent arbeitet in diesem Tab. Warten Sie, bis er fertig ist, und zeichnen Sie dann auf.",
   },
   toolSteps: {
     failed: "Fehlgeschlagen",

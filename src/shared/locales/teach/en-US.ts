@@ -25,6 +25,8 @@ export const teachEnUS = {
     start: "Start recording",
     unscriptable:
       "This page can't be recorded. Open the page where the task starts.",
+    busy: "Another recording is open. Save or discard it before you start a new one.",
+    showRecording: "Show the recording",
   },
   recording: {
     title: "Recording",
@@ -64,6 +66,15 @@ export const teachEnUS = {
     openTab: "New tab: {url}",
     switchTab: "Switched to {site}",
     page: "the page",
+  },
+  ended: {
+    title: "Recording ended",
+    tabClosed:
+      "Its tab was closed. Nothing has been sent yet: write the skill from these steps, or discard them.",
+    idle: "Nothing happened for a while. Nothing has been sent yet: write the skill from these steps, or discard them.",
+    consent:
+      "Stopped on the page. Writing the skill sends these steps to your model.",
+    write: "Write the skill",
   },
   writing: {
     title: "Writing the skill…",

@@ -59,6 +59,8 @@ export const displayZhCN: DisplayMessages = {
     teachNoInstructions: "模型没有写出任何说明。请重试。",
     teachGone: "此录制已不存在。",
     teachCheckTab: "无法打开用于检查的标签页。",
+    teachBusy: "另一个录制尚未完成。请先保存或丢弃它。",
+    teachTabBusy: "智能体正在这个标签页中工作。请等它完成后再录制。",
   },
   toolSteps: {
     failed: "失败",

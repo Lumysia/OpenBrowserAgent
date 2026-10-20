@@ -59,6 +59,8 @@ export const displayZhTW: DisplayMessages = {
     teachNoInstructions: "模型沒有寫出任何說明。請再試一次。",
     teachGone: "此錄製已不存在。",
     teachCheckTab: "無法開啟用於檢查的分頁。",
+    teachBusy: "另一個錄製尚未完成。請先儲存或捨棄它。",
+    teachTabBusy: "智慧體正在這個分頁中工作。請等它完成後再錄製。",
   },
   toolSteps: {
     failed: "失敗",

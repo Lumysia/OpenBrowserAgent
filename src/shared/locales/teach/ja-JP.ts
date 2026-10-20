@@ -24,6 +24,8 @@ export const teachJaJP: TeachLocaleMessages = {
     start: "記録を開始",
     unscriptable:
       "このページは記録できません。タスクを始めるページを開いてください。",
+    busy: "別の記録が開いています。新しく始める前に保存するか破棄してください。",
+    showRecording: "記録を表示",
   },
   recording: {
     title: "記録中",
@@ -61,6 +63,15 @@ export const teachJaJP: TeachLocaleMessages = {
     openTab: "新しいタブ：{url}",
     switchTab: "{site} に切り替え",
     page: "ページ",
+  },
+  ended: {
+    title: "記録を終了しました",
+    tabClosed:
+      "タブが閉じられました。まだ何も送信していません。これらのステップからスキルを書くか、破棄してください。",
+    idle: "しばらく操作がありませんでした。まだ何も送信していません。これらのステップからスキルを書くか、破棄してください。",
+    consent:
+      "ページ上で停止しました。スキルを書くと、これらのステップがモデルに送信されます。",
+    write: "スキルを書く",
   },
   writing: {
     title: "スキルを作成中…",

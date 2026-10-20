@@ -39,6 +39,24 @@ export const RUN_TAB_ID_PARAM = {
     "Defaults to the tab you are working on (see working_tab), not the tab the user has open now.",
 };
 
+// The run tabs of the runs in progress in this service worker (a restarted
+// worker has none), so the user does not start recording a tab the agent
+// works in.
+const working = new Set<RunTab>();
+
+export async function whileWorking<T>(tab: RunTab, work: () => Promise<T>) {
+  working.add(tab);
+  try {
+    return await work();
+  } finally {
+    working.delete(tab);
+  }
+}
+
+export function tabsInUse() {
+  return [...working].flatMap((tab) => (tab.id === undefined ? [] : [tab.id]));
+}
+
 function tabIdArg(value: unknown) {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : undefined;

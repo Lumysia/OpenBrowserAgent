@@ -3,7 +3,9 @@ import { useState } from "react";
 import { formatCount } from "../../../src/shared/i18n";
 import { TEACH_MESSAGE } from "../../../src/shared/teach/messages";
 import {
+  TEACH_ENDED_BY,
   TEACH_LIMITS,
+  TEACH_STATE,
   TEACH_STEP_KIND,
   type TeachSession,
   type TeachStep,
@@ -16,7 +18,10 @@ import type { TeachController } from "./use-teach";
 
 // The recording while it records: the steps so far, newest last, each
 // with "changes each time", "keep as an example" (fields that are not
-// secret, while the page still has the value) and delete.
+// secret, while the page still has the value) and delete. A recording that
+// ended without the user (its tab closed, it went idle, or Stop on the page
+// before the provider was allowed) shows the same steps and waits for them
+// to write the skill.
 export function TeachRecordingCard({
   session,
   teach,
@@ -27,19 +32,22 @@ export function TeachRecordingCard({
   const t = useMessages();
   const words = t.teach.recording;
   const count = session.steps.length;
+  const ended = session.state === TEACH_STATE.ended;
+  const title = ended ? t.teach.ended.title : words.title;
+  const note = ended
+    ? t.teach.ended[session.endedBy || TEACH_ENDED_BY.consent]
+    : !count && words.empty;
   return (
-    <div
-      className="composer-card teach-card"
-      role="region"
-      aria-label={words.title}
-    >
+    <div className="composer-card teach-card" role="region" aria-label={title}>
       <div className="composer-card-header">
         <strong>
-          <span className="teach-recording-dot" aria-hidden="true" />
-          {words.title}
+          {!ended && (
+            <span className="teach-recording-dot" aria-hidden="true" />
+          )}
+          {title}
           <span className="teach-count">{formatCount(words.steps, count)}</span>
         </strong>
-        {!count && <small>{words.empty}</small>}
+        {note && <small>{note}</small>}
       </div>
       {!!count && (
         <ol className="teach-steps" aria-live="polite">
@@ -79,9 +87,15 @@ export function TeachRecordingCard({
         >
           {words.discard}
         </Button>
-        <Button size="sm" onClick={() => teach.stop(session.tabId)}>
-          {words.stop}
-        </Button>
+        {ended ? (
+          <Button size="sm" onClick={() => teach.write(session.tabId)}>
+            {t.teach.ended.write}
+          </Button>
+        ) : (
+          <Button size="sm" onClick={() => teach.stop(session.tabId)}>
+            {words.stop}
+          </Button>
+        )}
       </div>
     </div>
   );

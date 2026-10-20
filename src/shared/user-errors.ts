@@ -22,6 +22,9 @@ export const USER_ERROR_CODE = {
   teachNoInstructions: "teachNoInstructions",
   teachGone: "teachGone",
   teachCheckTab: "teachCheckTab",
+  // Teach mode: another recording is open; the agent works in the tab.
+  teachBusy: "teachBusy",
+  teachTabBusy: "teachTabBusy",
 } as const;
 
 export type UserErrorCode =

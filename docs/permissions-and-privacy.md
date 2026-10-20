@@ -61,7 +61,8 @@ Tasks run an agent later, on a schedule, or when a watched page changes, while t
 - **Example values.** The value of a non-secret field stays in the recorder inside the page, for that page only. It leaves the page only when the user ticks "keep as an example" on that step, and then it becomes part of the skill (and syncs with it).
 - **Where it lives.** While recording and until saved, the steps are in `storage.session` (gone when the browser closes). On **Stop** the steps go once to the chat model as text, with «value withheld» markers, to write the skill. Saving stores an ordinary skill: `SKILL.md` and `references/demonstration.json`, which syncs like other skills.
 - **The check run** is a normal chat run with the usual tools in a new tab. The agent asks for inputs in the chat but never for a secret one: the user fills it on the page or the browser fills it. It asks before a final submit, purchase, send or delete.
-- **The agent does not work in a tab that is being recorded**: runs that would start there, and page tools aimed at it, are refused.
+- **The agent does not work in a tab that is being recorded**: runs that would start there, page tools aimed at it, and closing or grouping it are refused; a recording does not start in a tab the agent is working in.
+- **Nothing is sent without the user.** A recording that ends because its tab closed or nothing happened for 15 minutes, or that was stopped on the page before the user allowed the model's provider, waits in the side panel until the user chooses to write it.
 
 ## Code sandbox
 
