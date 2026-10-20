@@ -18,6 +18,7 @@ import {
 } from "../../../src/shared/teach/records";
 import type { TeachSession } from "../../../src/shared/teach/types";
 import { formatMessage } from "../../../src/shared/text";
+import { userErrorText } from "../../../src/shared/user-errors";
 import type { AttachmentTab, PickedSkill } from "../../../src/shared/types";
 import { useMessages, useUiLanguage } from "../../../src/ui/messages";
 import type { SendRequest } from "../send-message-plan";
@@ -91,14 +92,17 @@ export function useTeach({
   );
   const check = currentChatId ? checks[currentChatId] : undefined;
 
-  const run = useCallback(async (work: () => Promise<unknown>) => {
-    setError("");
-    try {
-      await work();
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
-    }
-  }, []);
+  const run = useCallback(
+    async (work: () => Promise<unknown>) => {
+      setError("");
+      try {
+        await work();
+      } catch (failure) {
+        setError(userErrorText(failure, t));
+      }
+    },
+    [t],
+  );
 
   const openStart = useCallback(async () => {
     const tab = await getActiveTab();

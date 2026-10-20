@@ -71,6 +71,17 @@ function headingNear(element: Element) {
   return "";
 }
 
+// The element itself in the page, or the outermost shadow host it sits in:
+// where its container, heading and path are looked up.
+function inDocument(element: Element) {
+  let node = element;
+  for (let root = node.getRootNode(); root instanceof ShadowRoot;) {
+    node = root.host;
+    root = node.getRootNode();
+  }
+  return node;
+}
+
 export function describeElement(element: Element): TeachTarget {
   const role = roleOf(element);
   const named = namedFrom(element, role);
@@ -86,8 +97,11 @@ export function describeElement(element: Element): TeachTarget {
   const nameAttribute = stableAttribute(element.getAttribute("name"));
   const id = stableAttribute(element.id);
   const href = link ? urlPattern(link.href) : "";
-  const container = short(containerOf(element));
-  const heading = headingNear(element);
+  const placed = inDocument(element);
+  const container = short(
+    containerOf(element) || (placed === element ? "" : containerOf(placed)),
+  );
+  const heading = headingNear(placed);
   return {
     ...target,
     ...(label ? { label } : {}),
@@ -97,7 +111,7 @@ export function describeElement(element: Element): TeachTarget {
     ...(href ? { href } : {}),
     ...(container ? { container } : {}),
     ...(heading && heading !== target.name ? { heading } : {}),
-    path: structuralPath(element),
+    path: structuralPath(placed),
   };
 }
 
