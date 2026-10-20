@@ -51,10 +51,10 @@ export async function saveRecording({
       ? skills.map((item) => (item.id === saved.id ? saved : item))
       : [...skills, saved],
   );
-  if (!redone)
-    await storage.skillSettings.update((current) =>
-      setSkillInvokeMode(current, saved.id, RECORDED_SKILL_INVOKE),
-    );
+  // A redone skill is a draft again: used only when picked.
+  await storage.skillSettings.update((current) =>
+    setSkillInvokeMode(current, saved.id, RECORDED_SKILL_INVOKE),
+  );
   await updateSession(tabId, () => undefined);
   return { skillId: saved.id, name: saved.name };
 }
