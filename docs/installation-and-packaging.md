@@ -1,6 +1,12 @@
 # Installation and Packaging
 
-OpenBrowserAgent is currently installed from a source build. The default build targets Chromium-based browsers; Firefox and Safari targets are also available.
+Download the zip for your browser from the [latest GitHub release](https://github.com/Lumysia/OpenBrowserAgent/releases/latest), or build it from source as described below. Chrome and other Chromium-based browsers are the supported target; the Firefox and Safari builds are experimental.
+
+## Install a Release
+
+- **Chrome / Chromium:** unzip `open-browser-agent-<version>-chrome.zip`, open `chrome://extensions`, turn on Developer mode, choose **Load unpacked** and select the unzipped folder. To update, replace the folder's contents and click the reload button on the extension's card.
+- **Firefox (experimental):** load `open-browser-agent-<version>-firefox.zip` as a temporary add-on from `about:debugging`. Firefox removes temporary add-ons when it restarts.
+- **Safari (experimental):** convert `open-browser-agent-<version>-safari.zip` with Xcode's Safari web extension converter.
 
 ## Requirements
 
