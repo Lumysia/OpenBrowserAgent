@@ -31,6 +31,13 @@ export const teachJaJP: TeachLocaleMessages = {
     empty: "ページでタスクを行ってください。各ステップがここに表示されます。",
     long: "記録が長いとスキルの質が下がります。タスクが終わったら停止してください。",
     full: "記録がいっぱいです。以降のステップは記録されません。",
+    unrecorded: plural({
+      other:
+        "ページ上の{count}件の操作を記録できませんでした。ステップに漏れがないか確認してください。",
+    }),
+    frames: plural({
+      other: "{count}個の埋め込みフレーム内のステップは記録されませんでした。",
+    }),
     stop: "停止",
     discard: "破棄",
     deleteStep: "ステップを削除",

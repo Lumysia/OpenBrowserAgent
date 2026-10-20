@@ -9,11 +9,12 @@ import {
 } from "../src/shared/teach/page-protocol";
 import { startCapture, type Capture } from "../src/teach-recorder/capture";
 import { showRecordingPill } from "../src/teach-recorder/pill";
+import { watchUnseen } from "../src/teach-recorder/unseen";
 
 // Teach mode's recorder (see src/teach-recorder): the background injects it
 // into the top frame of a tab it records, again after each navigation, and
 // starts it through the global. Never in the manifest.
-type Recorder = { capture: Capture; removePill: () => void };
+type Recorder = { capture: Capture; end: () => void };
 
 type Globals = typeof globalThis & {
   [TEACH_RECORDER_GLOBAL]?: (config: TeachPageConfig) => boolean;
@@ -34,11 +35,18 @@ export default defineContentScript({
         (event) => send({ type: TEACH_MESSAGE.event, event }),
         config,
       );
+      const stopUnseen = watchUnseen((kind) =>
+        send({ type: TEACH_MESSAGE.unrecorded, kind }),
+      );
       const removePill = showRecordingPill(config, () =>
         send({ type: TEACH_MESSAGE.pageStop }),
       );
-      const recorder = { capture, removePill };
-      globals.__obaTeachRecorderActive = recorder;
+      const end = () => {
+        capture.stop();
+        stopUnseen();
+        removePill();
+      };
+      globals.__obaTeachRecorderActive = { capture, end };
       const onMessage = (
         message: { type?: string; stepId?: string; url?: string } | undefined,
         _sender: unknown,
@@ -53,8 +61,7 @@ export default defineContentScript({
           return;
         }
         if (message?.type !== TEACH_PAGE_MESSAGE.end) return;
-        capture.stop();
-        removePill();
+        end();
         chrome.runtime.onMessage.removeListener(onMessage);
         delete globals.__obaTeachRecorderActive;
         sendResponse(true);

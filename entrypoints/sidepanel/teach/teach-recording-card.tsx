@@ -53,6 +53,16 @@ export function TeachRecordingCard({
           ))}
         </ol>
       )}
+      {!!session.unrecorded?.input && (
+        <Feedback error>
+          {formatCount(words.unrecorded, session.unrecorded.input)}
+        </Feedback>
+      )}
+      {!!session.unrecorded?.frames && (
+        <Feedback>
+          {formatCount(words.frames, session.unrecorded.frames)}
+        </Feedback>
+      )}
       {session.dropped > 0 ? (
         <Feedback error>{words.full}</Feedback>
       ) : (

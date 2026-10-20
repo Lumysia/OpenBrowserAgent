@@ -31,6 +31,15 @@ export const teachPtBR: TeachLocaleMessages = {
     empty: "Faça a tarefa na página. Cada etapa aparece aqui.",
     long: "Gravações longas geram habilidades piores. Pare quando a tarefa terminar.",
     full: "A gravação está cheia: as próximas etapas não são gravadas.",
+    unrecorded: plural({
+      one: "{count} ação na página não pôde ser gravada. Confira se as etapas estão completas.",
+      other:
+        "{count} ações na página não puderam ser gravadas. Confira se as etapas estão completas.",
+    }),
+    frames: plural({
+      one: "As etapas em {count} quadro incorporado não foram gravadas.",
+      other: "As etapas em {count} quadros incorporados não foram gravadas.",
+    }),
     stop: "Parar",
     discard: "Descartar",
     deleteStep: "Excluir etapa",

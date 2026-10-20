@@ -17,6 +17,7 @@ import {
   discardRecording,
   finishRecording,
   recordEvent,
+  recordUnrecorded,
   setupTeachRecorder,
   startRecording,
   updateSession,
@@ -150,6 +151,8 @@ function fromPage(message: TeachMessage, sender: Sender) {
   if (tabId === undefined || sender.frameId !== 0) return undefined;
   if (message.type === TEACH_MESSAGE.event)
     return recordEvent(tabId, message.event);
+  if (message.type === TEACH_MESSAGE.unrecorded)
+    return recordUnrecorded(tabId, message.kind);
   if (message.type === TEACH_MESSAGE.pageStop) return stop(tabId);
   return undefined;
 }

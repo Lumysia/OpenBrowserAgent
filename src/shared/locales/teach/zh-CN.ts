@@ -30,6 +30,12 @@ export const teachZhCN: TeachLocaleMessages = {
     empty: "在页面上完成任务，每个步骤都会显示在这里。",
     long: "录制太长，技能效果会变差。任务完成后就停止。",
     full: "录制已满：之后的步骤不会被录制。",
+    unrecorded: plural({
+      other: "页面上有 {count} 个操作无法录制。请检查步骤是否完整。",
+    }),
+    frames: plural({
+      other: "{count} 个嵌入框架中的步骤未录制。",
+    }),
     stop: "停止",
     discard: "放弃",
     deleteStep: "删除步骤",

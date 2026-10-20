@@ -382,6 +382,7 @@ Strings live in `src/shared/locales/teach/`. The user **records a skill** by doi
 | draft / verified (skill status) | 草稿 / 已验证 | 草稿 / 已驗證 | 下書き / 確認済み | 초안 / 확인됨 |
 | check (run of a recorded skill) | 检查          | 檢查          | 確認              | 확인          |
 | Fix the steps                   | 修正步骤      | 修正步驟      | ステップを修正    | 단계 수정     |
+| embedded frame (iframe)         | 嵌入框架      | 內嵌框架      | 埋め込みフレーム  | 삽입된 프레임 |
 
 | English                         | Français                   | Deutsch               | Español               | Português             |
 | ------------------------------- | -------------------------- | --------------------- | --------------------- | --------------------- |
@@ -394,6 +395,7 @@ Strings live in `src/shared/locales/teach/`. The user **records a skill** by doi
 | draft / verified (skill status) | brouillon / vérifiée       | Entwurf / geprüft     | borrador / verificada | rascunho / verificada |
 | check (run of a recorded skill) | vérification               | Prüfung               | comprobación          | verificação           |
 | Fix the steps                   | Corriger les étapes        | Schritte korrigieren  | Corregir los pasos    | Corrigir as etapas    |
+| embedded frame (iframe)         | cadre intégré              | eingebetteter Frame   | marco incrustado      | quadro incorporado    |
 
 ## Notes per language
 

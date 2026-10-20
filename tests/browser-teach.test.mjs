@@ -12,6 +12,11 @@ import {
   storageValue,
   t,
 } from "./browser-tasks-helpers.mjs";
+import {
+  tabIdOf,
+  teachSession,
+  waitForRecorder,
+} from "./browser-teach-helpers.mjs";
 import { ref } from "./browser-tool-fixture.mjs";
 import { clickElement, pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
@@ -193,10 +198,8 @@ test(
       await poll(() => panelHas(panel, ".teach-card", t.teach.start.title));
       await clickElement(panel, ".teach-card button[type=submit]");
       await poll(() => panelHas(panel, ".teach-card", t.teach.recording.empty));
-      // The pill is on the page, marked as the extension's own.
-      await poll(() =>
-        page.call(() => !!document.querySelector("[data-oba-ui]")),
-      );
+      // The recorder runs in the page.
+      await waitForRecorder(panel, await tabIdOf(panel, "/form"));
 
       // The demonstration, with real input events.
       await typeText(page, EMAIL, 'input[name="email"]');
@@ -235,6 +238,9 @@ test(
       );
       assert.equal(steps.length, 5, steps.join(" | "));
       assert.match(steps[1], new RegExp(t.teach.recording.secret));
+      // Ordinary input raises no "could not be recorded" warning.
+      const recorded = await teachSession(panel, await tabIdOf(panel, "/done"));
+      assert.equal(recorded.unrecorded, undefined);
 
       // Stop: the model writes the skill; the save card shows its name.
       await clickElement(panel, ".teach-card button", {

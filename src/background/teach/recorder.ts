@@ -19,6 +19,7 @@ import {
   type TeachSession,
   type TeachStart,
   type TeachStep,
+  type TeachUnrecorded,
 } from "../../shared/teach/types";
 import {
   mergeFingerprints,
@@ -207,6 +208,22 @@ function withEvent(
 
 export async function recordEvent(tabId: number, event: TeachEvent) {
   await updateSession(tabId, (session) => withEvent(session, event));
+}
+
+// The page saw input it could not record, or focus went into a frame.
+export async function recordUnrecorded(
+  tabId: number,
+  kind: keyof TeachUnrecorded,
+) {
+  if (kind !== "input" && kind !== "frames") return;
+  await updateSession(tabId, (session) => {
+    if (session.state !== TEACH_STATE.recording) return session;
+    const unrecorded = session.unrecorded || { input: 0, frames: 0 };
+    return {
+      ...session,
+      unrecorded: { ...unrecorded, [kind]: unrecorded[kind] + 1 },
+    };
+  });
 }
 
 // The URL as the page redacts it: a page that moved within its document

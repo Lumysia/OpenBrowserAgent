@@ -32,6 +32,15 @@ export const teachEnUS = {
     empty: "Do the task on the page. Each step shows up here.",
     long: "Long recordings make weaker skills. Stop once the task is done.",
     full: "The recording is full: later steps are not recorded.",
+    unrecorded: plural({
+      one: "{count} action on the page could not be recorded. Check that the steps are complete.",
+      other:
+        "{count} actions on the page could not be recorded. Check that the steps are complete.",
+    }),
+    frames: plural({
+      one: "Steps in {count} embedded frame were not recorded.",
+      other: "Steps in {count} embedded frames were not recorded.",
+    }),
     stop: "Stop",
     discard: "Discard",
     deleteStep: "Delete step",

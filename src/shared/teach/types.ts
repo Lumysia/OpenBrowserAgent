@@ -20,6 +20,13 @@ export const TEACH_LIMITS = {
   nameChars: 80,
   // Characters of the user's own notes (what it is for, what changes).
   noteChars: 500,
+  // How long the browser's user activation lasts after a press or key
+  // (about 5 s in browsers), how often the page checks for activation it
+  // saw no input for, and how long a press on a control waits for its
+  // click (see teach-recorder/unseen.ts).
+  activationMs: 5_000,
+  unseenCheckMs: 250,
+  missedClickMs: 1_000,
 } as const;
 
 // What a target is, by meaning: the role and accessible name the agent's
@@ -100,6 +107,10 @@ export type TeachEvent = Omit<TeachStep, "leadsTo" | "varies"> & {
   typed?: string[];
 };
 
+// What the user did that the recording could not see: input the page kept
+// from the recorder, and embedded frames the user worked in.
+export type TeachUnrecorded = { input: number; frames: number };
+
 export const TEACH_STATE = {
   recording: "recording",
   writing: "writing",
@@ -141,6 +152,7 @@ export type TeachSession = {
   // later pages and navigations lose echoes of them. Never in the skill.
   typedKey?: string;
   typed?: string[];
+  unrecorded?: TeachUnrecorded;
 };
 
 // What the user starts a recording with.

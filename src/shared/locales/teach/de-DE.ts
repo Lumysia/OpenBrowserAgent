@@ -32,6 +32,16 @@ export const teachDeDE: TeachLocaleMessages = {
       "Erledigen Sie die Aufgabe auf der Seite. Jeder Schritt erscheint hier.",
     long: "Lange Aufzeichnungen ergeben schwächere Skills. Beenden Sie, sobald die Aufgabe erledigt ist.",
     full: "Die Aufzeichnung ist voll: Weitere Schritte werden nicht aufgezeichnet.",
+    unrecorded: plural({
+      one: "{count} Aktion auf der Seite konnte nicht aufgezeichnet werden. Prüfen Sie, ob die Schritte vollständig sind.",
+      other:
+        "{count} Aktionen auf der Seite konnten nicht aufgezeichnet werden. Prüfen Sie, ob die Schritte vollständig sind.",
+    }),
+    frames: plural({
+      one: "Schritte in {count} eingebettetem Frame wurden nicht aufgezeichnet.",
+      other:
+        "Schritte in {count} eingebetteten Frames wurden nicht aufgezeichnet.",
+    }),
     stop: "Stopp",
     discard: "Verwerfen",
     deleteStep: "Schritt löschen",

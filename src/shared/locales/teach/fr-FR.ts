@@ -31,6 +31,16 @@ export const teachFrFR: TeachLocaleMessages = {
     empty: "Faites la tâche sur la page. Chaque étape s’affiche ici.",
     long: "Les longs enregistrements donnent des compétences moins bonnes. Arrêtez une fois la tâche terminée.",
     full: "L’enregistrement est plein : les étapes suivantes ne sont pas enregistrées.",
+    unrecorded: plural({
+      one: "{count} action sur la page n’a pas pu être enregistrée. Vérifiez que les étapes sont complètes.",
+      other:
+        "{count} actions sur la page n’ont pas pu être enregistrées. Vérifiez que les étapes sont complètes.",
+    }),
+    frames: plural({
+      one: "Les étapes dans {count} cadre intégré n’ont pas été enregistrées.",
+      other:
+        "Les étapes dans {count} cadres intégrés n’ont pas été enregistrées.",
+    }),
     stop: "Arrêter",
     discard: "Annuler",
     deleteStep: "Supprimer l’étape",

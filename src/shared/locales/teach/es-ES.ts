@@ -31,6 +31,15 @@ export const teachEsES: TeachLocaleMessages = {
     empty: "Haz la tarea en la página. Cada paso aparece aquí.",
     long: "Las grabaciones largas dan habilidades peores. Detén la grabación al terminar la tarea.",
     full: "La grabación está llena: los pasos siguientes no se graban.",
+    unrecorded: plural({
+      one: "{count} acción en la página no se pudo grabar. Comprueba que los pasos estén completos.",
+      other:
+        "{count} acciones en la página no se pudieron grabar. Comprueba que los pasos estén completos.",
+    }),
+    frames: plural({
+      one: "No se grabaron los pasos en {count} marco incrustado.",
+      other: "No se grabaron los pasos en {count} marcos incrustados.",
+    }),
     stop: "Detener",
     discard: "Descartar",
     deleteStep: "Eliminar paso",

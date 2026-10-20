@@ -31,6 +31,13 @@ export const teachKo: TeachLocaleMessages = {
     empty: "페이지에서 작업을 하세요. 각 단계가 여기에 표시됩니다.",
     long: "기록이 길면 스킬 품질이 떨어집니다. 작업이 끝나면 중지하세요.",
     full: "기록이 가득 찼습니다. 이후 단계는 기록되지 않습니다.",
+    unrecorded: plural({
+      other:
+        "페이지에서 {count}개의 동작을 기록하지 못했습니다. 단계가 빠짐없는지 확인하세요.",
+    }),
+    frames: plural({
+      other: "삽입된 프레임 {count}개 안의 단계는 기록되지 않았습니다.",
+    }),
     stop: "중지",
     discard: "취소",
     deleteStep: "단계 삭제",

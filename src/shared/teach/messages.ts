@@ -1,5 +1,5 @@
 import { sendRuntimeRequest } from "../runtime-messages";
-import type { TeachEvent, TeachStart } from "./types";
+import type { TeachEvent, TeachStart, TeachUnrecorded } from "./types";
 
 // What the side panel and the recording page ask the background, which
 // keeps the recordings (see background/teach).
@@ -16,6 +16,7 @@ export const TEACH_MESSAGE = {
   openCheckTab: "teach:openCheckTab",
   // The recording page (its content script).
   event: "teach:event",
+  unrecorded: "teach:unrecorded",
   pageStop: "teach:pageStop",
 } as const;
 
@@ -49,6 +50,7 @@ export type TeachMessage =
   | ({ type: typeof TEACH_MESSAGE.save } & TeachSave)
   | { type: typeof TEACH_MESSAGE.openCheckTab; skillId: string }
   | { type: typeof TEACH_MESSAGE.event; event: TeachEvent }
+  | { type: typeof TEACH_MESSAGE.unrecorded; kind: keyof TeachUnrecorded }
   | { type: typeof TEACH_MESSAGE.pageStop };
 
 const MESSAGE_TYPES = new Set<string>(Object.values(TEACH_MESSAGE));

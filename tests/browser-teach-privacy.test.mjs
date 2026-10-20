@@ -7,6 +7,12 @@ import { TEACH_STATE } from "../src/shared/teach/types.ts";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { openSidePanel, startTaskExtension } from "./browser-tasks-helpers.mjs";
 import { click, clickElement, typeText } from "./cdp-input.mjs";
+import {
+  tabIdOf,
+  teach,
+  teachSessions,
+  waitForRecorder,
+} from "./browser-teach-helpers.mjs";
 import { poll } from "./chromium.mjs";
 
 // What a recording lets out of the page, read where it leaves: every
@@ -83,14 +89,7 @@ function model(body) {
   return { text: "Done." };
 }
 
-const teach = (panel, message) =>
-  panel.call((message) => chrome.runtime.sendMessage(message), message);
-const sessions = (panel) =>
-  panel.call(
-    async (key) => (await chrome.storage.session.get(key))[key] || {},
-    STORAGE_KEYS.teachSessions,
-  );
-const current = async (panel) => Object.values(await sessions(panel))[0];
+const current = async (panel) => Object.values(await teachSessions(panel))[0];
 
 // Every echo form of the typed values, as the page wrote them.
 const LEAKS = [
@@ -138,14 +137,7 @@ test(
 
       const panel = await openSidePanel(browser, session.extensionUrl);
       const page = await browser.open(session.url("/search"));
-      const tabId = await poll(() =>
-        panel.call(
-          async () =>
-            (await chrome.tabs.query({})).find((tab) =>
-              tab.url.endsWith("/search"),
-            )?.id,
-        ),
-      );
+      const tabId = await tabIdOf(panel, "/search");
       const started = await teach(panel, { type: TEACH_MESSAGE.start, tabId });
       assert.ok(started?.ok, JSON.stringify(started));
       await poll(async () => (await current(panel))?.typedKey);
@@ -170,9 +162,7 @@ test(
       await poll(() =>
         page.call(() => location.pathname === "/results").catch(() => false),
       );
-      await poll(() =>
-        page.call(() => !!document.querySelector("[data-oba-ui]")),
-      );
+      await waitForRecorder(panel, tabId);
       await clickElement(page, "#hit");
       await poll(() =>
         page.call(() => location.pathname === "/secrets").catch(() => false),
@@ -184,9 +174,7 @@ test(
       );
 
       // 3. Fields that are secret in ways a first look misses.
-      await poll(() =>
-        page.call(() => !!document.querySelector("[data-oba-ui]")),
-      );
+      await waitForRecorder(panel, tabId);
       await typeText(page, KENNWORT, "#f1");
       const show = await page.call(() => {
         const rect = document
