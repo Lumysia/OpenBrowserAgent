@@ -27,6 +27,14 @@ You bring your own model, from a cloud provider with your own API key or running
 - It works on its own tab, so you can keep browsing while it runs, and it asks you when it is unsure.
 - Create your own agents with their own instructions, tools, model and an optional workspace with memory. Agents can hand work to sub-agents that run in the background. Agents can be imported and exported.
 
+### Run tasks on a schedule and watch pages
+
+- Have the agent do something later or on a schedule: once, every few minutes, hours or days, or daily or weekly at a set time. Or watch a page (all of it or one part you pick) and get told when it changes the way you describe, such as a price dropping below a number.
+- A watch reads the page without the AI model and calls the model only when the content changed, so checking often costs little.
+- Results arrive as system notifications and as ordinary chats in the side panel's task list, where you create, edit, pause, run or delete tasks. You can also ask the agent to set one up, change it or remove it in words.
+- Tasks only look by default: they read and report, but don't click, type or submit. An agent can act on its own only if you turn that on in its settings. Tasks the agent creates or changes, and tasks or permissions that arrive by sync, wait for your OK on each device.
+- Tasks run while the browser is open, each on the device it belongs to.
+
 ### Translate pages and video subtitles
 
 - Translate a whole page from the toolbar menu, the translate button on the page edge, the right-click menu or a keyboard shortcut (Alt+A, Control+Shift+A on macOS). The translation sits under each paragraph or replaces it, keeping the page's layout and font; code and form fields are left alone.
