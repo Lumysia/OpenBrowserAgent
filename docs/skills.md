@@ -38,6 +38,8 @@ If the check went differently, choose **Fix the steps** (the agent edits the ski
 
 Recorded skills are ordinary skills: `SKILL.md` plus `references/demonstration.json`, the recorded steps with what each element is called on the page, used only as hints. They start as **Manual**, sync like your other skills and show **Recorded · Draft** or **Recorded · Verified** in Settings. Recording stops when its tab closes or after 15 minutes without a step, and the agent does not work in a tab while it is being recorded. Record short tasks: long recordings (over about 40 steps) make weaker skills, and at most 100 steps are kept. Sign in before you record. What recording captures is described in [Permissions and privacy](permissions-and-privacy.md#teach-mode-recording).
 
+If you sync with a device that still runs OpenBrowserAgent 0.2.0, editing a recorded skill there (in Settings or by the agent) removes its **Recorded** and **Verified** marks on every device; the skill itself and its steps stay.
+
 ## Settings
 
 Open **Settings → Agents & skills → Skills**. For each skill you can choose:
