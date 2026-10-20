@@ -62,7 +62,8 @@ export function addTeachStep(
   const last = steps.at(-1);
   if (last && isRepeat(last, event, limits)) return { steps, dropped: false };
   // A field committed again (blur after Enter, a second edit right away)
-  // is one entry: the latest.
+  // is one entry: the latest, under its id (the page keeps the latest value
+  // by that id), so an example kept of the earlier value goes.
   if (
     last?.kind === TEACH_STEP_KIND.field &&
     event.kind === TEACH_STEP_KIND.field &&
@@ -71,11 +72,11 @@ export function addTeachStep(
     return {
       steps: replaceLast(steps, {
         ...last,
+        id: event.id,
         at: event.at,
         field: {
           ...event.field!,
           submitted: !!(last.field?.submitted || event.field?.submitted),
-          example: last.field?.example,
         },
       }),
       dropped: false,

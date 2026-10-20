@@ -105,6 +105,23 @@ test("a field committed twice keeps one entry, and Enter submits it", () => {
   assert.equal(steps[0].field?.submitted, true);
 });
 
+test("a field committed again keeps the latest id and no stale example", () => {
+  const first = event({
+    kind: "field",
+    target: email,
+    field: { inputType: "email", length: 3, secret: false, example: "old" },
+  });
+  const again = event({
+    kind: "field",
+    target: email,
+    field: { inputType: "email", length: 12, secret: false },
+  });
+  const [step] = record([first, again]);
+  assert.equal(step.id, again.id);
+  assert.equal(step.field?.example, undefined);
+  assert.equal(step.field?.length, 12);
+});
+
 test("a navigation a click caused is the click's result", () => {
   const click = event({ target: button });
   const steps = record([
