@@ -34,7 +34,7 @@ You can teach the agent a browser task by doing it once yourself:
 4. Choose **Stop** (in the side panel or on the pill). The model writes a skill from the steps: a name such as `submit-weekly-timesheet`, a description, and instructions with the inputs, steps and how to check the result.
 5. Check the name and description, and open **Instructions the agent will follow** to read or edit what the skill will tell the agent. Then choose **Save and check**. The skill runs once in a new tab: the agent asks for the inputs, asks you to fill passwords on the page yourself, and asks before the final submit, purchase, send or delete. When it works, the skill is marked **Verified** and you can let the agent use it automatically. **Skip, save as draft** saves it without the check.
 
-Only a check marks a skill **Verified**: when its steps or its recording are edited (in Settings or by the agent), or a later check goes differently, it is a **Draft** again until it is checked again.
+Only a check marks a skill **Verified**: when its steps or its recording are edited (in Settings or by the agent), or a later check goes differently, it is a **Draft** again until it is checked again: choose **Check again** on the skill in Settings → Skills, which runs the check from the side panel.
 
 If the check went differently, choose **Fix the steps** (the agent edits the skill from the run), **Record again from here** (records the rest again in the check tab, keeping the earlier steps), or **Save as draft**.
 

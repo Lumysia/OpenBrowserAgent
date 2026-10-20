@@ -1,6 +1,5 @@
 import {
-  sidePanelHandoffStorage,
-  type SidePanelHandoff,
+  leaveSidePanelHandoff,
   type SidePanelHandoffRequest,
 } from "../shared/side-panel-handoff";
 import { openSidePanel } from "./action-surface";
@@ -15,15 +14,10 @@ export function handOffToSidePanel(
 ) {
   const windowId = tab?.windowId;
   if (!openSidePanel(windowId)) return Promise.resolve();
-  const handoff: SidePanelHandoff = {
-    ...request,
-    id: crypto.randomUUID(),
+  return leaveSidePanelHandoff(request, {
     windowId,
     tabId: tab?.id,
     pageTitle: tab?.title,
     pageUrl: tab?.url,
-    createdAt: Date.now(),
-  };
-  const { area, key } = sidePanelHandoffStorage();
-  return area.set({ [key]: handoff });
+  });
 }

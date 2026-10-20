@@ -118,6 +118,7 @@ export const teachEnUS = {
   },
   skillsHint:
     "To record a skill, open the side panel on the page where the task starts and choose + → Record a skill.",
+  checkAgain: "Check again",
   tool: {
     skillCheck: { running: "Reporting the check", done: "Reported the check" },
   },

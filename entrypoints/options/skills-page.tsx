@@ -1,4 +1,13 @@
-import { recordedSkillInfo } from "../../src/shared/teach/skill-files";
+import {
+  RECORDED_SKILL_STATUS,
+  recordedSkillInfo,
+} from "../../src/shared/teach/skill-files";
+import {
+  leaveSidePanelHandoff,
+  SIDE_PANEL_TASK,
+} from "../../src/shared/side-panel-handoff";
+import { openSidePanelIn } from "../../src/shared/side-panel";
+import { useCurrentWindowId } from "../../src/ui/use-current-window-id";
 import { useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -63,6 +72,7 @@ export function SkillsPage() {
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const windowId = useCurrentWindowId();
 
   if (!entries) return null;
   const t = useMessages();
@@ -104,6 +114,18 @@ export function SkillsPage() {
       ),
     );
     showSaved(skill.id);
+  }
+
+  // A recorded draft is checked in the side panel: opened during the click,
+  // which then runs the check (use-side-panel-handoff.ts).
+  function checkAgain(skill: Skill) {
+    openSidePanelIn(windowId).catch((error: unknown) =>
+      console.warn("Failed to open the side panel", error),
+    );
+    void leaveSidePanelHandoff(
+      { task: SIDE_PANEL_TASK.checkSkill, skillId: skill.id },
+      { windowId },
+    );
   }
 
   function customize(builtin: Skill) {
@@ -225,6 +247,10 @@ export function SkillsPage() {
                     )
                   }
                   onDelete={() => deleteSkill(entry)}
+                  {...(recordedSkillInfo(skill)?.status ===
+                  RECORDED_SKILL_STATUS.draft
+                    ? { onCheck: () => checkAgain(skill) }
+                    : {})}
                 />
               )}
             </SkillItem>

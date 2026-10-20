@@ -117,6 +117,7 @@ export const teachPtBR: TeachLocaleMessages = {
   },
   skillsHint:
     "Para gravar uma habilidade, abra o painel lateral na página onde a tarefa começa e escolha + → Gravar uma habilidade.",
+  checkAgain: "Verificar de novo",
   tool: {
     skillCheck: {
       running: "Informando a verificação",

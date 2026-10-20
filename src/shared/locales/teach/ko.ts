@@ -114,6 +114,7 @@ export const teachKo: TeachLocaleMessages = {
   },
   skillsHint:
     "스킬을 기록하려면 작업이 시작되는 페이지에서 사이드 패널을 열고 + → 스킬 기록을 선택하세요.",
+  checkAgain: "다시 확인",
   tool: {
     skillCheck: {
       running: "확인 결과 보고 중",

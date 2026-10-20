@@ -114,6 +114,7 @@ export const teachJaJP: TeachLocaleMessages = {
   },
   skillsHint:
     "スキルを記録するには、タスクを始めるページでサイドパネルを開き、「+」→「スキルを記録」を選びます。",
+  checkAgain: "もう一度確認",
   tool: {
     skillCheck: { running: "確認結果を報告中", done: "確認結果を報告しました" },
   },

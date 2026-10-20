@@ -111,6 +111,7 @@ export const teachZhCN: TeachLocaleMessages = {
   },
   skillsHint:
     "要录制技能，请在任务开始的页面打开侧边栏，然后选择“+”→“录制技能”。",
+  checkAgain: "再次检查",
   tool: {
     skillCheck: { running: "正在报告检查结果", done: "已报告检查结果" },
   },

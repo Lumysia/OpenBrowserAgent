@@ -143,8 +143,10 @@ export function useTeach({
       setStarting(undefined);
     });
 
-  const startCheck = (skillId: string, name: string) =>
+  const startCheck = (skillId: string, checkedName?: string) =>
     run(async () => {
+      const name =
+        checkedName || skills.find((skill) => skill.id === skillId)?.name || "";
       const opened = await sendTeachMessage<{
         tabId: number;
         title: string;

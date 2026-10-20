@@ -117,6 +117,7 @@ export const teachEsES: TeachLocaleMessages = {
   },
   skillsHint:
     "Para grabar una habilidad, abre el panel lateral en la página donde empieza la tarea y elige + → Grabar una habilidad.",
+  checkAgain: "Comprobar de nuevo",
   tool: {
     skillCheck: {
       running: "Informando de la comprobación",

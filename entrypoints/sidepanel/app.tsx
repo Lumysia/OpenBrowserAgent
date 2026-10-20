@@ -229,6 +229,10 @@ function SidepanelRoot() {
       navigation.showChat();
     },
     showTasks: () => navigation.showTasks(),
+    checkSkill: (skillId) => {
+      navigation.showChat();
+      void teach.startCheck(skillId);
+    },
     importChat,
     createChat,
     attachTab: pageContext.attachTab,

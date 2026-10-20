@@ -120,6 +120,7 @@ export const teachDeDE: TeachLocaleMessages = {
   },
   skillsHint:
     "Um einen Skill aufzuzeichnen, öffnen Sie die Seitenleiste auf der Seite, auf der die Aufgabe beginnt, und wählen Sie + → „Skill aufzeichnen“.",
+  checkAgain: "Erneut prüfen",
   tool: {
     skillCheck: {
       running: "Melde das Prüfergebnis",

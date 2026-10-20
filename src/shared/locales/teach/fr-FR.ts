@@ -119,6 +119,7 @@ export const teachFrFR: TeachLocaleMessages = {
   },
   skillsHint:
     "Pour enregistrer une compétence, ouvrez le panneau latéral sur la page où la tâche commence et choisissez + → Enregistrer une compétence.",
+  checkAgain: "Vérifier à nouveau",
   tool: {
     skillCheck: {
       running: "Envoi du résultat de la vérification",

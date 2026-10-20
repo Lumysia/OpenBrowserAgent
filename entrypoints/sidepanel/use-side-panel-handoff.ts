@@ -35,6 +35,7 @@ export function useSidePanelHandoff({
   ready,
   openChat,
   showTasks,
+  checkSkill,
   importChat,
   createChat,
   attachTab,
@@ -47,6 +48,7 @@ export function useSidePanelHandoff({
   ready: boolean;
   openChat: (chatId: string) => void;
   showTasks: () => void;
+  checkSkill: (skillId: string) => void;
   importChat: (chat: Chat) => void;
   createChat: () => Chat;
   attachTab: (tab: AttachmentTab) => void;
@@ -108,6 +110,9 @@ export function useSidePanelHandoff({
     if (handoff.task === SIDE_PANEL_TASK.openChat)
       return openChat(handoff.chatId);
     if (handoff.task === SIDE_PANEL_TASK.openTasks) return showTasks();
+    // Settings → Skills: check a recorded skill again.
+    if (handoff.task === SIDE_PANEL_TASK.checkSkill)
+      return checkSkill(handoff.skillId);
     if (handoff.task === SIDE_PANEL_TASK.continue) {
       importChat(continuedChat(handoff, t));
       focusComposer();
@@ -136,6 +141,7 @@ export function useSidePanelHandoff({
   }, [
     attachSelectedText,
     attachTab,
+    checkSkill,
     composerRef,
     createChat,
     handoff,
