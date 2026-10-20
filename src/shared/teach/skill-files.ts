@@ -65,15 +65,38 @@ export function withRecordedStatus(
   return withSkillMetadata(skill, { status }, now);
 }
 
-// What the model wrote: a SKILL.md, possibly in a code fence.
+const isFence = (line: string) => /^```[\w-]*$/.test(line.trim());
+const isRule = (line: string) => line.trim() === "---";
+
+// What the model wrote: a SKILL.md, possibly in a code fence, after a
+// short preamble ("Here is the skill:"), with any line endings. The
+// frontmatter is the first `---` block that names the skill.
 export function parseDraft(text: string): TeachDraft {
-  const unfenced = text
-    .trim()
-    .replace(/^```[a-z]*\n([\s\S]*?)\n```$/i, "$1")
-    .trim();
-  const { name, description } = parseSkillFrontmatter(unfenced);
-  const body = unfenced.replace(/^---\n[\s\S]*?\n---\n?/, "").trim();
-  return { name: normalizeSkillName(name), description, body };
+  const lines = text.replace(/\r\n?/g, "\n").trim().split("\n");
+  for (let open = lines.findIndex(isRule); open >= 0;) {
+    const close = lines.findIndex(
+      (line, index) => index > open && isRule(line),
+    );
+    if (close < 0) break;
+    const frontmatter = `${lines.slice(open, close + 1).join("\n")}\n`;
+    const { name, description } = parseSkillFrontmatter(frontmatter);
+    if (name || description) {
+      let rest = lines.slice(close + 1);
+      // The fence opened before the frontmatter closes after the body.
+      if (lines.slice(0, open).some(isFence)) {
+        const end = rest.findLastIndex(isFence);
+        if (end >= 0) rest = rest.slice(0, end);
+      }
+      return {
+        name: normalizeSkillName(name),
+        description,
+        body: rest.join("\n").trim(),
+      };
+    }
+    open = lines.findIndex((line, index) => index > open && isRule(line));
+  }
+  const body = lines.join("\n").replace(/^```[\w-]*\n([\s\S]*?)\n```$/, "$1");
+  return { name: "", description: "", body: body.trim() };
 }
 
 // An input the skill needs: each field the user typed in and each step
