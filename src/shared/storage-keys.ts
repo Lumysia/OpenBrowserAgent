@@ -38,6 +38,10 @@ export const STORAGE_KEYS = {
   pageRefFloor: "page-ref-floor",
   pageTranslateTabs: "page-translate-tabs",
   setupProgress: "setup-progress",
+  // Teach mode (session storage): the recordings by tab, and how check
+  // runs of recorded skills came out by chat (see shared/teach/records.ts).
+  teachSessions: "teach-sessions",
+  skillChecks: "skill-checks",
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
   syncDeviceId: "sync-device-id",

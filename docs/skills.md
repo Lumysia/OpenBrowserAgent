@@ -24,6 +24,24 @@ A skill you pick is used for that message.
 
 Built-in skills update with the extension.
 
+## Record a skill
+
+You can teach the agent a browser task by doing it once yourself:
+
+1. Open the side panel on the page where the task starts and choose **+ → Record a skill**.
+2. Optionally say what it is for and what changes each time (for example "the week and the project"), then choose **Start recording**. A **Recording · Stop** pill stays at the top of the page while it records.
+3. Do the task. Each step shows up in the side panel: delete steps you did by mistake, mark a step **Changes each time**, or keep what you typed in a field as an example (never offered for passwords, codes or card numbers, and only while the page still shows it).
+4. Choose **Stop** (in the side panel or on the pill). The model writes a skill from the steps: a name such as `submit-weekly-timesheet`, a description, and instructions with the inputs, steps and how to check the result.
+5. Check the name and description, and open **Instructions the agent will follow** to read or edit what the skill will tell the agent. Then choose **Save and check**. The skill runs once in a new tab: the agent asks for the inputs, asks you to fill passwords on the page yourself, and asks before the final submit, purchase, send or delete. When it works, the skill is marked **Verified** and you can let the agent use it automatically. **Skip, save as draft** saves it without the check.
+
+Only a check marks a skill **Verified**: when its steps or its recording are edited (in Settings or by the agent), or a later check goes differently, it is a **Draft** again until it is checked again: choose **Check again** on the skill in Settings → Skills, which runs the check from the side panel.
+
+If the check went differently, choose **Fix the steps** (the agent edits the skill from the run), **Record again from here** (records the rest again in the check tab, keeping the earlier steps), or **Save as draft**.
+
+Recorded skills are ordinary skills: `SKILL.md` plus `references/demonstration.json`, the recorded steps with what each element is called on the page, used only as hints. They start as **Manual**, sync like your other skills and show **Recorded · Draft** or **Recorded · Verified** in Settings. You record one task at a time. Recording stops when its tab closes or after 15 minutes without a step; nothing is sent to the model then until you open the side panel and choose **Write the skill** (or **Discard**). The same happens when you press **Stop** on the pill before you allowed your model's provider. The agent does not work in a tab while it is being recorded, and you can't start recording a tab the agent is working in. If the step list says actions or steps in embedded frames could not be recorded, check the steps before you stop, or do those parts another way. Record short tasks: long recordings (over about 40 steps) make weaker skills, and at most 100 steps are kept. Sign in before you record. What recording captures is described in [Permissions and privacy](permissions-and-privacy.md#teach-mode-recording).
+
+If you sync with a device that still runs OpenBrowserAgent 0.2.0, editing a recorded skill there (in Settings or by the agent) removes its **Recorded** and **Verified** marks on every device; the skill itself and its steps stay.
+
 ## Settings
 
 Open **Settings → Agents & skills → Skills**. For each skill you can choose:

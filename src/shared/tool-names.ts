@@ -26,6 +26,7 @@ export const TOOL_NAME = {
   devtools: "devtools",
   tasks: "tasks",
   taskResult: "taskResult",
+  skillCheck: "skillCheck",
 } as const;
 
 export const MCP_TOOL_PREFIX = "mcp__";

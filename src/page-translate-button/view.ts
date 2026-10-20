@@ -1,5 +1,6 @@
 // The button's elements, in a closed shadow root: the page's styles and
 // scripts can't reach them.
+import { markOwnUi } from "../shared/page-ui";
 import { PAGE_BUTTON_HOST_ATTRIBUTE } from "../shared/page-translate/button";
 import { iconSvg } from "../page-toast/icons";
 import { pageShadowCss } from "../ui/page-shadow";
@@ -32,6 +33,7 @@ export type PageButtonView = ReturnType<typeof createView>;
 export function createView() {
   const host = document.createElement("div");
   host.setAttribute(PAGE_BUTTON_HOST_ATTRIBUTE, "");
+  markOwnUi(host);
   host.setAttribute("translate", "no");
   const shadow = host.attachShadow({ mode: "closed" });
   const style = document.createElement("style");

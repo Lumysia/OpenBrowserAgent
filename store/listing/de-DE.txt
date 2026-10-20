@@ -14,7 +14,7 @@ WAS SIE DAMIT TUN KÖNNEN
 AGENTEN, SKILLS UND TOOLS
 
 • Erstellen Sie Agenten mit eigenen Anweisungen, Tools und eigenem Modell. Agenten können Arbeit an Subagenten übergeben, die im Hintergrund laufen.
-• Skills sind wiederverwendbare Anweisungen: Wählen Sie selbst einen aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Schreiben Sie eigene und importieren oder exportieren Sie sie.
+• Skills sind wiederverwendbare Anweisungen: Wählen Sie selbst einen aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Schreiben Sie eigene und importieren oder exportieren Sie sie. Oder erledigen Sie eine Aufgabe einmal während einer Aufzeichnung, und der Agent macht daraus einen Skill, ohne Ihre Eingaben zu speichern.
 • Verbinden Sie MCP-Server, um dem Agenten weitere Tools zu geben, etwa die Websuche.
 • Für genaue Zahlen kann der Agent Code schreiben und ihn in einer Sandbox auf Ihrem Gerät ausführen, die keinen Internetzugriff hat.
 • Mit einer optionalen lokalen Bridge kann ein Agent Befehle auf Ihrem Computer ausführen – erst, nachdem Sie sie installiert und aktiviert haben.

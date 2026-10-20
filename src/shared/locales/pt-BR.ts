@@ -11,6 +11,7 @@ import { themesPtBR } from "./themes/pt-BR";
 import { settingsPtBR } from "./settings/pt-BR";
 import { setupPtBR } from "./setup/pt-BR";
 import { tasksPtBR } from "./tasks/pt-BR";
+import { teachPtBR } from "./teach/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -637,4 +638,5 @@ export const ptBR: LocaleMessages = {
   settings: settingsPtBR,
   setup: setupPtBR,
   tasks: tasksPtBR,
+  teach: teachPtBR,
 };

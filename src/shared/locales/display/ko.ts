@@ -58,6 +58,15 @@ export const displayKo: DisplayMessages = {
     bridgeTimeout: "실행 브리지가 제때 응답하지 않았습니다.",
     syncKeysLocked:
       "API 키가 동기화되었지만 잠겨 있습니다. 설정 → 동기화에서 동기화 암호 문구를 입력하세요.",
+    teachUnscriptable: "이 페이지는 기록할 수 없습니다.",
+    tabRecording:
+      "이 탭은 기록 중입니다. 기록을 중지한 뒤 에이전트에게 맡기세요.",
+    teachEmpty: "기록된 내용이 없습니다. 페이지에서 작업을 한 뒤 중지하세요.",
+    teachNoInstructions: "모델이 지침을 작성하지 않았습니다. 다시 시도하세요.",
+    teachGone: "이 기록은 더 이상 없습니다.",
+    teachCheckTab: "확인용 탭을 열 수 없습니다.",
+    teachBusy: "다른 기록이 열려 있습니다. 먼저 저장하거나 삭제하세요.",
+    teachTabBusy: "에이전트가 이 탭에서 작업 중입니다. 끝난 뒤 기록하세요.",
   },
   toolSteps: {
     failed: "실패",

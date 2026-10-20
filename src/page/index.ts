@@ -7,6 +7,7 @@ import {
   runStep,
   type ActStep,
 } from "./actions";
+import { submittingRef } from "./form-submit";
 import { inputPoint } from "./pointer-actions";
 import { runEdits, type EditOp } from "./edits";
 import { mainMarkdown } from "./html-markdown";
@@ -140,6 +141,7 @@ const methods: Record<string, (args: Args) => unknown> = {
       note: [...notes, result.note].filter(Boolean).join("; "),
     };
   },
+  submits: (args) => submittingRef(args.step as ActStep),
   begin: () => beginChanges(),
   sameDocument: () => hasBaseline(),
   changes: () => collectChanges(),

@@ -34,6 +34,7 @@ import {
   handleSmartBarMessage,
   setupSmartBar,
 } from "../src/background/smart-bar";
+import { handleTeachMessage, setupTeach } from "../src/background/teach";
 import {
   handleVideoSubtitlesMessage,
   setupVideoSubtitles,
@@ -56,6 +57,7 @@ export default defineBackground(() => {
   setupVideoSubtitles();
   setupSync();
   setupTasks();
+  setupTeach();
   setupMcpOriginRules();
 
   chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -77,6 +79,7 @@ export default defineBackground(() => {
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse) ||
       handleTaskMessage(message, sendResponse) ||
+      handleTeachMessage(message, sender, sendResponse) ||
       handleProviderRequestMessage(message, sender, sendResponse),
   );
 

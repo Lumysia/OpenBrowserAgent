@@ -1,3 +1,4 @@
+import type { TeachController } from "./teach/use-teach";
 import {
   createContext,
   useContext,
@@ -104,6 +105,8 @@ type ComposerState = {
   editQueuedMessage: (message: QueuedMessage) => void;
   // The question before a send, above the composer.
   consentPrompt?: ReactNode;
+  // Recording a skill (teach mode).
+  teach: TeachController;
   send: () => void;
   stop: () => void;
 };

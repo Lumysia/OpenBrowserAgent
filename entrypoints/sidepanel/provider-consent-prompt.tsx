@@ -134,7 +134,7 @@ function ProviderConsentPrompt({
           {providerConsentAgreement(host, t.providerConsent)}
         </small>
       </div>
-      <div className="provider-consent-prompt-actions">
+      <div className="composer-card-actions">
         <Button variant="outline" size="sm" onClick={() => onAnswer(false)}>
           {t.providerConsent.decline}
         </Button>

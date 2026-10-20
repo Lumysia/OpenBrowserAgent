@@ -62,6 +62,17 @@ export const displayPtBR: DisplayMessages = {
     bridgeTimeout: "A ponte de execução não respondeu a tempo.",
     syncKeysLocked:
       "Suas chaves de API estão sincronizadas, mas bloqueadas. Digite sua frase secreta de sincronização em Configurações → Sincronização.",
+    teachUnscriptable: "Esta página não pode ser gravada.",
+    tabRecording:
+      "Esta guia está sendo gravada. Pare a gravação antes de o agente trabalhar nela.",
+    teachEmpty: "Nada foi gravado. Faça a tarefa na página e depois pare.",
+    teachNoInstructions: "O modelo não escreveu instruções. Tente de novo.",
+    teachGone: "Esta gravação não existe mais.",
+    teachCheckTab: "Não foi possível abrir a guia para a verificação.",
+    teachBusy:
+      "Outra gravação está aberta. Salve ou descarte essa gravação primeiro.",
+    teachTabBusy:
+      "O agente está trabalhando nesta guia. Espere ele terminar e depois grave.",
   },
   toolSteps: {
     failed: "Falhou",

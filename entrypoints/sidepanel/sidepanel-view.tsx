@@ -1,3 +1,4 @@
+import { TeachCard } from "./teach/teach-card";
 import { useRef, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import { TooltipProvider } from "../../src/ui/components";
@@ -186,6 +187,7 @@ function ChatView({
           onEdit={composer.editQueuedMessage}
         />
         {composer.consentPrompt}
+        <TeachCard />
         <ComposerBox onPickFiles={() => fileInputRef.current?.click()} />
       </footer>
     </div>

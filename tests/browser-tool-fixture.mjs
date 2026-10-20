@@ -96,10 +96,11 @@ export async function browserToolFixture(handleRequest, launch = {}) {
       calls = 0;
       requests.length = 0;
     };
-    const start = async (toolSteps, uploadedAttachments = []) => {
+    // `metadata`: the user message's, such as a check run's skillCheck.
+    const start = async (toolSteps, uploadedAttachments = [], metadata) => {
       script(toolSteps);
       await page.call(
-        ({ uploadedAttachments, portName, sendMessages }) => {
+        ({ uploadedAttachments, portName, sendMessages, metadata }) => {
           const chatId = crypto.randomUUID();
           const port = chrome.runtime.connect({ name: portName });
           const run = { chatId, events: [], done: false, port };
@@ -121,6 +122,7 @@ export async function browserToolFixture(handleRequest, launch = {}) {
                 role: "user",
                 content: "Run the local fixture tools",
                 createdAt: Date.now(),
+                ...(metadata ? { metadata } : {}),
               },
             ],
             body: {
@@ -134,6 +136,7 @@ export async function browserToolFixture(handleRequest, launch = {}) {
           uploadedAttachments,
           portName: AI_STREAM_PORT_NAME,
           sendMessages: AI_STREAM_REQUEST_TYPE.sendMessages,
+          metadata,
         },
       );
     };
@@ -184,8 +187,8 @@ export async function browserToolFixture(handleRequest, launch = {}) {
       script,
       start,
       toolTexts,
-      async run(steps) {
-        await start(steps);
+      async run(steps, { metadata } = {}) {
+        await start(steps, [], metadata);
         await poll(() => page.call(() => toolRun.done), 90000);
         return toolTexts();
       },

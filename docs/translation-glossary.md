@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/tasks/` (scheduled tasks and page watches), `src/shared/locales/provider-consent/` (permission to send content to an AI provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/tasks/` (scheduled tasks and page watches), `src/shared/locales/teach/` (recording a skill), `src/shared/locales/provider-consent/` (permission to send content to an AI provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -366,6 +366,36 @@ The **toolbar button**'s own right-click menu and the side panel's **"This page"
 | the original line (of a subtitle)                 | ligne originale                                     | Originalzeile                              | línea original                                    | linha original                                |
 | hex code (of a colour)                            | code hexadécimal                                    | Hex-Code                                   | código hexadecimal                                | código hexadecimal                            |
 | theme colour (subtitle quick colour)              | couleur du thème                                    | Designfarbe                                | color del tema                                    | cor do tema                                   |
+
+## Teach mode (recording a skill)
+
+Strings live in `src/shared/locales/teach/`. The user **records a skill** by doing a task once; this "record" is a different idea from the devtools capture above, so Chinese, Spanish and Portuguese use the word for recording a demonstration (录制 / 錄製 / grabar / gravar) instead of 记录 / registro; Japanese, Korean, French and German keep their word (記録 / 기록 / enregistrer / aufzeichnen), which fits both. A recording is made of **steps**; a step the user marks **Changes each time** becomes an input of the skill. A field is **secret** when it holds a password, code or card number. The saved skill is a **draft** until its **check** (one run in a new tab) passes, then **verified**. The pill on the page says "Recording · Stop" with the words below.
+
+| English                         | 简体中文      | 繁體中文      | 日本語            | 한국어        |
+| ------------------------------- | ------------- | ------------- | ----------------- | ------------- |
+| record a skill                  | 录制技能      | 錄製技能      | スキルを記録      | 스킬 기록     |
+| recording (teach mode)          | 录制          | 錄製          | 記録              | 기록          |
+| step (of a recording)           | 步骤          | 步驟          | ステップ          | 단계          |
+| changes each time               | 每次不同      | 每次不同      | 毎回変わる        | 매번 바뀜     |
+| secret (field)                  | 机密          | 機密          | 機密              | 비밀          |
+| example (kept value)            | 示例          | 範例          | 例                | 예시          |
+| draft / verified (skill status) | 草稿 / 已验证 | 草稿 / 已驗證 | 下書き / 確認済み | 초안 / 확인됨 |
+| check (run of a recorded skill) | 检查          | 檢查          | 確認              | 확인          |
+| Fix the steps                   | 修正步骤      | 修正步驟      | ステップを修正    | 단계 수정     |
+| embedded frame (iframe)         | 嵌入框架      | 內嵌框架      | 埋め込みフレーム  | 삽입된 프레임 |
+
+| English                         | Français                   | Deutsch               | Español               | Português             |
+| ------------------------------- | -------------------------- | --------------------- | --------------------- | --------------------- |
+| record a skill                  | enregistrer une compétence | Skill aufzeichnen     | grabar una habilidad  | gravar uma habilidade |
+| recording (teach mode)          | enregistrement             | Aufzeichnung          | grabación             | gravação              |
+| step (of a recording)           | étape                      | Schritt               | paso                  | etapa                 |
+| changes each time               | change à chaque fois       | ändert sich jedes Mal | cambia cada vez       | muda a cada vez       |
+| secret (field)                  | secret                     | geheim                | secreto               | secreto               |
+| example (kept value)            | exemple                    | Beispiel              | ejemplo               | exemplo               |
+| draft / verified (skill status) | brouillon / vérifiée       | Entwurf / geprüft     | borrador / verificada | rascunho / verificada |
+| check (run of a recorded skill) | vérification               | Prüfung               | comprobación          | verificação           |
+| Fix the steps                   | Corriger les étapes        | Schritte korrigieren  | Corregir los pasos    | Corrigir as etapas    |
+| embedded frame (iframe)         | cadre intégré              | eingebetteter Frame   | marco incrustado      | quadro incorporado    |
 
 ## Notes per language
 

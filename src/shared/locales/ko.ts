@@ -11,6 +11,7 @@ import { themesKo } from "./themes/ko";
 import { settingsKo } from "./settings/ko";
 import { setupKo } from "./setup/ko";
 import { tasksKo } from "./tasks/ko";
+import { teachKo } from "./teach/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -570,4 +571,5 @@ export const ko: LocaleMessages = {
   settings: settingsKo,
   setup: setupKo,
   tasks: tasksKo,
+  teach: teachKo,
 };

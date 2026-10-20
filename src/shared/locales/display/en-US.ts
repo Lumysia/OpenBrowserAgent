@@ -63,6 +63,16 @@ export const displayEnUS = {
     bridgeTimeout: "The execution bridge didn’t answer in time.",
     syncKeysLocked:
       "Your API keys are synced but locked. Enter your sync passphrase in Settings → Sync.",
+    teachUnscriptable: "This page can't be recorded.",
+    tabRecording:
+      "This tab is being recorded. Stop the recording before the agent works in it.",
+    teachEmpty: "Nothing was recorded. Do the task on the page, then stop.",
+    teachNoInstructions: "The model wrote no instructions. Try again.",
+    teachGone: "This recording is no longer there.",
+    teachCheckTab: "The tab for the check could not be opened.",
+    teachBusy: "Another recording is open. Save or discard it first.",
+    teachTabBusy:
+      "The agent is working in this tab. Wait until it is done, then record.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

@@ -12,6 +12,7 @@ import { mcpServersTool, mcpToolDefinitions } from "./mcp";
 import { extractTool, findTool, snapshotTool } from "./page";
 import { readTool } from "./read";
 import { runCodeTool } from "./run-code";
+import { skillCheckTool } from "./skill-check";
 import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
 import { screenshotTool } from "./screenshot";
@@ -51,6 +52,7 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   devtoolsTool,
   tasksTool,
   taskResultTool,
+  skillCheckTool,
 ];
 
 // The tools of one run. Core tools are declared from the first request;

@@ -11,7 +11,7 @@ It turns the browser into an AI working surface: users can chat with a selected 
 - Use the Browse agent to read pages, navigate tabs, click, type, edit pages, download, and automate browser tasks.
 - Use the Ask agent for focused page Q&A: it reads pages but does not operate the browser.
 - Create custom agents with their own instructions, tool groups, model, icon, and an optional workspace with memory.
-- Create/import reusable skills for repeatable workflows.
+- Create/import reusable skills for repeatable workflows, or record one by doing the task once (teach mode).
 - Schedule tasks for later or on a schedule, and watch pages for a change you describe, with a notification when there is something to tell.
 - Configure model providers, chat models, image models, sync preferences, MCP servers, and UI settings.
 
@@ -43,6 +43,7 @@ It turns the browser into an AI working surface: users can chat with a selected 
 - Each skill is Auto (agents see its name and description and read the full skill when a request fits), Manual (used only when the user picks it) or Off.
 - In the side panel, typing `/` at the start of the message or opening "+" → Skills picks a skill for that message: the agent follows it for the request typed after it.
 - Skills support import/export, duplication, editing and validation. The Options page warns when the Auto skills' descriptions get long.
+- **Teach mode** ("+" → Record a skill): the user does a task once while the side panel lists each step; on Stop the chat model writes an ordinary skill (`SKILL.md` plus `references/demonstration.json`, the steps' targets as hints, never typed values), the user reviews its name and description, and a check run in a new tab marks it verified. Recorded skills start as Manual; after a passed check the side panel offers Auto. See [Record a skill](skills.md#record-a-skill).
 
 ### Browser Tools
 

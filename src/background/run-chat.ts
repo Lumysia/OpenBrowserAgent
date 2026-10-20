@@ -22,6 +22,7 @@ import {
   createRunTab,
   handedRunTab,
   startRunTab,
+  whileWorking,
   withWorkingTab,
   workingTabNote,
   type RunTab,
@@ -29,7 +30,13 @@ import {
 import type { StreamSession } from "./stream-sessions";
 import { createSystemPrompt } from "./system-prompt";
 import { createToolSet } from "./tools/registry";
-import type { ToolDefinition, UnattendedRun } from "./tools/types";
+import { skillCheckOf } from "../shared/teach/check";
+import { refuseRecordingTab } from "./teach/guard";
+import type {
+  SkillCheckRun,
+  ToolDefinition,
+  UnattendedRun,
+} from "./tools/types";
 
 // A run nobody watches. `readOnly`: already limited to reading (a read-only
 // run's sub-agent); otherwise the agent's own permission decides.
@@ -47,6 +54,7 @@ type RunRequest = {
   // The tab a parent run hands to its sub-agent.
   tabId?: number;
   unattended?: UnattendedRequest;
+  skillCheck?: SkillCheckRun;
 };
 
 // An agent acts on its own only where the user allowed it (approval.ts):
@@ -119,6 +127,7 @@ async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
     tab,
     // The agent as stored: a sub-agent's narrower groups are not a change.
     unattended: unattendedRun(request.unattended, resolved, approvals),
+    ...(request.skillCheck ? { skillCheck: request.skillCheck } : {}),
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     isLocalExecutionBridgeTested,
@@ -161,25 +170,38 @@ export async function runChat(
   const { tab, start, earlier } = request.unattended
     ? await handedRunTab(session.chatId, request.tabId)
     : await startRunTab(session.chatId, request.messages.at(-1), request.tabId);
-  const prepared = await prepareRun(request, tab);
+  // The agent does not work in a tab the user is recording.
+  await refuseRecordingTab(start?.id);
+  const skillCheck = skillCheckOf(request.messages.at(-1));
+  const prepared = await prepareRun(
+    skillCheck
+      ? {
+          ...request,
+          skillCheck: { ...skillCheck, confirmedSubmits: new Set() },
+        }
+      : request,
+    tab,
+  );
   session.abortController.signal.throwIfAborted();
   const usesPages =
     hasToolGroup(prepared.agent, "pages") ||
     hasToolGroup(prepared.agent, "browser");
-  await runPiAgent({
-    session,
-    model: prepared.model,
-    helperModel: prepared.helperModel,
-    system: prepared.system,
-    messages: usesPages
-      ? withWorkingTab(request.messages, workingTabNote(start, earlier))
-      : request.messages,
-    setup: prepared.setup,
-    maxToolSteps: prepared.maxToolSteps,
-    messageId: request.messageId,
-    attachmentRetryNotice: getMessages(request.language).sidepanel
-      .attachmentsUnsupportedRetry,
-  });
+  await whileWorking(tab, () =>
+    runPiAgent({
+      session,
+      model: prepared.model,
+      helperModel: prepared.helperModel,
+      system: prepared.system,
+      messages: usesPages
+        ? withWorkingTab(request.messages, workingTabNote(start, earlier))
+        : request.messages,
+      setup: prepared.setup,
+      maxToolSteps: prepared.maxToolSteps,
+      messageId: request.messageId,
+      attachmentRetryNotice: getMessages(request.language).sidepanel
+        .attachmentsUnsupportedRetry,
+    }),
+  );
   return prepared;
 }
 

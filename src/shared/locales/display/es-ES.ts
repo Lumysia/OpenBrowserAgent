@@ -62,6 +62,18 @@ export const displayEsES: DisplayMessages = {
     bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
     syncKeysLocked:
       "Tus claves API están sincronizadas pero bloqueadas. Introduce tu frase de contraseña de sincronización en Configuración → Sincronización.",
+    teachUnscriptable: "Esta página no se puede grabar.",
+    tabRecording:
+      "Esta pestaña se está grabando. Detén la grabación antes de que el agente trabaje en ella.",
+    teachEmpty:
+      "No se grabó nada. Haz la tarea en la página y luego detén la grabación.",
+    teachNoInstructions:
+      "El modelo no escribió instrucciones. Inténtalo de nuevo.",
+    teachGone: "Esta grabación ya no existe.",
+    teachCheckTab: "No se pudo abrir la pestaña para la comprobación.",
+    teachBusy: "Hay otra grabación abierta. Guárdala o descártala primero.",
+    teachTabBusy:
+      "El agente está trabajando en esta pestaña. Espera a que termine y luego graba.",
   },
   toolSteps: {
     failed: "Error",

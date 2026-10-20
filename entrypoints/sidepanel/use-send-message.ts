@@ -171,6 +171,7 @@ export function useSendMessage(state: {
         skills: slash ? addSkill(sentSkills, slash.skill) : sentSkills,
         instruction:
           sendRequest?.instruction ?? messageInstruction(options.resendMessage),
+        skillCheck: sendRequest?.skillCheck,
       });
       state.storeSentAttachments({
         chatId: nextChat.id,

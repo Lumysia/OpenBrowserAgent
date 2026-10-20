@@ -1,3 +1,13 @@
+import {
+  RECORDED_SKILL_STATUS,
+  recordedSkillInfo,
+} from "../../src/shared/teach/skill-files";
+import {
+  leaveSidePanelHandoff,
+  SIDE_PANEL_TASK,
+} from "../../src/shared/side-panel-handoff";
+import { openSidePanelIn } from "../../src/shared/side-panel";
+import { useCurrentWindowId } from "../../src/ui/use-current-window-id";
 import { useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -46,6 +56,7 @@ import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
+import { guardSkillEdit } from "../../src/shared/teach/skill-files";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useLocale, useMessages } from "../../src/ui/messages";
@@ -61,6 +72,7 @@ export function SkillsPage() {
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const windowId = useCurrentWindowId();
 
   if (!entries) return null;
   const t = useMessages();
@@ -79,7 +91,7 @@ export function SkillsPage() {
     setImporting(true);
     setImportError("");
     try {
-      addSkill(await importSkillZip(file));
+      addSkill(guardSkillEdit(undefined, await importSkillZip(file)));
     } catch (error) {
       setImportError(importErrorDetail(error, t));
     } finally {
@@ -97,9 +109,23 @@ export function SkillsPage() {
     // The header's checks say why.
     if (skillTooLarge(draft)) return;
     setSkills((items) =>
-      items.map((item) => (item.id === skill.id ? draft : item)),
+      items.map((item) =>
+        item.id === skill.id ? guardSkillEdit(item, draft) : item,
+      ),
     );
     showSaved(skill.id);
+  }
+
+  // A recorded draft is checked in the side panel: opened during the click,
+  // which then runs the check (use-side-panel-handoff.ts).
+  function checkAgain(skill: Skill) {
+    openSidePanelIn(windowId).catch((error: unknown) =>
+      console.warn("Failed to open the side panel", error),
+    );
+    void leaveSidePanelHandoff(
+      { task: SIDE_PANEL_TASK.checkSkill, skillId: skill.id },
+      { windowId },
+    );
   }
 
   function customize(builtin: Skill) {
@@ -128,7 +154,7 @@ export function SkillsPage() {
       <SettingsPageHeader
         icon={<FileText />}
         title={t.options.skills}
-        description={t.options.skillsDescription}
+        description={`${t.options.skillsDescription} ${t.teach.skillsHint}`}
         actions={
           <>
             <input
@@ -221,6 +247,10 @@ export function SkillsPage() {
                     )
                   }
                   onDelete={() => deleteSkill(entry)}
+                  {...(recordedSkillInfo(skill)?.status ===
+                  RECORDED_SKILL_STATUS.draft
+                    ? { onCheck: () => checkAgain(skill) }
+                    : {})}
                 />
               )}
             </SkillItem>
@@ -246,6 +276,7 @@ function SkillItem({
   const locale = useLocale();
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
+  const recorded = recordedSkillInfo(draft);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
   // A skill whose files did not sync to this device is not broken.
   const checks =
@@ -272,6 +303,11 @@ function SkillItem({
                   {source === "builtin"
                     ? t.options.builtinSkillBadge
                     : t.options.overrideSkillBadge}
+                </Badge>
+              )}
+              {recorded && (
+                <Badge>
+                  {t.teach.status.recorded} · {t.teach.status[recorded.status]}
                 </Badge>
               )}
               {source !== "builtin" && (

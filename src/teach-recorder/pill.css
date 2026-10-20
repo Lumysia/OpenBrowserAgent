@@ -1,0 +1,82 @@
+/* The recording pill, inside its shadow root. Tokens come from tokens.css
+   with :root mapped to .teach-pill-theme, colors from applyTheme() on it,
+   the card from .page-surface like page notes and the smart bar. */
+.teach-pill-theme {
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+/* Centered at the top, where the page's own notes and the page notes at
+   the bottom are not; only the pill takes clicks. */
+.teach-pill-frame {
+  position: fixed;
+  top: var(--space-3);
+  right: 0;
+  left: 0;
+  z-index: var(--page-layer-top);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.teach-pill {
+  --enter-y: -8px;
+  --enter-scale: 0.96;
+  --enter-blur: 1px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  pointer-events: auto;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+
+.teach-pill-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--destructive);
+  animation: teach-pill-pulse 1.6s var(--ease-standard) infinite;
+}
+
+.teach-pill-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  background: var(--secondary);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+.teach-pill-stop:hover {
+  border-color: var(--hover-border);
+  background: var(--hover-surface);
+}
+.teach-pill-stop:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.teach-pill-stop svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes teach-pill-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teach-pill-dot {
+    animation: none;
+  }
+}

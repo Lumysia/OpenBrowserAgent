@@ -14,7 +14,7 @@ O QUE VOCÊ PODE FAZER
 AGENTES, HABILIDADES E FERRAMENTAS
 
 • Crie agentes com suas próprias instruções, ferramentas e modelo. Os agentes podem passar trabalho para subagentes que rodam em segundo plano.
-• Habilidades são instruções reutilizáveis: escolha uma você mesmo ou deixe o agente usar uma quando o pedido combinar. Escreva as suas e importe ou exporte.
+• Habilidades são instruções reutilizáveis: escolha uma você mesmo ou deixe o agente usar uma quando o pedido combinar. Escreva as suas e importe ou exporte. Ou faça uma tarefa uma vez enquanto ela é gravada, e o agente a transforma em uma habilidade, sem guardar o que você digita.
 • Conecte servidores MCP para dar ao agente mais ferramentas, como a pesquisa na web.
 • Para números exatos, o agente pode escrever código e executá-lo em uma sandbox no seu dispositivo, sem acesso à internet.
 • Uma ponte local opcional permite que um agente execute comandos no seu computador, só depois que você a instalar e ativar.

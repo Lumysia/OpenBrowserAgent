@@ -1,11 +1,11 @@
 import { PanelRight } from "lucide-react";
-import { useEffect, useState } from "react";
 import { getBrowserApi } from "../../src/shared/browser-api";
 import { SIDE_PANEL_COMMAND } from "../../src/shared/commands";
 import { openSidePanelIn } from "../../src/shared/side-panel";
 import { Button } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { useCommands } from "../../src/ui/use-commands";
+import { useCurrentWindowId } from "../../src/ui/use-current-window-id";
 
 // The menu's main action, with the side panel's own shortcut. The browser
 // opens the panel only during the click, so the window is looked up before
@@ -35,15 +35,4 @@ export function OpenSidePanelButton() {
       {shortcut && <kbd className="toolbar-menu-shortcut">{shortcut}</kbd>}
     </Button>
   );
-}
-
-function useCurrentWindowId() {
-  const [windowId, setWindowId] = useState<number>();
-  useEffect(() => {
-    getBrowserApi()
-      .windows?.getCurrent()
-      .then((window) => setWindowId(window.id))
-      .catch(console.warn);
-  }, []);
-  return windowId;
 }

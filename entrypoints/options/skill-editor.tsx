@@ -1,4 +1,11 @@
-import { Check, Copy, Download, RotateCcw, Trash2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  ListChecks,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import {
@@ -35,6 +42,7 @@ export function SkillEditor({
   onSave,
   onDuplicate,
   onDelete,
+  onCheck,
 }: {
   skill: Skill;
   draft: Skill;
@@ -44,6 +52,8 @@ export function SkillEditor({
   onSave: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  // A recorded draft: run its check in the side panel.
+  onCheck?: () => void;
 }) {
   const t = useMessages();
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
@@ -123,6 +133,11 @@ export function SkillEditor({
           {saved ? <Check size={16} /> : null}
           {saved ? t.common.saved : t.common.save}
         </Button>
+        {onCheck && (
+          <Button variant="outline" onClick={onCheck}>
+            <ListChecks size={16} /> {t.teach.checkAgain}
+          </Button>
+        )}
         {!override && (
           <Button variant="outline" onClick={onDuplicate}>
             <Copy size={16} /> {t.options.duplicateSkill}

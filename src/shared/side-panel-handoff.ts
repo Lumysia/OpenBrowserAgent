@@ -18,6 +18,8 @@ export const SIDE_PANEL_TASK = {
   openChat: "openChat",
   // Open the task list.
   openTasks: "openTasks",
+  // Run the check of a recorded skill (Settings → Skills).
+  checkSkill: "checkSkill",
 } as const;
 
 export type SidePanelTask =
@@ -34,7 +36,8 @@ export type SidePanelHandoffRequest =
   | { task: typeof SIDE_PANEL_TASK.searchWeb; text?: string }
   | { task: typeof SIDE_PANEL_TASK.summarizeLink; linkUrl: string }
   | { task: typeof SIDE_PANEL_TASK.openChat; chatId: string }
-  | { task: typeof SIDE_PANEL_TASK.openTasks };
+  | { task: typeof SIDE_PANEL_TASK.openTasks }
+  | { task: typeof SIDE_PANEL_TASK.checkSkill; skillId: string };
 
 export type SidePanelHandoff = SidePanelHandoffRequest & {
   id: string;
@@ -94,5 +97,29 @@ export function readSidePanelHandoff(
     typeof handoff.chatId !== "string"
   )
     return undefined;
+  if (
+    handoff.task === SIDE_PANEL_TASK.checkSkill &&
+    typeof handoff.skillId !== "string"
+  )
+    return undefined;
   return handoff as SidePanelHandoff;
+}
+
+// Leaves `request` for the side panel of `windowId` (opened by the caller
+// during the user's gesture).
+export function leaveSidePanelHandoff(
+  request: SidePanelHandoffRequest,
+  context: Pick<
+    SidePanelHandoff,
+    "windowId" | "tabId" | "pageTitle" | "pageUrl"
+  > = {},
+) {
+  const handoff: SidePanelHandoff = {
+    ...request,
+    ...context,
+    id: crypto.randomUUID(),
+    createdAt: Date.now(),
+  };
+  const { area, key } = sidePanelHandoffStorage();
+  return area.set({ [key]: handoff });
 }

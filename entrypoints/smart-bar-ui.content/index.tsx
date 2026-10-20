@@ -5,6 +5,7 @@ import {
   setSmartBarUi,
   type SmartBarUi,
 } from "../../src/smart-bar/bridge";
+import { markOwnUi } from "../../src/shared/page-ui";
 import type { SelectionSnapshot } from "../../src/smart-bar/selection";
 import { SmartBarApp } from "../../src/smart-bar/ui/smart-bar-app";
 import { createSmartBarStore } from "../../src/smart-bar/ui/store";
@@ -50,6 +51,7 @@ export default defineContentScript({
 // element and get the closed root through ElementInternals.
 function createHost() {
   const host = document.createElement("div");
+  markOwnUi(host);
   const shadow = host.attachShadow({ mode: "closed" });
   const html = document.createElement("html");
   const head = document.createElement("head");

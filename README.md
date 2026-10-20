@@ -47,6 +47,7 @@ You bring your own model, from a cloud provider with your own API key or running
 
 ### Extend it with skills, MCP and local tools
 
+- Record a skill by doing a browser task once: choose "+" → Record a skill, do the task, press Stop, and the agent writes the skill, runs it once to check it, and saves it. What you type is never recorded.
 - Skills are reusable instructions for one kind of task. Pick one with `/` or "+" in the message box, or let the agent use it when a request fits. Built-in skills update with the extension; write your own, ask the agent to "save what we just did as a skill", or import and export skill packages. See [Skills](docs/skills.md).
 - Connect remote MCP servers (Streamable HTTP) for more tools such as web search. Recommended servers are added in one click; any server can be added by URL or imported from JSON. A server must pass a connection test before it can be turned on, and each of its tools can be turned off.
 - The optional [local execution bridge](packages/local-execution-bridge/README.md) lets an agent run shell commands on your computer. It is a separate program: nothing runs on your computer until you install it and add it in Settings, and each agent's tool settings decide whether it may use it.

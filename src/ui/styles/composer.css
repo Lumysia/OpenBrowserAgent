@@ -246,7 +246,7 @@
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
-.provider-consent-prompt-actions {
+.composer-card-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;

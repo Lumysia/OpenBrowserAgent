@@ -10,16 +10,26 @@ import {
 // and the offscreen document. `code` carries a UserError across, so the
 // receiving UI can still show it in its language.
 // A consent error also carries the provider and host its text names.
-export type RuntimeReply<T = unknown> =
-  | { ok: true; value?: T }
-  | {
-      ok: false;
-      error: string;
-      code?: UserErrorCode;
-      consent?: { providerId: string; host: string };
-    };
+export type RuntimeFailure = {
+  ok: false;
+  error: string;
+  code?: UserErrorCode;
+  consent?: { providerId: string; host: string };
+};
 
-export function failureReply(error: unknown): RuntimeReply<never> {
+export type RuntimeReply<T = unknown> =
+  { ok: true; value?: T } | RuntimeFailure;
+
+// The error a failure stands for: the UserError it was when it had a code.
+export function failureError(failure: RuntimeFailure) {
+  return failure.consent
+    ? new ProviderConsentError(failure.consent.providerId, failure.consent.host)
+    : failure.code
+      ? new UserError(failure.code, failure.error)
+      : new Error(failure.error);
+}
+
+export function failureReply(error: unknown): RuntimeFailure {
   if (error instanceof ProviderConsentError)
     return {
       ok: false,
@@ -52,12 +62,7 @@ export function replyValue<T>(
   receiver: string,
 ): T {
   if (!reply) throw new Error(`${receiver} did not respond.`);
-  if (!reply.ok)
-    throw reply.consent
-      ? new ProviderConsentError(reply.consent.providerId, reply.consent.host)
-      : reply.code
-        ? new UserError(reply.code, reply.error)
-        : new Error(reply.error);
+  if (!reply.ok) throw failureError(reply);
   return reply.value as T;
 }
 

@@ -37,6 +37,10 @@ export type UnattendedRun = {
   report?(outcome: TaskOutcome): void;
 };
 
+// The check run of a recorded skill, and the refs of the controls or fields
+// the user allowed to submit a form (once each; see check-submit.ts).
+export type SkillCheckRun = { skillId: string; confirmedSubmits: Set<string> };
+
 export type TaskOutcome = {
   outcome: "report" | "nothing" | "met" | "notMet";
   summary: string;
@@ -61,6 +65,8 @@ export type RunContext = {
   tab: RunTab;
   // Set for scheduled task and watch runs.
   unattended?: UnattendedRun;
+  // Set for the check run of a recorded skill (see skill-check.ts).
+  skillCheck?: SkillCheckRun;
   storeArtifact(label: string, text: string): Promise<string>;
   readArtifact(
     handle: string,
@@ -91,6 +97,7 @@ export type ToolSetup = Pick<
   | "depth"
   | "workspace"
   | "unattended"
+  | "skillCheck"
 >;
 
 // The chat a run's tabs and downloads belong to: a sub-agent's are its

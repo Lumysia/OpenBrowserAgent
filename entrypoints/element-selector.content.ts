@@ -1,4 +1,42 @@
-(() => {
+import { defineContentScript } from "wxt/utils/define-content-script";
+import { structuralPath } from "../src/page/structural-path";
+import { markOwnUi } from "../src/shared/page-ui";
+
+// The element picker: the side panel injects it (see injectElementSelector)
+// after setting its prompt and theme on the isolated world's globals. The
+// picked element goes to the side panel as a getSelectedElement message.
+// Never in the manifest.
+
+type SelectorPreferences = {
+  colorScheme?: string;
+  accent?: { light: string; dark: string };
+};
+
+type SelectorGlobals = typeof globalThis & {
+  __obaElementSelectorActive?: boolean;
+  __obaElementSelectorPrompt?: string;
+  __obaElementSelectorPreferences?: SelectorPreferences;
+};
+
+type Rect = {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+};
+
+export default defineContentScript({
+  registration: "runtime",
+  // Tells the page nothing about the extension.
+  noScriptStartedPostMessage: true,
+  main() {
+    startSelector(globalThis as SelectorGlobals);
+  },
+});
+
+function startSelector(window: SelectorGlobals) {
   if (window.__obaElementSelectorActive) return;
   window.__obaElementSelectorActive = true;
 
@@ -13,12 +51,13 @@
   };
   const DEFAULT_SELECTOR_PROMPT = "Select an element — press Esc to cancel";
 
-  let hovered = null;
-  let currentRect = null;
+  let hovered: HTMLElement | null = null;
+  let currentRect: Rect | null = null;
   const previousCursor = document.body.style.cursor;
 
   const root = document.createElement("div");
   root.setAttribute("data-oba-selector-root", "true");
+  markOwnUi(root);
   Object.assign(root.style, {
     position: "fixed",
     inset: "0",
@@ -66,7 +105,7 @@
   document.body.style.cursor = "crosshair";
   updateOverlay(null);
 
-  function applyTheme(preferences) {
+  function applyTheme(preferences: SelectorPreferences) {
     const dark =
       preferences?.colorScheme === "dark" ||
       (preferences?.colorScheme !== "light" &&
@@ -116,7 +155,7 @@
     cleanup();
   }
 
-  function onMouseOver(event) {
+  function onMouseOver(event: MouseEvent) {
     const target = event.target;
     if (!isSelectableTarget(target)) return;
     hovered = target;
@@ -133,31 +172,7 @@
     updateOverlay(hovered.getBoundingClientRect());
   }
 
-  // A path to the element by tags and their places among siblings only, so
-  // it finds the same part of the page after a reload (a watch reads it).
-  function structuralPath(element) {
-    const steps = [];
-    let node = element;
-    while (
-      node &&
-      node !== document.body &&
-      node !== document.documentElement
-    ) {
-      const parent = node.parentElement;
-      if (!parent) break;
-      const tag = node.tagName.toLowerCase();
-      const same = Array.from(parent.children).filter(
-        (child) => child.tagName === node.tagName,
-      );
-      steps.unshift(
-        same.length > 1 ? `${tag}:nth-of-type(${same.indexOf(node) + 1})` : tag,
-      );
-      node = parent;
-    }
-    return ["body", ...steps].join(" > ");
-  }
-
-  async function onClick(event) {
+  async function onClick(event: MouseEvent) {
     const target = event.target;
     if (!isSelectableTarget(target)) return;
     event.preventDefault();
@@ -182,7 +197,7 @@
       tagName: target.tagName.toLowerCase(),
       path: structuralPath(target),
       pageUrl: location.href,
-      value: "value" in target ? target.value : undefined,
+      value: "value" in target ? (target as HTMLInputElement).value : undefined,
       imageSrc: image?.currentSrc || image?.src || undefined,
       imageAlt: image?.alt || undefined,
       imageWidth: image?.naturalWidth || image?.width || undefined,
@@ -192,11 +207,11 @@
     cleanup();
   }
 
-  function onRuntimeMessage(message) {
+  function onRuntimeMessage(message: { type?: string } | undefined) {
     if (message?.type === MESSAGE_CANCEL) cancel();
   }
 
-  function onKeyCancel(event) {
+  function onKeyCancel(event: KeyboardEvent) {
     if (event.key !== "Escape") return;
     event.preventDefault();
     event.stopPropagation();
@@ -204,17 +219,20 @@
     cancel();
   }
 
-  function isSelectableTarget(target) {
+  function isSelectableTarget(
+    target: EventTarget | null,
+  ): target is HTMLElement {
     return target instanceof HTMLElement && !root.contains(target);
   }
 
-  function imageFromTarget(target) {
+  function imageFromTarget(target: HTMLElement) {
     if (target instanceof HTMLImageElement) return target;
-    if (target instanceof HTMLElement) return target.querySelector("img");
-    return null;
+    return target.querySelector("img");
   }
 
-  async function imageToDataUrl(image) {
+  async function imageToDataUrl(
+    image: HTMLImageElement,
+  ): Promise<string | undefined> {
     if (image.currentSrc?.startsWith("data:")) return image.currentSrc;
     if (image.src?.startsWith("data:")) return image.src;
     const src = image.currentSrc || image.src;
@@ -234,7 +252,7 @@
       const response = await fetch(src);
       const blob = await response.blob();
       if (!blob.type.startsWith("image/")) return undefined;
-      return await new Promise((resolve) => {
+      return await new Promise<string | undefined>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result || ""));
         reader.onerror = () => resolve(undefined);
@@ -245,7 +263,7 @@
     }
   }
 
-  function updateOverlay(rect) {
+  function updateOverlay(rect: DOMRect | null) {
     currentRect = rect ? clampRect(rect) : null;
     if (!currentRect) {
       positionHighlight(0, 0, 0, 0);
@@ -258,7 +276,7 @@
     highlight.style.opacity = "1";
   }
 
-  function clampRect(rect) {
+  function clampRect(rect: DOMRect): Rect {
     const top = Math.max(0, Math.min(innerHeight, rect.top));
     const left = Math.max(0, Math.min(innerWidth, rect.left));
     const right = Math.max(left, Math.min(innerWidth, rect.right));
@@ -273,7 +291,12 @@
     };
   }
 
-  function positionHighlight(left, top, width, height) {
+  function positionHighlight(
+    left: number,
+    top: number,
+    width: number,
+    height: number,
+  ) {
     Object.assign(highlight.style, {
       transform: `translate(${left}px, ${top}px)`,
       width: `${Math.max(0, width)}px`,
@@ -289,4 +312,4 @@
   addEventListener("scroll", onViewportChange, true);
   addEventListener("resize", onViewportChange, true);
   chrome.runtime.onMessage.addListener(onRuntimeMessage);
-})();
+}

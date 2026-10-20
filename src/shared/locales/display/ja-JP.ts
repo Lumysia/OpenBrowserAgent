@@ -58,6 +58,18 @@ export const displayJaJP: DisplayMessages = {
     bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
     syncKeysLocked:
       "API キーは同期されていますが、ロックされています。「設定 → 同期」で同期パスフレーズを入力してください。",
+    teachUnscriptable: "このページは記録できません。",
+    tabRecording:
+      "このタブは記録中です。記録を停止してからエージェントに操作させてください。",
+    teachEmpty:
+      "何も記録されていません。ページでタスクを行ってから停止してください。",
+    teachNoInstructions:
+      "モデルが手順を書きませんでした。もう一度お試しください。",
+    teachGone: "この記録はもうありません。",
+    teachCheckTab: "確認用のタブを開けませんでした。",
+    teachBusy: "別の記録が開いています。先に保存するか破棄してください。",
+    teachTabBusy:
+      "エージェントがこのタブで作業中です。終わってから記録してください。",
   },
   toolSteps: {
     failed: "失敗",

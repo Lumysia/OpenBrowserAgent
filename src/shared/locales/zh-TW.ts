@@ -11,6 +11,7 @@ import { themesZhTW } from "./themes/zh-TW";
 import { settingsZhTW } from "./settings/zh-TW";
 import { setupZhTW } from "./setup/zh-TW";
 import { tasksZhTW } from "./tasks/zh-TW";
+import { teachZhTW } from "./teach/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -540,4 +541,5 @@ export const zhTW: LocaleMessages = {
   settings: settingsZhTW,
   setup: setupZhTW,
   tasks: tasksZhTW,
+  teach: teachZhTW,
 };

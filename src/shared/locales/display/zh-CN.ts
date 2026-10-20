@@ -53,6 +53,14 @@ export const displayZhCN: DisplayMessages = {
     bridgeTimeout: "执行桥没有及时响应。",
     syncKeysLocked:
       "你的 API Key 已同步但处于锁定状态。请在“设置 → 同步”中输入同步口令。",
+    teachUnscriptable: "此页面无法录制。",
+    tabRecording: "这个标签页正在录制。请先停止录制，再让智能体操作。",
+    teachEmpty: "没有录制到任何内容。请先在页面上完成任务，再停止。",
+    teachNoInstructions: "模型没有写出任何说明。请重试。",
+    teachGone: "此录制已不存在。",
+    teachCheckTab: "无法打开用于检查的标签页。",
+    teachBusy: "另一个录制尚未完成。请先保存或丢弃它。",
+    teachTabBusy: "智能体正在这个标签页中工作。请等它完成后再录制。",
   },
   toolSteps: {
     failed: "失败",

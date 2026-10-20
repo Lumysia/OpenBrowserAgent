@@ -1,4 +1,5 @@
 import type { PageToastOptions, PageToastTheme } from "../shared/page-toast";
+import { markOwnUi } from "../shared/page-ui";
 import { applyTheme } from "../ui/apply-theme";
 import { pageShadowCss } from "../ui/page-shadow";
 import { iconSvg, PAGE_TOAST_ICONS } from "./icons";
@@ -27,6 +28,7 @@ export function showPageToast(
   globals[CURRENT_KEY]?.();
 
   const host = document.createElement("div");
+  markOwnUi(host);
   const shadow = host.attachShadow({ mode: "closed" });
   const style = document.createElement("style");
   style.textContent = CSS;

@@ -11,6 +11,7 @@ import { themesEsES } from "./themes/es-ES";
 import { settingsEsES } from "./settings/es-ES";
 import { setupEsES } from "./setup/es-ES";
 import { tasksEsES } from "./tasks/es-ES";
+import { teachEsES } from "./teach/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
@@ -646,4 +647,5 @@ export const esES: LocaleMessages = {
   settings: settingsEsES,
   setup: setupEsES,
   tasks: tasksEsES,
+  teach: teachEsES,
 };

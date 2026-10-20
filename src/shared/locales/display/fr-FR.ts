@@ -62,6 +62,18 @@ export const displayFrFR: DisplayMessages = {
     bridgeTimeout: "Le pont d’exécution n’a pas répondu à temps.",
     syncKeysLocked:
       "Vos clés API sont synchronisées mais verrouillées. Saisissez votre phrase secrète de synchronisation dans Paramètres → Synchronisation.",
+    teachUnscriptable: "Cette page ne peut pas être enregistrée.",
+    tabRecording:
+      "Cet onglet est en cours d’enregistrement. Arrêtez l’enregistrement avant de laisser l’agent y travailler.",
+    teachEmpty:
+      "Rien n’a été enregistré. Faites la tâche sur la page, puis arrêtez.",
+    teachNoInstructions: "Le modèle n’a écrit aucune instruction. Réessayez.",
+    teachGone: "Cet enregistrement n’existe plus.",
+    teachCheckTab: "L’onglet de la vérification n’a pas pu être ouvert.",
+    teachBusy:
+      "Un autre enregistrement est ouvert. Enregistrez-le ou supprimez-le d’abord.",
+    teachTabBusy:
+      "L’agent travaille dans cet onglet. Attendez qu’il ait fini, puis enregistrez.",
   },
   toolSteps: {
     failed: "Échec",

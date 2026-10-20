@@ -12,6 +12,15 @@ const PAGES = {
 <p><div role="combobox" aria-label="Day picker" aria-readonly="true" aria-required="true" tabindex="0">Choose</div></p>
 <p><label>Agree <input type="checkbox" readonly required></label></p>
 <p><label>Name <input></label></p>`,
+  // Secret fields by the shared rule (shared/teach/secret-fields.ts), with
+  // values the user typed.
+  "/secrets": `<title>Secrets</title>
+<p><label>Verification code <input autocomplete="one-time-code" value="731904"></label></p>
+<p><label>Card <input autocomplete="cc-number" value="4111111111111111"></label></p>
+<p><input aria-label="Kennwort" style="-webkit-text-security: disc" value="Masked-1"></p>
+<p><label>Password <input type="password" value="Hidden-2"></label></p>
+<p><label>Expires <select autocomplete="cc-exp-month"><option>01</option><option selected>07</option></select></label></p>
+<p><label>Nickname <input value="Plain-3"></label></p>`,
   // Icon-only controls: no text, no label.
   "/icons": `<title>Icons</title>
 <p><a href="/config/integrations?tab=all"><svg width="16" height="16"><circle cx="8" cy="8" r="4"/></svg></a></p>
@@ -51,6 +60,43 @@ test("snapshot field states", { timeout: BROWSER_TEST_TIMEOUT }, async () => {
     await fixture.close();
   }
 });
+
+test(
+  "snapshot masks the values of secret fields",
+  { timeout: BROWSER_TEST_TIMEOUT },
+  async () => {
+    const fixture = await browserToolFixture((request, response) => {
+      if (!PAGES[request.url]) return false;
+      response
+        .writeHead(200, { "Content-Type": "text/html" })
+        .end(PAGES[request.url]);
+      return true;
+    });
+    try {
+      const tabId = await fixture.open("/secrets");
+      const snapshots = await fixture.run([
+        { name: "snapshot", args: { tabId } },
+      ]);
+      for (const snapshot of snapshots) {
+        for (const secret of [
+          "731904",
+          "4111111111111111",
+          "Masked-1",
+          "Hidden-2",
+          '"07"',
+        ])
+          assert.ok(!snapshot.includes(secret), `${secret} in ${snapshot}`);
+        assert.match(
+          snapshot,
+          /textbox "Verification code" \[?e\d+\]? value="•••"/,
+        );
+        assert.match(snapshot, /Plain-3/);
+      }
+    } finally {
+      await fixture.close();
+    }
+  },
+);
 
 test(
   "unnamed links and buttons get a guessed name and its source",

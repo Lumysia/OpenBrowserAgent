@@ -1,7 +1,7 @@
 import { HEADING_SELECTOR } from "../shared/dom-vocabulary";
+import { containerOf } from "./container";
 import {
   clip,
-  CONTAINER_ROLES,
   CONTROL_CANDIDATES,
   isHidden,
   isInteractive,
@@ -39,26 +39,6 @@ export function raiseFloor(floor: unknown) {
 
 export function refCounter() {
   return counter;
-}
-
-// The nearest container around an element, as "role name". Many controls
-// share a container: its description is kept.
-const containers = new WeakMap<Element, string>();
-function containerOf(element: Element) {
-  for (let node = element.parentElement; node; node = node.parentElement) {
-    const known = containers.get(node);
-    if (known !== undefined) {
-      if (known) return known;
-      continue;
-    }
-    const role = roleOf(node);
-    const described = CONTAINER_ROLES.has(role)
-      ? `${role} ${nameOf(node, role)}`
-      : "";
-    containers.set(node, described);
-    if (described) return described;
-  }
-  return "";
 }
 
 function meaningOf(element: Element): Meaning | undefined {

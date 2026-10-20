@@ -14,6 +14,7 @@ import {
   type RunContext,
   type ToolDefinition,
 } from "./types";
+import { refuseRecordingTabs } from "../teach/guard";
 
 const SEARCH_RESULT_LIMIT = 8;
 const SEARCH_RESULT_POLL_MS = 300;
@@ -126,6 +127,7 @@ async function groupTabs(action: string, input: Record<string, unknown>) {
     return fail("Tab groups are unavailable in this browser.");
   const ids = tabIdList(input);
   if (!ids.length) return fail(`Give tabIds to ${action}.`);
+  await refuseRecordingTabs(ids);
   if (action === "ungroup") {
     await api.tabs.ungroup(ids as [number, ...number[]]);
     return ok(`Ungrouped tab ${ids.join(", ")}.`, { action, tabIds: ids });
@@ -258,6 +260,7 @@ export const tabsTool: ToolDefinition = {
     if (action === "close") {
       const ids = tabIdList(input);
       if (!ids.length) return fail("Give tabId or tabIds to close.");
+      await refuseRecordingTabs(ids);
       await api.tabs.remove(ids);
       return ok(`Closed tab ${ids.join(", ")}.`, { action, tabIds: ids });
     }

@@ -14,7 +14,7 @@ WHAT YOU CAN DO
 AGENTS, SKILLS AND TOOLS
 
 • Create agents with their own instructions, tools and model. Agents can hand work to sub-agents that run in the background.
-• Skills are reusable instructions: pick one yourself, or let the agent use one when a request fits. Write your own, and import or export them.
+• Skills are reusable instructions: pick one yourself, or let the agent use one when a request fits. Write your own, and import or export them. Or do a task once while it records, and the agent turns it into a skill, without keeping what you type.
 • Connect MCP servers to give the agent more tools, such as web search.
 • For exact numbers, the agent can write code and run it in a sandbox on your device that has no internet access.
 • An optional local bridge lets an agent run commands on your computer, only after you install and enable it.

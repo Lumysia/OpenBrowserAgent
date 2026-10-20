@@ -21,6 +21,7 @@ import {
   questionToolQuestions,
   questionToolSubmittedAnswers,
 } from "./question-state";
+import { withConfirmSubmitOptions } from "../../src/shared/teach/check";
 
 // The ask tool's card: the model's questions as a form while the run waits
 // for the answers, then the answers given (none, when nothing waits any
@@ -35,7 +36,9 @@ export function QuestionToolForm({
   onSubmit: (answers: QuestionToolAnswer[]) => void;
 }) {
   const t = useMessages();
-  const questions = questionToolQuestions(part.input);
+  const questions = questionToolQuestions(part.input).map((question) =>
+    withConfirmSubmitOptions(question, t),
+  );
   const submittedAnswers = questionToolSubmittedAnswers(part.output);
   const [selected, setSelected] = React.useState<Record<number, string[]>>({});
   const [customAnswers, setCustomAnswers] = React.useState<

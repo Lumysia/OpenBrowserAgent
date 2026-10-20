@@ -2,6 +2,7 @@ import {
   Bot,
   Braces,
   CalendarClock,
+  CircleCheckBig,
   Camera,
   Code2,
   Download,
@@ -56,6 +57,7 @@ const ICONS: Record<string, Icon> = {
   [TOOL_NAME.devtools]: Gauge,
   [TOOL_NAME.tasks]: CalendarClock,
   [TOOL_NAME.taskResult]: Flag,
+  [TOOL_NAME.skillCheck]: CircleCheckBig,
 };
 
 export function toolIcon(name: string, input: Record<string, unknown> = {}) {

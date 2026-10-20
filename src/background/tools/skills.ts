@@ -8,12 +8,14 @@ import { storage, updateById } from "../../shared/storage";
 import {
   SKILL_ENTRY_PATH,
   createSkillPackage,
+  keepSkillMetadata,
   normalizeSkillName,
   parseSkillFrontmatter,
   skillFileKind,
   skillTooLarge,
 } from "../../shared/skills";
 import { SKILL_MAX_CHARS } from "../../shared/config";
+import { guardSkillEdit } from "../../shared/teach/skill-files";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { Skill } from "../../shared/types";
 import { fail, ok, schema, type ToolDefinition } from "./types";
@@ -56,11 +58,14 @@ export const skillsTool: ToolDefinition = {
       const content = String(input.content ?? "").trim();
       if (!content)
         return fail("content (the SKILL.md instructions) is required.");
-      const skill = createSkillPackage({
-        name,
-        description: trimmedString(input.description),
-        instruction: content,
-      });
+      const skill = guardSkillEdit(
+        undefined,
+        createSkillPackage({
+          name,
+          description: trimmedString(input.description),
+          instruction: content,
+        }),
+      );
       if (skillTooLarge(skill)) return fail(TOO_LARGE);
       await storage.skills.update((skills) => [...skills, skill]);
       run.skills.push(skill);
@@ -92,28 +97,35 @@ export const skillsTool: ToolDefinition = {
       content = file.content.replace(find, () => content);
     } else if (action !== "write")
       return fail('action must be "create", "write" or "patch".');
+    if (file && path === SKILL_ENTRY_PATH)
+      content = keepSkillMetadata(file.content, content);
     const now = Date.now();
     const meta = parseSkillFrontmatter(
       path === SKILL_ENTRY_PATH ? content : "",
     );
     // Applied to the skill as stored when written: files and fields changed
     // elsewhere since it was read stay.
-    const edit = (skill: Skill): Skill => ({
-      ...skill,
-      ...(meta.name ? { name: normalizeSkillName(meta.name) } : {}),
-      ...(meta.description ? { description: meta.description } : {}),
-      files: [
-        ...skill.files.filter((item) => item.path !== path),
+    const edit = (skill: Skill): Skill =>
+      guardSkillEdit(
+        skill,
         {
-          path,
-          kind: file?.kind || skillFileKind(path),
-          encoding: file?.encoding || "utf-8",
-          content,
+          ...skill,
+          ...(meta.name ? { name: normalizeSkillName(meta.name) } : {}),
+          ...(meta.description ? { description: meta.description } : {}),
+          files: [
+            ...skill.files.filter((item) => item.path !== path),
+            {
+              path,
+              kind: file?.kind || skillFileKind(path),
+              encoding: file?.encoding || "utf-8",
+              content,
+              updatedAt: now,
+            },
+          ],
           updatedAt: now,
         },
-      ],
-      updatedAt: now,
-    });
+        now,
+      );
     if (skillTooLarge(edit(existing))) return fail(TOO_LARGE);
     const next = customized
       ? edit(customized)
