@@ -44,7 +44,7 @@ export default defineContentScript({
         sendResponse: (value: unknown) => void,
       ) => {
         if (message?.type === TEACH_PAGE_MESSAGE.example) {
-          sendResponse({ value: capture.exampleOf(String(message.stepId)) });
+          sendResponse(capture.exampleOf(String(message.stepId)));
           return;
         }
         if (message?.type !== TEACH_PAGE_MESSAGE.end) return;

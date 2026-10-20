@@ -11,3 +11,8 @@ export type TeachPageConfig = {
   // The pill's words, in the user's UI language.
   messages: { recording: string; stop: string; stopHint: string };
 };
+
+// The page's answer when the user ticks "keep as an example": the value
+// while the page still has it and the field is not secret now (a page can
+// make a field secret after it was committed); `secret` when it is.
+export type ExampleReply = { value?: string; secret?: boolean };

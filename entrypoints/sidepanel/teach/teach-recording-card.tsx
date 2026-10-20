@@ -108,7 +108,7 @@ function TeachStepRow({
         {field?.example && (
           <span className="teach-step-note">{words.exampleKept}</span>
         )}
-        {gone && !field?.example && (
+        {gone && !field?.example && !field?.secret && (
           <span className="teach-step-note">{words.exampleGone}</span>
         )}
       </span>

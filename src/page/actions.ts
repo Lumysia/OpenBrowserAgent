@@ -4,6 +4,7 @@ import { compact } from "../shared/text";
 import { clip } from "./dom";
 import { click, drag, hover } from "./pointer-actions";
 import { RefError, resolveRef } from "./refs";
+import { shownFieldValue } from "./secret-field";
 import {
   describe,
   failed,
@@ -134,7 +135,7 @@ function type(
         : element.value !== next;
     if (rejected)
       return failed(
-        `${describe(element)} did not accept the text (value is now "${clip(element.value, QUOTE_MAX_CHARS)}").`,
+        `${describe(element)} did not accept the text (value is now "${clip(shownFieldValue(element, element.value), QUOTE_MAX_CHARS)}").`,
       );
     return submit ? press(element, "Enter") : ok();
   }

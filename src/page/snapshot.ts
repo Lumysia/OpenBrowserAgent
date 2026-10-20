@@ -15,6 +15,7 @@ import {
 } from "./dom";
 import { nameSourceNote } from "./guessed-name";
 import { refFor } from "./refs";
+import { shownFieldValue } from "./secret-field";
 
 // The page as one line per meaningful node:
 //   - heading [e3] h1: Web browser
@@ -272,7 +273,9 @@ function controlStates(
     const selected = Array.from(element.selectedOptions)
       .map((option) => compact(option.text))
       .join(", ");
-    states.push(`value="${clip(selected, VALUE_MAX)}"`);
+    states.push(
+      `value="${clip(shownFieldValue(element, selected), VALUE_MAX)}"`,
+    );
     const all = Array.from(element.options).map((option) =>
       compact(option.text),
     );
@@ -290,15 +293,15 @@ function controlStates(
       states.push(
         (element as HTMLInputElement).checked ? "checked" : "unchecked",
       );
-    else if (type === "password")
-      states.push(element.value ? 'value="•••"' : 'value=""');
     else if (!["button", "submit", "reset", "image", "file"].includes(type))
-      states.push(`value="${clip(element.value, VALUE_MAX)}"`);
+      states.push(
+        `value="${clip(shownFieldValue(element, element.value), VALUE_MAX)}"`,
+      );
     if (type !== "text" && type !== "textarea" && role === "textbox")
       states.push(`type=${type}`);
   } else if (role === "textbox" && (element as HTMLElement).isContentEditable) {
     states.push(
-      `value="${clip(compact((element as HTMLElement).innerText), VALUE_MAX)}"`,
+      `value="${clip(shownFieldValue(element, compact((element as HTMLElement).innerText)), VALUE_MAX)}"`,
     );
   }
   const checked = attr("aria-checked");

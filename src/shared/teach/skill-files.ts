@@ -8,6 +8,7 @@ import {
   withSkillMetadata,
 } from "../skills";
 import type { Skill, SkillFile, SkillInvokeMode } from "../types";
+import { isSecretStep } from "./secret-fields";
 import { fieldLabel } from "./transcript";
 import { originOf } from "./urls";
 import {
@@ -112,7 +113,7 @@ function inputsOf(steps: TeachStep[]): DemonstrationInput[] {
   return steps.flatMap((step, index) => {
     const typed = step.kind === TEACH_STEP_KIND.field;
     if (!typed && !step.varies) return [];
-    const sensitive = !!step.field?.secret;
+    const sensitive = isSecretStep(step);
     return [
       {
         label: fieldLabel(step.target),
@@ -129,17 +130,18 @@ function inputsOf(steps: TeachStep[]): DemonstrationInput[] {
 // The steps without anything the recorder keeps only for itself.
 function demonstrationStep(step: TeachStep, index: number) {
   const { id: _id, at: _at, field, choice, ...rest } = step;
+  const secret = isSecretStep(step);
   const kept = field && {
     inputType: field.inputType,
     length: field.length,
-    sensitive: field.secret,
+    sensitive: secret,
     ...(field.submitted ? { submitted: true } : {}),
-    ...(field.example && !field.secret ? { example: field.example } : {}),
+    ...(field.example && !secret ? { example: field.example } : {}),
   };
   return {
     step: index + 1,
     ...rest,
-    ...(choice !== undefined && !field?.secret ? { choice } : {}),
+    ...(choice !== undefined && !secret ? { choice } : {}),
     ...(kept ? { field: kept } : {}),
   };
 }

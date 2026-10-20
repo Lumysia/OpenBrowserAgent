@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   isSecretField,
+  isSecretStep,
   type FieldSignals,
 } from "../src/shared/teach/secret-fields";
+import { demonstrationJson } from "../src/shared/teach/skill-files";
+import { buildTranscript } from "../src/shared/teach/transcript";
+import type { TeachStep } from "../src/shared/teach/types";
 
 const input = (signals: Partial<FieldSignals>): FieldSignals => ({
   tag: "input",
@@ -73,9 +77,67 @@ test("disguised secret fields are found by id, name, label or placeholder", () =
     { label: "パスワード" },
     { label: "비밀번호" },
     { label: "Contraseña" },
+    // The languages the UI ships in, and compound words.
+    { label: "Kennwort" },
+    { label: "Neues Kennwort wiederholen" },
+    { label: "Sicherheitscode" },
+    { label: "Kartennummer" },
+    { label: "Kreditkartennummer" },
+    { label: "Clave" },
+    { label: "Número de tarjeta" },
+    { label: "Código de seguridad" },
+    { label: "Código de segurança" },
+    { label: "Número do cartão" },
+    { label: "Numéro de carte" },
+    { label: "Code de vérification" },
+    { label: "Пароль" },
+    { label: "Введите пароля" },
+    { label: "セキュリティコード" },
+    { label: "카드번호" },
   ];
   for (const signals of secret)
     assert.equal(isSecretField(input(signals)), true, JSON.stringify(signals));
+});
+
+test("a field the page masks with CSS is secret", () => {
+  assert.equal(isSecretField(input({ label: "Code", masked: true })), true);
+  assert.equal(isSecretField(input({ label: "Code", masked: false })), false);
+});
+
+test("a recorded step is judged again from what was kept of it", () => {
+  const page = { title: "Sign in", url: "https://app.test/in" };
+  const kennwort: TeachStep = {
+    id: "1",
+    kind: "field",
+    at: 1,
+    page,
+    target: { role: "textbox", name: "Kennwort", tag: "input" },
+    field: { inputType: "text", length: 8, secret: false, example: "Geheim-1" },
+  };
+  const nickname: TeachStep = {
+    ...kennwort,
+    id: "2",
+    target: { role: "textbox", name: "Nickname", tag: "input" },
+    field: { inputType: "text", length: 4, secret: false, example: "Kurt" },
+  };
+  assert.equal(isSecretStep(kennwort), true);
+  assert.equal(isSecretStep(nickname), false);
+  assert.equal(
+    isSecretStep({ ...nickname, field: { ...nickname.field!, secret: true } }),
+    true,
+  );
+  const session = {
+    steps: [kennwort, nickname],
+    startUrl: page.url,
+    startedAt: 1,
+    purpose: "",
+    varies: "",
+    dropped: 0,
+  };
+  for (const text of [demonstrationJson(session), buildTranscript(session)]) {
+    assert.ok(!text.includes("Geheim-1"), text);
+    assert.ok(text.includes("Kurt"), text);
+  }
 });
 
 test("ordinary fields are not secret", () => {

@@ -1,8 +1,12 @@
 // Whether a form field is secret: its value is never kept, not even as an
-// example the user ticks, and the skill asks for it at run time or leaves
-// it to the browser's autofill. Decided from the field's own structure
-// (type, autocomplete tokens, id, name, label, placeholder), never from the
-// site. Errs on the side of secret.
+// example the user ticks, the skill asks for it at run time or leaves it to
+// the browser's autofill, and the agent's page snapshot shows it masked.
+// Decided from the field's own structure (type, autocomplete tokens, CSS
+// masking, id, name, label, placeholder), never from the site. Errs on the
+// side of secret. The one rule for "secret" everywhere: page code reads the
+// signals with page/secret-field.ts.
+
+import type { TeachStep } from "./types";
 
 export type FieldSignals = {
   tag: string;
@@ -15,6 +19,8 @@ export type FieldSignals = {
   // The field was a password field at some point (a show-password toggle
   // turns it into a text field).
   wasPassword?: boolean;
+  // The page masks what is typed with CSS (`-webkit-text-security`).
+  masked?: boolean;
 };
 
 const SECRET_AUTOCOMPLETE = new Set([
@@ -49,6 +55,9 @@ const SECRET_WORDS = new Set([
   "contrasena",
   "senha",
   "mdp",
+  "clave",
+  "cryptogramme",
+  "tan",
 ]);
 
 // Word sequences.
@@ -70,10 +79,28 @@ const SECRET_PHRASES = [
   "secret key",
   "mot de passe",
   "code de sécurité",
+  "code de vérification",
+  "numéro de carte",
+  "código de seguridad",
+  "código de verificación",
+  "número de tarjeta",
+  "código de segurança",
+  "código de verificação",
+  "número do cartão",
 ];
 
-// Scripts without spaces between words: a substring is enough.
+// Parts of compound words (German) and scripts without spaces between
+// words, or with inflected endings: a substring is enough.
 const SECRET_SUBSTRINGS = [
+  "kennwort",
+  "passwort",
+  "kartennummer",
+  "sicherheitscode",
+  "prüfziffer",
+  "prüfnummer",
+  "bestätigungscode",
+  "einmalcode",
+  "парол",
   "密码",
   "密碼",
   "口令",
@@ -105,7 +132,8 @@ export function fieldWords(value: string | undefined) {
 
 function textIsSecret(value: string | undefined) {
   if (!value) return false;
-  if (SECRET_SUBSTRINGS.some((part) => value.includes(part))) return true;
+  const lower = value.toLowerCase();
+  if (SECRET_SUBSTRINGS.some((part) => lower.includes(part))) return true;
   const words = fieldWords(value);
   if (!words) return false;
   // "2fa", "cvv2" stay whole once digits are split off.
@@ -129,10 +157,28 @@ function autocompleteIsSecret(value: string | undefined) {
 }
 
 export function isSecretField(field: FieldSignals) {
-  if (field.wasPassword || field.type?.toLowerCase() === "password")
-    return true;
+  if (field.wasPassword || field.masked) return true;
+  if (field.type?.toLowerCase() === "password") return true;
   if (autocompleteIsSecret(field.autocomplete)) return true;
   return [field.id, field.name, field.label, field.placeholder].some(
     textIsSecret,
   );
+}
+
+// A recorded field step, judged again by the rule from what the recording
+// kept of it: a field the page reported as secret stays secret, and one
+// whose words the rule knows now becomes secret (when an example is ticked
+// and when the skill is saved).
+export function isSecretStep(step: Pick<TeachStep, "target" | "field">) {
+  if (!step.field) return false;
+  if (step.field.secret) return true;
+  const target = step.target;
+  return isSecretField({
+    tag: target?.tag || "",
+    type: step.field.inputType,
+    id: target?.id,
+    name: target?.nameAttribute,
+    label: [target?.label, target?.name].filter(Boolean).join(" ") || undefined,
+    placeholder: target?.placeholder,
+  });
 }

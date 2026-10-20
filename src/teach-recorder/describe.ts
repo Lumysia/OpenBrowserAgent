@@ -3,7 +3,6 @@ import { clip, isInteractive, namedFrom, roleOf } from "../page/dom";
 import { structuralPath } from "../page/structural-path";
 import { HEADING_SELECTOR } from "../shared/dom-vocabulary";
 import { editingHost } from "../shared/dom-vocabulary";
-import type { FieldSignals } from "../shared/teach/secret-fields";
 import { TEACH_LIMITS, type TeachTarget } from "../shared/teach/types";
 import { stableAttribute, urlPattern } from "../shared/teach/urls";
 import { compact } from "../shared/text";
@@ -133,27 +132,6 @@ export function clickedElement(path: EventTarget[]) {
   if (!first || first === document.body) return undefined;
   const text = compact((first as HTMLElement).innerText);
   return text && text.length <= TEACH_LIMITS.nameChars ? first : undefined;
-}
-
-// What the secret-field rules read from a field.
-export function fieldSignals(
-  element: Element,
-  target: TeachTarget,
-  wasPassword: boolean,
-): FieldSignals {
-  return {
-    tag: element.localName,
-    type: element.getAttribute("type") || undefined,
-    autocomplete: element.getAttribute("autocomplete") || undefined,
-    id: element.id || undefined,
-    name: element.getAttribute("name") || undefined,
-    label:
-      [target.label, target.name, element.getAttribute("aria-label")]
-        .filter(Boolean)
-        .join(" ") || undefined,
-    placeholder: target.placeholder,
-    wasPassword,
-  };
 }
 
 // What kind of field it is, for the skill: an input's type, or the tag.

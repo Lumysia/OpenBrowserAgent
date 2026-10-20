@@ -1,3 +1,4 @@
+import { isSecretStep } from "./secret-fields";
 import { currentPage } from "./steps";
 import {
   TEACH_STEP_KIND,
@@ -43,7 +44,7 @@ export function fieldLabel(target: TeachTarget | undefined) {
 function fieldText(step: TeachStep) {
   const field = step.field!;
   const label = fieldLabel(step.target);
-  const value = field.secret
+  const value = isSecretStep(step)
     ? `«secret value withheld: field '${label}' (sensitive input: never store or ask for it in chat)»`
     : field.example
       ? `example value ${quoted(field.example)}`

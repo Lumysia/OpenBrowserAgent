@@ -7,6 +7,7 @@ import {
   type TeachMessage,
 } from "../../shared/teach/messages";
 import { sessionOfTab, teachSessions } from "../../shared/teach/records";
+import { isSecretStep } from "../../shared/teach/secret-fields";
 import {
   TEACH_STATE,
   TEACH_STEP_KIND,
@@ -21,6 +22,7 @@ import {
   updateSession,
   whenRecordingStops,
 } from "./recorder";
+import type { ExampleReply } from "../../shared/teach/page-protocol";
 import { openCheckTab, redoSteps, saveRecording } from "./save";
 import { writeDraft } from "./writer";
 
@@ -55,8 +57,12 @@ function changeStep(
   }));
 }
 
-// The value of a field step from the page that still has it.
-async function pageExample(session: TeachSession, stepId: string) {
+// The value of a field step from the page that still has it, judged
+// secret or not by the page as it is now.
+async function pageExample(
+  session: TeachSession,
+  stepId: string,
+): Promise<ExampleReply> {
   for (const tabId of session.tabIds) {
     const reply = (await getBrowserApi()
       .tabs.sendMessage(
@@ -64,30 +70,35 @@ async function pageExample(session: TeachSession, stepId: string) {
         { type: TEACH_PAGE_MESSAGE.example, stepId },
         { frameId: 0 },
       )
-      .catch(() => undefined)) as { value?: unknown } | undefined;
-    if (typeof reply?.value === "string") return reply.value;
+      .catch(() => undefined)) as ExampleReply | undefined;
+    if (reply?.secret === true) return { secret: true };
+    if (typeof reply?.value === "string") return { value: reply.value };
   }
-  return undefined;
+  return {};
 }
 
+// Whether the example is as asked; false when the page no longer has the
+// value or the field is secret (then the step is marked secret).
 async function keepExample(tabId: number, stepId: string, keep: boolean) {
   const session = sessionOfTab(await teachSessions.get(), tabId);
   const step = session?.steps.find((item) => item.id === stepId);
   if (!session || step?.kind !== TEACH_STEP_KIND.field || !step.field)
     throw new Error("There is no such field.");
-  if (step.field.secret) throw new Error("Secret fields keep no example.");
-  const value = keep ? await pageExample(session, stepId) : undefined;
-  if (keep && value === undefined) return false;
+  const reply =
+    keep && !isSecretStep(step) ? await pageExample(session, stepId) : {};
+  const secret = isSecretStep(step) || reply.secret === true;
+  const value = secret ? undefined : reply.value;
   await changeStep(tabId, stepId, (current) => [
     {
       ...current,
       field: {
         ...current.field!,
+        secret: current.field!.secret || secret,
         example: value ? value.slice(0, EXAMPLE_CHARS) : undefined,
       },
     },
   ]);
-  return true;
+  return !keep || value !== undefined;
 }
 
 async function rewrite(tabId: number) {

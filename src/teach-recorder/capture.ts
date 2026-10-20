@@ -1,6 +1,7 @@
 import { editingHost } from "../shared/dom-vocabulary";
 import { isOwnUiEvent } from "../shared/page-ui";
-import { isSecretField } from "../shared/teach/secret-fields";
+import { isSecretElement } from "../page/secret-field";
+import type { ExampleReply } from "../shared/teach/page-protocol";
 import {
   TEACH_STEP_KIND,
   type TeachEvent,
@@ -10,7 +11,6 @@ import { urlPattern } from "../shared/teach/urls";
 import {
   clickedElement,
   describeElement,
-  fieldSignals,
   inputTypeOf,
   isFormField,
 } from "./describe";
@@ -30,8 +30,7 @@ const MODIFIER_KEYS = new Set(["Control", "Meta", "Alt", "Shift", "AltGraph"]);
 
 export type Capture = {
   stop(): void;
-  // The value of a field step, while this page still has it.
-  exampleOf(stepId: string): string | undefined;
+  exampleOf(stepId: string): ExampleReply;
 };
 
 export function startCapture(report: (event: TeachEvent) => void): Capture {
@@ -39,8 +38,10 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   const dirty = new Set<Element>();
   // Fields that were password fields at some point.
   const passwords = new WeakSet<Element>();
-  // Values of committed fields that are not secret, by step.
-  const values = new Map<string, string>();
+  // Committed fields that are not secret and their values, by step.
+  const values = new Map<string, { field: Element; value: string }>();
+  // Open shadow roots whose type changes are watched.
+  const watched = new WeakSet<Node>();
 
   const page = () => ({
     title: document.title.trim(),
@@ -75,10 +76,8 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       "value" in field
         ? String((field as HTMLInputElement).value)
         : (field as HTMLElement).innerText || "";
-    const secret = isSecretField(
-      fieldSignals(field, base.target!, passwords.has(field)),
-    );
-    if (!secret) values.set(base.id, value);
+    const secret = isSecretElement(field, passwords.has(field));
+    if (!secret) values.set(base.id, { field, value });
     const length =
       field instanceof HTMLInputElement && field.type === "file"
         ? field.files?.length || 0
@@ -114,7 +113,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
     if (!field) return;
     if (field instanceof HTMLSelectElement) {
       const base = step(TEACH_STEP_KIND.choose, field);
-      const secret = isSecretField(fieldSignals(field, base.target!, false));
+      const secret = isSecretElement(field, passwords.has(field));
       const choice = Array.from(field.selectedOptions)
         .map((option) => option.label.trim())
         .join(", ");
@@ -151,8 +150,15 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   }
 
   function onFocusIn(event: FocusEvent) {
+    watchShadowRoots(event);
     const field = fieldOf(event);
     if (field) notePassword(field);
+  }
+
+  // Before the page's own handlers run (a show-password button in a shadow
+  // root): watch the shadow roots the pointer is in.
+  function onPointerDown(event: Event) {
+    watchShadowRoots(event);
   }
 
   function onClick(event: MouseEvent) {
@@ -191,27 +197,39 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   }
 
   // A show-password toggle turns a password field into a text field: it
-  // stays secret.
+  // stays secret. Watched in the document and in each open shadow root
+  // (found at the start, or when focus or the pointer goes into one).
   const types = new MutationObserver((records) => {
     for (const record of records)
       if (record.oldValue === "password" && record.target instanceof Element)
         passwords.add(record.target);
   });
-  types.observe(document.documentElement, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["type"],
-    attributeOldValue: true,
-  });
-  document
-    .querySelectorAll('input[type="password"]')
-    .forEach((element) => passwords.add(element));
+  function watchRoot(root: Document | ShadowRoot) {
+    if (watched.has(root)) return;
+    watched.add(root);
+    types.observe(root, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["type"],
+      attributeOldValue: true,
+    });
+    root.querySelectorAll("*").forEach((element) => {
+      notePassword(element);
+      if (element.shadowRoot) watchRoot(element.shadowRoot);
+    });
+  }
+  function watchShadowRoots(event: Event) {
+    for (const node of event.composedPath())
+      if (node instanceof ShadowRoot) watchRoot(node);
+  }
+  watchRoot(document);
 
   const listeners: [string, EventListener][] = [
     ["input", onInput],
     ["change", onChange],
     ["focusout", onFocusOut as EventListener],
     ["focusin", onFocusIn as EventListener],
+    ["pointerdown", onPointerDown],
     ["click", onClick as EventListener],
     ["keydown", onKeyDown as EventListener],
   ];
@@ -226,6 +244,13 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       dirty.clear();
       values.clear();
     },
-    exampleOf: (stepId) => values.get(stepId),
+    exampleOf(stepId) {
+      const entry = values.get(stepId);
+      if (!entry) return {};
+      if (!isSecretElement(entry.field, passwords.has(entry.field)))
+        return { value: entry.value };
+      values.delete(stepId);
+      return { secret: true };
+    },
   };
 }
