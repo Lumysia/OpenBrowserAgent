@@ -10,6 +10,9 @@ export type TeachPageConfig = {
   theme: PageToastTheme;
   // The pill's words, in the user's UI language.
   messages: { recording: string; stop: string; stopHint: string };
+  // The recording's fingerprint key and the values typed on its earlier
+  // pages (shared/teach/redact.ts).
+  typed: { key: string; fingerprints: string[] };
 };
 
 // The page's answer when the user ticks "keep as an example": the value

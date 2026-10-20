@@ -21,3 +21,9 @@ Recording a skill (`src/teach-recorder/`, `src/shared/teach/`, `src/background/t
 | [browser-use/workflow-use](https://github.com/browser-use/workflow-use)                                      | AGPL-3.0   | ideas: the model names the workflow and its inputs, choices become instructions          |
 | Chrome DevTools Recorder / [puppeteer/replay](https://github.com/puppeteer/replay), Playwright codegen       | Apache-2.0 | step shape and locator priority (role and name first)                                    |
 | [Agent Skills specification](https://agentskills.io/specification), Agent Workflow Memory (arXiv:2409.07429) | Apache-2.0 | skill name and description rules, `references/` files; text workflows with inputs        |
+
+## Libraries added for teach mode
+
+| Library                                                    | Licence | Used for                                                                       |
+| ---------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| [@noble/hashes](https://github.com/paulmillr/noble-hashes) | MIT     | HMAC-SHA-256 fingerprints of typed values, to find their echoes on later pages |

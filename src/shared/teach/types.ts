@@ -93,8 +93,12 @@ export type TeachStep = {
   varies?: boolean;
 };
 
-// What the content script reports: a step before the background numbers it.
-export type TeachEvent = Omit<TeachStep, "leadsTo" | "varies">;
+// What the content script reports: a step before the background numbers it,
+// with the fingerprints of values typed since its last report (see
+// redact.ts), which the recording keeps apart from its steps.
+export type TeachEvent = Omit<TeachStep, "leadsTo" | "varies"> & {
+  typed?: string[];
+};
 
 export const TEACH_STATE = {
   recording: "recording",
@@ -133,6 +137,10 @@ export type TeachSession = {
   // A recording that redoes a skill from one of its steps on: the skill,
   // and the steps kept from its demonstration.
   redo?: { skillId: string; fromStep: number };
+  // Fingerprints of the values typed so far and their key (redact.ts), so
+  // later pages and navigations lose echoes of them. Never in the skill.
+  typedKey?: string;
+  typed?: string[];
 };
 
 // What the user starts a recording with.

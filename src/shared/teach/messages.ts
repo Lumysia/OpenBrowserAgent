@@ -23,6 +23,9 @@ export const TEACH_MESSAGE = {
 export const TEACH_PAGE_MESSAGE = {
   // The value of a field the page still has, for an example the user keeps.
   example: "teach:page:example",
+  // A URL the tab moved to (in the same document), without echoes of what
+  // was typed there.
+  redact: "teach:page:redact",
   // The recording ended: remove the pill and stop listening.
   end: "teach:page:end",
 } as const;

@@ -20,6 +20,11 @@ import {
   type TeachStart,
   type TeachStep,
 } from "../../shared/teach/types";
+import {
+  mergeFingerprints,
+  newFingerprintKey,
+  redactStrings,
+} from "../../shared/teach/redact";
 import { cleanUrl, hostOf, urlPattern } from "../../shared/teach/urls";
 import { pageToastTheme } from "../page-toast";
 
@@ -56,15 +61,21 @@ export async function updateSession(
   return result;
 }
 
-async function pageConfig(): Promise<TeachPageConfig> {
-  const [preferences, language] = await Promise.all([
+async function pageConfig(tabId: number): Promise<TeachPageConfig> {
+  const [preferences, language, sessions] = await Promise.all([
     storage.preferences.get(),
     storage.language.get(),
+    teachSessions.get(),
   ]);
   const messages = getMessages(language).teach.pill;
+  const session = sessionOfTab(sessions, tabId);
   return {
     theme: pageToastTheme(preferences.colorScheme, preferences.accentColor),
     messages,
+    typed: {
+      key: session?.typedKey || "",
+      fingerprints: session?.typed || [],
+    },
   };
 }
 
@@ -81,7 +92,7 @@ async function injectRecorder(tabId: number) {
     const [result] = await scripting.executeScript({
       target,
       func: callRecorder,
-      args: [TEACH_RECORDER_GLOBAL, await pageConfig()],
+      args: [TEACH_RECORDER_GLOBAL, await pageConfig(tabId)],
     });
     return result?.result === true;
   } catch {
@@ -133,6 +144,8 @@ export async function startRecording(
     state: TEACH_STATE.recording,
     dropped: 0,
     ...(start.redo ? { redo: start.redo } : {}),
+    typedKey: newFingerprintKey(),
+    typed: [],
   };
   await teachSessions.update((sessions) => {
     const next = { ...sessions };
@@ -166,37 +179,65 @@ export async function discardRecording(tabId: number) {
   await Promise.all(session.tabIds.map(endRecorder));
 }
 
-export async function recordEvent(tabId: number, event: TeachEvent) {
-  await updateSession(tabId, (session) => {
-    if (session.state !== TEACH_STATE.recording) return session;
-    const change = addTeachStep(session.steps, event);
-    return {
-      ...session,
-      steps: change.steps,
-      dropped: session.dropped + (change.dropped ? 1 : 0),
-      lastEventAt: Date.now(),
-    };
+// A step into the recording: its fingerprints of typed values join the
+// recording's, and the step loses any echo of a value typed so far, on any
+// of its pages (the page took out what it knew already; navigations and
+// tabs the background sees come only through here).
+function withEvent(
+  session: TeachSession,
+  event: TeachEvent,
+  add: typeof addTeachStep = addTeachStep,
+): TeachSession {
+  if (session.state !== TEACH_STATE.recording) return session;
+  const { typed: added, ...rest } = event;
+  const typed = mergeFingerprints(session.typed, added);
+  const step = redactStrings(rest, {
+    key: session.typedKey,
+    fingerprints: typed,
   });
+  const change = add(session.steps, step);
+  return {
+    ...session,
+    typed,
+    steps: change.steps,
+    dropped: session.dropped + (change.dropped ? 1 : 0),
+    lastEventAt: Date.now(),
+  };
 }
 
-function recordNavigation(tabId: number, url: string, title = "") {
+export async function recordEvent(tabId: number, event: TeachEvent) {
+  await updateSession(tabId, (session) => withEvent(session, event));
+}
+
+// The URL as the page redacts it: a page that moved within its document
+// still knows what was typed in it, including a field not committed yet.
+async function redactedInPage(tabId: number, pattern: string) {
+  const reply = await getBrowserApi()
+    .tabs.sendMessage(
+      tabId,
+      { type: TEACH_PAGE_MESSAGE.redact, url: pattern },
+      { frameId: 0 },
+    )
+    .catch(() => undefined);
+  return typeof reply === "string" && reply ? reply : pattern;
+}
+
+async function recordNavigation(tabId: number, url: string) {
   const pattern = urlPattern(url);
   if (!pattern) return;
-  return updateSession(tabId, (session) => {
-    if (session.state !== TEACH_STATE.recording) return session;
-    const change = addNavigation(session.steps, {
-      id: crypto.randomUUID(),
-      kind: TEACH_STEP_KIND.navigate,
-      at: Date.now(),
-      page: { title, url: pattern },
-    });
-    return {
-      ...session,
-      steps: change.steps,
-      dropped: session.dropped + (change.dropped ? 1 : 0),
-      lastEventAt: Date.now(),
-    };
-  });
+  const page = { title: "", url: await redactedInPage(tabId, pattern) };
+  return updateSession(tabId, (session) =>
+    withEvent(
+      session,
+      {
+        id: crypto.randomUUID(),
+        kind: TEACH_STEP_KIND.navigate,
+        at: Date.now(),
+        page,
+      },
+      addNavigation,
+    ),
+  );
 }
 
 // What a recording's own steps are made of besides the page's: where its
@@ -237,23 +278,20 @@ export function setupTeachRecorder() {
       .then(
         (session) =>
           session &&
-          updateSession(session.tabId, (current) => {
-            const change = addTeachStep(current.steps, {
-              id: crypto.randomUUID(),
-              kind: TEACH_STEP_KIND.openTab,
-              at: Date.now(),
-              page: {
-                title: "",
-                url: urlPattern(tab.pendingUrl || tab.url) || "",
+          updateSession(session.tabId, (current) =>
+            withEvent(
+              { ...current, tabIds: [...current.tabIds, tabId] },
+              {
+                id: crypto.randomUUID(),
+                kind: TEACH_STEP_KIND.openTab,
+                at: Date.now(),
+                page: {
+                  title: "",
+                  url: urlPattern(tab.pendingUrl || tab.url) || "",
+                },
               },
-            });
-            return {
-              ...current,
-              tabIds: [...current.tabIds, tabId],
-              steps: change.steps,
-              lastEventAt: Date.now(),
-            };
-          }),
+            ),
+          ),
       )
       .catch(warn);
   });

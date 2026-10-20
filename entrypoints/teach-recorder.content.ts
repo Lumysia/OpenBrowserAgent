@@ -30,8 +30,9 @@ export default defineContentScript({
       if (globals.__obaTeachRecorderActive) return true;
       const send = (message: unknown) =>
         chrome.runtime.sendMessage(message).catch(() => undefined);
-      const capture = startCapture((event) =>
-        send({ type: TEACH_MESSAGE.event, event }),
+      const capture = startCapture(
+        (event) => send({ type: TEACH_MESSAGE.event, event }),
+        config,
       );
       const removePill = showRecordingPill(config, () =>
         send({ type: TEACH_MESSAGE.pageStop }),
@@ -39,12 +40,16 @@ export default defineContentScript({
       const recorder = { capture, removePill };
       globals.__obaTeachRecorderActive = recorder;
       const onMessage = (
-        message: { type?: string; stepId?: string } | undefined,
+        message: { type?: string; stepId?: string; url?: string } | undefined,
         _sender: unknown,
         sendResponse: (value: unknown) => void,
       ) => {
         if (message?.type === TEACH_PAGE_MESSAGE.example) {
           sendResponse(capture.exampleOf(String(message.stepId)));
+          return;
+        }
+        if (message?.type === TEACH_PAGE_MESSAGE.redact) {
+          sendResponse(capture.redact(String(message.url || "")));
           return;
         }
         if (message?.type !== TEACH_PAGE_MESSAGE.end) return;

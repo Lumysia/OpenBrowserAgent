@@ -1,7 +1,10 @@
 import { editingHost } from "../shared/dom-vocabulary";
 import { isOwnUiEvent } from "../shared/page-ui";
 import { isSecretElement } from "../page/secret-field";
-import type { ExampleReply } from "../shared/teach/page-protocol";
+import type {
+  ExampleReply,
+  TeachPageConfig,
+} from "../shared/teach/page-protocol";
 import {
   TEACH_STEP_KIND,
   type TeachEvent,
@@ -14,6 +17,7 @@ import {
   inputTypeOf,
   isFormField,
 } from "./describe";
+import { typedValues } from "./typed-values";
 
 // Listens to what the user does on the page, in the capture phase so the
 // page cannot hide it, and reports steps: trusted clicks, changes of
@@ -22,7 +26,8 @@ import {
 // step says which field, its type and the entry's length; the value stays
 // here (for this document only) in case the user keeps it as an example,
 // which the background asks for by step and only for fields that are not
-// secret.
+// secret. Every step passes through `send`, which takes out the page's
+// echoes of what was typed (typed-values.ts).
 
 // Ctrl/Cmd + these keys in a field edit text; they are not steps.
 const EDITING_KEYS = new Set(["a", "c", "v", "x", "z", "y"]);
@@ -31,9 +36,14 @@ const MODIFIER_KEYS = new Set(["Control", "Meta", "Alt", "Shift", "AltGraph"]);
 export type Capture = {
   stop(): void;
   exampleOf(stepId: string): ExampleReply;
+  // A URL the tab moved to, without echoes of what was typed here.
+  redact(url: string): string;
 };
 
-export function startCapture(report: (event: TeachEvent) => void): Capture {
+export function startCapture(
+  report: (event: TeachEvent) => void,
+  config: TeachPageConfig,
+): Capture {
   // Fields typed in and not committed yet.
   const dirty = new Set<Element>();
   // Fields that were password fields at some point.
@@ -42,6 +52,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   const values = new Map<string, { field: Element; value: string }>();
   // Open shadow roots whose type changes are watched.
   const watched = new WeakSet<Node>();
+  const typed = typedValues(config.typed);
 
   const page = () => ({
     title: document.title.trim(),
@@ -61,6 +72,24 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       passwords.add(element);
   };
 
+  const valueOf = (field: Element) =>
+    "value" in field
+      ? String((field as HTMLInputElement).value)
+      : (field as HTMLElement).innerText || "";
+
+  // The one way out of the page: what is being typed counts as typed (a
+  // suggestion may echo it before the field is committed), and the step
+  // carries no echo of it.
+  function send(event: TeachEvent) {
+    for (const field of dirty)
+      typed.add(valueOf(field), isSecretElement(field, passwords.has(field)));
+    const fingerprints = typed.take();
+    report({
+      ...typed.redact(event),
+      ...(fingerprints.length ? { typed: fingerprints } : {}),
+    });
+  }
+
   const fieldOf = (event: Event) => {
     const element = event.composedPath()[0];
     if (!(element instanceof Element)) return undefined;
@@ -72,17 +101,15 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   function commit(field: Element, submitted: boolean) {
     if (!dirty.delete(field)) return;
     const base = step(TEACH_STEP_KIND.field, field);
-    const value =
-      "value" in field
-        ? String((field as HTMLInputElement).value)
-        : (field as HTMLElement).innerText || "";
+    const value = valueOf(field);
     const secret = isSecretElement(field, passwords.has(field));
+    typed.add(value, secret);
     if (!secret) values.set(base.id, { field, value });
     const length =
       field instanceof HTMLInputElement && field.type === "file"
         ? field.files?.length || 0
         : value.length;
-    report({
+    send({
       ...base,
       field: {
         inputType: inputTypeOf(field),
@@ -117,7 +144,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       const choice = Array.from(field.selectedOptions)
         .map((option) => option.label.trim())
         .join(", ");
-      report({
+      send({
         ...base,
         ...(secret
           ? {
@@ -135,7 +162,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       field instanceof HTMLInputElement &&
       (field.type === "checkbox" || field.type === "radio")
     ) {
-      report({
+      send({
         ...step(TEACH_STEP_KIND.toggle, field),
         checked: field.checked,
       });
@@ -164,7 +191,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
   function onClick(event: MouseEvent) {
     if (!event.isTrusted || isOwnUiEvent(event)) return;
     const element = clickedElement(event.composedPath());
-    if (element) report(step(TEACH_STEP_KIND.click, element));
+    if (element) send(step(TEACH_STEP_KIND.click, element));
   }
 
   function onKeyDown(event: KeyboardEvent) {
@@ -173,7 +200,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
     const field = fieldOf(event);
     if (event.key === "Enter" && field instanceof HTMLInputElement) {
       if (dirty.has(field)) commit(field, true);
-      else report({ ...step(TEACH_STEP_KIND.key, field), key: event.key });
+      else send({ ...step(TEACH_STEP_KIND.key, field), key: event.key });
       return;
     }
     const modified = event.ctrlKey || event.metaKey || event.altKey;
@@ -193,7 +220,7 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
     ]
       .filter(Boolean)
       .join("+");
-    report({ ...step(TEACH_STEP_KIND.key), key });
+    send({ ...step(TEACH_STEP_KIND.key), key });
   }
 
   // A show-password toggle turns a password field into a text field: it
@@ -243,7 +270,9 @@ export function startCapture(report: (event: TeachEvent) => void): Capture {
       types.disconnect();
       dirty.clear();
       values.clear();
+      typed.clear();
     },
+    redact: (url) => typed.redact(url),
     exampleOf(stepId) {
       const entry = values.get(stepId);
       if (!entry) return {};
