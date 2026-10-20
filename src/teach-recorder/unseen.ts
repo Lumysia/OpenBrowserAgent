@@ -58,18 +58,22 @@ export function watchUnseen(report: (kind: keyof TeachUnrecorded) => void) {
   const activation = (
     navigator as Navigator & { userActivation?: UserActivation }
   ).userActivation;
-  // Activation that starts with no input seen since the last check, or
-  // lasts longer than any input seen could have given.
+  // Activation that starts with no input seen since the last check (timers
+  // of hidden tabs run late, so the check's own time counts), or lasts
+  // longer than any input seen could have given.
   let wasActive = !!activation?.isActive;
+  let checkedAt = Date.now();
   const timer = setInterval(() => {
+    const now = Date.now();
     const active = !!activation?.isActive;
     const started = active && !wasActive;
+    const lastCheck = checkedAt;
     wasActive = active;
+    checkedAt = now;
     if (!active || document.activeElement instanceof HTMLIFrameElement) return;
-    const unseenFor = Date.now() - seenAt;
     if (
-      (started && unseenFor > 2 * TEACH_LIMITS.unseenCheckMs) ||
-      unseenFor > TEACH_LIMITS.activationMs
+      (started && seenAt < lastCheck) ||
+      now - seenAt > TEACH_LIMITS.activationMs
     )
       missed();
   }, TEACH_LIMITS.unseenCheckMs);
