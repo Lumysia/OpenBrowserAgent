@@ -110,6 +110,8 @@ export const teachDeDE: TeachLocaleMessages = {
     recordAgain: "Ab hier neu aufzeichnen",
     keepDraft: "Als Entwurf speichern",
     done: "Fertig",
+    submit: "Absenden",
+    dontSubmit: "Nicht absenden",
   },
   status: {
     recorded: "Aufgezeichnet",

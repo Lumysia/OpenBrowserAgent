@@ -104,6 +104,8 @@ export const teachKo: TeachLocaleMessages = {
     recordAgain: "여기서부터 다시 기록",
     keepDraft: "초안으로 저장",
     done: "완료",
+    submit: "제출",
+    dontSubmit: "제출 안 함",
   },
   status: {
     recorded: "기록됨",

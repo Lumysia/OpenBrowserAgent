@@ -108,6 +108,8 @@ export const teachEnUS = {
     recordAgain: "Record again from here",
     keepDraft: "Save as draft",
     done: "Done",
+    submit: "Submit",
+    dontSubmit: "Don't submit",
   },
   status: {
     recorded: "Recorded",

@@ -107,6 +107,8 @@ export const teachEsES: TeachLocaleMessages = {
     recordAgain: "Volver a grabar desde aquí",
     keepDraft: "Guardar como borrador",
     done: "Listo",
+    submit: "Enviar",
+    dontSubmit: "No enviar",
   },
   status: {
     recorded: "Grabada",

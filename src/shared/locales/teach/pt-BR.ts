@@ -107,6 +107,8 @@ export const teachPtBR: TeachLocaleMessages = {
     recordAgain: "Gravar de novo a partir daqui",
     keepDraft: "Salvar como rascunho",
     done: "Concluído",
+    submit: "Enviar",
+    dontSubmit: "Não enviar",
   },
   status: {
     recorded: "Gravada",

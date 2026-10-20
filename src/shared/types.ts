@@ -460,6 +460,9 @@ export type QuestionToolQuestion = {
   options: QuestionToolOption[];
   multiple?: boolean;
   custom?: boolean;
+  // A check run asks to submit a form through this ref; the options are
+  // the product's own (shared/teach/check.ts).
+  confirmSubmit?: string;
 };
 
 export type QuestionToolAnswer = {

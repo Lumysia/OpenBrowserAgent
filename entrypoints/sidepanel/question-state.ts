@@ -45,6 +45,9 @@ export function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
         options,
         multiple: item.multiple === true,
         custom: item.custom !== false,
+        ...(typeof item.confirmSubmit === "string" && item.confirmSubmit
+          ? { confirmSubmit: item.confirmSubmit }
+          : {}),
       },
     ];
   });

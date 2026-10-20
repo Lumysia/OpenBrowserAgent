@@ -118,13 +118,34 @@ function checkStep(body, done) {
         "Please type your password into the Password field on the page, then choose Done.",
         ["Done"],
       ),
-    () => ask("Create the account now?", ["Create it", "Not now"]),
     () => snapshot,
+    // Skips asking: act refuses to submit in a check run.
     (text) => ({
       name: TOOL_NAME.act,
       args: {
         tabId,
         steps: [{ action: "click", ref: ref(text, 'button "Create account"') }],
+      },
+    }),
+    (text) => ({
+      name: TOOL_NAME.ask,
+      args: {
+        questions: [
+          {
+            question: "Create the account now?",
+            options: [{ label: "Sure" }],
+            confirmSubmit: text.match(/confirmSubmit: "(\w+)"/)[1],
+          },
+        ],
+      },
+    }),
+    (text) => ({
+      name: TOOL_NAME.act,
+      args: {
+        tabId,
+        steps: [
+          { action: "click", ref: text.match(/submit through (\w+)/)[1] },
+        ],
       },
     }),
     () => ({
@@ -305,10 +326,27 @@ test(
       await clickElement(panel, ".tool-question-option", { text: "Done" });
       await clickElement(panel, ".tool-question-stack button[type=submit]");
 
-      // It waits before the final submit until the user confirms.
-      await poll(() => panelHas(panel, ".tool-question-option", "Create it"));
+      // It cannot submit before the user confirms: act refused the click
+      // the model tried first, and the question offers the product's own
+      // choices.
+      await poll(() =>
+        panelHas(panel, ".tool-question-option", t.teach.check.submit),
+      );
       assert.equal(await check.call(() => location.pathname), "/form");
-      await clickElement(panel, ".tool-question-option", { text: "Create it" });
+      assert.equal(
+        await panelHas(panel, ".tool-question-option", "Sure"),
+        false,
+      );
+      const refusal = fixture.requests.some((request) =>
+        JSON.stringify(request.body).includes(
+          "this is a check run: ask the user first",
+        ),
+      );
+      assert.ok(refusal, "act refused the unconfirmed submit");
+      await clickElement(panel, ".tool-question-option", {
+        text: t.teach.check.submit,
+        exact: true,
+      });
       await clickElement(panel, ".tool-question-stack button[type=submit]");
       await poll(() =>
         check.call(() => location.pathname === "/done").catch(() => false),

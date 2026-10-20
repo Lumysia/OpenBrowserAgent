@@ -101,6 +101,8 @@ export const teachZhTW: TeachLocaleMessages = {
     recordAgain: "從這裡重新錄製",
     keepDraft: "儲存為草稿",
     done: "完成",
+    submit: "送出",
+    dontSubmit: "不送出",
   },
   status: {
     recorded: "已錄製",

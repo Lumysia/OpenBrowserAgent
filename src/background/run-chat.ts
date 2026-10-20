@@ -174,7 +174,12 @@ export async function runChat(
   await refuseRecordingTab(start?.id);
   const skillCheck = skillCheckOf(request.messages.at(-1));
   const prepared = await prepareRun(
-    skillCheck ? { ...request, skillCheck } : request,
+    skillCheck
+      ? {
+          ...request,
+          skillCheck: { ...skillCheck, confirmedSubmits: new Set() },
+        }
+      : request,
     tab,
   );
   session.abortController.signal.throwIfAborted();

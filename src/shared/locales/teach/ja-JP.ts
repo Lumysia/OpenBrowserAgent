@@ -104,6 +104,8 @@ export const teachJaJP: TeachLocaleMessages = {
     recordAgain: "ここから記録し直す",
     keepDraft: "下書きとして保存",
     done: "完了",
+    submit: "送信する",
+    dontSubmit: "送信しない",
   },
   status: {
     recorded: "記録",

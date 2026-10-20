@@ -37,7 +37,9 @@ export type UnattendedRun = {
   report?(outcome: TaskOutcome): void;
 };
 
-export type SkillCheckRun = { skillId: string };
+// The check run of a recorded skill, and the refs of the controls or fields
+// the user allowed to submit a form (once each; see check-submit.ts).
+export type SkillCheckRun = { skillId: string; confirmedSubmits: Set<string> };
 
 export type TaskOutcome = {
   outcome: "report" | "nothing" | "met" | "notMet";

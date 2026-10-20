@@ -21,6 +21,7 @@ import {
 } from "./act-steps";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { pageOutcomeLines } from "./act-report";
+import { refuseUnconfirmedSubmit } from "./check-submit";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
 import { errorMessage } from "../../shared/error-message";
@@ -143,7 +144,15 @@ export const actTool: ToolDefinition = {
         if (index < first) continue;
         let result: StepOutcome;
         try {
-          result = await runStep(tab.id, step, signal);
+          const refused = await refuseUnconfirmedSubmit(
+            run,
+            tab.id,
+            step,
+            signal,
+          );
+          result = refused
+            ? { error: refused }
+            : await runStep(tab.id, step, signal);
         } catch (error) {
           if (!(error instanceof PageError)) signal?.throwIfAborted();
           result = { error: errorMessage(error) };

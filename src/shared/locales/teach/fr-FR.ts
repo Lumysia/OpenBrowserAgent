@@ -109,6 +109,8 @@ export const teachFrFR: TeachLocaleMessages = {
     recordAgain: "Réenregistrer à partir d’ici",
     keepDraft: "Enregistrer comme brouillon",
     done: "Terminé",
+    submit: "Envoyer",
+    dontSubmit: "Ne pas envoyer",
   },
   status: {
     recorded: "Enregistrée",
