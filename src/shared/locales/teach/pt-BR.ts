@@ -87,6 +87,7 @@ export const teachPtBR: TeachLocaleMessages = {
     title: "Salvar a habilidade",
     name: "Nome",
     description: "Descrição",
+    instructions: "Instruções que o agente vai seguir",
     stored:
       "Salva como habilidade com suas etapas: qual controle em qual página. O que você digitou não é armazenado. Ela sincroniza como suas outras habilidades.",
     check: "Salvar e verificar",

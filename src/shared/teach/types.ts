@@ -18,8 +18,10 @@ export const TEACH_LIMITS = {
   causedNavigationMs: 5_000,
   // A recording with no step for this long stops.
   idleMinutes: 15,
-  // Characters kept of a target's name, label or container.
+  // Characters kept of a target's name, label or container, and of the
+  // nearest heading and a page's title (page-text.ts).
   nameChars: 80,
+  labelChars: 48,
   // Characters of the user's own notes (what it is for, what changes).
   noteChars: 500,
   // How long the browser's user activation lasts after a press or key

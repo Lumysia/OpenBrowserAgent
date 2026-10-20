@@ -173,7 +173,7 @@ export function useTeach({
 
   const save = (
     tabId: number,
-    draft: { name: string; description: string },
+    draft: { name: string; description: string; body: string },
     check: boolean,
   ) =>
     run(async () => {

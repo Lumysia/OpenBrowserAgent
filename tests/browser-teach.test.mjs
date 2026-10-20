@@ -18,7 +18,7 @@ import {
   waitForRecorder,
 } from "./browser-teach-helpers.mjs";
 import { ref } from "./browser-tool-fixture.mjs";
-import { clickElement, pressKey, typeText } from "./cdp-input.mjs";
+import { clickElement, MODIFIERS, pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 
 // Teach mode end to end on the production build: the user records a task
@@ -252,6 +252,20 @@ test(
         () => document.querySelector(".teach-card input").value,
       );
       assert.equal(shownName, SKILL_NAME);
+      // The instructions are folded away; open, they show and can be edited.
+      await clickElement(panel, ".teach-card .ui-disclosure-trigger");
+      await poll(() =>
+        panel.call(() =>
+          document
+            .querySelector(".teach-card textarea.teach-body")
+            ?.value.includes("## Steps"),
+        ),
+      );
+      await panel.call(() =>
+        document.querySelector(".teach-card textarea.teach-body").focus(),
+      );
+      await pressKey(panel, "End", { modifiers: MODIFIERS.ctrl });
+      await panel.send("Input.insertText", { text: "\nEdited on the card." });
       const writeRequest = fixture.requests.find((request) =>
         JSON.stringify(request.body).includes(
           "Skill from a recorded demonstration",
@@ -307,6 +321,7 @@ test(
       assert.ok(skill, "the skill is stored");
       assert.match(skill.files[0].content, /status: "verified"/);
       assert.match(skill.files[0].content, /source: "demonstration"/);
+      assert.match(skill.files[0].content, /Edited on the card\./);
       const settings = await storageValue(options, STORAGE_KEYS.skillSettings);
       assert.equal(settings[skill.id]?.invoke, "manual");
       await clickElement(panel, ".teach-card button", {

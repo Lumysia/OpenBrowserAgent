@@ -82,6 +82,11 @@
   display: grid;
   gap: var(--space-1);
 }
+.teach-body {
+  max-height: 240px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
 .teach-note {
   color: var(--muted-foreground);
   font-size: var(--text-sm);

@@ -24,6 +24,7 @@ export async function saveRecording({
   tabId,
   name,
   description,
+  body,
 }: TeachSave): Promise<TeachSaved> {
   const session = sessionOfTab(await teachSessions.get(), tabId);
   if (!session?.draft || session.state !== TEACH_STATE.review)
@@ -43,7 +44,7 @@ export async function saveRecording({
     .map((entry) => entry.skill.name);
   const skill = buildRecordedSkill({
     session,
-    draft: { ...session.draft, name, description },
+    draft: { name, description, body },
     existingNames,
     ...(redone ? { id: redone.id } : {}),
   });

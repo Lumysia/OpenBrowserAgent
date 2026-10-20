@@ -89,6 +89,7 @@ export const teachFrFR: TeachLocaleMessages = {
     title: "Enregistrer la compétence",
     name: "Nom",
     description: "Description",
+    instructions: "Instructions que l’agent suivra",
     stored:
       "Enregistrée comme compétence avec ses étapes : quel contrôle sur quelle page. Ce que vous avez tapé n’est pas conservé. Elle se synchronise comme vos autres compétences.",
     check: "Enregistrer et vérifier",

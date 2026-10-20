@@ -24,6 +24,7 @@ import {
   TEACH_ENDED_BY,
   type TeachEndedBy,
 } from "../../shared/teach/types";
+import { pageTextOf } from "../../shared/teach/page-text";
 import {
   mergeFingerprints,
   newFingerprintKey,
@@ -219,10 +220,9 @@ function withEvent(
   if (session.state !== TEACH_STATE.recording) return session;
   const { typed: added, ...rest } = event;
   const typed = mergeFingerprints(session.typed, added);
-  const step = redactStrings(rest, {
-    key: session.typedKey,
-    fingerprints: typed,
-  });
+  const step = pageTextOf(
+    redactStrings(rest, { key: session.typedKey, fingerprints: typed }),
+  );
   const change = add(session.steps, step);
   return {
     ...session,

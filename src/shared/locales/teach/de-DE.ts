@@ -90,6 +90,7 @@ export const teachDeDE: TeachLocaleMessages = {
     title: "Skill speichern",
     name: "Name",
     description: "Beschreibung",
+    instructions: "Anweisungen, denen der Agent folgt",
     stored:
       "Wird als Skill mit seinen Schritten gespeichert: welches Element auf welcher Seite. Ihre Eingaben werden nicht gespeichert. Er wird wie Ihre anderen Skills synchronisiert.",
     check: "Speichern und prüfen",

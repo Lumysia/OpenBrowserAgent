@@ -87,6 +87,7 @@ export const teachEsES: TeachLocaleMessages = {
     title: "Guardar la habilidad",
     name: "Nombre",
     description: "Descripción",
+    instructions: "Instrucciones que seguirá el agente",
     stored:
       "Se guarda como habilidad con sus pasos: qué control en qué página. Lo que escribiste no se guarda. Se sincroniza como tus otras habilidades.",
     check: "Guardar y comprobar",

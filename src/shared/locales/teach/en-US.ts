@@ -88,6 +88,7 @@ export const teachEnUS = {
     title: "Save the skill",
     name: "Name",
     description: "Description",
+    instructions: "Instructions the agent will follow",
     stored:
       "Saved as a skill with its steps: which control on which page. What you typed is not stored. It syncs like your other skills.",
     check: "Save and check",

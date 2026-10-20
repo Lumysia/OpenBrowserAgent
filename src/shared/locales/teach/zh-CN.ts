@@ -82,6 +82,7 @@ export const teachZhCN: TeachLocaleMessages = {
     title: "保存技能",
     name: "名称",
     description: "描述",
+    instructions: "智能体将遵循的说明",
     stored:
       "将保存为技能，包含其步骤：在哪个页面用了哪个控件。不会保存你输入的内容。它会像其他技能一样同步。",
     check: "保存并检查",

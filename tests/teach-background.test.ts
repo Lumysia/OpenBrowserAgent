@@ -118,7 +118,12 @@ test("a redone skill is saved as a draft that is used only when picked", async (
   await teachSessions.set({
     7: session({ redo: { skillId: earlier.id, fromStep: 1 } }),
   });
-  await saveRecording({ tabId: 7, name: "submit-form", description: "x" });
+  await saveRecording({
+    tabId: 7,
+    name: "submit-form",
+    description: "x",
+    body: "## Steps",
+  });
   const [entry] = resolveSkillCatalog(
     await storage.skills.get(),
     await storage.skillSettings.get(),
@@ -139,7 +144,7 @@ test("teach errors reach the side panel as codes it shows in the UI language", a
     );
   await teachSessions.set({});
   await assert.rejects(
-    saveRecording({ tabId: 7, name: "x", description: "" }),
+    saveRecording({ tabId: 7, name: "x", description: "", body: "" }),
     (error: { code?: string }) => error.code === "teachGone",
   );
 });

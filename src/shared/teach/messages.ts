@@ -33,10 +33,12 @@ export const TEACH_PAGE_MESSAGE = {
 
 type StepRef = { tabId: number; stepId: string };
 
+// What the user saves of the draft, as edited on the save card.
 export type TeachSave = {
   tabId: number;
   name: string;
   description: string;
+  body: string;
 };
 
 export type TeachMessage =

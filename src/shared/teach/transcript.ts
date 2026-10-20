@@ -1,3 +1,4 @@
+import { pageTextOf } from "./page-text";
 import { isSecretStep } from "./secret-fields";
 import { currentPage } from "./steps";
 import {
@@ -52,7 +53,8 @@ function fieldText(step: TeachStep) {
   return `Type into ${describeTarget(step.target)} (${field.inputType}, ${field.length} characters) ${value}${field.submitted ? ", then press Enter" : ""}`;
 }
 
-export function stepText(step: TeachStep) {
+export function stepText(recorded: TeachStep) {
+  const step = pageTextOf(recorded);
   const target = describeTarget(step.target);
   switch (step.kind) {
     case TEACH_STEP_KIND.click:
@@ -95,7 +97,7 @@ export function buildTranscript(
     );
   lines.push("", "Steps:");
   let page = "";
-  session.steps.forEach((step, index) => {
+  session.steps.map(pageTextOf).forEach((step, index) => {
     if (step.kind !== TEACH_STEP_KIND.switchTab && step.page.url !== page) {
       page = step.page.url;
       lines.push(

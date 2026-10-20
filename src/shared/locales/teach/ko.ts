@@ -85,6 +85,7 @@ export const teachKo: TeachLocaleMessages = {
     title: "스킬 저장",
     name: "이름",
     description: "설명",
+    instructions: "에이전트가 따를 지침",
     stored:
       "단계(어느 페이지의 어떤 요소인지)와 함께 스킬로 저장됩니다. 입력한 내용은 저장되지 않습니다. 다른 스킬처럼 동기화됩니다.",
     check: "저장하고 확인",

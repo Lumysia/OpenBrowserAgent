@@ -9,6 +9,7 @@ import {
   withSkillMetadata,
 } from "../skills";
 import type { Skill, SkillFile, SkillInvokeMode } from "../types";
+import { pageTextOf } from "./page-text";
 import { isSecretStep } from "./secret-fields";
 import { fieldLabel } from "./transcript";
 import { originOf } from "./urls";
@@ -163,7 +164,8 @@ function inputsOf(steps: TeachStep[]): DemonstrationInput[] {
 }
 
 // The steps without anything the recorder keeps only for itself.
-function demonstrationStep(step: TeachStep, index: number) {
+function demonstrationStep(recorded: TeachStep, index: number) {
+  const step = pageTextOf(recorded);
   const { id: _id, at: _at, field, choice, ...rest } = step;
   const secret = isSecretStep(step);
   const kept = field && {

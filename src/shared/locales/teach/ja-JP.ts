@@ -85,6 +85,7 @@ export const teachJaJP: TeachLocaleMessages = {
     title: "スキルを保存",
     name: "名前",
     description: "説明",
+    instructions: "エージェントが従う手順",
     stored:
       "スキルとしてステップ（どのページのどの要素か）と一緒に保存されます。入力した内容は保存されません。他のスキルと同じように同期されます。",
     check: "保存して確認",
