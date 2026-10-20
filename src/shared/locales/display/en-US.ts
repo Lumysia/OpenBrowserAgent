@@ -66,6 +66,10 @@ export const displayEnUS = {
     teachUnscriptable: "This page can't be recorded.",
     tabRecording:
       "This tab is being recorded. Stop the recording before the agent works in it.",
+    teachEmpty: "Nothing was recorded. Do the task on the page, then stop.",
+    teachNoInstructions: "The model wrote no instructions. Try again.",
+    teachGone: "This recording is no longer there.",
+    teachCheckTab: "The tab for the check could not be opened.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

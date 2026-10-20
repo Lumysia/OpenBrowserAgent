@@ -166,7 +166,7 @@ export async function startRecording(
 export async function endRecording(tabId: number) {
   const session = await updateSession(tabId, (current) =>
     current.state === TEACH_STATE.recording
-      ? { ...current, state: TEACH_STATE.writing, error: undefined }
+      ? { ...current, state: TEACH_STATE.writing, failure: undefined }
       : current,
   );
   if (session) await Promise.all(session.tabIds.map(endRecorder));

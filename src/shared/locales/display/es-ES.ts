@@ -65,6 +65,12 @@ export const displayEsES: DisplayMessages = {
     teachUnscriptable: "Esta página no se puede grabar.",
     tabRecording:
       "Esta pestaña se está grabando. Detén la grabación antes de que el agente trabaje en ella.",
+    teachEmpty:
+      "No se grabó nada. Haz la tarea en la página y luego detén la grabación.",
+    teachNoInstructions:
+      "El modelo no escribió instrucciones. Inténtalo de nuevo.",
+    teachGone: "Esta grabación ya no existe.",
+    teachCheckTab: "No se pudo abrir la pestaña para la comprobación.",
   },
   toolSteps: {
     failed: "Error",

@@ -4,6 +4,7 @@ import {
   setSkillInvokeMode,
 } from "../../shared/skill-catalog";
 import { storage } from "../../shared/storage";
+import { USER_ERROR_CODE, UserError } from "../../shared/user-errors";
 import { sessionOfTab, teachSessions } from "../../shared/teach/records";
 import {
   buildRecordedSkill,
@@ -26,7 +27,10 @@ export async function saveRecording({
 }: TeachSave): Promise<TeachSaved> {
   const session = sessionOfTab(await teachSessions.get(), tabId);
   if (!session?.draft || session.state !== TEACH_STATE.review)
-    throw new Error("There is no recording to save.");
+    throw new UserError(
+      USER_ERROR_CODE.teachGone,
+      "There is no recording to save.",
+    );
   const [userSkills, settings] = await Promise.all([
     storage.skills.get(),
     storage.skillSettings.get(),
@@ -76,12 +80,20 @@ export async function openCheckTab(skillId: string) {
     (item) => item.id === skillId,
   );
   const demonstration = skill ? demonstrationOf(skill) : undefined;
-  if (!demonstration) throw new Error("The skill has no recording.");
+  if (!demonstration)
+    throw new UserError(
+      USER_ERROR_CODE.teachGone,
+      "The skill has no recording.",
+    );
   const start = demonstration.startUrl.includes("*")
     ? new URL(demonstration.startUrl.replaceAll("*", "x")).origin
     : demonstration.startUrl;
   const tab = await getBrowserApi().tabs.create({ url: start, active: true });
-  if (tab.id === undefined) throw new Error("The tab could not be opened.");
+  if (tab.id === undefined)
+    throw new UserError(
+      USER_ERROR_CODE.teachCheckTab,
+      "The tab could not be opened.",
+    );
   await waitTabComplete(tab.id);
   return { tabId: tab.id, title: tab.title || "", url: start };
 }

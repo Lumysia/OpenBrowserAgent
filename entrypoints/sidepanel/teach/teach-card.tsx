@@ -1,7 +1,9 @@
 import { CircleAlert, CircleDot, PenLine } from "lucide-react";
 import { useId, useState } from "react";
+import { failureError } from "../../../src/shared/runtime-messages";
 import { TEACH_MESSAGE } from "../../../src/shared/teach/messages";
 import { TEACH_STATE } from "../../../src/shared/teach/types";
+import { userErrorText } from "../../../src/shared/user-errors";
 import { Button, Feedback, Input, Label } from "../../../src/ui/components";
 import { useMessages } from "../../../src/ui/messages";
 import { useChat, useComposer } from "../sidepanel-providers";
@@ -15,6 +17,7 @@ import type { TeachController, TeachStartTarget } from "./use-teach";
 export function TeachCard() {
   const { teach } = useComposer();
   const { streaming } = useChat();
+  const t = useMessages();
   const { session, starting, check } = teach;
   if (starting) return <TeachStartCard target={starting} teach={teach} />;
   if (session?.state === TEACH_STATE.recording)
@@ -33,7 +36,9 @@ export function TeachCard() {
     return (
       <TeachFailedCard
         tabId={session.tabId}
-        error={session.error || ""}
+        error={
+          session.failure ? userErrorText(failureError(session.failure), t) : ""
+        }
         teach={teach}
       />
     );

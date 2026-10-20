@@ -61,6 +61,10 @@ export const displayKo: DisplayMessages = {
     teachUnscriptable: "이 페이지는 기록할 수 없습니다.",
     tabRecording:
       "이 탭은 기록 중입니다. 기록을 중지한 뒤 에이전트에게 맡기세요.",
+    teachEmpty: "기록된 내용이 없습니다. 페이지에서 작업을 한 뒤 중지하세요.",
+    teachNoInstructions: "모델이 지침을 작성하지 않았습니다. 다시 시도하세요.",
+    teachGone: "이 기록은 더 이상 없습니다.",
+    teachCheckTab: "확인용 탭을 열 수 없습니다.",
   },
   toolSteps: {
     failed: "실패",

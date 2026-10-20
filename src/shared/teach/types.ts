@@ -1,3 +1,5 @@
+import type { RuntimeFailure } from "../runtime-messages";
+
 // Teach mode: the user shows a browser task once (a recording), and it
 // becomes an ordinary skill. A recording holds what was done and to which
 // element, described by meaning only; never what was typed (see
@@ -144,7 +146,9 @@ export type TeachSession = {
   // Steps left out after maxSteps.
   dropped: number;
   draft?: TeachDraft;
-  error?: string;
+  // Why writing the skill failed, as a runtime failure so the side panel
+  // shows a known error in the UI language.
+  failure?: RuntimeFailure;
   // A recording that redoes a skill from one of its steps on: the skill,
   // and the steps kept from its demonstration.
   redo?: { skillId: string; fromStep: number };

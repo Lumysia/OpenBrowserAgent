@@ -1,4 +1,5 @@
 import { getBrowserApi } from "../../shared/browser-api";
+import { USER_ERROR_CODE, UserError } from "../../shared/user-errors";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
   isTeachMessage,
@@ -84,7 +85,7 @@ async function keepExample(tabId: number, stepId: string, keep: boolean) {
   const session = sessionOfTab(await teachSessions.get(), tabId);
   const step = session?.steps.find((item) => item.id === stepId);
   if (!session || step?.kind !== TEACH_STEP_KIND.field || !step.field)
-    throw new Error("There is no such field.");
+    throw new UserError(USER_ERROR_CODE.teachGone, "There is no such field.");
   const reply =
     keep && !isSecretStep(step) ? await pageExample(session, stepId) : {};
   const secret = isSecretStep(step) || reply.secret === true;
@@ -105,7 +106,7 @@ async function keepExample(tabId: number, stepId: string, keep: boolean) {
 async function rewrite(tabId: number) {
   await updateSession(tabId, (session) =>
     session.state === TEACH_STATE.failed
-      ? { ...session, state: TEACH_STATE.writing, error: undefined }
+      ? { ...session, state: TEACH_STATE.writing, failure: undefined }
       : session,
   );
   void writeDraft(tabId);

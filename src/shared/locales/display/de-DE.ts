@@ -62,6 +62,12 @@ export const displayDeDE: DisplayMessages = {
     teachUnscriptable: "Diese Seite kann nicht aufgezeichnet werden.",
     tabRecording:
       "Dieser Tab wird gerade aufgezeichnet. Beenden Sie die Aufzeichnung, bevor der Agent darin arbeitet.",
+    teachEmpty:
+      "Es wurde nichts aufgezeichnet. Erledigen Sie die Aufgabe auf der Seite und beenden Sie dann die Aufzeichnung.",
+    teachNoInstructions:
+      "Das Modell hat keine Anweisungen geschrieben. Versuchen Sie es erneut.",
+    teachGone: "Diese Aufzeichnung gibt es nicht mehr.",
+    teachCheckTab: "Der Tab für die Prüfung konnte nicht geöffnet werden.",
   },
   toolSteps: {
     failed: "Fehlgeschlagen",

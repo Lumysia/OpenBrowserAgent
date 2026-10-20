@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
 import { saveRecording } from "../src/background/teach/save";
+import { writeDraft } from "../src/background/teach/writer";
+import { getMessages } from "../src/shared/i18n";
+import { failureError } from "../src/shared/runtime-messages";
+import { userErrorText } from "../src/shared/user-errors";
 import {
   resolveSkillCatalog,
   setSkillInvokeMode,
@@ -60,4 +64,22 @@ test("a redone skill is saved as a draft that is used only when picked", async (
     await storage.skillSettings.get(),
   ).filter((item) => item.skill.id === earlier.id);
   assert.equal(entry.invoke, "manual");
+});
+
+test("teach errors reach the side panel as codes it shows in the UI language", async () => {
+  await teachSessions.set({ 7: session({ state: "writing", steps: [] }) });
+  await writeDraft(7);
+  const failed = (await teachSessions.get())[7];
+  assert.equal(failed.state, "failed");
+  assert.equal(failed.failure?.code, "teachEmpty");
+  for (const language of ["de-DE", "zh-TW"] as const)
+    assert.equal(
+      userErrorText(failureError(failed.failure!), getMessages(language)),
+      getMessages(language).display.errors.teachEmpty,
+    );
+  await teachSessions.set({});
+  await assert.rejects(
+    saveRecording({ tabId: 7, name: "x", description: "" }),
+    (error: { code?: string }) => error.code === "teachGone",
+  );
 });

@@ -16,6 +16,12 @@ export const USER_ERROR_CODE = {
   // tab while it is recorded.
   teachUnscriptable: "teachUnscriptable",
   tabRecording: "tabRecording",
+  // Teach mode: nothing was recorded; the model wrote no instructions; the
+  // recording (or the recorded skill) is gone; the check's tab didn't open.
+  teachEmpty: "teachEmpty",
+  teachNoInstructions: "teachNoInstructions",
+  teachGone: "teachGone",
+  teachCheckTab: "teachCheckTab",
 } as const;
 
 export type UserErrorCode =

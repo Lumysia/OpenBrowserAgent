@@ -61,6 +61,12 @@ export const displayJaJP: DisplayMessages = {
     teachUnscriptable: "このページは記録できません。",
     tabRecording:
       "このタブは記録中です。記録を停止してからエージェントに操作させてください。",
+    teachEmpty:
+      "何も記録されていません。ページでタスクを行ってから停止してください。",
+    teachNoInstructions:
+      "モデルが手順を書きませんでした。もう一度お試しください。",
+    teachGone: "この記録はもうありません。",
+    teachCheckTab: "確認用のタブを開けませんでした。",
   },
   toolSteps: {
     failed: "失敗",
