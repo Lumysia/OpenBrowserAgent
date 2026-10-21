@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.3.0-alpha.1 - 2026-10-21
+
 - **Record a skill**: show the agent a browser task once. Choose **+ → Record a skill** in the side panel, do the task, and press **Stop**. The agent writes a skill with a name, inputs and steps, runs it once in a new tab to check it (asking you before the final submit), and saves it; you can let the agent use it automatically once the check passed. Steps show up in the side panel while you record, where you can delete them or mark what changes each time.
 - Recording never keeps what you type, only which field you used, not even where the page repeats it (a search title, a heading, a link); passwords, codes and card numbers are never stored, not even as an example, and the agent's page reading hides them too. The agent does not work in a tab while you record it.
 - The save card shows the instructions the skill will give the agent, and you can edit them. During the check, the agent cannot submit a form until you choose **Submit**. The step list warns when the page kept input from the recording or you worked in an embedded frame. A recording that ends because its tab closed or it went idle waits for you to write it. Settings → Skills offers **Check again** for drafts, and a verified skill becomes a draft again when its steps change.
