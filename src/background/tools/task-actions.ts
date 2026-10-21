@@ -7,8 +7,14 @@ import {
   updateTask,
   type TaskPatch,
 } from "../../shared/tasks/edit";
-import { idleReason, type RunContext } from "../../shared/tasks/lifecycle";
+import { localIsoTime } from "../../shared/local-time";
+import {
+  idleReason,
+  plannedRunAt,
+  type RunContext,
+} from "../../shared/tasks/lifecycle";
 import { normalizeTrigger, taskState } from "../../shared/tasks/normalize";
+import { MINUTE_MS } from "../../shared/tasks/schedule";
 import { loadRunContext } from "../../shared/tasks/run-context";
 import {
   TRIGGER_FIELDS,
@@ -32,8 +38,9 @@ const AGENT_WAITS_FOR_OK =
 type Input = Record<string, unknown>;
 type Outcome = Record<string, unknown> & { error?: string };
 
+// Times in the user's local time with the offset, as the model gives them.
 const iso = (time: number | undefined) =>
-  time === undefined ? undefined : new Date(time).toISOString();
+  time === undefined ? undefined : localIsoTime(time);
 
 // The task's state in words for the model.
 const STATUS: Record<string, string> = {
@@ -101,7 +108,7 @@ function summary(task: ScheduledTask, view: Snapshot) {
       summary: result.summary,
       chatId: result.chatId,
     },
-    nextRun: reason ? undefined : iso(state.nextRunAt),
+    nextRun: iso(plannedRunAt(task, state, view.context)),
   };
 }
 
@@ -129,12 +136,15 @@ function triggerFrom(
   input: Input,
   current?: ScheduledTask["trigger"],
 ): { trigger?: ScheduledTask["trigger"]; error?: string } {
+  const relative = relativeAt(input, current);
+  if (relative.error) return relative;
   const given = TRIGGER_FIELDS.filter((field) => input[field] !== undefined);
-  if (!given.length) return {};
+  if (!given.length && relative.at === undefined) return {};
   const fields: Input = Object.fromEntries(
     given.map((field) => [field, input[field]]),
   );
-  if (fields.at !== undefined) {
+  if (relative.at !== undefined) fields.at = relative.at;
+  else if (fields.at !== undefined) {
     const at = Date.parse(trimmedString(fields.at));
     if (!Number.isFinite(at))
       return {
@@ -152,6 +162,23 @@ function triggerFrom(
           : "Give a valid schedule: kind and its fields.",
     };
   return { trigger };
+}
+
+// A one-time task "in 5 minutes": the time counted from now, so the model
+// need not add to a clock.
+function relativeAt(
+  input: Input,
+  current?: ScheduledTask["trigger"],
+): { at?: number; error?: string } {
+  if (input.inMinutes === undefined) return {};
+  if (input.at !== undefined)
+    return { error: "Give at or inMinutes, not both." };
+  if ((input.kind ?? current?.kind) !== "once")
+    return { error: "inMinutes is only for kind once." };
+  const minutes = input.inMinutes;
+  if (typeof minutes !== "number" || !(minutes > 0))
+    return { error: "inMinutes must be a number of minutes above 0." };
+  return { at: Date.now() + minutes * MINUTE_MS };
 }
 
 function changeNote(agent: Agent | undefined) {
@@ -248,6 +275,7 @@ async function changedResult(task: ScheduledTask): Promise<Outcome> {
     mayAct: !!agent && mayActUnattended(agent),
     status: now.status,
     waitingForOk: now.waitingForOk,
+    nextRun: now.nextRun,
     note: now.waitingForOk
       ? `${changeNote(agent)} ${AGENT_WAITS_FOR_OK}`
       : changeNote(agent),

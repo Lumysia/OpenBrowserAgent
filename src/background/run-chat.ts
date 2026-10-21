@@ -2,6 +2,7 @@ import { hasToolGroup, resolveAgent } from "../shared/agents";
 import { mayActHere, type AgentActApprovals } from "../shared/tasks/approval";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
+import { currentTimeNote } from "../shared/local-time";
 import { respondWith } from "../shared/runtime-messages";
 import { DESCRIBE_RUN } from "../shared/run-description";
 import {
@@ -23,12 +24,12 @@ import {
   handedRunTab,
   startRunTab,
   whileWorking,
-  withWorkingTab,
   workingTabNote,
   type RunTab,
 } from "./run-tab";
 import type { StreamSession } from "./stream-sessions";
 import { createSystemPrompt } from "./system-prompt";
+import { withTurnContext } from "./turn-context";
 import { createToolSet } from "./tools/registry";
 import { skillCheckOf } from "../shared/teach/check";
 import { refuseRecordingTab } from "./teach/guard";
@@ -192,9 +193,10 @@ export async function runChat(
       model: prepared.model,
       helperModel: prepared.helperModel,
       system: prepared.system,
-      messages: usesPages
-        ? withWorkingTab(request.messages, workingTabNote(start, earlier))
-        : request.messages,
+      messages: withTurnContext(request.messages, [
+        usesPages && workingTabNote(start, earlier),
+        currentTimeNote(),
+      ]),
       setup: prepared.setup,
       maxToolSteps: prepared.maxToolSteps,
       messageId: request.messageId,

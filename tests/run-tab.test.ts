@@ -3,10 +3,10 @@ import { test } from "node:test";
 import {
   createRunTab,
   startRunTab,
-  withWorkingTab,
   workingTabNote,
 } from "../src/background/run-tab";
 import { pageTab } from "../src/background/page-agent";
+import { withTurnContext } from "../src/background/turn-context";
 import type { ChatMessage } from "../src/shared/types";
 import { fakeTabs, installChrome } from "./fake-chrome";
 
@@ -116,19 +116,22 @@ test("the chat's last tab carries over to its next message", async () => {
   assert.match(note, /Earlier in this chat you worked on tab 3 /);
 });
 
-test("the working tab joins the latest user message's context only", () => {
+test("turn notes join the latest user message's context only", () => {
   const messages = [
     message({ context: "<selected_tabs/>" }),
     { ...message(), id: "a", role: "assistant" as const },
     message(),
   ];
-  const next = withWorkingTab(messages, "<working_tab>x</working_tab>");
+  const next = withTurnContext(messages, ["<working_tab>x</working_tab>"]);
   assert.equal(next[0], messages[0]);
   assert.equal(next[2].metadata?.context, "<working_tab>x</working_tab>");
   assert.equal(messages[2].metadata, undefined);
-  const withContext = withWorkingTab([messages[0]], "<working_tab/>");
+  const withContext = withTurnContext(
+    [messages[0]],
+    [false, "<working_tab/>", "<current_time/>"],
+  );
   assert.equal(
     withContext[0].metadata?.context,
-    "<selected_tabs/>\n\n<working_tab/>",
+    "<selected_tabs/>\n\n<working_tab/>\n\n<current_time/>",
   );
 });

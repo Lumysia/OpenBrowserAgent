@@ -5,6 +5,7 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - A scheduled task you ask the agent for in a chat now runs as asked, without a separate **Allow** step. Tasks that arrive by sync from another device still wait for your OK.
+- The agent knows the current local time and can schedule a one-time task "in 5 minutes" directly; task times it reports are in your local time. Code the agent runs can now format dates and numbers and convert between time zones.
 
 ## 0.3.0-alpha.1 - 2026-10-21
 

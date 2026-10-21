@@ -68,8 +68,8 @@ export const tasksTool: ToolDefinition = {
     "List, create, change, run, pause or delete scheduled tasks and page watches",
   description: `Manage the user's scheduled tasks and page watches when they ask ("every morning…", "in an hour…", "tell me when this page…", "stop that watch"). A task runs later on its own with an agent, and the user gets a notification with the result.
 action: list (every task with its id, schedule, agent, device, state, last result and next run); get (one task by id, with its prompt and recent runs' chat ids); create; update (id and the fields to change); delete (id); runNow (id; only tasks of this device that are allowed); pause / resume (id).
-Schedule fields: kind: once (at: local date and time, ISO 8601 such as 2026-05-01T09:00), interval (every, unit: minutes|hours|days), daily (time HH:MM), weekly (time, days: 0=Sunday..6), watch (url, everyMinutes >= ${TASK_LIMITS.minWatchMinutes}, default ${TASK_LIMITS.defaultWatchMinutes}; checks the page cheaply and runs the agent only when it changed). In update, give kind for a new schedule or only the fields to change.
-prompt: what to do each run, or for a watch the condition and what to report. create runs with your agent; update may name another agent (agent: its name). Tell the user what you did.`,
+Schedule fields: kind: once (at: local date and time, ISO 8601 such as 2026-05-01T09:00; or inMinutes: minutes from now, for "in 5 minutes"), interval (every, unit: minutes|hours|days), daily (time HH:MM), weekly (time, days: 0=Sunday..6), watch (url, everyMinutes >= ${TASK_LIMITS.minWatchMinutes}, default ${TASK_LIMITS.defaultWatchMinutes}; checks the page cheaply and runs the agent only when it changed). In update, give kind for a new schedule or only the fields to change.
+prompt: what to do each run, or for a watch the condition and what to report. create runs with your agent; update may name another agent (agent: its name). Tell the user what you did and when it runs next (nextRun, in local time).`,
   parameters: schema(
     {
       action: { type: "string", enum: [...ACTIONS] },
@@ -83,6 +83,7 @@ prompt: what to do each run, or for a watch the condition and what to report. cr
         enum: ["once", "interval", "daily", "weekly", "watch"],
       },
       at: { type: "string" },
+      inMinutes: { type: "number" },
       every: { type: "number" },
       unit: { type: "string", enum: ["minutes", "hours", "days"] },
       time: { type: "string" },

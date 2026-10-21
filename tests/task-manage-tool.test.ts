@@ -9,6 +9,7 @@ import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";
 import { TOOL_NAME } from "../src/shared/tool-names";
 import { agentActApproval } from "../src/shared/tasks/approval";
+import { localIsoTime } from "../src/shared/local-time";
 import { discardTask } from "../src/shared/tasks/edit";
 import { idleReason } from "../src/shared/tasks/lifecycle";
 import { loadRunContext } from "../src/shared/tasks/run-context";
@@ -79,9 +80,7 @@ test("list and get show each task's schedule, state and runs (read)", async () =
   assert.equal(other.status, "runs on another device");
   const got = await call({ action: "get", id: "t1" });
   assert.equal(got.prompt, "Check the prices");
-  assert.deepEqual(got.recentRuns, [
-    { chatId: "run-1", at: new Date(5).toISOString() },
-  ]);
+  assert.deepEqual(got.recentRuns, [{ chatId: "run-1", at: localIsoTime(5) }]);
   assert.equal((await call({ action: "get", id: "nope" })).isError, true);
   // Reading actions stay in read-only runs; the others do not.
   const reading = readingTool(tasksTool)!;
@@ -142,6 +141,43 @@ test("a task of an agent whose acting is not allowed here still waits", async ()
   assert.equal((await stored(id)).reason, undefined);
   assert.equal(await runTask(id, { manual: true }), true);
   assert.equal(env.runs.length, 1);
+});
+
+test("a one-time task in some minutes is counted from now; times read as local", async () => {
+  await schedulerEnv({ tasks: [] });
+  const before = Date.now();
+  const created = await call({
+    action: "create",
+    title: "Stretch",
+    prompt: "Remind me to stretch",
+    kind: "once",
+    inMinutes: 5,
+  });
+  const id = String(created.taskId);
+  const { task: made } = await stored(id);
+  assert.equal(made.trigger.kind, "once");
+  const at = (made.trigger as { at: number }).at;
+  assert.ok(at >= before + 5 * 60_000 && at <= Date.now() + 5 * 60_000);
+  // The result gives the run time as local time with its offset.
+  assert.equal(created.nextRun, localIsoTime(at));
+  assert.equal(created.schedule, `once at ${localIsoTime(at)}`);
+  // An absolute time with an offset is that moment.
+  const fixed = await call({
+    action: "update",
+    id,
+    at: "2030-01-02T09:00:00+09:00",
+  });
+  assert.equal(fixed.nextRun, localIsoTime(Date.parse("2030-01-02T00:00Z")));
+  for (const [input, error] of [
+    [{ kind: "once", inMinutes: 5, at: "2030-01-01T09:00" }, /not both/],
+    [{ kind: "daily", time: "09:00", inMinutes: 5 }, /only for kind once/],
+    [{ kind: "once", inMinutes: -1 }, /above 0/],
+    [{ kind: "once", inMinutes: "5" }, /above 0/],
+  ] as const)
+    assert.match(
+      String((await call({ action: "create", prompt: "x", ...input })).error),
+      error,
+    );
 });
 
 test("update, pause and resume run as made; discard goes back to what was allowed", async () => {

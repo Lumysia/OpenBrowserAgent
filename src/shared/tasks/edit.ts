@@ -1,4 +1,5 @@
 import { storage, removeById, updateById } from "../storage";
+import { localIsoTime } from "../local-time";
 import { sameJson } from "../sync/codec";
 import { mayActUnattended } from "../agents";
 import type { Agent } from "../types";
@@ -194,7 +195,7 @@ export function updateTaskState(
 export function describeTrigger(trigger: TaskTrigger) {
   switch (trigger.kind) {
     case "once":
-      return `once at ${new Date(trigger.at).toString()}`;
+      return `once at ${localIsoTime(trigger.at)}`;
     case "interval":
       return `every ${trigger.every} ${trigger.unit}`;
     case "daily":

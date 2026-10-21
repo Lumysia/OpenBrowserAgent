@@ -231,11 +231,12 @@ async function offeredInTaskRun(agent: Agent, allowedHere = true) {
       onStart: () => {},
     });
     sessions.abortSession(run.chatId);
-    const tools = (fixture.requests[0].body.tools || []).map(
+    const { body } = fixture.requests[0];
+    const tools = (body.tools || []).map(
       (tool: { function?: { name: string }; name?: string }) =>
         tool.function?.name || tool.name,
-    );
-    return tools as string[];
+    ) as string[];
+    return Object.assign(tools, { user: JSON.stringify(body.messages.at(-1)) });
   } finally {
     mock.restoreAll();
     await fixture.close();
@@ -249,6 +250,9 @@ test("a task run of an agent without the permission is not offered act; with it,
   });
   assert.ok(looking.includes(TOOL_NAME.read));
   assert.ok(looking.includes(TOOL_NAME.taskResult));
+  // The run knows the current local time, in its message, not the system
+  // prompt.
+  assert.match(looking.user, /<current_time>\w+day \d{4}-\d\d-\d\dT/);
   assert.ok(!looking.includes(TOOL_NAME.act));
   const acting = await offeredInTaskRun({
     ...ALL_GROUPS_AGENT,
