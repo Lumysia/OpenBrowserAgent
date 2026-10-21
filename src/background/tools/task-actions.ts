@@ -20,14 +20,14 @@ import type { Agent } from "../../shared/types";
 import { resumeTask, startTaskRun } from "../tasks/scheduler";
 
 // What the agent's task tool does, on the same edits as the task list
-// (shared/tasks/edit.ts) but as the agent: what it creates, changes or
-// turns on waits for the user's OK on this device.
+// (shared/tasks/edit.ts): the user asked for them in the chat, so they
+// are allowed as made. Only an agent's permission to act on its own that
+// was not allowed on this device still waits (see approval.ts).
 
-const AGENT = { approve: false };
 const RECENT_RUNS = 10;
 
-export const WAITS_FOR_OK =
-  "It waits for the user's OK: it does not run until the user allows it on this step or in the task list. Tell the user.";
+const AGENT_WAITS_FOR_OK =
+  "Its agent's permission to act on its own was turned on on another device and is not allowed on this device yet: the task does not run here until the user allows it in the task list. Tell the user.";
 
 type Input = Record<string, unknown>;
 type Outcome = Record<string, unknown> & { error?: string };
@@ -194,26 +194,14 @@ export async function createTaskAction(
   if (!input.kind) return { error: "kind is required." };
   const { trigger, error } = triggerFrom(input);
   if (!trigger) return { error: error || "Give a valid schedule." };
-  const task = await createTask(
-    {
-      title: trimmedString(input.title) || prompt.slice(0, 60),
-      prompt,
-      agentId: agent.id,
-      trigger,
-    },
-    AGENT,
-  );
+  const task = await createTask({
+    title: trimmedString(input.title) || prompt.slice(0, 60),
+    prompt,
+    agentId: agent.id,
+    trigger,
+  });
   if (!task) return { error: "The task could not be created." };
-  return {
-    success: true,
-    taskId: task.id,
-    title: task.title,
-    schedule: describeTrigger(task.trigger),
-    agent: agent.name,
-    mayAct: mayActUnattended(agent),
-    waitingForOk: true,
-    note: `${changeNote(agent)} ${WAITS_FOR_OK}`,
-  };
+  return changedResult(task);
 }
 
 export async function updateTaskAction(input: Input): Promise<Outcome> {
@@ -240,12 +228,13 @@ export async function updateTaskAction(input: Input): Promise<Outcome> {
   if (trigger) patch.trigger = trigger;
   if (!Object.keys(patch).length)
     return { error: "Nothing to change: give the fields to change." };
-  const saved = await updateTask(task.id, patch, AGENT);
+  const saved = await updateTask(task.id, patch);
   if (!saved) return { error: "That change does not make a valid task." };
   return changedResult(saved);
 }
 
-// After a change: what the task is now and whether it waits for the OK.
+// After a change: what the task is now, whether its runs may act, and
+// whether it still waits for the user's OK.
 async function changedResult(task: ScheduledTask): Promise<Outcome> {
   const view = await snapshot();
   const now = summary(task, view);
@@ -259,9 +248,9 @@ async function changedResult(task: ScheduledTask): Promise<Outcome> {
     mayAct: !!agent && mayActUnattended(agent),
     status: now.status,
     waitingForOk: now.waitingForOk,
-    ...(now.waitingForOk
-      ? { note: `${changeNote(agent)} ${WAITS_FOR_OK}` }
-      : {}),
+    note: now.waitingForOk
+      ? `${changeNote(agent)} ${AGENT_WAITS_FOR_OK}`
+      : changeNote(agent),
   };
 }
 
@@ -301,12 +290,11 @@ export async function setTaskPaused(
   const task = findTask(view, input);
   if (!task) return notFound(input);
   if (paused) {
-    const saved = await updateTask(task.id, { enabled: false }, AGENT);
+    const saved = await updateTask(task.id, { enabled: false });
     return saved ? changedResult(saved) : notFound(input);
   }
-  if (!task.enabled) await updateTask(task.id, { enabled: true }, AGENT);
-  if (taskState(view.states, task.id).pausedBy)
-    await resumeTask(task.id, AGENT);
+  if (!task.enabled) await updateTask(task.id, { enabled: true });
+  if (taskState(view.states, task.id).pausedBy) await resumeTask(task.id);
   const current = (await storage.tasks.get()).find(
     (item) => item.id === task.id,
   );

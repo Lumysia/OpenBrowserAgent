@@ -111,10 +111,8 @@ export const tasksZhCN: TasksLocaleMessages = {
     paused: "任务连续多次失败，已暂停。",
   },
   approval: {
-    onlyLooks: "只查看",
     allow: "允许",
     discard: "放弃",
-    waits: "需等你允许后才会在此设备上运行。",
   },
   agentPermission: {
     pendingHere: "已在另一台设备上开启：你允许之前，它不会在这里自主操作。",

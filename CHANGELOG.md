@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- A scheduled task you ask the agent for in a chat now runs as asked, without a separate **Allow** step. Tasks that arrive by sync from another device still wait for your OK.
+
 ## 0.3.0-alpha.1 - 2026-10-21
 
 - **Record a skill**: show the agent a browser task once. Choose **+ → Record a skill** in the side panel, do the task, and press **Stop**. The agent writes a skill with a name, inputs and steps, runs it once in a new tab to check it (asking you before the final submit), and saves it; you can let the agent use it automatically once the check passed. Steps show up in the side panel while you record, where you can delete them or mark what changes each time.

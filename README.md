@@ -32,7 +32,7 @@ You bring your own model, from a cloud provider with your own API key or running
 - Have the agent do something later or on a schedule: once, every few minutes, hours or days, or daily or weekly at a set time. Or watch a page (all of it or one part you pick) and get told when it changes the way you describe, such as a price dropping below a number.
 - A watch reads the page without the AI model and calls the model only when the content changed, so checking often costs little.
 - Results arrive as system notifications and as ordinary chats in the side panel's task list, where you create, edit, pause, run or delete tasks. You can also ask the agent to set one up, change it or remove it in words.
-- Tasks only look by default: they read and report, but don't click, type or submit. An agent can act on its own only if you turn that on in its settings. Tasks the agent creates or changes, and tasks or permissions that arrive by sync, wait for your OK on each device.
+- Tasks only look by default: they read and report, but don't click, type or submit. An agent can act on its own only if you turn that on in its settings. Tasks you ask the agent for in a chat run as asked; tasks or permissions that arrive by sync wait for your OK on each device.
 - Tasks run while the browser is open, each on the device it belongs to.
 
 ### Translate pages and video subtitles

@@ -7,7 +7,6 @@ import { normalizeTask } from "./normalize";
 import {
   isKnownTrigger,
   type ScheduledTask,
-  type TaskApproval,
   type TaskState,
   type TaskTrigger,
 } from "./types";
@@ -19,13 +18,12 @@ export type TaskDraft = Pick<
 > &
   Partial<Pick<ScheduledTask, "deviceId" | "enabled">>;
 
-// Who makes an edit: the user in the task list on this device (`approve`:
-// it runs as edited), or the agent (it waits for the user's OK).
-export type EditSource = { approve: boolean };
+// Edits here are the user's, made in the task list or asked of the agent
+// in a chat: they are allowed on this device as made (see approval.ts).
 
 // A new task from a draft, run by this device unless the draft names
 // another; undefined when the draft cannot be one (no usable trigger).
-export async function createTask(draft: TaskDraft, { approve }: EditSource) {
+export async function createTask(draft: TaskDraft) {
   const now = Date.now();
   const deviceId = draft.deviceId || (await storage.taskDeviceId.get());
   const task = normalizeTask({
@@ -39,11 +37,10 @@ export async function createTask(draft: TaskDraft, { approve }: EditSource) {
   // Only a schedule this version can run makes a new task.
   if (!task || !isKnownTrigger(task.trigger)) return undefined;
   // The approval first: the scheduler sees the task allowed when it comes.
-  if (approve)
-    await updateTaskState(task.id, (state) => ({
-      ...state,
-      approved: approvalOf(task, now),
-    }));
+  await updateTaskState(task.id, (state) => ({
+    ...state,
+    approved: approvalOf(task, now),
+  }));
   await storage.tasks.update((tasks) => [...tasks, task]);
   return task;
 }
@@ -84,30 +81,19 @@ export function editedTask(
 
 // Changes a task's definition. Returns the task as stored after it, or
 // undefined when there is no such task or the change makes no valid one.
-// The user's edit is allowed as made; the agent's waits for the user's OK,
-// turning a task on included.
-export async function updateTask(
-  id: string,
-  patch: TaskPatch,
-  { approve }: EditSource,
-) {
+// The edit is allowed as made, turning a task on included.
+export async function updateTask(id: string, patch: TaskPatch) {
   const current = (await storage.tasks.get()).find((task) => task.id === id);
   if (!current) return undefined;
   const now = Date.now();
   const edit = editedTask(current, patch, now);
   if (!edit) return undefined;
-  const turnedOn = edit.task.enabled && !current.enabled;
-  if (!edit.changed && !approve) return current;
-  // The state first: the scheduler sees the edit allowed (or not) when
-  // the task changes.
+  // The state first: the scheduler sees the edit allowed when the task
+  // changes.
   await updateTaskState(id, (state) => ({
     ...state,
     ...(edit.restart ? RESTART : {}),
-    approved: approve
-      ? approvalOf(edit.task, now)
-      : turnedOn
-        ? withheld(state.approved)
-        : state.approved,
+    approved: approvalOf(edit.task, now),
   }));
   if (!edit.changed) return current;
   return updateById(
@@ -124,18 +110,6 @@ const RESTART = {
   baseline: undefined,
   conditionMet: undefined,
 } satisfies Partial<TaskState>;
-
-// The approval of a task the agent turns on: as allowed, but off, so the
-// task waits for the user's OK.
-function withheld(approved: TaskApproval | undefined) {
-  return approved && { ...approved, enabled: false };
-}
-
-// The agent resumes a task the scheduler paused (failures, or it needed
-// the user): it waits for the user's OK before it runs again.
-export function withholdResume(state: TaskState): TaskState {
-  return { ...state, approved: withheld(state.approved) };
-}
 
 // The user set an agent's tools or its permission to act on its own on
 // this device: what it may do on its own is allowed here as set.
@@ -186,7 +160,6 @@ export async function discardTask(id: string) {
   return !!(await updateTask(
     id,
     same ? { enabled: false } : { ...definition, enabled: approved.enabled },
-    { approve: true },
   ));
 }
 

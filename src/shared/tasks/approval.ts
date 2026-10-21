@@ -5,11 +5,11 @@ import type { ScheduledTask, TaskApproval, TaskState } from "./types";
 
 // What the user allowed on this device, kept on this device only. A task
 // runs here only as the user last allowed it: what it does (prompt), when
-// (trigger), with which agent, and whether it is on. Edits in the task
-// list allow themselves; a task that came by sync from another device, or
-// that the agent created or changed, waits for the user's OK. Likewise an
-// agent's permission to act on its own counts here only once allowed here
-// for its tool groups.
+// (trigger), with which agent, and whether it is on. The user's edits
+// here allow themselves, made in the task list or asked of the agent in a
+// chat; a task that came by sync from another device waits for the user's
+// OK. Likewise an agent's permission to act on its own counts here only
+// once allowed here for its tool groups.
 
 // The approval of the task as it is now.
 export function approvalOf(task: ScheduledTask, at: number): TaskApproval {

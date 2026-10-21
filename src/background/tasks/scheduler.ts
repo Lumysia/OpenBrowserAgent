@@ -1,11 +1,6 @@
 import { getBrowserApi } from "../../shared/browser-api";
 import { storage } from "../../shared/storage";
-import {
-  dropTaskStates,
-  updateTaskState,
-  withholdResume,
-  type EditSource,
-} from "../../shared/tasks/edit";
+import { dropTaskStates, updateTaskState } from "../../shared/tasks/edit";
 import {
   afterRun,
   idleReason,
@@ -256,10 +251,10 @@ export async function markTasksSeen() {
 }
 
 // A task the scheduler paused starts over: no failures, the schedule
-// counted from now. Resumed by the agent, it waits for the user's OK.
-export async function resumeTask(taskId: string, { approve }: EditSource) {
+// counted from now.
+export async function resumeTask(taskId: string) {
   await updateTaskState(taskId, (current) => ({
-    ...(approve ? current : withholdResume(current)),
+    ...current,
     pausedBy: undefined,
     failures: 0,
     nextRunAt: undefined,
@@ -285,9 +280,7 @@ async function answerTaskMessage(message: TaskMessage) {
     await markTasksSeen();
     return true;
   }
-  // The task list's resume is the user's.
-  if (message.type === TASK_MESSAGE.resume)
-    return resumeTask(message.taskId, { approve: true });
+  if (message.type === TASK_MESSAGE.resume) return resumeTask(message.taskId);
   return startTaskRun(message.taskId);
 }
 

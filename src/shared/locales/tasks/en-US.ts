@@ -120,10 +120,8 @@ export const tasksEnUS = {
     paused: "The task failed several times in a row and is paused.",
   },
   approval: {
-    onlyLooks: "Only looks",
     allow: "Allow",
     discard: "Discard",
-    waits: "Waits for your OK before it runs on this device.",
   },
   agentPermission: {
     pendingHere:

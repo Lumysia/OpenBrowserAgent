@@ -8,12 +8,8 @@ import {
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";
 import { TOOL_NAME } from "../src/shared/tool-names";
-import {
-  approveTask,
-  createTask,
-  discardTask,
-  updateTask,
-} from "../src/shared/tasks/edit";
+import { agentActApproval } from "../src/shared/tasks/approval";
+import { discardTask } from "../src/shared/tasks/edit";
 import { idleReason } from "../src/shared/tasks/lifecycle";
 import { loadRunContext } from "../src/shared/tasks/run-context";
 import type { ScheduledTask } from "../src/shared/tasks/types";
@@ -24,12 +20,12 @@ import { tasksTool } from "../src/background/tools/tasks";
 import type { ToolContext } from "../src/background/tools/types";
 import { DEVICE, schedulerEnv, settle, task } from "./task-scheduler-env";
 
-// The agent's task tool, action by action, and the user's OK that what
-// the agent creates, changes or turns on waits for.
+// The agent's task tool, action by action. The user asked for what it
+// does in the chat, so it runs as made; only an agent's permission to act
+// on its own that was not allowed on this device still waits.
 
 afterEach(() => mock.restoreAll());
 
-const USER = { approve: true };
 const AGENT = { ...createAgentDraft("Helper"), id: "custom" };
 
 async function call(input: Record<string, unknown>) {
@@ -95,7 +91,7 @@ test("list and get show each task's schedule, state and runs (read)", async () =
   assert.deepEqual(actions, ["list", "get"]);
 });
 
-test("create makes a task that waits for the user's OK, then runs once allowed", async () => {
+test("create makes a task that runs without a separate OK", async () => {
   const env = await schedulerEnv({ tasks: [] });
   const created = await call({
     action: "create",
@@ -105,28 +101,50 @@ test("create makes a task that waits for the user's OK, then runs once allowed",
     every: 2,
     unit: "hours",
   });
-  assert.equal(created.waitingForOk, true);
-  assert.match(String(created.note), /waits for the user's OK/);
+  assert.equal(created.waitingForOk, false);
+  assert.equal(created.status, "scheduled");
+  assert.doesNotMatch(String(created.note), /OK/);
   const id = String(created.taskId);
-  assert.equal((await stored(id)).reason, "needsOk");
-  // Not run: not due, not by run now, not by the agent's runNow.
+  assert.equal((await stored(id)).reason, undefined);
+  // Nothing to notify or count on the badge.
   await armTasks();
   await settle();
-  assert.equal(env.runs.length, 0);
-  assert.equal(await runTask(id, { manual: true }), false);
-  assert.equal((await call({ action: "runNow", id })).isError, true);
-  // Notified once, counted in the badge.
-  await armTasks();
-  assert.equal(env.notifications.length, 1);
+  assert.equal(env.notifications.length, 0);
   const { task: made, state } = await stored(id);
-  assert.equal(badgeCount([made], { [id]: state }, await loadRunContext()), 1);
-  await approveTask(id);
+  assert.equal(badgeCount([made], { [id]: state }, await loadRunContext()), 0);
+  // The agent's runNow and the list's run now both run it.
+  assert.equal((await call({ action: "runNow", id })).started, true);
+  await settle();
+  assert.equal(env.runs.length, 1);
+});
+
+test("a task of an agent whose acting is not allowed here still waits", async () => {
+  const env = await schedulerEnv({ tasks: [] });
+  // Turned on on another device: synced, not allowed here.
+  const buyer = { ...AGENT, actUnattended: true };
+  await storage.agents.replace([buyer]);
+  const created = await call({
+    action: "create",
+    title: "Buy",
+    prompt: "Buy the ticket when it is on sale",
+    kind: "daily",
+    time: "09:00",
+  });
+  assert.equal(created.waitingForOk, true);
+  assert.match(String(created.note), /not allowed on this device yet/);
+  const id = String(created.taskId);
+  assert.equal((await stored(id)).reason, "needsOk");
+  assert.equal(await runTask(id, { manual: true }), false);
+  // The tool never allows the agent itself.
+  assert.deepEqual(await storage.agentActApprovals.get(), {});
+  // Allowed here (task list or agent settings): it runs.
+  await storage.agentActApprovals.set({ [buyer.id]: agentActApproval(buyer) });
   assert.equal((await stored(id)).reason, undefined);
   assert.equal(await runTask(id, { manual: true }), true);
   assert.equal(env.runs.length, 1);
 });
 
-test("update changes what is asked; a real change or turning on waits again, a rename does not", async () => {
+test("update, pause and resume run as made; discard goes back to what was allowed", async () => {
   await schedulerEnv();
   const renamed = await call({
     action: "update",
@@ -136,12 +154,13 @@ test("update changes what is asked; a real change or turning on waits again, a r
   assert.equal(renamed.waitingForOk, false);
   assert.equal((await stored("t1")).task.title, "Price check");
   const every = await call({ action: "update", id: "t1", every: 3 });
-  assert.equal(every.waitingForOk, true);
+  assert.equal(every.waitingForOk, false);
   assert.deepEqual((await stored("t1")).task.trigger, {
     kind: "interval",
     every: 3,
     unit: "hours",
   });
+  assert.equal((await stored("t1")).reason, undefined);
   // Same checks as the task list: no watch of a file.
   const bad = await call({
     action: "update",
@@ -150,20 +169,20 @@ test("update changes what is asked; a real change or turning on waits again, a r
     url: "file:///etc",
   });
   assert.equal(bad.isError, true);
-  // Discard: back to what the user allowed.
-  await discardTask("t1");
-  assert.equal((await stored("t1")).task.trigger.kind, "interval");
-  assert.deepEqual((await stored("t1")).task.trigger, task().trigger);
-  assert.equal((await stored("t1")).reason, undefined);
-  // Pausing needs no OK; turning back on does.
   assert.equal(
     (await call({ action: "pause", id: "t1" })).status,
     "paused by the user",
   );
   const resumed = await call({ action: "resume", id: "t1" });
-  assert.equal(resumed.waitingForOk, true);
-  // The task list's own edit is the user's: allowed as made.
-  await updateTask("t1", { prompt: "Check all prices" }, USER);
+  assert.equal(resumed.waitingForOk, false);
+  assert.equal(resumed.status, "scheduled");
+  // A synced change waits; Discard goes back to what was allowed.
+  await storage.tasks.update((tasks) =>
+    tasks.map((item) => ({ ...item, prompt: "Buy everything" })),
+  );
+  assert.equal((await stored("t1")).reason, "needsOk");
+  await discardTask("t1");
+  assert.equal((await stored("t1")).task.prompt, "Check the prices");
   assert.equal((await stored("t1")).reason, undefined);
 });
 
@@ -177,7 +196,7 @@ test("update can name another agent but never changes what an agent may do", asy
   await storage.agents.replace([acting]);
   const moved = await call({ action: "update", id: "t1", agent: "Buyer" });
   assert.equal(moved.agent, "Buyer");
-  assert.equal(moved.waitingForOk, true);
+  assert.equal(moved.waitingForOk, false);
   assert.equal(
     (await call({ action: "update", id: "t1", agent: "Nobody" })).isError,
     true,
@@ -188,15 +207,14 @@ test("update can name another agent but never changes what an agent may do", asy
   assert.equal(agent.actUnattended, false);
 });
 
-test("delete removes the task; discard of a task never allowed deletes it", async () => {
+test("delete removes the task; discard of a synced task never allowed deletes it", async () => {
   await schedulerEnv();
   assert.equal((await call({ action: "delete", id: "t1" })).deleted, true);
   assert.equal((await storage.tasks.get()).length, 0);
-  const made = (await createTask(
-    { title: "x", prompt: "y", agentId: "custom", trigger: task().trigger },
-    { approve: false },
-  ))!;
-  await discardTask(made.id);
+  // As sync stores it: the definition, nothing allowed here.
+  await storage.tasks.replace([task({ id: "synced" })]);
+  assert.equal((await stored("synced")).reason, "needsOk");
+  await discardTask("synced");
   assert.equal((await storage.tasks.get()).length, 0);
 });
 

@@ -118,10 +118,8 @@ export const tasksPtBR: TasksLocaleMessages = {
     paused: "A tarefa falhou várias vezes seguidas e foi pausada.",
   },
   approval: {
-    onlyLooks: "Só observa",
     allow: "Permitir",
     discard: "Descartar",
-    waits: "Aguarda sua aprovação antes de ser executada neste dispositivo.",
   },
   agentPermission: {
     pendingHere:

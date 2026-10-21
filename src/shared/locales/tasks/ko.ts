@@ -115,10 +115,8 @@ export const tasksKo: TasksLocaleMessages = {
     paused: "작업이 연속으로 실패하여 일시 중지되었습니다.",
   },
   approval: {
-    onlyLooks: "보기만",
     allow: "허용",
     discard: "취소",
-    waits: "이 기기에서 실행되기 전에 허용을 기다립니다.",
   },
   agentPermission: {
     pendingHere:
