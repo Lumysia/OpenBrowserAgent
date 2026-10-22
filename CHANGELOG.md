@@ -6,6 +6,7 @@ What changed in each release. The release workflow publishes the section for the
 
 - A scheduled task you ask the agent for in a chat now runs as asked, without a separate **Allow** step. Tasks that arrive by sync from another device still wait for your OK.
 - The agent knows the current local time and can schedule a one-time task "in 5 minutes" directly; task times it reports are in your local time. Code the agent runs can now format dates and numbers and convert between time zones.
+- The confirmation before deleting a task or clearing chat history now matches the rest of the side panel: a title, a short explanation, and **Cancel** first (and focused) with the delete action at the end.
 
 ## 0.3.0-alpha.1 - 2026-10-21
 

@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { Button } from "./button";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { IconTooltip } from "./tooltip";
 
-// An icon-only destructive action that asks first in a small popover: what
-// it does, the action, and Cancel.
+// An icon-only destructive action that asks first in a small popover: the
+// action as its title, what it does, then Cancel and the action. Cancel
+// comes first so it takes the focus.
 export function ConfirmIconButton({
   icon,
   label,
@@ -25,6 +26,7 @@ export function ConfirmIconButton({
   onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const id = useId();
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <IconTooltip label={label}>
@@ -40,28 +42,29 @@ export function ConfirmIconButton({
           </Button>
         </PopoverTrigger>
       </IconTooltip>
-      <PopoverContent className="settings-popover-content" align="end">
-        <div className="settings-popover-menu" role="alertdialog">
-          <p>{question}</p>
-          <div className="row">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                setOpen(false);
-                onConfirm();
-              }}
-            >
-              {confirmLabel}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setOpen(false)}
-            >
-              {cancelLabel}
-            </Button>
-          </div>
+      <PopoverContent
+        className="confirm-popover"
+        align="end"
+        role="alertdialog"
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-text`}
+      >
+        <strong id={`${id}-title`}>{label}</strong>
+        <p id={`${id}-text`}>{question}</p>
+        <div className="confirm-popover-actions">
+          <Button variant="secondary" size="sm" onClick={() => setOpen(false)}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+          >
+            {confirmLabel}
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
