@@ -146,8 +146,8 @@ const DETAILS: Record<
         : "",
     ]),
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
-  // Which task, and for one created or changed whether its runs may act
-  // (the agent never turns that on) and that it waits for the user's OK.
+  // Which task, and for one that still waits for the user's OK (its
+  // agent's permission to act on its own is not allowed here) that it does.
   [TOOL_NAME.tasks]: (input, output, t) =>
     input.action === "list"
       ? compactJoin([
@@ -157,14 +157,7 @@ const DETAILS: Record<
       : compactJoin([
           actionLabel(input.action, t),
           stringValue(output.title) || stringValue(input.title),
-          output.waitingForOk === true
-            ? compactJoin([
-                output.mayAct === true
-                  ? t.tasks.agentPermission.label
-                  : t.tasks.approval.onlyLooks,
-                t.tasks.status.needsOk,
-              ])
-            : "",
+          output.waitingForOk === true ? t.tasks.status.needsOk : "",
         ]),
   [TOOL_NAME.taskResult]: (input) => stringValue(input.summary),
   [TOOL_NAME.skillCheck]: (input) => stringValue(input.summary),

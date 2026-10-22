@@ -43,6 +43,33 @@
   overflow: hidden;
   border-radius: var(--radius);
 }
+/* A question before a destructive action (ConfirmIconButton): the action,
+   what it does, then Cancel and the action at the end. */
+.confirm-popover {
+  width: min(300px, calc(100vw - 24px));
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+.confirm-popover > strong {
+  color: var(--foreground);
+  font-size: var(--text-md);
+  line-height: 1.25;
+}
+.confirm-popover > p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.confirm-popover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
 .ui-select-content {
   z-index: var(--z-overlay);
   width: var(--radix-select-trigger-width);

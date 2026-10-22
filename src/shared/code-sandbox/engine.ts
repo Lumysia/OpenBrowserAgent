@@ -21,6 +21,7 @@ import {
   type CodeRunStop,
 } from "./protocol";
 import { guestString, type Budget } from "./guest-string";
+import { installIntl } from "./intl-bridge";
 
 // The guest's whole API, set up by guest code from three host functions so
 // that the host functions themselves never become globals. Values print as
@@ -217,6 +218,7 @@ function install(
   };
   for (const handle of [pair, prelude, write, read, save, input])
     handle.dispose();
+  installIntl(context);
   return report;
 }
 

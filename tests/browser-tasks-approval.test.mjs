@@ -26,12 +26,12 @@ import {
   watchModel,
 } from "./browser-tasks-helpers.mjs";
 
-// The user's OK on this device: for what the agent's task tool creates or
-// changes (on its step card and in the list), and for a task that came by
-// sync.
+// The user's OK on this device: what the agent's task tool creates or
+// changes in a chat runs as asked, with no Allow step; a task that came by
+// sync waits for Allow in the task list.
 
 test(
-  "a task the agent creates waits for the user's OK on its step and runs once confirmed",
+  "a task the agent creates in a chat runs without an Allow step",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     let baseUrl = "";
@@ -52,7 +52,7 @@ test(
             },
           }),
         ],
-        "I set up the watch; it waits for your OK.",
+        "I set up the watch.",
       ),
     });
     const { browser, extensionUrl, fixture, options } = session;
@@ -67,40 +67,29 @@ test(
       assert.equal(task.trigger.kind, "watch");
       assert.equal(task.trigger.everyMinutes, 1);
       assert.equal(task.agentId, "general-agent");
-      // The step says what was made, that runs only look and that it waits.
-      await poll(async () => {
-        const text = await chatText(panel);
-        return (
-          text.includes(t.tasks.approval.onlyLooks) &&
-          text.includes(t.tasks.status.needsOk) &&
-          text.includes("Price watch")
-        );
-      });
-      // The result told the model so.
+      // A new watch takes its first look at once: nothing to allow.
+      await ranAfter(options, task.id);
+      const taskRuns = runStarts(fixture.requests).filter((request) =>
+        isTaskRun(request.body),
+      );
+      assert.equal(taskRuns.length, 1);
+      // The step says what was made, and nothing waits.
+      await poll(async () => (await chatText(panel)).includes("Price watch"));
+      const text = await chatText(panel);
+      assert.ok(!text.includes(t.tasks.status.needsOk));
+      assert.ok(!text.includes(t.tasks.approval.allow));
+      assert.equal(
+        await panel.call(
+          () => !!document.querySelector(".task-approval-actions"),
+        ),
+        false,
+      );
+      // The result told the model it is scheduled, not waiting.
       const toolResult = fixture.requests
         .flatMap((request) => request.body.messages || [])
         .find((m) => m.role === "tool" && String(m.content).includes(task.id));
-      assert.match(String(toolResult.content), /waits for the user's OK/);
-      // A new watch looks at once, but this one waits: no task run, badge 1.
-      const badge = () => options.call(() => chrome.action.getBadgeText({}));
-      await poll(async () => (await badge()) === "1");
-      const taskRuns = () =>
-        runStarts(fixture.requests).filter((request) => isTaskRun(request.body))
-          .length;
-      assert.equal(taskRuns(), 0);
-      assert.equal((await taskStates(options))[task.id]?.lastRunAt, undefined);
-      // Confirm on the step card: it runs.
-      await clickElement(panel, ".tool-card .task-approval-actions button", {
-        text: t.tasks.approval.allow,
-        exact: true,
-      });
-      await ranAfter(options, task.id);
-      assert.equal(taskRuns(), 1);
-      await poll(() =>
-        panel.call(
-          () => !document.querySelector(".tool-card .task-approval-actions"),
-        ),
-      );
+      assert.match(String(toolResult.content), /"waitingForOk":false/);
+      assert.equal((await taskStates(options))[task.id].okNotified, undefined);
       const agents = (await storageValue(options, STORAGE_KEYS.agents)) || [];
       assert.ok(agents.every((agent) => agent.actUnattended !== true));
     } finally {
@@ -110,7 +99,7 @@ test(
 );
 
 test(
-  "the agent lists, changes and deletes tasks; the change waits for the OK",
+  "the agent lists, changes and deletes tasks; the change runs as made",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const session = await startTaskExtension({
@@ -171,7 +160,7 @@ test(
       const listed = results.find((text) => text.includes('"count":2'));
       assert.match(listed, /"id":"news"/);
       assert.match(listed, /"id":"old"/);
-      assert.ok(results.some((text) => /"waitingForOk":true/.test(text)));
+      assert.ok(results.every((text) => !/"waitingForOk":true/.test(text)));
       // The steps say what was done, in the UI language.
       const steps = t.display.toolSteps.actions;
       await poll(async () => {
@@ -180,20 +169,15 @@ test(
           (part) => text.includes(part),
         );
       });
-      // The changed task waits in the list, with Allow; Allow clears it.
+      // The changed task is scheduled in the list, with nothing to allow.
       await openTaskList(panel);
       await poll(async () =>
-        (await taskRowText(panel, "news")).includes(t.tasks.status.needsOk),
+        (await taskRowText(panel, "news")).includes("Evening news"),
       );
-      await clickElement(
-        panel,
-        '[data-task-id="news"] .task-approval-actions button',
-        { text: t.tasks.approval.allow, exact: true },
+      assert.ok(
+        !(await taskRowText(panel, "news")).includes(t.tasks.status.needsOk),
       );
-      await poll(
-        async () =>
-          !(await taskRowText(panel, "news")).includes(t.tasks.status.needsOk),
-      );
+      assert.ok((await taskStates(options)).news.approved);
     } finally {
       await session.close();
     }

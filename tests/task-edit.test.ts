@@ -7,8 +7,6 @@ import { observation } from "../src/shared/tasks/watch-text";
 import { UNKNOWN_TRIGGER, type ScheduledTask } from "../src/shared/tasks/types";
 import { installChrome } from "./fake-chrome";
 
-const USER = { approve: true };
-
 // Editing a task starts it over only when what it does or when it runs
 // really changed; the form saves every field each time.
 
@@ -28,30 +26,23 @@ async function stored(id: string) {
 
 // What the task form saves: the whole draft.
 const formSave = (task: ScheduledTask, patch: Partial<ScheduledTask>) =>
-  updateTask(
-    task.id,
-    {
-      title: task.title,
-      prompt: task.prompt,
-      agentId: task.agentId,
-      trigger: task.trigger,
-      deviceId: task.deviceId,
-      ...patch,
-    },
-    USER,
-  );
+  updateTask(task.id, {
+    title: task.title,
+    prompt: task.prompt,
+    agentId: task.agentId,
+    trigger: task.trigger,
+    deviceId: task.deviceId,
+    ...patch,
+  });
 
 test("renaming a one-time task that ran keeps it done", async () => {
   const at = Date.now() - HOUR;
-  const task = (await createTask(
-    {
-      title: "Remind",
-      prompt: "Say hi",
-      agentId: "custom",
-      trigger: { kind: "once", at },
-    },
-    USER,
-  ))!;
+  const task = (await createTask({
+    title: "Remind",
+    prompt: "Say hi",
+    agentId: "custom",
+    trigger: { kind: "once", at },
+  }))!;
   await storage.taskStates.set({
     [task.id]: { failures: 0, lastRunAt: at + 1_000 },
   });
@@ -63,15 +54,12 @@ test("renaming a one-time task that ran keeps it done", async () => {
 });
 
 test("saving a watch unchanged keeps its baseline and writes nothing", async () => {
-  const task = (await createTask(
-    {
-      title: "Price",
-      prompt: "Tell me when it is below 50",
-      agentId: "custom",
-      trigger: { kind: "watch", url: "https://shop.test/", everyMinutes: 5 },
-    },
-    USER,
-  ))!;
+  const task = (await createTask({
+    title: "Price",
+    prompt: "Tell me when it is below 50",
+    agentId: "custom",
+    trigger: { kind: "watch", url: "https://shop.test/", everyMinutes: 5 },
+  }))!;
   const baseline = await observation("price 60", 1);
   await storage.taskStates.set({
     [task.id]: { failures: 0, lastRunAt: 10, nextRunAt: 20, baseline },
@@ -85,15 +73,12 @@ test("saving a watch unchanged keeps its baseline and writes nothing", async () 
 });
 
 test("a real change of the trigger or the prompt starts over", async () => {
-  const task = (await createTask(
-    {
-      title: "Price",
-      prompt: "Tell me when it is below 50",
-      agentId: "custom",
-      trigger: { kind: "watch", url: "https://shop.test/", everyMinutes: 5 },
-    },
-    USER,
-  ))!;
+  const task = (await createTask({
+    title: "Price",
+    prompt: "Tell me when it is below 50",
+    agentId: "custom",
+    trigger: { kind: "watch", url: "https://shop.test/", everyMinutes: 5 },
+  }))!;
   const baseline = await observation("price 60", 1);
   const ran = { failures: 0, lastRunAt: 10, nextRunAt: 20, baseline };
   await storage.taskStates.set({ [task.id]: ran });
@@ -111,25 +96,18 @@ test("a real change of the trigger or the prompt starts over", async () => {
 });
 
 test("an edit that makes no valid task is refused and stores nothing", async () => {
-  const task = (await createTask(
-    {
-      title: "Price",
-      prompt: "Check",
-      agentId: "custom",
-      trigger: { kind: "interval", every: 2, unit: "hours" },
-    },
-    USER,
-  ))!;
-  const refused = await updateTask(
-    task.id,
-    {
-      trigger: { kind: "watch", url: "file:///etc/passwd", everyMinutes: 5 },
-    },
-    USER,
-  );
+  const task = (await createTask({
+    title: "Price",
+    prompt: "Check",
+    agentId: "custom",
+    trigger: { kind: "interval", every: 2, unit: "hours" },
+  }))!;
+  const refused = await updateTask(task.id, {
+    trigger: { kind: "watch", url: "file:///etc/passwd", everyMinutes: 5 },
+  });
   assert.equal(refused, undefined);
   assert.deepEqual((await stored(task.id)).task.trigger, task.trigger);
-  assert.equal(await updateTask("missing", { title: "x" }, USER), undefined);
+  assert.equal(await updateTask("missing", { title: "x" }), undefined);
 });
 
 test("a trigger kind or field from a newer version is kept, shown and not run", async () => {
@@ -168,21 +146,17 @@ test("a trigger kind or field from a newer version is kept, shown and not run", 
   assert.equal(idleReason(cron, { failures: 0 }, here), "unsupported");
   assert.equal(plannedRunAt(cron, { failures: 0 }, here), undefined);
   // Edits elsewhere and of the task itself keep the stored form.
-  await updateTask("w", { title: "Renamed" }, USER);
-  await updateTask("c", { title: "Renamed too" }, USER);
+  await updateTask("w", { title: "Renamed" });
+  await updateTask("c", { title: "Renamed too" });
   const raw = (await local.get("tasks")).tasks as typeof stored;
   assert.equal(raw[0].trigger.mode, "visual");
   assert.deepEqual(raw[1].trigger, stored[1].trigger);
   assert.equal(raw[1].title, "Renamed too");
   // A new schedule must be one this version runs.
   assert.equal(
-    await updateTask(
-      "w",
-      {
-        trigger: { kind: UNKNOWN_TRIGGER, storedKind: "cron" },
-      },
-      USER,
-    ),
+    await updateTask("w", {
+      trigger: { kind: UNKNOWN_TRIGGER, storedKind: "cron" },
+    }),
     undefined,
   );
 });

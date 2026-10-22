@@ -7,8 +7,14 @@ import {
   updateTask,
   type TaskPatch,
 } from "../../shared/tasks/edit";
-import { idleReason, type RunContext } from "../../shared/tasks/lifecycle";
+import { localIsoTime } from "../../shared/local-time";
+import {
+  idleReason,
+  plannedRunAt,
+  type RunContext,
+} from "../../shared/tasks/lifecycle";
 import { normalizeTrigger, taskState } from "../../shared/tasks/normalize";
+import { MINUTE_MS } from "../../shared/tasks/schedule";
 import { loadRunContext } from "../../shared/tasks/run-context";
 import {
   TRIGGER_FIELDS,
@@ -20,20 +26,21 @@ import type { Agent } from "../../shared/types";
 import { resumeTask, startTaskRun } from "../tasks/scheduler";
 
 // What the agent's task tool does, on the same edits as the task list
-// (shared/tasks/edit.ts) but as the agent: what it creates, changes or
-// turns on waits for the user's OK on this device.
+// (shared/tasks/edit.ts): the user asked for them in the chat, so they
+// are allowed as made. Only an agent's permission to act on its own that
+// was not allowed on this device still waits (see approval.ts).
 
-const AGENT = { approve: false };
 const RECENT_RUNS = 10;
 
-export const WAITS_FOR_OK =
-  "It waits for the user's OK: it does not run until the user allows it on this step or in the task list. Tell the user.";
+const AGENT_WAITS_FOR_OK =
+  "Its agent's permission to act on its own was turned on on another device and is not allowed on this device yet: the task does not run here until the user allows it in the task list. Tell the user.";
 
 type Input = Record<string, unknown>;
 type Outcome = Record<string, unknown> & { error?: string };
 
+// Times in the user's local time with the offset, as the model gives them.
 const iso = (time: number | undefined) =>
-  time === undefined ? undefined : new Date(time).toISOString();
+  time === undefined ? undefined : localIsoTime(time);
 
 // The task's state in words for the model.
 const STATUS: Record<string, string> = {
@@ -101,7 +108,7 @@ function summary(task: ScheduledTask, view: Snapshot) {
       summary: result.summary,
       chatId: result.chatId,
     },
-    nextRun: reason ? undefined : iso(state.nextRunAt),
+    nextRun: iso(plannedRunAt(task, state, view.context)),
   };
 }
 
@@ -129,12 +136,15 @@ function triggerFrom(
   input: Input,
   current?: ScheduledTask["trigger"],
 ): { trigger?: ScheduledTask["trigger"]; error?: string } {
+  const relative = relativeAt(input, current);
+  if (relative.error) return relative;
   const given = TRIGGER_FIELDS.filter((field) => input[field] !== undefined);
-  if (!given.length) return {};
+  if (!given.length && relative.at === undefined) return {};
   const fields: Input = Object.fromEntries(
     given.map((field) => [field, input[field]]),
   );
-  if (fields.at !== undefined) {
+  if (relative.at !== undefined) fields.at = relative.at;
+  else if (fields.at !== undefined) {
     const at = Date.parse(trimmedString(fields.at));
     if (!Number.isFinite(at))
       return {
@@ -152,6 +162,23 @@ function triggerFrom(
           : "Give a valid schedule: kind and its fields.",
     };
   return { trigger };
+}
+
+// A one-time task "in 5 minutes": the time counted from now, so the model
+// need not add to a clock.
+function relativeAt(
+  input: Input,
+  current?: ScheduledTask["trigger"],
+): { at?: number; error?: string } {
+  if (input.inMinutes === undefined) return {};
+  if (input.at !== undefined)
+    return { error: "Give at or inMinutes, not both." };
+  if ((input.kind ?? current?.kind) !== "once")
+    return { error: "inMinutes is only for kind once." };
+  const minutes = input.inMinutes;
+  if (typeof minutes !== "number" || !(minutes > 0))
+    return { error: "inMinutes must be a number of minutes above 0." };
+  return { at: Date.now() + minutes * MINUTE_MS };
 }
 
 function changeNote(agent: Agent | undefined) {
@@ -194,26 +221,14 @@ export async function createTaskAction(
   if (!input.kind) return { error: "kind is required." };
   const { trigger, error } = triggerFrom(input);
   if (!trigger) return { error: error || "Give a valid schedule." };
-  const task = await createTask(
-    {
-      title: trimmedString(input.title) || prompt.slice(0, 60),
-      prompt,
-      agentId: agent.id,
-      trigger,
-    },
-    AGENT,
-  );
+  const task = await createTask({
+    title: trimmedString(input.title) || prompt.slice(0, 60),
+    prompt,
+    agentId: agent.id,
+    trigger,
+  });
   if (!task) return { error: "The task could not be created." };
-  return {
-    success: true,
-    taskId: task.id,
-    title: task.title,
-    schedule: describeTrigger(task.trigger),
-    agent: agent.name,
-    mayAct: mayActUnattended(agent),
-    waitingForOk: true,
-    note: `${changeNote(agent)} ${WAITS_FOR_OK}`,
-  };
+  return changedResult(task);
 }
 
 export async function updateTaskAction(input: Input): Promise<Outcome> {
@@ -240,12 +255,13 @@ export async function updateTaskAction(input: Input): Promise<Outcome> {
   if (trigger) patch.trigger = trigger;
   if (!Object.keys(patch).length)
     return { error: "Nothing to change: give the fields to change." };
-  const saved = await updateTask(task.id, patch, AGENT);
+  const saved = await updateTask(task.id, patch);
   if (!saved) return { error: "That change does not make a valid task." };
   return changedResult(saved);
 }
 
-// After a change: what the task is now and whether it waits for the OK.
+// After a change: what the task is now, whether its runs may act, and
+// whether it still waits for the user's OK.
 async function changedResult(task: ScheduledTask): Promise<Outcome> {
   const view = await snapshot();
   const now = summary(task, view);
@@ -259,9 +275,10 @@ async function changedResult(task: ScheduledTask): Promise<Outcome> {
     mayAct: !!agent && mayActUnattended(agent),
     status: now.status,
     waitingForOk: now.waitingForOk,
-    ...(now.waitingForOk
-      ? { note: `${changeNote(agent)} ${WAITS_FOR_OK}` }
-      : {}),
+    nextRun: now.nextRun,
+    note: now.waitingForOk
+      ? `${changeNote(agent)} ${AGENT_WAITS_FOR_OK}`
+      : changeNote(agent),
   };
 }
 
@@ -301,12 +318,11 @@ export async function setTaskPaused(
   const task = findTask(view, input);
   if (!task) return notFound(input);
   if (paused) {
-    const saved = await updateTask(task.id, { enabled: false }, AGENT);
+    const saved = await updateTask(task.id, { enabled: false });
     return saved ? changedResult(saved) : notFound(input);
   }
-  if (!task.enabled) await updateTask(task.id, { enabled: true }, AGENT);
-  if (taskState(view.states, task.id).pausedBy)
-    await resumeTask(task.id, AGENT);
+  if (!task.enabled) await updateTask(task.id, { enabled: true });
+  if (taskState(view.states, task.id).pausedBy) await resumeTask(task.id);
   const current = (await storage.tasks.get()).find(
     (item) => item.id === task.id,
   );

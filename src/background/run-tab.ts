@@ -202,24 +202,3 @@ export function workingTabNote(
   ].filter(Boolean);
   return xmlTag("working_tab", lines.join(" "));
 }
-
-// The messages with the working tab added to the context of the latest
-// message, when it is the user's (only for this run; nothing is stored).
-export function withWorkingTab(messages: ChatMessage[], note: string) {
-  const index = messages.length - 1;
-  const message = messages[index];
-  if (message?.role !== "user") return messages;
-  const context =
-    typeof message.metadata?.context === "string"
-      ? message.metadata.context
-      : "";
-  const next = [...messages];
-  next[index] = {
-    ...message,
-    metadata: {
-      ...message.metadata,
-      context: [context, note].filter(Boolean).join("\n\n"),
-    },
-  };
-  return next;
-}

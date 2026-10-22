@@ -87,6 +87,31 @@ writeFile("out/total.txt", "total=" + total);
       },
     );
 
+    await t.test(
+      "Intl comes from the browser: time zones and locales work",
+      async () => {
+        const [, formatted] = await fixture.run([
+          { name: "toolSearch", args: { names: ["runCode"] } },
+          {
+            name: "runCode",
+            args: {
+              code: `const d = new Date(Date.UTC(2026, 9, 21, 23, 44));
+[new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Toronto", dateStyle: "short", timeStyle: "short" }).format(d),
+ d.toLocaleString("de-DE", { timeZone: "Asia/Tokyo" }),
+ (1234.5).toLocaleString("fr-FR")]`,
+            },
+          },
+        ]);
+        const moment = new Date(Date.UTC(2026, 9, 21, 23, 44));
+        const expected = JSON.stringify([
+          "2026-10-21 19:44",
+          moment.toLocaleString("de-DE", { timeZone: "Asia/Tokyo" }),
+          (1234.5).toLocaleString("fr-FR"),
+        ]);
+        assert.ok(formatted.includes(`Result: ${expected}`), formatted);
+      },
+    );
+
     await t.test("a too-large allocation fails cleanly", async () => {
       const [, big, after] = await fixture.run([
         { name: "toolSearch", args: { names: ["runCode"] } },

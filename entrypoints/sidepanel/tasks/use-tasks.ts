@@ -19,7 +19,6 @@ import { useStoredState } from "../../../src/ui/useStoredState";
 // The task list's data and what can be done to it. Definitions are edited
 // in storage (the background re-arms its alarms when they change); runs and
 // what only the scheduler may change go to the background.
-const USER = { approve: true };
 
 export function useTasks() {
   const [tasks] = useStoredState(storage.tasks);
@@ -45,7 +44,7 @@ export function useTasks() {
     context,
     // Edits made here are the user's: they run as made.
     save: (draft: TaskDraft, id?: string) =>
-      id ? updateTask(id, draft, USER) : createTask(draft, USER),
+      id ? updateTask(id, draft) : createTask(draft),
     remove: (id: string) => deleteTask(id),
     allow: (id: string) => approveTask(id),
     discard: (id: string) => discardTask(id),
@@ -58,8 +57,8 @@ export function useTasks() {
       state: TaskState,
       paused: boolean,
     ) => {
-      if (paused) return updateTask(task.id, { enabled: false }, USER);
-      if (!task.enabled) await updateTask(task.id, { enabled: true }, USER);
+      if (paused) return updateTask(task.id, { enabled: false });
+      if (!task.enabled) await updateTask(task.id, { enabled: true });
       if (state.pausedBy)
         await sendTaskMessage({ type: TASK_MESSAGE.resume, taskId: task.id });
     },

@@ -120,10 +120,8 @@ export const tasksDeDE: TasksLocaleMessages = {
       "Die Aufgabe ist mehrmals nacheinander fehlgeschlagen und pausiert.",
   },
   approval: {
-    onlyLooks: "Sieht nur nach",
     allow: "Erlauben",
     discard: "Verwerfen",
-    waits: "Wartet auf Ihr OK, bevor sie auf diesem Gerät läuft.",
   },
   agentPermission: {
     pendingHere:

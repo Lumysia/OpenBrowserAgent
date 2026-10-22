@@ -458,21 +458,13 @@
 }
 
 /* Task list: rows are multi-line history rows; the form fits the panel. */
-/* Allow / Discard for a task waiting for the user's OK, under its row in
-   the list and on the task tool's step card. */
+/* Allow / Discard under a list row for a task waiting for the user's OK. */
 .task-approval-actions {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
   padding: 0 var(--space-2) var(--space-2);
-}
-.tool-detail-content .task-approval-actions {
-  padding: var(--space-1) 0 0;
-}
-.task-approval-actions small {
-  flex-basis: 100%;
-  color: var(--muted-foreground);
 }
 .task-form {
   padding: var(--space-3);

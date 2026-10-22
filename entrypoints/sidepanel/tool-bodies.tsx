@@ -8,10 +8,6 @@ import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
 import { isQuestionPending } from "./question-state";
 import { QuestionToolForm } from "./tool-question-form";
-import {
-  TaskApprovalActions,
-  useTaskWaitingForOk,
-} from "./tasks/task-approval";
 
 type ToolBodyProps = {
   part: ChatPart;
@@ -64,18 +60,7 @@ export const TOOL_CARD_KINDS: Partial<Record<string, ToolCardKind>> = {
     waiting: isQuestionPending,
   },
   [TOOL_NAME.subAgent]: { Body: SubAgentBody, below: true },
-  // A task the agent created, changed or turned on waits for the user's
-  // OK: the same buttons as in the task list, while it waits.
-  [TOOL_NAME.tasks]: { Body: TaskStepBody, below: true },
 };
-
-function TaskStepBody({ part }: ToolBodyProps) {
-  const taskId = String(output(part).taskId || "");
-  const waiting = useTaskWaitingForOk(taskId);
-  return taskId && waiting ? (
-    <TaskApprovalActions taskId={taskId} hint />
-  ) : null;
-}
 
 function SubAgentBody({
   part,

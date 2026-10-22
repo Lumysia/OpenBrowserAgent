@@ -1,6 +1,6 @@
 import type { TaskTrigger } from "./types";
 
-const MINUTE_MS = 60_000;
+export const MINUTE_MS = 60_000;
 const UNIT_MS = { minutes: MINUTE_MS, hours: 60 * MINUTE_MS } as const;
 // Looking a week and a day ahead finds every weekly day.
 const WEEK_SEARCH_DAYS = 8;

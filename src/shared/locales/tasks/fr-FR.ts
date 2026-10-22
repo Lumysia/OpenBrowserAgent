@@ -118,10 +118,8 @@ export const tasksFrFR: TasksLocaleMessages = {
     paused: "La tâche a échoué plusieurs fois de suite et a été mise en pause.",
   },
   approval: {
-    onlyLooks: "Se contente de regarder",
     allow: "Autoriser",
     discard: "Annuler",
-    waits: "Attend votre accord avant de s’exécuter sur cet appareil.",
   },
   agentPermission: {
     pendingHere:
