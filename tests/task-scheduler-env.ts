@@ -44,6 +44,8 @@ export async function schedulerEnv({
   tabs = [] as Array<{ id: number; windowId?: number }>,
   // The tasks were allowed on this device (made in its task list).
   allowed = true,
+  // How long the browser takes to show a notification.
+  showing = async () => {},
 } = {}) {
   const alarms = new Map<string, { name: string; scheduledTime: number }>();
   const onAlarm = eventListeners<(alarm: { name: string }) => void>();
@@ -61,6 +63,7 @@ export async function schedulerEnv({
     },
     notifications: {
       create: async (id: string, options: { title: string }) => {
+        await showing();
         notifications.push({ id, title: options.title });
         return id;
       },

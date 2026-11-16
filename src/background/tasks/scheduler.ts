@@ -121,9 +121,17 @@ export async function armTasks() {
 export function runTask(taskId: string, { manual = false } = {}) {
   if (active.has(taskId)) return Promise.resolve(false);
   active.add(taskId);
-  const run = queue.then(() => runQueued(taskId, manual));
+  // The task runs until its run is recorded, as its stored state shows;
+  // telling the user and arming its next alarm come after that.
+  const run = queue
+    .then(() => runQueued(taskId, manual))
+    .finally(() => active.delete(taskId));
   queue = run.catch(() => undefined);
-  return run.finally(() => active.delete(taskId));
+  return run.then(async (followUp) => {
+    if (!followUp) return false;
+    await followUp();
+    return true;
+  });
 }
 
 // The task when it may run now: this device's, allowed here as it is, and
@@ -178,15 +186,20 @@ async function runQueued(taskId: string, manual: boolean) {
       },
     };
   }
-  await finishRun(task, end, manual);
-  return true;
+  return recordRun(task, end, manual);
 }
 
-async function finishRun(task: ScheduledTask, end: RunEnd, manual: boolean) {
+// Records how the run ended and returns what follows it: telling the user
+// and arming the next alarm.
+async function recordRun(
+  task: ScheduledTask,
+  end: RunEnd,
+  manual: boolean,
+): Promise<() => Promise<void>> {
   // Deleted while it ran: nothing to record or tell.
   if (!(await findTask(task.id))) {
     await dropTaskStates([task.id]);
-    return;
+    return async () => {};
   }
   let notice: Notice | null = null;
   await storage.taskStates.update((states) => {
@@ -200,8 +213,10 @@ async function finishRun(task: ScheduledTask, end: RunEnd, manual: boolean) {
         : next.state;
     return { ...states, [task.id]: state };
   });
-  if (notice) await notifyTask(task, notice, end.result);
-  await armTasks();
+  return async () => {
+    if (notice) await notifyTask(task, notice, end.result);
+    await armTasks();
+  };
 }
 
 // After the worker (re)starts: runs cut off by a stop are retried once, and
