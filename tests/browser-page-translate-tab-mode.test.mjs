@@ -99,3 +99,80 @@ test(
     }
   },
 );
+
+// Single-page routers show the next page by putting a new <body> in place
+// of the old one, keeping some elements across (a persisted header).
+const routedArticle = articlePage({ paragraphs: 5 }).replace(
+  "</article>",
+  `<a id="next" href="/next">Next day</a></article>
+<script>
+document.addEventListener("click", async (event) => {
+  const link = event.target.closest("#next");
+  if (!link) return;
+  event.preventDefault();
+  const next = new DOMParser().parseFromString(
+    await (await fetch(link.href)).text(),
+    "text/html",
+  );
+  next.querySelector("#title").replaceWith(document.querySelector("#title"));
+  document.title = next.title;
+  history.pushState(null, "", link.href);
+  document.body.replaceWith(document.adoptNode(next.body));
+});
+</script>`,
+);
+
+test(
+  "a translated tab translates the body a single-page router swaps in",
+  { timeout: BROWSER_TEST_TIMEOUT },
+  async () => {
+    const session = await startPageTranslate({
+      pages: { "/article": routedArticle, "/next": nextPage },
+      answer: fixtureTranslator(),
+    });
+    const { browser, url, clickMenu, menuTitles } = session;
+    const translations = (page, selector) =>
+      page.call(
+        (selector) =>
+          document.querySelectorAll(`${selector} oba-translation`).length,
+        selector,
+      );
+    try {
+      const page = await browser.open(url("/article"));
+      await clickMenu(url("/article"));
+      await poll(() => translationIn(page, "#title"));
+
+      await page.call(() => document.querySelector("#next").click());
+      await poll(() =>
+        page.call(() =>
+          document
+            .querySelector("#intro")
+            ?.textContent.startsWith("The second day"),
+        ),
+      );
+      assert.equal(
+        await poll(() => translationIn(page, "#intro")),
+        "FR: The second day starts early, before the sun reaches the valley.",
+      );
+      await poll(() => translationIn(page, "#title"));
+      // The element kept from the first page is translated once, like the
+      // rest, also after the background asks again for the new address.
+      await unchangedFor(() =>
+        page.call(() => document.querySelectorAll("oba-translation").length),
+      );
+      assert.equal(await translations(page, "#title"), 1);
+      assert.equal(await translations(page, "#intro"), 1);
+      assert.equal((await menuTitles()).at(-1), "Show original");
+
+      await clickMenu(url("/next"));
+      await poll(
+        async () => (await menuTitles()).at(-1) === "Translate this page",
+      );
+      await unchangedFor(() =>
+        page.call(() => document.querySelectorAll("oba-translation").length),
+      ).then((count) => assert.equal(count, 0));
+    } finally {
+      await session.close();
+    }
+  },
+);
