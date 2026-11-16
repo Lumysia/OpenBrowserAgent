@@ -44,7 +44,7 @@ async function translateWithModel(
   model: ProviderModel,
   request: EngineRequest,
 ) {
-  const parser = createMarkedStreamParser();
+  let parser = createMarkedStreamParser();
   const ids = new Set(request.items.map((item) => item.id));
   const emit = (items: Array<{ id: number; text: string }>) => {
     for (const item of items)
@@ -70,6 +70,10 @@ async function translateWithModel(
       onText: (delta) => {
         emit(parser.push(delta));
         partial();
+      },
+      // Items already complete stay delivered; the rest streams again.
+      onRestart: () => {
+        parser = createMarkedStreamParser();
       },
     },
   );

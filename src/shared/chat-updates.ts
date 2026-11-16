@@ -61,6 +61,37 @@ export function appendAssistantPart(
   };
 }
 
+// Removes the parts of a reply step that was requested again. Their text is
+// the latest the reply streamed, so it comes off the end of its content.
+export function discardAssistantParts(
+  chat: Chat,
+  messageId: string,
+  ids: readonly string[],
+): Chat {
+  const discarded = new Set(ids);
+  return {
+    ...chat,
+    messages: chat.messages.map((message) => {
+      if (
+        message.id !== messageId ||
+        !message.parts?.some((part) => discarded.has(part.id))
+      )
+        return message;
+      const text = message.parts
+        .filter((part) => part.type === "text" && discarded.has(part.id))
+        .map((part) => part.text || "")
+        .join("");
+      return {
+        ...message,
+        content: message.content.endsWith(text)
+          ? message.content.slice(0, message.content.length - text.length)
+          : message.content,
+        parts: message.parts.filter((part) => !discarded.has(part.id)),
+      };
+    }),
+  };
+}
+
 export function updateAssistantRunMetrics(
   chat: Chat,
   messageId: string,

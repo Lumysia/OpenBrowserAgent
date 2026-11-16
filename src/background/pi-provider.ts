@@ -49,8 +49,15 @@ import {
   FIELD_REJECTION_STATUSES,
   rejectsField,
   requestRejection,
-  statusRecorder,
 } from "./request-rejection";
+import { responseRecorder } from "./response-recorder";
+import {
+  MID_STREAM_RESENDS,
+  replacesEarlierAttempt,
+  replyEvents,
+  resendDelayMs,
+} from "./reply-attempts";
+import { delay } from "../shared/cancellation";
 
 export type ProviderModel = {
   provider: ProviderId;
@@ -158,7 +165,8 @@ const NO_API_KEY = "local-no-key";
 // rejected is remembered for the model (model-limits.ts), so later requests
 // leave it out from the start. Prompt caching uses Pi's defaults: Anthropic
 // breakpoints on tools, system prompt and the latest message; automatic
-// caching elsewhere.
+// caching elsewhere. A reply whose connection drops mid-stream is requested
+// again and replaces what it streamed (reply-attempts.ts).
 export function createProviderStream(
   configuration: ProviderModel,
   reasoning?: RequestReasoning,
@@ -179,6 +187,8 @@ export function createProviderStream(
   };
   return (requested, context, options) => {
     const output = new AssistantMessageEventStream();
+    const reply = replyEvents(output);
+    let resends = 0;
     let model = requested;
     const start = async () => {
       const refuses = await known;
@@ -204,7 +214,7 @@ export function createProviderStream(
         // The thinking fields this request sends, which the plain request
         // leaves out.
         let thinkingFields: string[] = [];
-        const responses = statusRecorder(
+        const responses = responseRecorder(
           model.api === "anthropic-messages"
             ? anthropicFetch(configuration)
             : undefined,
@@ -255,6 +265,17 @@ export function createProviderStream(
             pendingStart = event;
             continue;
           }
+          if (
+            event.type === "error" &&
+            event.reason === "error" &&
+            responses.droppedMidStream() &&
+            resends < MID_STREAM_RESENDS
+          ) {
+            resends++;
+            await delay(resendDelayMs(resends), options?.signal);
+            reply.resend();
+            return run(messages, canRetry);
+          }
           const rejection =
             event.type === "error" && !started && event.reason !== "aborted"
               ? requestRejection(
@@ -295,11 +316,11 @@ export function createProviderStream(
           // not append a phantom assistant to Pi's transcript before its
           // retry.
           if (pendingStart) {
-            output.push(pendingStart);
+            reply.push(pendingStart);
             pendingStart = undefined;
           }
           if (event.type !== "error") started = true;
-          output.push(event);
+          reply.push(event);
         }
         output.end();
       };
@@ -312,9 +333,11 @@ export function createProviderStream(
     };
     void start().catch((error) => {
       const message = assistantMessage(model);
+      // What the reply streamed before the failure stays its content.
+      message.content = [...(reply.shown()?.content ?? [])];
       message.stopReason = options?.signal?.aborted ? "aborted" : "error";
       message.errorMessage = errorMessage(error);
-      output.push({
+      reply.push({
         type: "error",
         reason: message.stopReason,
         error: message,
@@ -402,18 +425,21 @@ function withoutImages(messages: Message[]): Message[] {
 
 // One plain-text request outside the agent loop (titles, compaction, smart
 // bar, page translation). `onText` receives the answer's text as it streams;
-// `onThinking` is called when the model reasons before answering.
+// `onThinking` is called when the model reasons before answering, and
+// `onRestart` when the request was sent again after its connection dropped:
+// the text streamed until then is void, and the answer streams anew.
 export type TextRequestOptions = {
   signal?: AbortSignal;
   reasoning?: RequestReasoning;
   onText?: (delta: string) => void;
   onThinking?: () => void;
+  onRestart?: () => void;
 };
 
 export async function requestText(
   model: ProviderModel,
   request: { system?: string; prompt: string },
-  { signal, reasoning, onText, onThinking }: TextRequestOptions = {},
+  { signal, reasoning, onText, onThinking, onRestart }: TextRequestOptions = {},
 ): Promise<{ text: string; usage: Usage }> {
   const events = await createProviderStream(model, reasoning)(
     piModel(model),
@@ -427,6 +453,11 @@ export async function requestText(
   );
   if (onText || onThinking)
     for await (const event of events) {
+      if (
+        replacesEarlierAttempt(event) ||
+        (event.type === "done" && replacesEarlierAttempt(event.message))
+      )
+        onRestart?.();
       if (event.type === "text_delta") onText?.(event.delta);
       else if (event.type === "thinking_delta") onThinking?.();
     }

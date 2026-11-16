@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- When the connection drops while a reply is streaming (a "network error" partway through), the request is now sent again on its own, up to two more times, and the new reply replaces the cut one instead of leaving half a sentence behind. **Continue** only shows up if those tries fail too. Gemini models aren't covered yet.
+
 ## 0.3.0-alpha.2 - 2026-10-21
 
 - A scheduled task you ask the agent for in a chat now runs as asked, without a separate **Allow** step. Tasks that arrive by sync from another device still wait for your OK.

@@ -4,6 +4,7 @@ import {
   appendAssistantContent,
   appendAssistantPart,
   appendQueuedMessages,
+  discardAssistantParts,
   endAssistantRun,
   updateAssistantRunMetrics,
 } from "../../src/shared/chat-updates";
@@ -57,7 +58,19 @@ export function createStreamHandlers(updateChat: ChatUpdater) {
       chunk: unknown,
       metrics?: Partial<RunMetrics>,
     ) {
-      const { delta, part } = streamPartFromChunk(chunk);
+      const { delta, part, discard } = streamPartFromChunk(chunk);
+      if (discard) {
+        for (const partId of discard) {
+          const itemKey = key(chatId, messageId, partId);
+          const item = pendingText.get(itemKey);
+          if (item?.timeout !== undefined) window.clearTimeout(item.timeout);
+          pendingText.delete(itemKey);
+        }
+        updateChat(chatId, (chat) =>
+          discardAssistantParts(chat, messageId, discard),
+        );
+        return;
+      }
       if (!delta && !part) return;
       if (isAppendableTextPart(part)) {
         const partId = part.id;

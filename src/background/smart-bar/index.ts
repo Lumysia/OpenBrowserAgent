@@ -349,6 +349,7 @@ async function runAction(
         answering = true;
         post({ type: "delta", text });
       },
+      onRestart: () => post({ type: "restart" }),
       // Once, until the answer starts.
       onThinking: () => {
         if (answering || thinking) return;

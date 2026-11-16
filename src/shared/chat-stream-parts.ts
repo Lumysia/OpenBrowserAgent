@@ -17,9 +17,12 @@ export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
   });
 }
 
+// What one stream chunk does to the reply: text to append, a part to add or
+// update, or the ids of parts to remove.
 export function streamPartFromChunk(chunk: unknown): {
   delta?: string;
   part?: ChatPart;
+  discard?: string[];
 } {
   if (!chunk || typeof chunk !== "object") return {};
   const maybe = chunk as {
@@ -39,7 +42,14 @@ export function streamPartFromChunk(chunk: unknown): {
     step?: string;
     error?: string;
     text?: string;
+    ids?: unknown;
   };
+  if (maybe.type === AI_TEXT_CHUNK_TYPE.discardParts)
+    return {
+      discard: Array.isArray(maybe.ids)
+        ? maybe.ids.filter((id): id is string => typeof id === "string")
+        : [],
+    };
   if (maybe.type === AI_TEXT_CHUNK_TYPE.contextSummary)
     return {
       part: {

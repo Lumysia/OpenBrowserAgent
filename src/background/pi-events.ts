@@ -13,6 +13,7 @@ import {
 import { RUN_STOP_REASON, type RunStopReason } from "../shared/run-stop";
 import { createUsageMeter, type UsageMetrics } from "./run-usage";
 import { isQueuedMessage, type QueuedUserMessage } from "./stream-sessions";
+import { replacesEarlierAttempt } from "./reply-attempts";
 
 const TEXT_CHUNKS = {
   text: {
@@ -69,6 +70,8 @@ export function createEventHandler(
     post({ type: "metrics", metrics: meter.add(metrics) });
   const openParts = new Map<string, string>();
   const announcedCalls = new Set<string>();
+  // The parts this step of the reply has streamed so far.
+  const stepParts = new Set<string>();
   const consumed: QueuedUserMessage[] = [];
   const chunk = (value: Record<string, unknown>) =>
     post({ type: "chunk", chunk: value });
@@ -80,6 +83,7 @@ export function createEventHandler(
     if (call?.type !== "toolCall" || !call.id || !call.name) return;
     if (announcedCalls.has(call.id)) return;
     announcedCalls.add(call.id);
+    stepParts.add(call.id);
     chunk({
       type: toolPartType(call.name),
       toolCallId: call.id,
@@ -99,6 +103,7 @@ export function createEventHandler(
     if (!types) return;
     if (phase === "start") {
       openParts.set(id, types.end);
+      stepParts.add(id);
       chunk({ type: types.start, id });
     } else if (phase === "delta" && "delta" in update) {
       chunk({ type: types.delta, id, delta: update.delta });
@@ -108,13 +113,29 @@ export function createEventHandler(
     }
   };
 
+  const startStep = () => {
+    turnId = crypto.randomUUID();
+    stepParts.clear();
+    openParts.clear();
+  };
+
+  // The step was requested again after its connection dropped: what it
+  // streamed so far is removed, and the new attempt streams as a new step.
+  const discardStep = () => {
+    if (stepParts.size)
+      chunk({ type: AI_TEXT_CHUNK_TYPE.discardParts, ids: [...stepParts] });
+    for (const id of stepParts) announcedCalls.delete(id);
+    startStep();
+  };
+
   const handlers: EventHandlers = {
     message_start(event) {
       if (isQueuedMessage(event.message)) consumed.push(event.message);
-      if (event.message.role === "assistant") turnId = crypto.randomUUID();
+      if (event.message.role === "assistant") startStep();
     },
     message_update(event) {
       const update = event.assistantMessageEvent;
+      if (replacesEarlierAttempt(update)) discardStep();
       if (!("contentIndex" in update)) return;
       if (update.type.startsWith("toolcall_")) announceToolCall(update);
       else textChunk(update);
@@ -136,6 +157,7 @@ export function createEventHandler(
     },
     message_end(event) {
       if (event.message.role !== "assistant") return;
+      if (replacesEarlierAttempt(event.message)) discardStep();
       // A stream that fails mid-part never sends its end event.
       for (const [id, type] of openParts) chunk({ type, id });
       openParts.clear();

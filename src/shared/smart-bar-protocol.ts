@@ -94,6 +94,9 @@ export type SmartBarRunRequest = {
 
 export type SmartBarStreamEvent =
   | { type: "delta"; text: string }
+  // The request was sent again after its connection dropped; the answer
+  // streams anew.
+  | { type: "restart" }
   // The model is thinking before it answers.
   | { type: "thinking" }
   | { type: "done" }

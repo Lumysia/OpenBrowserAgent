@@ -8,20 +8,6 @@ type RequestRejection = { status?: number; message: string };
 // written. Rate limits, overload and server errors are not about a field.
 export const FIELD_REJECTION_STATUSES: readonly number[] = [400, 422];
 
-// Records the status of the responses a request gets, for SDKs that take a
-// fetch function (Pi's OpenAI and Anthropic adapters).
-export function statusRecorder(
-  base: typeof fetch = (...args) => fetch(...args),
-) {
-  let status: number | undefined;
-  const recording: typeof fetch = async (input, init) => {
-    const response = await base(input, init);
-    status = response.status;
-    return response;
-  };
-  return { fetch: recording, status: () => status };
-}
-
 // The Gemini SDK takes no fetch function; its error text is the response
 // body, whose `error.code` is the HTTP status.
 function bodyStatus(message: string) {
