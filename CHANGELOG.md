@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.3.0-alpha.4 - 2026-11-16
+
 - With **Translate this page** on, sites that switch pages without a full load by swapping in a new page body (blogs and docs built with Astro, Turbo and similar) now get the next page translated too, instead of leaving it in the original language.
 
 ## 0.3.0-alpha.3 - 2026-11-16
