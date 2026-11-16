@@ -64,29 +64,47 @@ export function createController(
   onStarted: () => void,
 ) {
   let session: ReturnType<typeof startSession> | undefined;
+  const begin = () =>
+    startSession({ onFatal: stop, onStarted, onReplaced: restart });
+  function start() {
+    if (session) return;
+    session = begin();
+    onState(true);
+  }
+  function stop() {
+    if (!session) return;
+    session.stop();
+    session = undefined;
+    onState(false);
+  }
+  // The page put a new body in place of the translated one: it is
+  // translated from the start, as a page that loaded.
+  function restart() {
+    session?.stop();
+    session = begin();
+  }
   return {
     get active() {
       return !!session;
     },
     toggle() {
-      if (session) this.stop();
-      else this.start();
+      if (session) stop();
+      else start();
     },
-    start() {
-      if (session) return;
-      session = startSession(() => this.stop(), onStarted);
-      onState(true);
-    },
-    stop() {
-      if (!session) return;
-      session.stop();
-      session = undefined;
-      onState(false);
-    },
+    start,
+    stop,
   };
 }
 
-function startSession(onFatal: () => void, onStarted: () => void) {
+type SessionEvents = {
+  // The session can't go on: the page goes back to its original.
+  onFatal: () => void;
+  onStarted: () => void;
+  // What the session translates left the page.
+  onReplaced: () => void;
+};
+
+function startSession({ onFatal, onStarted, onReplaced }: SessionEvents) {
   const queue = createQueue();
   // Units sent and waiting for a translation, by source text: identical
   // paragraphs are sent once.
@@ -113,6 +131,13 @@ function startSession(onFatal: () => void, onStarted: () => void) {
   // Unknown until the session's settings arrive (nothing shows before).
   const language = () => config?.targetLanguage ?? "";
   const root = document.body || document.documentElement;
+  // Single-page routers show the next page by replacing <body> (or the
+  // whole <html>); the session's root is then gone from the page.
+  const page = new MutationObserver(() => {
+    if (!root.isConnected) onReplaced();
+  });
+  page.observe(document, { childList: true });
+  page.observe(document.documentElement, { childList: true });
 
   const units = createUnits(
     {
@@ -443,6 +468,7 @@ function startSession(onFatal: () => void, onStarted: () => void) {
 
   return {
     stop() {
+      page.disconnect();
       for (const unit of units.units.values()) clear(unit);
       presenter.stop();
       units.stop();
