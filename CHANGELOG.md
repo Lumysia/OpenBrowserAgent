@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.3.0-alpha.3 - 2026-11-16
+
 - When the connection drops while a reply is streaming (a "network error" partway through), the request is now sent again on its own, up to two more times, and the new reply replaces the cut one instead of leaving half a sentence behind. **Continue** only shows up if those tries fail too. Gemini models aren't covered yet.
 
 ## 0.3.0-alpha.2 - 2026-10-21
