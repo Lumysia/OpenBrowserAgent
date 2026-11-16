@@ -80,6 +80,14 @@ test(
       await poll(
         async () => (await teachSession(panel, firstId))?.steps.length === 1,
       );
+      // The panel lists it, so its card has its height before the next click.
+      await poll(() =>
+        panel.call(() =>
+          [...document.querySelectorAll(".teach-step")].some((step) =>
+            step.textContent.includes("Save First"),
+          ),
+        ),
+      );
 
       // A second recording, in another tab: refused, with the way back.
       const second = await browser.open(session.url("/second"));

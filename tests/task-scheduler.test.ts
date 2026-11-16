@@ -52,6 +52,30 @@ test("a task deleted during its run leaves no state and no notification", async 
   assert.equal(env.notifications.length, 0);
 });
 
+test("run now starts a new run once the last one is recorded, before its notification is shown", async () => {
+  let show = () => {};
+  let held = false;
+  const env = await schedulerEnv({
+    // The first notification waits until the test lets it show.
+    showing: () =>
+      held
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            held = true;
+            show = resolve;
+          }),
+  });
+  const first = runTask("t1", { manual: true });
+  while (!(await storage.taskStates.get()).t1?.lastRunAt) await settle(5);
+  assert.equal((await storage.taskStates.get()).t1.running, undefined);
+  const reply = await send({ type: TASK_MESSAGE.runNow, taskId: "t1" });
+  assert.deepEqual(reply, { ok: true, value: true });
+  show();
+  assert.equal(await first, true);
+  await settle();
+  assert.equal(env.runs.length, 2);
+});
+
 test("states of tasks deleted on another device are dropped when arming", async () => {
   await schedulerEnv({
     tasks: [task({ deviceId: "other" })],

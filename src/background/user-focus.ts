@@ -15,16 +15,10 @@ type Watch = {
 
 export async function watchOpenedTabs(sourceTabId: number): Promise<Watch> {
   const api = getBrowserApi();
-  const [tabs, focused] = await Promise.all([
-    api.tabs.query({ active: true }).catch(() => [] as chrome.tabs.Tab[]),
-    api.windows?.getLastFocused().catch(() => undefined),
-  ]);
   // The tab in front of each window, and the one before it.
   const active = new Map<number, number>();
   const before = new Map<number, number>();
-  for (const tab of tabs)
-    if (tab.id !== undefined) active.set(tab.windowId, tab.id);
-  let userWindow = focused?.id;
+  let userWindow: number | undefined;
   const opened: number[] = [];
   const restoring: Promise<void>[] = [];
 
@@ -72,10 +66,21 @@ export async function watchOpenedTabs(sourceTabId: number): Promise<Watch> {
     if (tab.openerTabId === sourceTabId && tab.id !== undefined) found(tab.id);
   };
   const targets = api.webNavigation?.onCreatedNavigationTarget;
+  // Listening starts before the tabs in front are read, so a switch the
+  // user makes meanwhile is not lost; what it reported is newer than what
+  // the reads return.
   api.tabs.onActivated.addListener(onActivated);
   api.windows?.onFocusChanged.addListener(onFocusChanged);
   if (targets) targets.addListener(onTarget);
   else api.tabs.onCreated.addListener(onCreated);
+  const [tabs, focused] = await Promise.all([
+    api.tabs.query({ active: true }).catch(() => [] as chrome.tabs.Tab[]),
+    api.windows?.getLastFocused().catch(() => undefined),
+  ]);
+  for (const tab of tabs)
+    if (tab.id !== undefined && !active.has(tab.windowId))
+      active.set(tab.windowId, tab.id);
+  userWindow ??= focused?.id;
   return {
     async stop() {
       api.tabs.onActivated.removeListener(onActivated);

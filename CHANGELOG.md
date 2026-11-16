@@ -4,6 +4,9 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- If you switch tabs just as the agent starts acting on a page, a tab that page opens no longer stays in front of the tab you switched to.
+- **Run now** on a scheduled task works right after its last run finished; before, a click while that run's notification was still on its way did nothing.
+
 ## 0.3.0-alpha.4 - 2026-11-16
 
 - With **Translate this page** on, sites that switch pages without a full load by swapping in a new page body (blogs and docs built with Astro, Turbo and similar) now get the next page translated too, instead of leaving it in the original language.
