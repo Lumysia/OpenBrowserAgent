@@ -41,10 +41,15 @@ const mouse = (page, type, { x, y }, { scale = 1, ...rest } = {}) =>
 // shifts the rows further, so a point taken then lands on another row.
 // Content arriving late moves what follows it without an animation (the
 // setup's buttons under a step whose list loads): the element's box has to
-// stay put for two frames.
-export function elementCenter(page, selector, { text, exact = false } = {}) {
-  return poll(() =>
-    page.call(
+// stay put for two frames. A timeout names what it was still waiting for.
+export async function elementCenter(
+  page,
+  selector,
+  { text, exact = false } = {},
+) {
+  let waiting = "";
+  const found = await poll(async () => {
+    const result = await page.call(
       async ({ selector, text, exact }) => {
         const element = [...document.querySelectorAll(selector)].find(
           (item) =>
@@ -53,7 +58,8 @@ export function elementCenter(page, selector, { text, exact = false } = {}) {
               ? item.textContent.trim() === text
               : item.textContent.includes(text)),
         );
-        if (!element || element.disabled) return null;
+        if (!element) return { waiting: "no such element" };
+        if (element.disabled) return { waiting: "disabled" };
         const moving = document.getAnimations().some((animation) => {
           const target = animation.effect?.target;
           return (
@@ -62,7 +68,7 @@ export function elementCenter(page, selector, { text, exact = false } = {}) {
             target?.contains?.(element)
           );
         });
-        if (moving) return null;
+        if (moving) return { waiting: "animating" };
         element.scrollIntoView({ block: "nearest" });
         const rect = element.getBoundingClientRect();
         const point = {
@@ -70,17 +76,29 @@ export function elementCenter(page, selector, { text, exact = false } = {}) {
           y: rect.y + rect.height / 2,
         };
         const hit = document.elementFromPoint(point.x, point.y);
-        if (!hit || !element.contains(hit)) return null;
+        if (!hit || !element.contains(hit))
+          return {
+            waiting: `covered by ${hit ? hit.outerHTML.slice(0, 120) : "nothing"}`,
+          };
         if (!document.hidden)
           await new Promise((resolve) =>
             requestAnimationFrame(() => requestAnimationFrame(resolve)),
           );
         const after = element.getBoundingClientRect();
-        return after.x === rect.x && after.y === rect.y ? point : null;
+        return after.x === rect.x && after.y === rect.y
+          ? { point }
+          : { waiting: "moving" };
       },
       { selector, text, exact },
-    ),
-  );
+    );
+    waiting = result.waiting || "";
+    return result.point;
+  }).catch((error) => {
+    throw new Error(
+      `${error.message}: ${selector}${text ? ` "${text}"` : ""} ${waiting}`,
+    );
+  });
+  return found;
 }
 
 // A left click (or `button`) at `point`.
@@ -89,14 +107,20 @@ export async function click(page, point, { scale, button = "left" } = {}) {
     await mouse(page, type, point, { scale, button, clickCount: 1 });
 }
 
-// Moves the pointer onto `point` and clicks the element under it.
+// Moves the pointer onto `point` and clicks the element under it. A hidden
+// page (the side panel while the page it works on is in front) draws no
+// frames, and Chrome holds a pointer move for a frame that never comes: the
+// move returns only after its 5 s input timeout, by when the point may hit
+// something else. There is no pointer to hover with there, so the click
+// goes straight to the point.
 export async function clickElement(
   page,
   selector,
   { text, exact, scale } = {},
 ) {
+  const hidden = await page.call(() => document.hidden);
   const point = await elementCenter(page, selector, { text, exact });
-  await mouse(page, "mouseMoved", point, { scale });
+  if (!hidden) await mouse(page, "mouseMoved", point, { scale });
   await click(page, point, { scale });
 }
 

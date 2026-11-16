@@ -4,15 +4,16 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 import { composerFixture } from "./browser-composer.mjs";
 import { poll } from "./chromium.mjs";
 
-// Focuses (or blurs) the composer and reads the box's shadow before, once
-// the box-shadow transition has run a frame, and at its end. `ran` is false
-// when no box-shadow transition started: the lists cannot interpolate.
+// Focuses (or blurs) the composer and reads the box's shadow before, halfway
+// through the box-shadow transition, and at its end. `ran` is false when no
+// box-shadow transition started: the lists cannot interpolate. The halfway
+// value is read with the transition seeked there, since how far it got
+// after some frames depends on how fast the machine draws them.
 function focusTransition(page, focus) {
   return page.call(async (focus) => {
     const box = document.querySelector(".composer-box");
     const area = box.querySelector("textarea");
     const style = getComputedStyle(box);
-    const frame = () => new Promise((r) => requestAnimationFrame(r));
     const event = (type) =>
       new Promise((resolve) => {
         const listener = (event) => {
@@ -34,8 +35,11 @@ function focusTransition(page, focus) {
       new Promise((resolve) => setTimeout(() => resolve(false), 2000)),
     ]);
     if (!ran) return { ran, before, after: style.boxShadow };
-    await frame();
-    await frame();
+    const transition = box
+      .getAnimations()
+      .find((animation) => animation.transitionProperty === "box-shadow");
+    const { delay, duration } = transition.effect.getComputedTiming();
+    transition.currentTime = delay + duration / 2;
     const middle = style.boxShadow;
     await end;
     return { ran, before, middle, after: style.boxShadow };
