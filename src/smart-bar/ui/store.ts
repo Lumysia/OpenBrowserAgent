@@ -118,6 +118,7 @@ export function createSmartBarStore(host: HTMLElement) {
           text: (state.result?.text || "") + event.text,
           thinking: false,
         });
+      else if (event.type === "restart") updateResult({ text: "" });
       else if (event.type === "thinking") updateResult({ thinking: true });
       else if (event.type === "error")
         updateResult({ status: "error", error: event.error });
@@ -127,7 +128,11 @@ export function createSmartBarStore(host: HTMLElement) {
           consent: { providerId: event.providerId, host: event.host },
         });
       else updateResult({ status: "done" });
-      if (event.type !== "delta" && event.type !== "thinking") {
+      if (
+        event.type !== "delta" &&
+        event.type !== "restart" &&
+        event.type !== "thinking"
+      ) {
         current.disconnect();
         port = undefined;
       }

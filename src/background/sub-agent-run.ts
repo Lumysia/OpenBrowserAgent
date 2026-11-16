@@ -4,6 +4,7 @@ import { saveChatContent } from "../shared/chat-storage";
 import { streamPartFromChunk } from "../shared/chat-stream-parts";
 import {
   appendAssistantPart,
+  discardAssistantParts,
   endAssistantRun,
   updateAssistantRunMetrics,
 } from "../shared/chat-updates";
@@ -96,8 +97,10 @@ export async function runBackgroundChat(options: {
   }, PERSIST_INTERVAL_MS);
   session.observers.add((event: AiStreamResponse) => {
     if (event.type === "chunk") {
-      const { delta, part } = streamPartFromChunk(event.chunk);
-      chat = appendAssistantPart(chat, { messageId: assistantId, delta, part });
+      const { delta, part, discard } = streamPartFromChunk(event.chunk);
+      chat = discard
+        ? discardAssistantParts(chat, assistantId, discard)
+        : appendAssistantPart(chat, { messageId: assistantId, delta, part });
       if (part?.toolName && options.onProgress) {
         const existing = progress.find(
           (item) =>

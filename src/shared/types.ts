@@ -382,6 +382,9 @@ export const AI_TEXT_CHUNK_TYPE = {
   textNoteEnd: "text-note-end",
   // A compaction summary that replaced earlier context of the run.
   contextSummary: "context-summary",
+  // Parts of a reply step that was requested again after its connection
+  // dropped; the new attempt replaces them.
+  discardParts: "discard-parts",
 } as const;
 
 export type SendMessagesBody = {
