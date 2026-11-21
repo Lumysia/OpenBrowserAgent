@@ -4,8 +4,36 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
-- If you switch tabs just as the agent starts acting on a page, a tab that page opens no longer stays in front of the tab you switched to.
-- **Run now** on a scheduled task works right after its last run finished; before, a click while that run's notification was still on its way did nothing.
+0.3.0 is the third public release of OpenBrowserAgent, after 4 test pre-releases. It adds scheduled tasks and page watches and lets you teach the agent a skill by showing it once. Each pre-release's own notes are in [CHANGELOG.md](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md): [alpha.1](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha1---2026-10-21), [alpha.2](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha2---2026-10-21), [alpha.3](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha3---2026-11-16) and [alpha.4](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha4---2026-11-16).
+
+**Status:** the same as 0.2.0. Chrome and other Chromium-based browsers (Edge, Brave, Arc) are the supported target. The Firefox and Safari builds are experimental: they build and pass the shared tests, but they have not been tested on real browsers yet. Safari has no system notifications, so there task results show only on the toolbar button and in the task list.
+
+### Install or update
+
+- **Chrome / Chromium:** unzip `open-browser-agent-0.3.0-chrome.zip`, open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and select the unzipped folder. To update, replace the folder's contents and click the reload button on the extension's card.
+- **Firefox (experimental):** `open-browser-agent-0.3.0-firefox.zip`. Load it as a temporary add-on from `about:debugging`.
+- **Safari (experimental):** `open-browser-agent-0.3.0-safari.zip`. It needs Xcode's Safari web extension converter.
+- `open-browser-agent-0.3.0-sources.zip` is the source package for store review.
+
+### Highlights
+
+- **Scheduled tasks and page watches** (alpha.1): have the agent do something later, every few minutes, hours or days, or daily or weekly at a set time, or watch a page and tell you when the change you describe happens. Results arrive as system notifications and a count on the toolbar button, and each run is a chat you can open. Create tasks from the new task list or from a chat with **Make this a task**, or ask the agent in words. A watch reads the page without the model and only asks it when the text changed.
+- **Tasks only look by default** (alpha.1, alpha.2): they read and report, and never click or type, unless you turn on the new **Act on its own** permission for an agent. A task you ask for in a chat runs as asked; tasks and permissions that arrive by sync from another device wait for your **Allow** on this one.
+- **Record a skill** (alpha.1): choose **+ → Record a skill**, do a browser task once, and the agent writes a skill from it, checks it in a new tab (asking before the final submit) and saves it. What you type is never kept, and passwords, codes and card numbers are never stored.
+- **Time and dates for the agent** (alpha.2): it knows your local time, can schedule a one-time task "in 5 minutes", and the code it runs can format dates and numbers and convert time zones.
+- **Steadier replies and translation** (alpha.3, alpha.4): a reply cut off by a dropped connection is sent again on its own, and page translation follows sites that swap in a new page without a full load.
+- **Fixes after alpha.4:**
+  - If you switch tabs just as the agent starts acting on a page, a tab that page opens no longer stays in front of the tab you switched to.
+  - **Run now** on a scheduled task works right after its last run finished; before, a click while that run's notification was still on its way did nothing.
+
+### Good to know
+
+- **New permission: notifications.** It is used only to tell you about the results of tasks and watches you set up. The browser may ask you to accept it when the extension updates. Everything else about permissions is as in 0.2.0.
+- **Sync works as before.** The sync format did not change, so there is nothing to redo and no order to update your devices in. Scheduled tasks sync with your settings, but each task runs only on the device that created it (you can change which in the task form), and what you allowed on a device stays on that device.
+- Settings and data from 0.2.0 carry over unchanged. **Act on its own** is off for every agent, yours included, until you turn it on.
+- You bring your own model provider and API key. Nothing is sent anywhere except the providers, MCP servers, translation engine and sync servers you choose.
+
+Please report problems on the [issue tracker](https://github.com/Lumysia/OpenBrowserAgent/issues).
 
 ## 0.3.0-alpha.4 - 2026-11-16
 
