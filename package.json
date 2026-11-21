@@ -1,6 +1,6 @@
 {
   "name": "open-browser-agent",
-  "version": "0.3.0-alpha.4",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {

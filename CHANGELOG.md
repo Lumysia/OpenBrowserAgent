@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.3.0 - 2026-11-21
+
 0.3.0 is the third public release of OpenBrowserAgent, after 4 test pre-releases. It adds scheduled tasks and page watches and lets you teach the agent a skill by showing it once. Each pre-release's own notes are in [CHANGELOG.md](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md): [alpha.1](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha1---2026-10-21), [alpha.2](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha2---2026-10-21), [alpha.3](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha3---2026-11-16) and [alpha.4](https://github.com/Lumysia/OpenBrowserAgent/blob/main/CHANGELOG.md#030-alpha4---2026-11-16).
 
 **Status:** the same as 0.2.0. Chrome and other Chromium-based browsers (Edge, Brave, Arc) are the supported target. The Firefox and Safari builds are experimental: they build and pass the shared tests, but they have not been tested on real browsers yet. Safari has no system notifications, so there task results show only on the toolbar button and in the task list.
