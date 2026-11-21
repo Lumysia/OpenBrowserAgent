@@ -42,7 +42,7 @@ Optional local execution bridge: connects to a separately installed helper on th
 Runs web searches through the browser's default search engine (the one the user chose) when the agent needs to look something up for the user's request.
 
 == notifications justification ==
-Tells the user when a task they scheduled or a page watch they set up has a result, when the condition they described is met, when a task needs their answer, or when a task was paused after failing repeatedly. Clicking the notification opens that result in the side panel. Notifications appear only for tasks the user created.
+Tells the user when a task they scheduled or a page watch they set up has a result, when the condition they described is met, when a task needs their answer, or when a task that arrived from their other devices through sync waits for their OK, or when a task was paused after failing repeatedly. Clicking the notification opens that result in the side panel. Notifications appear only for the user's own tasks and watches.
 
 == tabGroups justification ==
 When the user asks the agent to organize tabs, it groups them and names and colors the groups, and it shows group names in tab lists.
